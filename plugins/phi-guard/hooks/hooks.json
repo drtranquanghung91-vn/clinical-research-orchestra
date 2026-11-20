@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__.*|WebFetch|WebSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if python3 -c 'import sys' >/dev/null 2>&1; then P=python3; else P=python; fi; \"$P\" \"${CLAUDE_PLUGIN_ROOT}/scripts/phi_scan.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
