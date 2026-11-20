@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+_sources/
+.claude/
+out/
+*.key.csv
+!plugins/orchestra/templates/project/out/
+!plugins/orchestra/templates/project/out/.gitkeep

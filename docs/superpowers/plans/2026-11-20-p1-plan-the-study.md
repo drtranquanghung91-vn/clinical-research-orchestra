@@ -11,6 +11,7 @@
 ## Global Constraints
 
 - Everything in P0's Global Constraints applies.
+- Frontmatter `description` values are single-quoted YAML strings (escape ' as ''); `tools/lint_skills.py` rejects unquoted values containing `: ` or ` #`.
 - Skill names drop the `-vi` suffix: `research-question`, `literature-search`, `critical-appraisal`, `protocol-design`, `sample-size-sap`.
 - Skill bodies in English, ≤ 500 words (enforced by `tools/lint_skills.py`). Descriptions carry Vietnamese and English triggers.
 - Output language of research documents follows `project.yaml → language.output`; chat follows the user.
@@ -292,7 +293,7 @@ git commit -m "feat(orchestra): sample size calculator (Amelia Le) with golden t
 ```markdown
 ---
 name: research-question
-description: Use when a medical student, doctor or health worker has a clinical idea, observation or topic and needs a researchable question, PICO/PECO, objectives, hypotheses or a title, or asks whether a topic is feasible, or when stated objectives do not match the design. Triggers: "ý tưởng nghiên cứu", "câu hỏi nghiên cứu", "PICO", "PECO", "mục tiêu nghiên cứu", "giả thuyết nghiên cứu", "đặt tên đề tài", "chọn đề tài luận văn", "đề tài cơ sở", "đề tài này có làm được không", "FINER", "tôi muốn nghiên cứu về", "research question", "research idea", "is this topic feasible".
+description: 'Use when a medical student, doctor or health worker has a clinical idea, observation or topic and needs a researchable question, PICO/PECO, objectives, hypotheses or a title, or asks whether a topic is feasible, or when stated objectives do not match the design. Triggers: "ý tưởng nghiên cứu", "câu hỏi nghiên cứu", "PICO", "PECO", "mục tiêu nghiên cứu", "giả thuyết nghiên cứu", "đặt tên đề tài", "chọn đề tài luận văn", "đề tài cơ sở", "đề tài này có làm được không", "FINER", "tôi muốn nghiên cứu về", "research question", "research idea", "is this topic feasible".'
 ---
 ```
 
@@ -337,7 +338,7 @@ git commit -m "feat(orchestra): research-question skill (ported from Amelia Le)"
 ```markdown
 ---
 name: literature-search
-description: Use when a research question or topic needs its literature found, verified and organised: search strategy, evidence table, evidence map, research gaps, or "what have previous studies done". Triggers: "tìm tài liệu cho đề tài", "tìm y văn", "chiến lược tìm kiếm", "bảng tổng hợp nghiên cứu", "evidence table", "bản đồ bằng chứng", "evidence map", "research gap", "khoảng trống nghiên cứu", "các nghiên cứu trước đã làm gì", "search strategy", "find studies on"; or after the research question is approved and before the protocol.
+description: 'Use when a research question or topic needs its literature found, verified and organised: search strategy, evidence table, evidence map, research gaps, or "what have previous studies done". Triggers: "tìm tài liệu cho đề tài", "tìm y văn", "chiến lược tìm kiếm", "bảng tổng hợp nghiên cứu", "evidence table", "bản đồ bằng chứng", "evidence map", "research gap", "khoảng trống nghiên cứu", "các nghiên cứu trước đã làm gì", "search strategy", "find studies on"; or after the research question is approved and before the protocol.'
 ---
 ```
 
@@ -375,7 +376,7 @@ git commit -m "feat(orchestra): literature-search skill (ported from Amelia Le)"
 ```markdown
 ---
 name: critical-appraisal
-description: Use when a research paper or a body of evidence must be appraised for trustworthiness, value and relevance before it is used, with the tool matched to the real study design, including journal club. Triggers: "thẩm định y văn", "đánh giá chất lượng bài báo", "bài này có tin được không", "đánh giá phê bình", "critical appraisal", "risk of bias", "nguy cơ sai lệch", "RoB 2", "ROBINS-I", "ROBINS-E", "Newcastle-Ottawa", "NOS", "AXIS", "CASP", "JBI", "AMSTAR 2", "QUADAS", "PROBAST", "GRADE", "CERQual", "journal club"; or when literature-search reaches its appraisal step.
+description: 'Use when a research paper or a body of evidence must be appraised for trustworthiness, value and relevance before it is used, with the tool matched to the real study design, including journal club. Triggers: "thẩm định y văn", "đánh giá chất lượng bài báo", "bài này có tin được không", "đánh giá phê bình", "critical appraisal", "risk of bias", "nguy cơ sai lệch", "RoB 2", "ROBINS-I", "ROBINS-E", "Newcastle-Ottawa", "NOS", "AXIS", "CASP", "JBI", "AMSTAR 2", "QUADAS", "PROBAST", "GRADE", "CERQual", "journal club"; or when literature-search reaches its appraisal step.'
 ---
 ```
 
@@ -392,7 +393,7 @@ Translate the five reference files into `references/appraisal-tools/`, keeping e
 ```markdown
 ---
 name: appraise
-description: Appraise one research paper (PDF, PMID or DOI) for journal club or for the project's evidence table (thẩm định một bài báo).
+description: 'Appraise one research paper (PDF, PMID or DOI) for journal club or for the project''s evidence table (thẩm định một bài báo).'
 disable-model-invocation: true
 ---
 
@@ -422,7 +423,7 @@ git commit -m "feat(orchestra): critical-appraisal skill and /orchestra:appraise
 ```markdown
 ---
 name: protocol-design
-description: Use when a study must be designed or a protocol drafted or reviewed: design choice, population, inclusion and exclusion criteria, sampling, outcomes, variables, bias and confounding, "đề cương nghiên cứu" or "chương 2 đối tượng và phương pháp". Triggers: "thiết kế nghiên cứu", "chọn thiết kế", "đề cương", "protocol", "tiêu chuẩn lựa chọn", "tiêu chuẩn loại trừ", "biến số nghiên cứu", "bảng biến số", "sai số", "yếu tố nhiễu", "confounder", "bias", "cohort hay case-control", "hồi cứu hay tiến cứu", "SPIRIT", "bảng dự kiến kết quả", "study design", "review my protocol".
+description: 'Use when a study must be designed or a protocol drafted or reviewed: design choice, population, inclusion and exclusion criteria, sampling, outcomes, variables, bias and confounding, "đề cương nghiên cứu" or "chương 2 đối tượng và phương pháp". Triggers: "thiết kế nghiên cứu", "chọn thiết kế", "đề cương", "protocol", "tiêu chuẩn lựa chọn", "tiêu chuẩn loại trừ", "biến số nghiên cứu", "bảng biến số", "sai số", "yếu tố nhiễu", "confounder", "bias", "cohort hay case-control", "hồi cứu hay tiến cứu", "SPIRIT", "bảng dự kiến kết quả", "study design", "review my protocol".'
 ---
 ```
 
@@ -451,7 +452,7 @@ git commit -m "feat(orchestra): protocol-design skill (ported from Amelia Le)" -
 ```markdown
 ---
 name: sample-size-sap
-description: Use when a sample size must be calculated, explained or justified, power computed, a Statistical Analysis Plan (SAP) written, or a statistical test chosen for a clinical or epidemiological study. Triggers: "tính cỡ mẫu", "cỡ mẫu bao nhiêu", "n bao nhiêu là đủ", "công thức cỡ mẫu", "giải thích cỡ mẫu cho hội đồng", "kế hoạch phân tích thống kê", "chọn test thống kê", "dùng test gì", "sample size", "power", "SAP", "effect size", "MCID", "non-inferiority margin", "cluster ICC"; or when a protocol lacks a sample-size section.
+description: 'Use when a sample size must be calculated, explained or justified, power computed, a Statistical Analysis Plan (SAP) written, or a statistical test chosen for a clinical or epidemiological study. Triggers: "tính cỡ mẫu", "cỡ mẫu bao nhiêu", "n bao nhiêu là đủ", "công thức cỡ mẫu", "giải thích cỡ mẫu cho hội đồng", "kế hoạch phân tích thống kê", "chọn test thống kê", "dùng test gì", "sample size", "power", "SAP", "effect size", "MCID", "non-inferiority margin", "cluster ICC"; or when a protocol lacks a sample-size section.'
 ---
 ```
 
@@ -523,7 +524,7 @@ A table `Code | Full name | Version/year | Designs | Items | Citation (from guid
 ```markdown
 ---
 name: guideline-check
-description: Use when the user asks which clinical or reporting guidelines apply to a study, whether a cited guideline is still current, or needs the reporting checklist for their design; also before a protocol or manuscript is finalised. Triggers: "guideline mới nhất", "cập nhật guideline", "hướng dẫn điều trị mới nhất", "khuyến cáo hiện hành", "checklist báo cáo", "dùng checklist nào", "CONSORT", "STROBE", "PRISMA", "STARD", "TRIPOD", "CARE", "SPIRIT", "reporting guideline", "is this guideline current", "which checklist".
+description: 'Use when the user asks which clinical or reporting guidelines apply to a study, whether a cited guideline is still current, or needs the reporting checklist for their design; also before a protocol or manuscript is finalised. Triggers: "guideline mới nhất", "cập nhật guideline", "hướng dẫn điều trị mới nhất", "khuyến cáo hiện hành", "checklist báo cáo", "dùng checklist nào", "CONSORT", "STROBE", "PRISMA", "STARD", "TRIPOD", "CARE", "SPIRIT", "reporting guideline", "is this guideline current", "which checklist".'
 ---
 
 # Guideline check
@@ -753,7 +754,7 @@ git commit -m "feat(orchestra): review_lint flags paper-by-paper literature revi
 ```markdown
 ---
 name: literature-review
-description: Use when literature must be written up as prose: thesis Chapter 1 (tổng quan tài liệu), the background or introduction of a paper, or a narrative review. Triggers: "tổng quan tài liệu", "viết tổng quan", "chương 1 tổng quan", "tổng quan y văn", "viết phần đặt vấn đề", "viết phần mở đầu bài báo", "background", "introduction section", "literature review", "narrative review", "viết bài tổng quan".
+description: 'Use when literature must be written up as prose: thesis Chapter 1 (tổng quan tài liệu), the background or introduction of a paper, or a narrative review. Triggers: "tổng quan tài liệu", "viết tổng quan", "chương 1 tổng quan", "tổng quan y văn", "viết phần đặt vấn đề", "viết phần mở đầu bài báo", "background", "introduction section", "literature review", "narrative review", "viết bài tổng quan".'
 ---
 
 # Literature review
@@ -804,7 +805,7 @@ Content (write fully): typical Chapter 1 outline for Vietnamese theses (1.1 conc
 ```markdown
 ---
 name: review
-description: Write the literature review for the current project: thesis Chapter 1 or a manuscript background (viết tổng quan tài liệu).
+description: 'Write the literature review for the current project: thesis Chapter 1 or a manuscript background (viết tổng quan tài liệu).'
 disable-model-invocation: true
 ---
 

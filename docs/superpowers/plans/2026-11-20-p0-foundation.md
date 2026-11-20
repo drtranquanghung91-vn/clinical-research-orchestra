@@ -37,7 +37,7 @@ plugins/orchestra/scripts/crolib/ledgers.py       ledger schemas, load/save/vali
 plugins/orchestra/scripts/search_lit.py           CLI: search, fetch, add-to-ledger, doi, trial
 plugins/orchestra/scripts/verify_refs.py          CLI: verify ledger records, check [@id] citations
 plugins/orchestra/scripts/init_project.py         CLI: create project folder from template
-plugins/orchestra/scripts/gate.py                 CLI: open / lock / check / waive gates
+plugins/orchestra/scripts/gate.py                 CLI: open / lock / check gates (waivers via decisions.md)
 plugins/orchestra/templates/project/...           skeleton copied by init_project.py
 plugins/orchestra/skills/research-project-setup/SKILL.md
 plugins/orchestra/skills/start/SKILL.md           /orchestra:start
