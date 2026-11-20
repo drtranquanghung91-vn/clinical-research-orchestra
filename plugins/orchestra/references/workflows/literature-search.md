@@ -63,7 +63,14 @@ Log every query: date, source, query, filters, number of results, number kept.
   PubMed paper). `search_lit.py trial <NCT>` fetches a trial already named.
 - For key papers (newest SR, large RCT) run `find_related_articles` to catch missed papers.
 - At least PubMed plus Consensus; OpenEvidence when reachable. One source alone is a listed error.
-- Add chosen records with `search_lit.py add <project> <pmids>`.
+- Add chosen records with `search_lit.py add <project> <pmid-or-doi> [...]`: PMIDs go to PubMed (Europe
+  PMC when NCBI is unreachable), DOIs to Crossref; a doi.org URL prefix is stripped and a work already in
+  the ledger is not added twice. A Vietnamese journal article, thesis or Ministry of Health document
+  with neither identifier is added only when the author holds it:
+  `search_lit.py add-manual <project> --title T --authors "Surname AB; Surname CD" --journal J --year YYYY
+  --seen-in "00_inputs/file.pdf p. 45"`. Ask the author for the document; never fill it in from memory
+  or a search snippet. `verify_refs.py` lists these as MANUAL (not machine-verifiable, exit code
+  unaffected); they may be cited, and the limitation is stated.
 
 ## Step 3 – Screening and selection
 Read titles and abstracts through the metadata call. Keep papers that answer the PICO directly;

@@ -46,6 +46,32 @@ class TestLitapi(unittest.TestCase):
         recs = litapi.summaries(["111", "99999999"])
         self.assertEqual([r["pmid"] for r in recs], ["111"])
 
+    def test_epmc_by_pmid(self):
+        body = {"resultList": {"result": [{
+            "pmid": "111", "title": "Metformin in PMOS.", "authorString": "Nguyen A, Le B.", "pubYear": "2026",
+            "doi": "10.1371/x", "authorList": {"author": [{"fullName": "Nguyen A"}, {"fullName": "Le B"}]},
+            "journalInfo": {"journal": {"medlineAbbreviation": "PLoS Med"}, "volume": "9", "issue": "2"},
+            "pageInfo": "1-9", "abstractText": "<h4>Aim</h4> text",
+            "pubTypeList": {"pubType": ["Journal Article", "Retracted Publication"]}}]}}
+        urls = []
+
+        def fake(url, timeout=30):
+            urls.append(url)
+            return json.dumps(body).encode()
+        litapi.http_get = fake
+        recs = litapi.epmc_by_pmid(["111", "222"])
+        self.assertEqual([r["pmid"] for r in recs], ["111"])  # 222 not returned for its own query
+        self.assertIn("EXT_ID%3A111+AND+SRC%3AMED", urls[0])
+        self.assertIn("resultType=core", urls[0])
+        self.assertEqual(recs[0]["pubtypes"], ["Journal Article", "Retracted Publication"])
+        self.assertEqual(recs[0]["id"], "nguyen2026")
+        self.assertEqual(recs[0]["abstract"], "Aim text")
+        self.assertEqual(recs[0]["pages"], "1-9")
+
+    def test_epmc_by_pmid_empty(self):
+        litapi.http_get = lambda url, timeout=30: json.dumps({"resultList": {"result": []}}).encode()
+        self.assertEqual(litapi.epmc_by_pmid(["5"]), [])
+
 
 if __name__ == "__main__":
     unittest.main()

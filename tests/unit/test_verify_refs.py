@@ -43,7 +43,94 @@ class TestVerify(unittest.TestCase):
     def test_network_error_is_never_verified(self):
         def boom(p):
             raise OSError("offline")
-        self.assertEqual(vr.verify(REC, pubmed=boom)[0], "ERROR")
+        self.assertEqual(vr.verify(REC, pubmed=boom, epmc=boom)[0], "ERROR")
+
+    def test_manual_record(self):
+        rec = {"id": "m1", "title": "T", "source": "manual", "seen_in": "00_inputs/a.pdf p. 4"}
+        st, notes = vr.verify(rec)
+        self.assertEqual(st, "MANUAL")
+        self.assertEqual(notes, ["author-supplied (00_inputs/a.pdf p. 4); not machine-verifiable"])
+
+    def test_identifierless_non_manual_stays_no_identifier(self):
+        self.assertEqual(vr.verify({"id": "x", "title": "T"})[0], "NO_IDENTIFIER")
+
+    def test_epmc_fallback_verifies_with_note(self):
+        def down(p):
+            raise urllib.error.URLError("blocked")
+        st, notes = vr.verify(REC, pubmed=down, epmc=lambda p: FOUND)
+        self.assertEqual(st, "VERIFIED")
+        self.assertIn("checked via Europe PMC (PubMed unreachable)", notes)
+
+    def test_epmc_fallback_retracted(self):
+        def down(p):
+            raise urllib.error.URLError("blocked")
+        st, _ = vr.verify(REC, pubmed=down, epmc=lambda p: dict(FOUND, pubtypes=["Retracted Publication"]))
+        self.assertEqual(st, "RETRACTED")
+
+    def test_pubmed_not_found_does_not_fall_back(self):
+        def no(p):
+            raise AssertionError("Europe PMC must not be asked")
+        self.assertEqual(vr.verify(REC, pubmed=lambda p: None, epmc=no)[0], "NOT_FOUND")
+
+    def test_both_sources_down_is_error(self):
+        def down(p):
+            raise urllib.error.URLError("blocked")
+        self.assertEqual(vr.verify(REC, pubmed=down, epmc=down)[0], "ERROR")
+
+    def test_fetch_epmc_maps_record(self):
+        rec = {"title": "T", "year": 2024, "authors": ["Smith J"], "doi": "10.1/abc", "journal": "BMJ",
+               "pubtypes": ["Retracted Publication"]}
+        with mock.patch.object(vr.litapi, "epmc_by_pmid", return_value=[rec]):
+            found = vr.fetch_epmc("123")
+        self.assertEqual(found["first_author"], "Smith J")
+        self.assertEqual(found["pubtypes"], ["Retracted Publication"])
+        with mock.patch.object(vr.litapi, "epmc_by_pmid", return_value=[]):
+            self.assertIsNone(vr.fetch_epmc("123"))
+
+    def test_main_manual_exit_0_listed_and_write_leaves_it(self):
+        man = {"id": "m1", "title": "T", "source": "manual", "seen_in": "scan.pdf",
+               "verified_by": "author-supplied, not machine-verifiable"}
+        with tempfile.TemporaryDirectory() as t:
+            proj = Path(t)
+            (proj / "ledgers").mkdir()
+            ledgers.save_references(proj / "ledgers" / "references.json", [dict(REC), man])
+            out = io.StringIO()
+            orig = vr.fetch_pubmed
+            vr.fetch_pubmed = lambda p: FOUND
+            try:
+                with contextlib.redirect_stdout(out):
+                    code = vr.main([str(proj), "--write"])
+            finally:
+                vr.fetch_pubmed = orig
+            self.assertEqual(code, 0)
+            self.assertIn("Author-supplied", out.getvalue())
+            self.assertIn("m1: MANUAL", out.getvalue())
+            refs = ledgers.load_references(proj / "ledgers" / "references.json")
+            self.assertEqual(refs[1]["verified_by"], "author-supplied, not machine-verifiable")
+            self.assertTrue(refs[0]["verified_by"].endswith("VERIFIED"))
+
+    def test_main_no_identifier_exit_1(self):
+        with tempfile.TemporaryDirectory() as t:
+            proj = Path(t)
+            (proj / "ledgers").mkdir()
+            ledgers.save_references(proj / "ledgers" / "references.json", [{"id": "x", "title": "T"}])
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(vr.main([str(proj)]), 1)
+
+    def test_main_both_sources_down_exit_2(self):
+        def down(p):
+            raise urllib.error.URLError("blocked")
+        with tempfile.TemporaryDirectory() as t:
+            proj = Path(t)
+            (proj / "ledgers").mkdir()
+            ledgers.save_references(proj / "ledgers" / "references.json", [dict(REC)])
+            o, e = vr.fetch_pubmed, vr.fetch_epmc
+            vr.fetch_pubmed = vr.fetch_epmc = down
+            try:
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    self.assertEqual(vr.main([str(proj)]), 2)
+            finally:
+                vr.fetch_pubmed, vr.fetch_epmc = o, e
 
 
 class TestCitations(unittest.TestCase):
@@ -148,13 +235,13 @@ class TestCitations(unittest.TestCase):
             old = "verify_refs.py 2026-01-01 VERIFIED"
             proj = self._proj(t, [dict(REC, verified_by=old)])
             out = io.StringIO()
-            vr_fetch = vr.fetch_pubmed
-            vr.fetch_pubmed = boom
+            vr_fetch, vr_epmc = vr.fetch_pubmed, vr.fetch_epmc
+            vr.fetch_pubmed = vr.fetch_epmc = boom
             try:
                 with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
                     code = vr.main([str(proj), "--write"])
             finally:
-                vr.fetch_pubmed = vr_fetch
+                vr.fetch_pubmed, vr.fetch_epmc = vr_fetch, vr_epmc
             rec = ledgers.load_references(proj / "ledgers" / "references.json")[0]
             self.assertEqual(rec["verified_by"], old)
             self.assertIn("stale", out.getvalue())

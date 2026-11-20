@@ -36,6 +36,10 @@ only that source and record what could not be checked as a limitation.
 - A work may be cited only if it is in `ledgers/references.json`, added by `search_lit.py add`
   (or by a lookup tool in this session), and checked by `verify_refs.py --write`.
 - Never type a PMID or DOI from memory. If a lookup fails, say so; do not substitute.
+- PMID or DOI first. Without either, a source may enter only through `search_lit.py add-manual`, and
+  only when the author holds the document (a PDF, scan or printed page) and names it in `--seen-in`.
+  The agent never creates a manual record from memory or from a search snippet; it asks the author
+  for the document. Manual records are listed as not machine-verifiable at every gate.
 - Knowledge recalled from the model's own memory never goes into a reference list. It may serve as
   a search keyword, and the hit is then verified as below.
 - Numbers (rates, RR, CI, n) quoted in a document must come from an abstract, metadata or full text

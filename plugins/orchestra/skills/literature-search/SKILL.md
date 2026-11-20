@@ -22,7 +22,8 @@ Inputs: `01_question/question.md` (PICO/PECO). Detail for every step is in the w
 1. Search plan, targeted or exploratory, in `02_evidence/search-strategy.md`
    (`${CLAUDE_PLUGIN_ROOT}/references/literature/search-strategy.md`).
 2. Run `search_lit.py search`; also ClinicalTrials.gov filtered by the study country (the
-   counter-check for a population gap). Add chosen records with `search_lit.py add <project> <pmids>`.
+   counter-check for a population gap). Add chosen records with `search_lit.py add <project> <pmid-or-doi>...`; a source the author holds
+   with neither goes in only via `add-manual ... --seen-in <document>` (ask for the document).
 3. `verify_refs.py <project> --write`.
 4. Evidence table with a risk-of-bias column. 4b: source credibility (retractions in batches,
    predatory journals, COI, duplicate publications of one trial). 4c: appraise key studies with the

@@ -106,25 +106,43 @@ def make_id(first_author: str, year: str) -> str:
 
 # ---------------------------------------------------------------- Europe PMC
 
+def _epmc_record(r: dict) -> dict:
+    ji = r.get("journalInfo", {}) or {}
+    return {
+        "id": make_id(r.get("authorString", "").split(",")[0], str(r.get("pubYear", ""))),
+        "title": (r.get("title") or "").rstrip("."),
+        "authors": [a.get("fullName") for a in r.get("authorList", {}).get("author", [])],
+        "journal": ji.get("journal", {}).get("medlineAbbreviation", ""),
+        "year": int(r["pubYear"]) if str(r.get("pubYear", "")).isdigit() else None,
+        "volume": ji.get("volume", "") or "",
+        "issue": ji.get("issue", "") or "",
+        "pages": r.get("pageInfo", "") or "",
+        "doi": r.get("doi", ""),
+        "pmid": r.get("pmid", ""),
+        "pmcid": r.get("pmcid", ""),
+        "pubtypes": (r.get("pubTypeList", {}) or {}).get("pubType", []) or [],
+        "abstract": re.sub(r"<[^>]+>", "", r.get("abstractText", "") or ""),
+        "retrieved_with": "litapi europepmc",
+        "access": "metadata",
+    }
+
+
 def epmc_search(query: str, retmax: int = 10) -> list[dict]:
     url = EPMC + "search?" + urllib.parse.urlencode(
         {"query": query, "format": "json", "pageSize": retmax, "resultType": "core"})
     data = json.loads(http_get(url))
+    return [_epmc_record(r) for r in data.get("resultList", {}).get("result", [])]
+
+
+def epmc_by_pmid(pmids: list[str]) -> list[dict]:
+    """Look PMIDs up on Europe PMC (fallback when NCBI is unreachable). Unknown PMIDs are skipped."""
     out = []
-    for r in data.get("resultList", {}).get("result", []):
-        out.append({
-            "id": make_id(r.get("authorString", "").split(",")[0], str(r.get("pubYear", ""))),
-            "title": (r.get("title") or "").rstrip("."),
-            "authors": [a.get("fullName") for a in r.get("authorList", {}).get("author", [])],
-            "journal": r.get("journalInfo", {}).get("journal", {}).get("medlineAbbreviation", ""),
-            "year": int(r["pubYear"]) if str(r.get("pubYear", "")).isdigit() else None,
-            "doi": r.get("doi", ""),
-            "pmid": r.get("pmid", ""),
-            "pmcid": r.get("pmcid", ""),
-            "abstract": r.get("abstractText", ""),
-            "retrieved_with": "litapi europepmc",
-            "access": "metadata",
-        })
+    for pmid in pmids:
+        url = EPMC + "search?" + urllib.parse.urlencode(
+            {"query": f"EXT_ID:{pmid} AND SRC:MED", "format": "json", "pageSize": 1, "resultType": "core"})
+        for r in json.loads(http_get(url)).get("resultList", {}).get("result", []):
+            if str(r.get("pmid", "")) == str(pmid):
+                out.append(_epmc_record(r))
     return out
 
 
