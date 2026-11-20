@@ -39,6 +39,13 @@ CASES = [
     # name casing
     ({"q": "Họ tên: NGUYỄN VĂN BÌNH, 67 tuổi"}, "deny"),
     ({"q": "Bệnh nhân: đau đầu, sốt"}, None),
+    ({"q": "Bệnh nhân: COPD Nặng"}, None),
+    # URL parsing must not break detection
+    ({"q": "BN: Trần Văn An [https://www.who.int]"}, "deny"),
+    ({"q": "see guidelines [https://www.who.int]"}, None),
+    # numeric scalars and dict keys
+    ({"pid": 12345}, None),
+    ({"CCCD 079 123 456789": None}, "deny"),
 ]
 
 
@@ -121,6 +128,12 @@ class TestPhiScan(unittest.TestCase):
             found = phi_scan.scan_file(f)
             self.assertEqual({(x["line"], x["severity"]) for x in found}, {(2, "block"), (3, "warn")})
             self.assertTrue(all(x["code"] == "E-PHI" for x in found))
+
+    def test_scan_file_with_bracketed_url(self):
+        f = Path(self._tmp.name) / "url.md"
+        f.write_text("BN: Trần Văn An [https://www.who.int]\n", encoding="utf-8")
+        found = phi_scan.scan_file(f)
+        self.assertEqual([(x["line"], x["severity"]) for x in found], [(1, "block")])
 
     def test_scan_file_non_utf8(self):
         f = Path(self._tmp.name) / "latin.txt"

@@ -26,10 +26,11 @@ STRIP = [
     re.compile(r"\bNCT\d{8}\b"),
 ]
 URL = re.compile(r"https?://\S+")
+URL_TRAIL = ")]>.,;:'\""
 VI_UPPER = ("AÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬBCDĐEÈÉẺẼẸÊỀẾỂỄỆFGHIÌÍỈĨỊJKLMNOÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢPQRSTUÙÚỦŨỤƯỪỨỬỮỰVWXYỲÝỶỸỴZ")
 VI_LOWER = VI_UPPER.lower()
 _U, _L = f"[{VI_UPPER}]", f"[{VI_LOWER}]"
-NAME = (rf"(?:{_U}{_L}+(?:\s+{_U}{_L}+){{1,4}}|{_U}{{1,7}}(?:\s+{_U}{{1,7}}){{1,4}})")
+NAME = (rf"(?:{_U}{_L}+(?:\s+{_U}{_L}+){{1,4}}|{_U}{{2,7}}(?![{VI_UPPER}{VI_LOWER}])(?:\s+{_U}{{2,7}}(?![{VI_UPPER}{VI_LOWER}])){{1,4}})")
 STRONG = [
     ("CCCD number", re.compile(r"(?<!\d)0\d{2}[\s.]?\d{3}[\s.]?\d{6}(?!\d)")),
     ("BHYT card", re.compile(r"\b[A-Z]{2}\d{13}\b")),
@@ -72,19 +73,28 @@ def allowed(tool: str) -> bool:
 
 
 def _url_text(m: "re.Match") -> str:
-    parts = urllib.parse.urlsplit(m.group(0))
-    text = urllib.parse.unquote_plus(parts.path + " " + parts.query)
-    return " " + text.replace("&", " ").replace("=", " ") + " "
+    raw = m.group(0)
+    url = raw.rstrip(URL_TRAIL)
+    tail = raw[len(url):]
+    try:
+        parts = urllib.parse.urlsplit(url)
+        text = urllib.parse.unquote_plus(parts.path + " " + parts.query)
+    except ValueError:
+        text = urllib.parse.unquote_plus(url)  # unparseable: scan the raw URL text
+    return " " + text.replace("&", " ").replace("=", " ") + " " + tail
 
 
 def _texts(obj, out: list) -> None:
     """Collect scannable strings: every string value raw, plus 'key: value' for each dict entry."""
     if isinstance(obj, dict):
         for k, v in obj.items():
+            out.append(str(k))
             if isinstance(v, (dict, list, tuple)):
                 _texts(v, out)
-            elif v is not None:
+            elif isinstance(v, str):
                 out.append(f"{k}: {v}")
+                out.append(v)
+            elif v is not None:
                 out.append(str(v))
     elif isinstance(obj, (list, tuple)):
         for v in obj:
