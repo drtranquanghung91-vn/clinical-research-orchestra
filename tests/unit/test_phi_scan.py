@@ -2,6 +2,7 @@ import contextlib
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -46,7 +47,49 @@ CASES = [
     # numeric scalars and dict keys
     ({"pid": 12345}, None),
     ({"CCCD 079 123 456789": None}, "deny"),
+    # I5: common note forms without a colon (weak), English labels (strong)
+    ({"q": "BN Nguyễn Văn An, 65 tuổi, THA"}, "ask"),
+    ({"q": "Bệnh nhân Nguyễn Văn An 65 tuổi"}, "ask"),
+    ({"q": "Ông Nguyễn Văn An sinh năm 1960"}, "ask"),
+    ({"q": "anh Hưng hỏi về PICO"}, None),
+    ({"q": "Name: Nguyen Van An"}, "deny"),
+    ({"q": "patient: Nguyen Van An"}, "deny"),
+    # I5: record numbers need a digit; all-caps after a label needs 3+ words or a diacritic
+    ({"q": "PID treatment guidelines CDC 2021"}, None),
+    ({"q": "PID: 24001234"}, "deny"),
+    ({"q": "BN: COPD GOLD"}, None),
+    ({"q": "BN: TRAN VAN AN"}, "deny"),
+    ({"q": "BN: NGUYỄN AN"}, "deny"),
+    # I5: URL fragments are scanned
+    ({"url": "https://example.org/page#cccd=079123456789"}, "deny"),
 ]
+
+BASH_CASES = [
+    ({"command": 'python search_lit.py search "CCCD 079 123 456789 suy tim"'}, "deny"),
+    ({"command": 'python3 "$R/search_lit.py" search "BN: Trần Văn An"'}, "deny"),
+    ({"command": "curl 'https://example.org/?q=0903123456'"}, "ask"),
+    ({"command": "wget https://example.org/cccd/079123456789"}, "deny"),
+    ({"command": "Invoke-WebRequest -Uri 'https://example.org/?id=079123456789'"}, "deny"),
+    ({"command": "python -c \"import urllib.request as u; u.urlopen('https://x.org/?c=079123456789')\""}, "deny"),
+    ({"command": "python -c \"import requests; requests.get('https://x.org', params={'c': '079123456789'})\""},
+     "deny"),
+    # local commands are not outbound: allowed even when they mention an identifier
+    ({"command": "grep -c 079123456789 00_inputs/data.csv"}, None),
+    ({"command": "python -c \"print('079 123 456789')\""}, None),
+    ({"command": 'python search_lit.py search "metformin PCOS"'}, None),
+]
+
+
+def find_bash():
+    """Git Bash on Windows (as Claude Code uses), bash elsewhere; None if unavailable."""
+    if os.name == "nt":
+        cands = [os.environ.get("CLAUDE_CODE_GIT_BASH_PATH", "")]
+        git = shutil.which("git")
+        if git:  # ...\Git\cmd\git.exe or ...\Git\mingw64\bin\git.exe
+            for root in list(Path(git).resolve().parents)[:3]:
+                cands += [str(root / "usr" / "bin" / "bash.exe"), str(root / "bin" / "bash.exe")]
+        return next((c for c in cands if c and Path(c).is_file()), None)
+    return shutil.which("bash")
 
 
 class TestPhiScan(unittest.TestCase):
@@ -69,9 +112,10 @@ class TestPhiScan(unittest.TestCase):
 
     def test_decisions(self):
         for tool_input, want in CASES:
-            d = phi_scan.decide("mcp__oe__oe_ask", tool_input)
-            got = d["permissionDecision"] if d else None
-            self.assertEqual(got, want, tool_input)
+            with self.subTest(tool_input=tool_input):
+                d = phi_scan.decide("mcp__oe__oe_ask", tool_input)
+                got = d["permissionDecision"] if d else None
+                self.assertEqual(got, want, tool_input)
 
     def test_internal_app_tools_are_allowed(self):
         self.assertIsNone(phi_scan.decide("mcp__ccd_session__x", {"q": "CCCD 079 123 456789"}))
@@ -144,8 +188,67 @@ class TestPhiScan(unittest.TestCase):
     def test_hooks_json_targets_outbound_tools(self):
         hj = json.loads((PHI_SCRIPTS.parent / "hooks" / "hooks.json").read_text(encoding="utf-8"))
         entry = hj["hooks"]["PreToolUse"][0]
-        self.assertEqual(entry["matcher"], "mcp__.*|WebFetch|WebSearch")
+        self.assertEqual(entry["matcher"], "mcp__.*|WebFetch|WebSearch|Bash")
         self.assertIn("phi_scan.py", entry["hooks"][0]["command"])
+
+    # I6: Bash commands that send queries out are scanned; local commands are not
+    def test_bash_outbound_commands(self):
+        for tool_input, want in BASH_CASES:
+            with self.subTest(tool_input=tool_input):
+                d = phi_scan.decide("Bash", tool_input)
+                got = d["permissionDecision"] if d else None
+                self.assertEqual(got, want, tool_input)
+
+    # I5: file mode joins neighbouring lines
+    def test_scan_file_label_and_name_on_two_lines(self):
+        f = Path(self._tmp.name) / "two.md"
+        f.write_text("Ghi chú\nHọ tên:\nNguyễn Văn An\nkết thúc\n", encoding="utf-8")
+        found = phi_scan.scan_file(f)
+        self.assertEqual([(x["line"], x["severity"]) for x in found], [(2, "block")])
+
+    # I10: missing file is an IO error -> stderr + 2
+    def test_file_mode_missing_file_exits_2(self):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = phi_scan.main(["--file", str(Path(self._tmp.name) / "missing.md")])
+        self.assertEqual(code, 2)
+        self.assertIn("cannot read", err.getvalue())
+        self.assertEqual(out.getvalue(), "")
+
+    def test_file_mode_without_files_exits_2(self):
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(phi_scan.main(["--file"]), 2)
+
+    # I4: the real hooks.json command, end to end through bash
+    def _hook_command(self):
+        hj = json.loads((PHI_SCRIPTS.parent / "hooks" / "hooks.json").read_text(encoding="utf-8"))
+        return hj["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+
+    def _run_hook_command(self, payload: dict, path=None):
+        bash = find_bash()
+        if not bash:
+            self.skipTest("bash not available (Git Bash on Windows); hook command cannot be run")
+        env = dict(os.environ, CLAUDE_PLUGIN_ROOT=PHI_SCRIPTS.parent.as_posix())
+        if path is not None:
+            env["PATH"] = path
+        return subprocess.run([bash, "-c", self._hook_command()], input=json.dumps(payload).encode("utf-8"),
+                              capture_output=True, env=env, timeout=60)
+
+    def test_hooks_json_command_denies_cccd_end_to_end(self):
+        r = self._run_hook_command({"tool_name": "WebSearch", "tool_input": {"query": "CCCD 079 123 456789"}})
+        self.assertEqual(r.returncode, 0, r.stderr)
+        out = json.loads(r.stdout.decode("utf-8"))["hookSpecificOutput"]
+        self.assertEqual(out["permissionDecision"], "deny")
+
+    def test_hooks_json_command_asks_when_python_missing(self):
+        with tempfile.TemporaryDirectory() as empty:
+            r = self._run_hook_command({"tool_name": "WebSearch", "tool_input": {"query": "x"}}, path=empty)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        out = json.loads(r.stdout.decode("utf-8"))["hookSpecificOutput"]
+        self.assertEqual(out["hookEventName"], "PreToolUse")
+        self.assertEqual(out["permissionDecision"], "ask")
+        self.assertIn("Python not found", out["permissionDecisionReason"])
+        self.assertIn("Không tìm thấy Python", out["permissionDecisionReason"])
 
 
 if __name__ == "__main__":
