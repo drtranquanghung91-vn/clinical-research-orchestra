@@ -88,6 +88,16 @@ class TestLintSkills(unittest.TestCase):
             errs = self._lint_desc(f"description: {first}Use when x")
             self.assertTrue(any("not valid plain YAML" in e for e in errs), (first, errs))
 
+    def test_more_invalid_plain_starts(self):  # R6: rejected without PyYAML too
+        for value in ["- Use when x", "? Use when x", ",Use when x", "]Use when x", "}Use when x", "#Use when x"]:
+            errs = self._lint_desc(f"description: {value}")
+            self.assertTrue(any("not valid plain YAML" in e for e in errs), (value, errs))
+
+    def test_plain_value_starting_with_dash_word_is_fine(self):
+        with mock.patch.object(lint_skills, "yaml", None):
+            fm, _ = lint_skills.parse_frontmatter("---\nname: s\ndescription: -1 dose, ?maybe\n---\nB\n")
+        self.assertEqual(fm["description"], "-1 dose, ?maybe")
+
     def test_plain_value_without_indicators_is_fine(self):
         self.assertEqual(self._lint_desc("description: Use when x, y or z (ratio 1:2, item#3, 50%)"), [])
 

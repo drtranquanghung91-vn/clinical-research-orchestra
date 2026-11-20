@@ -21,7 +21,7 @@ except ImportError:  # pragma: no cover
 
 MAX_WORDS = 500
 BLOCK = ("|", ">", "|-", ">-", "|+", ">+")
-INDICATORS = tuple("[{&*!|>%@`")
+INDICATORS = tuple("[{&*!|>%@`") + ("- ", "? ", ",", "]", "}", "#")
 
 
 def _scalar(key: str, val: str) -> str:
