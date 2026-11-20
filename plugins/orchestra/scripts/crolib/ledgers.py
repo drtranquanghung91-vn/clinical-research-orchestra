@@ -119,11 +119,23 @@ def check_project(project: Path) -> list[str]:
 
 
 def main(argv=None) -> int:
+    """Exit 0 = ledgers clean, 1 = problems found (listed), 2 = usage error or no project/ledgers folder."""
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
     argv = sys.argv[1:] if argv is None else argv
     if len(argv) != 2 or argv[0] != "check":
-        print("usage: python ledgers.py check <project_dir>")
+        print("usage: python ledgers.py check <project_dir>", file=sys.stderr)
         return 2
-    errs = check_project(Path(argv[1]))
+    project = Path(argv[1])
+    if not project.is_dir():
+        print(f"ledgers: project folder {project} not found", file=sys.stderr)
+        return 2
+    if not (project / "ledgers").is_dir():
+        print(f"ledgers: {project} has no ledgers/ folder; is it the project folder?", file=sys.stderr)
+        return 2
+    errs = check_project(project)
     for e in errs:
         print(e)
     print(f"ledgers: {len(errs)} problems")

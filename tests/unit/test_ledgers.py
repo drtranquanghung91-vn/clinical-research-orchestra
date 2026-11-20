@@ -105,6 +105,31 @@ class TestLedgers(unittest.TestCase):
             self.assertFalse(any("duplicate id" in e for e in errs))
             self.assertEqual(sum("missing 'id'" in e for e in errs), 2)
 
+    # I3: a wrong path is an error (2), never a clean check
+    def _main(self, argv):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = ledgers.main(argv)
+        return code, out.getvalue(), err.getvalue()
+
+    def test_main_missing_project_exits_2(self):
+        with tempfile.TemporaryDirectory() as t:
+            code, out, err = self._main(["check", str(Path(t) / "nonexistent_proj")])
+            self.assertEqual(code, 2)
+            self.assertIn("not found", err)
+
+    def test_main_project_without_ledgers_exits_2(self):
+        with tempfile.TemporaryDirectory() as t:
+            code, out, err = self._main(["check", t])
+            self.assertEqual(code, 2)
+            self.assertIn("ledgers", err)
+
+    def test_main_usage_goes_to_stderr(self):
+        code, out, err = self._main([])
+        self.assertEqual(code, 2)
+        self.assertIn("usage", err)
+        self.assertEqual(out, "")
+
     def test_main_returns_1_on_malformed_ledger(self):
         with tempfile.TemporaryDirectory() as t:
             proj = self._project(t, **{"claims.json": "{"})

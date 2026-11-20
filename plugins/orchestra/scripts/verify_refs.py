@@ -5,10 +5,15 @@ Records: PMID → PubMed esummary; DOI only → Crossref. Title (fuzzy ≥ 0.85)
 surname and PMID↔DOI agreement are compared. Retracted publications are reported as RETRACTED.
 Statuses: VERIFIED · MISMATCH · NOT_FOUND · RETRACTED · NO_IDENTIFIER · ERROR.
 Citations: every [@id] in the given Markdown files must exist in the ledger and not be retracted.
-verified_by records the last status; only a value ending in VERIFIED means verified.
+verified_by records the last status; only a value ending in VERIFIED means verified. An ERROR
+leaves verified_by unchanged (reported as possibly stale).
 Adapted from grand-rounds verify_refs.py (MIT).
 
   python verify_refs.py <project_dir|references.json> [--write] [--json] [--cite FILE ...]
+
+Exit codes: 0 = every reference VERIFIED and no citation finding; 1 = findings (MISMATCH,
+NOT_FOUND, RETRACTED, NO_IDENTIFIER, E-REF); 2 = missing project/ledger, unreadable JSON or
+--cite file, or a reference that could not be checked (network/API ERROR).
 """
 from __future__ import annotations
 
@@ -156,12 +161,35 @@ def main(argv=None) -> int:
             print(f"verify_refs: cannot read {f}", file=sys.stderr)
             return 2
     target = Path(a.target)
-    path = target / "ledgers" / "references.json" if target.is_dir() else target
-    refs = ledgers.load_references(path)
+    if not target.exists():
+        print(f"verify_refs: {target} not found; give the project folder or its ledgers/references.json",
+              file=sys.stderr)
+        return 2
+    if target.is_dir():
+        if not (target / "ledgers").is_dir():
+            print(f"verify_refs: {target} has no ledgers/ folder; is it the project folder?", file=sys.stderr)
+            return 2
+        path = target / "ledgers" / "references.json"
+        if not path.is_file():
+            print(f"verify_refs: {path} not found", file=sys.stderr)
+            return 2
+    else:
+        path = target
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict) or not isinstance(data.get("references", []), list) \
+                or not all(isinstance(r, dict) for r in data.get("references", [])):
+            raise ValueError('expected {"references": [record, ...]}')
+    except (OSError, ValueError) as e:
+        print(f"verify_refs: cannot read {path}: {e}", file=sys.stderr)
+        return 2
+    refs = data.get("references", [])
     today = dt.date.today().isoformat()
     results = []
     for r in refs:
         status, notes = verify(r)
+        if status == "ERROR" and r.get("verified_by"):
+            notes = notes + [f"stored status '{r['verified_by']}' was not re-checked and may be stale"]
         results.append({"id": r.get("id"), "status": status, "notes": notes})
         if a.write and status != "ERROR":
             r["verified_by"] = f"verify_refs.py {today} {status}"
@@ -177,6 +205,12 @@ def main(argv=None) -> int:
             print(f"- {x['id']}: {x['status']}" + "".join(f"\n    · {n}" for n in x["notes"]))
         for c in cites:
             print(f"- {c['code']} {c['file']}: [@{c['key']}] {c['problem']}")
+    errors = [x["id"] for x in results if x["status"] == "ERROR"]
+    if errors:
+        print(f"verify_refs: {len(errors)} reference(s) could not be checked (network/API error): "
+              f"{', '.join(str(i) for i in errors)}; their stored status was left unchanged and may be stale",
+              file=sys.stderr)
+        return 2
     ok = all(x["status"] == "VERIFIED" for x in results) and not cites
     return 0 if ok else 1
 

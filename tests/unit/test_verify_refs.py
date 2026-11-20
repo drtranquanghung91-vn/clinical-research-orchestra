@@ -113,6 +113,53 @@ class TestCitations(unittest.TestCase):
             self.assertEqual(code, 2)
             self.assertIn("cannot read", err.getvalue())
 
+    # I3: a wrong path or a broken ledger is an error (2), never "0 references, clean"
+    def _run_err(self, argv, fetch=lambda p: FOUND):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            code = self._run(argv, fetch)
+        return code, err.getvalue()
+
+    def test_missing_project_exits_2(self):
+        with tempfile.TemporaryDirectory() as t:
+            code, err = self._run_err([str(Path(t) / "nonexistent_proj")])
+            self.assertEqual(code, 2)
+            self.assertIn("not found", err)
+
+    def test_folder_without_ledgers_exits_2(self):
+        with tempfile.TemporaryDirectory() as t:
+            code, err = self._run_err([t])
+            self.assertEqual(code, 2)
+            self.assertIn("ledgers", err)
+
+    def test_malformed_references_json_exits_2(self):
+        with tempfile.TemporaryDirectory() as t:
+            proj = self._proj(t, [])
+            for body in ("{not json", "[]", '{"references": "x"}'):
+                (proj / "ledgers" / "references.json").write_text(body, encoding="utf-8")
+                code, err = self._run_err([str(proj)])
+                self.assertEqual(code, 2, body)
+                self.assertIn("references.json", err, body)
+
+    def test_error_keeps_verified_by_and_warns_stale(self):
+        def boom(p):
+            raise OSError("offline")
+        with tempfile.TemporaryDirectory() as t:
+            old = "verify_refs.py 2026-01-01 VERIFIED"
+            proj = self._proj(t, [dict(REC, verified_by=old)])
+            out = io.StringIO()
+            vr_fetch = vr.fetch_pubmed
+            vr.fetch_pubmed = boom
+            try:
+                with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+                    code = vr.main([str(proj), "--write"])
+            finally:
+                vr.fetch_pubmed = vr_fetch
+            rec = ledgers.load_references(proj / "ledgers" / "references.json")[0]
+            self.assertEqual(rec["verified_by"], old)
+            self.assertIn("stale", out.getvalue())
+            self.assertEqual(code, 2)
+
     def test_write_not_found_keeps_retracted_true(self):
         with tempfile.TemporaryDirectory() as t:
             proj = self._proj(t, [dict(REC, retracted=True)])
@@ -131,10 +178,17 @@ class TestFetchers(unittest.TestCase):
         self.assertEqual(found["pubtypes"], ["Retracted Publication"])
 
     def test_crossref_404_is_none(self):
+        errors = []
+
         def nf(url, *a, **k):
-            raise urllib.error.HTTPError(url, 404, "nf", {}, None)
-        with mock.patch.object(vr, "_get", side_effect=nf):
-            self.assertIsNone(vr.fetch_crossref("10.1/x"))
+            errors.append(urllib.error.HTTPError(url, 404, "nf", {}, None))
+            raise errors[-1]
+        try:
+            with mock.patch.object(vr, "_get", side_effect=nf):
+                self.assertIsNone(vr.fetch_crossref("10.1/x"))
+        finally:
+            for e in errors:
+                e.close()  # no ResourceWarning from the test's own HTTPError
 
     def test_pubmed_error_result_is_none(self):
         body = json.dumps({"result": {"123": {"error": "cannot get document summary"}}}).encode()
