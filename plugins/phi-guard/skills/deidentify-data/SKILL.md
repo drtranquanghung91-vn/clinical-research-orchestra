@@ -11,10 +11,13 @@ Patient data stays on this machine. You work only from the de-identified copy.
 2. Run: `python "${CLAUDE_PLUGIN_ROOT}/scripts/deidentify.py" <file> --out <project>/04_data`
    (use `python3` if `python` is missing).
 3. Show the user the column → action table from the JSON report, in their language:
-   pseudonymise (replaced by P0001…, one per patient), year-only (date of birth → year), drop (removed), keep.
+   pseudonymise (record IDs and patient names, replaced by P0001…, one per patient as keyed by
+   `patient_key`), year-only (date of birth → year), drop (removed; originals kept only in the key file),
+   keep. Give the `reasons` of value-based drops (e.g. "name-like values" for a doctor or relative column).
    Also report `rows_above_header` (title rows skipped) and, for each `keep` column, `suspect_values`
    (how many cells look like a name, phone, email or ID number; counts only).
-   If the script exits 2, show its error message; nothing was written.
+   If the script exits 2, show its error message; nothing was written. When it could not find the header
+   row, ask the user which row holds the column names and re-run with `--header-row N` (1-based).
 4. Ask the user to confirm every `keep` column that could still identify someone, first those with
    `suspect_values` above 0 (free-text notes, rare diagnoses with exact dates, small villages).
    Re-run after they rename or remove such columns.

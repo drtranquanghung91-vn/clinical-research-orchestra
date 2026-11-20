@@ -45,13 +45,13 @@ class TestDeidentify(unittest.TestCase):
             self.assertEqual(rep["rows"], 2)
             self.assertNotIn("Nguyễn", json.dumps(rep, ensure_ascii=False))
 
-    def _run(self, table, err=None):
+    def _run(self, table, err=None, header_row=None):
         with tempfile.TemporaryDirectory() as t:
             src = Path(t) / "d.csv"
             with src.open("w", encoding="utf-8-sig", newline="") as fh:
                 csv.writer(fh).writerows(table)
             with contextlib.redirect_stderr(err if err is not None else io.StringIO()):
-                rep = deidentify.deidentify_csv(src, Path(t))
+                rep = deidentify.deidentify_csv(src, Path(t), header_row=header_row)
             return (rep, Path(rep["deid_file"]).read_text(encoding="utf-8-sig"),
                     Path(rep["key_file"]).read_text(encoding="utf-8-sig"))
 
@@ -83,17 +83,58 @@ class TestDeidentify(unittest.TestCase):
         for secret in ("DANH SÁCH", "Khoa Nội", "Nguyễn Văn An"):
             self.assertNotIn(secret, deid)
 
-    def test_no_header_row_found_warns_and_uses_row_0(self):
-        err = io.StringIO()
-        rep, _, _ = self._run([["Ghi chú", "Khác"], ["a", "b"]], err)
-        self.assertEqual(rep["rows_above_header"], 0)
-        self.assertEqual(rep["rows"], 1)
-        self.assertIn("no header row", err.getvalue())
+    # R3: no recognised header row -> nothing written, exit 2; --header-row N forces a row
+    def test_headerless_file_writes_nothing_and_exits_2(self):
+        with tempfile.TemporaryDirectory() as t:
+            src = Path(t) / "h.csv"
+            with src.open("w", encoding="utf-8-sig", newline="") as fh:
+                csv.writer(fh).writerows([["Nguyễn Văn An", "079123456789", "67"], ["Trần Thị Bình", "x", "55"]])
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err), contextlib.redirect_stdout(io.StringIO()):
+                code = deidentify.main([str(src)])
+            self.assertEqual(code, 2)
+            self.assertIn("could not find a header row; add one or pass --header-row N (1-based)", err.getvalue())
+            self.assertEqual(sorted(x.name for x in Path(t).iterdir()), ["h.csv"])
 
-    def test_unlabelled_name_column_is_pseudonymised(self):
+    def test_header_row_option_forces_row(self):
+        with tempfile.TemporaryDirectory() as t:
+            src = Path(t) / "h.csv"
+            with src.open("w", encoding="utf-8-sig", newline="") as fh:
+                csv.writer(fh).writerows([["Ghi chú", "Khác"], ["a", "b"]])
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+                code = deidentify.main([str(src), "--header-row", "1"])
+            self.assertEqual(code, 0)
+            rep = json.loads(out.getvalue())
+            self.assertEqual(rep["rows_above_header"], 0)
+            self.assertEqual(rep["rows"], 1)
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(deidentify.main([str(src), "--header-row", "9"]), 2)
+
+    # R2: columns found only by name-shaped values are dropped (to the key file), not pseudonymised
+    def test_unlabelled_name_column_is_dropped(self):
         rows = [["67", "Nguyễn Văn An"], ["55", "Trần Thị Bình"], ["40", "LÊ MINH TUẤN"], ["33", ""]]
         acts = deidentify.classify_columns(["Tuổi", "col_x"], rows)
-        self.assertEqual(acts, {"Tuổi": "keep", "col_x": "pseudonymise"})
+        self.assertEqual(acts, {"Tuổi": "keep", "col_x": "drop"})
+
+    def test_same_patient_with_two_doctors_keeps_one_pseudonym(self):
+        table = [["Mã BN", "Tuổi", "Bác sĩ điều trị"],
+                 ["BN001", "67", "Lê Văn Cường"], ["BN002", "55", "Lê Văn Cường"], ["BN001", "67", "Phạm Thị Dung"]]
+        rep, deid, key = self._run(table)
+        self.assertEqual(rep["columns"], {"Mã BN": "pseudonymise", "Tuổi": "keep", "Bác sĩ điều trị": "drop"})
+        self.assertEqual(rep["reasons"], {"Bác sĩ điều trị": "name-like values"})
+        self.assertEqual([r[0] for r in self._rows(deid)[1:]], ["P0001", "P0002", "P0001"])
+        self.assertEqual(self._rows(key)[0], ["pseudonym", "Mã BN", "Bác sĩ điều trị"])
+        for secret in ("Lê Văn Cường", "Phạm Thị Dung", "BN001"):
+            self.assertNotIn(secret, deid)
+        self.assertIn("Lê Văn Cường", key)
+
+    def test_patient_key_without_record_id_uses_name_and_dob(self):
+        table = [["Họ và tên", "Ngày sinh", "Tuổi"],
+                 ["Nguyễn Văn An", "12/03/1958", "67"], ["Nguyễn Văn An", "01/01/1990", "35"],
+                 ["Nguyễn Văn An", "12/03/1958", "67"]]
+        rep, deid, key = self._run(table)
+        self.assertEqual([r[0] for r in self._rows(deid)[1:]], ["P0001", "P0002", "P0001"])
 
     def test_name_like_values_under_clinical_header_are_kept(self):
         rows = [["Suy Tim"], ["Rung Nhĩ"], ["Đái Tháo Đường"]]
@@ -105,7 +146,8 @@ class TestDeidentify(unittest.TestCase):
         drop = ["BHXH", "Số BHXH", "Số thẻ", "Mã thẻ", "Nơi ở", "Cư trú", "Nơi cư trú", "ĐT", "Số ĐT", "SĐT",
                 "Điện thoại"]
         keep = ["Ho khan", "Tuổi bệnh nhân", "Giới tính bệnh nhân", "Số bệnh nhân", "Nhóm người bệnh",
-                "Thời gian ĐT", "DT da", "Cân nặng", "Chiều cao", "Số lượng"]
+                "Thời gian ĐT", "DT da", "Cân nặng", "Chiều cao", "Số lượng", "Giới tính", "Số lượng tiểu cầu",
+                "Huyết áp tâm thu", "Áp lực động mạch phổi"]
         acts = deidentify.classify_columns(pseudo + drop + keep, [])
         for h in pseudo:
             self.assertEqual(acts[h], "pseudonymise", h)
@@ -113,6 +155,34 @@ class TestDeidentify(unittest.TestCase):
             self.assertEqual(acts[h], "drop", h)
         for h in keep:
             self.assertEqual(acts[h], "keep", h)
+
+    # R1: record-id headers before clinical words; clinical keep only as a prefix; village/ward words drop
+    def test_record_id_headers_are_pseudonymised(self):
+        ids = ["Mã số bệnh nhân", "Mã số người bệnh", "Mã BA", "Số BA", "Mã LK", "Mã điều trị", "Mã tiếp nhận",
+               "Số nhập viện", "Mã y tế", "Mã định danh", "Mã số BN", "Patient ID", "Số bệnh án"]
+        acts = deidentify.classify_columns(ids, [])
+        for h in ids:
+            self.assertEqual(acts[h], "pseudonymise", h)
+
+    def test_address_part_headers_are_dropped(self):
+        drop = ["Thôn/xóm", "Xã/phường", "Ấp", "Tổ dân phố", "Thon", "Xa phuong"]
+        acts = deidentify.classify_columns(drop, [])
+        for h in drop:
+            self.assertEqual(acts[h], "drop", h)
+
+    def test_name_phrase_with_clinical_word_is_not_kept(self):
+        acts = deidentify.classify_columns(["Họ tên người giới thiệu"], [])
+        self.assertNotEqual(acts["Họ tên người giới thiệu"], "keep")
+
+    def test_record_id_values_absent_from_deid(self):
+        table = [["Mã số bệnh nhân", "Số BA", "Mã LK", "Tuổi", "Thôn/xóm"],
+                 ["MS-0001", "BA24-777", "LK998877", "67", "Xóm Đông"],
+                 ["MS-0002", "BA24-778", "LK998878", "55", "Thôn Tây"]]
+        rep, deid, key = self._run(table)
+        for secret in ("MS-0001", "BA24-777", "LK998877", "Xóm Đông", "Thôn Tây"):
+            self.assertNotIn(secret, deid)
+            self.assertIn(secret, key)
+        self.assertEqual([r[0] for r in self._rows(deid)[1:]], ["P0001", "P0002"])
 
     def test_same_patient_shares_pseudonym(self):
         table = [["Mã BN", "Họ và tên", "Tuổi", "Lần khám"],
@@ -131,7 +201,7 @@ class TestDeidentify(unittest.TestCase):
     def test_keep_columns_report_suspect_value_counts(self):
         table = [["Tuổi", "Ghi chú"], ["67", "liên hệ 0903 123 456"], ["55", "ổn"], ["40", "ổn"], ["30", "ổn"],
                  ["20", "ổn"]]
-        rep, deid, _ = self._run(table)
+        rep, deid, _ = self._run(table, header_row=1)
         self.assertEqual(rep["columns"], {"Tuổi": "keep", "Ghi chú": "keep"})
         self.assertEqual(rep["suspect_values"], {"Tuổi": 0, "Ghi chú": 1})
         self.assertNotIn("0903", json.dumps(rep, ensure_ascii=False))
@@ -164,13 +234,15 @@ class TestDeidentify(unittest.TestCase):
             self.assertIn("empty file", err.getvalue())
 
     def test_blank_headers_do_not_leak(self):
-        rep, deid, key = self._run([["Tuổi", "", ""], ["67", "079123456789", "x"], ["55", "079987654321", "y"]])
+        rep, deid, key = self._run([["Tuổi", "", ""], ["67", "079123456789", "x"], ["55", "079987654321", "y"]],
+                                   header_row=1)
         self.assertEqual(rep["columns"], {"Tuổi": "keep", "col_2": "drop", "col_3": "keep"})
         self.assertNotIn("079123456789", deid)
         self.assertIn("079123456789", key)
 
     def test_duplicate_headers_do_not_leak(self):
-        rep, deid, key = self._run([["Ghi chú", "Ghi chú"], ["ok", "079123456789"], ["hi", "079987654321"]])
+        rep, deid, key = self._run([["Ghi chú", "Ghi chú"], ["ok", "079123456789"], ["hi", "079987654321"]],
+                                   header_row=1)
         self.assertEqual(rep["columns"], {"Ghi chú": "keep", "Ghi chú_2": "drop"})
         self.assertNotIn("079123456789", deid)
         self.assertIn("079123456789", key)
@@ -218,7 +290,7 @@ class TestDeidentify(unittest.TestCase):
             wb.close()
             err = io.StringIO()
             with contextlib.redirect_stderr(err):
-                rep = deidentify.deidentify_csv(src, Path(t))
+                rep = deidentify.deidentify_csv(src, Path(t), header_row=1)
             self.assertEqual(rep["rows"], 1)
             self.assertIn("only the first sheet 'Main' was read; 1 other sheet(s) ignored", err.getvalue())
 
