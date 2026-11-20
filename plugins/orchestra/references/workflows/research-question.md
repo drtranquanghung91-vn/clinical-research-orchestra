@@ -106,54 +106,10 @@ Otherwise, run:
    {population}? What are the main unanswered questions and ongoing controversies?"
 
 ### Building the queries
-- Each component P, I/E, C, O is one block. Usually **P + I/E (+ O)** is enough: C and O blocks
-  often lose relevant papers; add them when there are more than 500 results (**default**).
-- Each block: main MeSH term + free text (synonyms, abbreviations, brand names, British and American
-  spellings). OR inside a block, AND between blocks, full brackets.
-- Common PubMed tags:
-
-| Tag | Meaning | Example |
-|---|---|---|
-| `[MeSH Terms]` | MeSH term (includes narrower terms) | `"Diabetes Mellitus, Type 2"[MeSH Terms]` |
-| `[Majr]` | MeSH as major topic | `"Delirium"[Majr]` |
-| `[tiab]` | Title and abstract | `delirium[tiab]` |
-| `[ti]` + `[au]` + `[dp]` | Verify one paper (title words + first author + year) | `frailty[ti] AND overtreatment[ti] AND Smith[au] AND 2023[dp]` |
-| `[pt]` | Publication type | `randomized controlled trial[pt]`, `meta-analysis[pt]`, `systematic review[pt]`, `practice guideline[pt]` |
-| `[Affiliation]` | Author affiliation | `Vietnam[Affiliation]` |
-| `[doi]` | Search by DOI | `10.1001/jama.2019.0234[doi]` |
-
-- Do not use the `*` wildcard (the tool refuses it); list variants instead
-  (`child OR children OR pediatric OR paediatric`).
-- Worked example, postoperative delirium after cardiac surgery in older adults, dexmedetomidine:
-
-```
-("Delirium"[MeSH Terms] OR delirium[tiab] OR "acute confusion"[tiab])
-AND ("Cardiac Surgical Procedures"[MeSH Terms] OR "cardiac surgery"[tiab] OR CABG[tiab] OR "coronary artery bypass"[tiab] OR "valve surgery"[tiab])
-AND ("Dexmedetomidine"[MeSH Terms] OR dexmedetomidine[tiab] OR Precedex[tiab])
-AND ("Aged"[MeSH Terms] OR elderly[tiab] OR "older adults"[tiab] OR geriatric[tiab])
-```
-
-  Variants to run: `... AND (systematic review[pt] OR meta-analysis[pt])`;
-  `... AND randomized controlled trial[pt]`; drop the intervention block and add
-  `AND (incidence[tiab] OR prevalence[tiab] OR "risk factors"[MeSH Terms])` for epidemiology and
-  risk factors; `... AND (Vietnam[Affiliation] OR Vietnam[tiab] OR Vietnamese[tiab])`; Asia:
-  `AND (Asia[MeSH Terms] OR China[Affiliation] OR Japan[Affiliation] OR Korea[Affiliation] OR Thailand[Affiliation])`.
-- Consensus / OpenEvidence questions (English, specific):
-  epidemiology "What is the incidence of postoperative delirium after cardiac surgery in patients
-  aged 65 and older?"; effectiveness "Does perioperative dexmedetomidine reduce postoperative
-  delirium after cardiac surgery compared with propofol or placebo?"; associated factors "What are
-  the independent risk factors for delirium after cardiac surgery in older adults?"; measurement
-  "Which delirium assessment tools are validated after cardiac surgery (CAM-ICU, 3D-CAM)?";
-  guideline "What do current guidelines recommend for prevention of postoperative delirium in older
-  surgical patients?"; gap "What are the main unanswered research questions about {topic}?"
-- Search log, one row per query: # · date · source · query or question · filters · results · kept.
-- When results look wrong (thresholds are **defaults**):
-
-| Situation | What to do |
-|---|---|
-| More than 500 papers | Add the O or C block; use `[Majr]`; limit publication type or years |
-| Fewer than 10 papers | Drop a less important block; add synonyms; check `query_translation` to see whether PubMed understood the query |
-| Off-topic results | Read `query_translation`: PubMed may map to the wrong MeSH ("cardiac surgery" → also "thoracic surgery"); add `[tiab]` to force the exact words |
+Concept blocks, PubMed tags, the worked example, Consensus/OpenEvidence question patterns, the search log
+and the "results look wrong" table are in
+`${CLAUDE_PLUGIN_ROOT}/references/literature/search-strategy.md` (shared with `literature-search`).
+For a scoping search keep to **P + I/E** blocks (**default**) and record `total_count` per query.
 
 ### Four situations
 Conclude with one of four situations, with the evidence:
