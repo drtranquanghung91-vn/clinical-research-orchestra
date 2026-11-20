@@ -14,7 +14,9 @@ Vietnamese and English.
 
 ## What works in 0.1.0
 - `/orchestra:start`, `/orchestra:status`: create or resume a project folder with ledgers and gates.
-- `phi-guard`: blocks patient identifiers in outbound tool calls; `deidentify-data` skill.
+- `phi-guard`: detects common patient-identifier formats heuristically (CCCD/CMND, BHYT, labelled names,
+  dates of birth, record numbers, addresses, phones, emails) in outbound tool calls and blocks or asks;
+  detection is not proof that a text is free of identifiers. `deidentify-data` skill for CSV/Excel files.
 - Scripts: `search_lit.py`, `verify_refs.py`, `init_project.py`, `gate.py`, `ledgers.py check`.
 
 ## Authors
