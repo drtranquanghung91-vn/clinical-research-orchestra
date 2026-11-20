@@ -11,10 +11,13 @@ Patient data stays on this machine. You work only from the de-identified copy.
 2. Run: `python "${CLAUDE_PLUGIN_ROOT}/scripts/deidentify.py" <file> --out <project>/04_data`
    (use `python3` if `python` is missing).
 3. Show the user the column → action table from the JSON report, in their language:
-   pseudonymise (replaced by P0001…), year-only (date of birth → year), drop (removed), keep.
-4. Ask the user to confirm every `keep` column that could still identify someone
-   (free-text notes, rare diagnoses with exact dates, small villages). Re-run after they rename or
-   remove such columns.
+   pseudonymise (replaced by P0001…, one per patient), year-only (date of birth → year), drop (removed), keep.
+   Also report `rows_above_header` (title rows skipped) and, for each `keep` column, `suspect_values`
+   (how many cells look like a name, phone, email or ID number; counts only).
+   If the script exits 2, show its error message; nothing was written.
+4. Ask the user to confirm every `keep` column that could still identify someone, first those with
+   `suspect_values` above 0 (free-text notes, rare diagnoses with exact dates, small villages).
+   Re-run after they rename or remove such columns.
 5. Tell the user where `<stem>.key.csv` is and that it must never be uploaded, emailed or committed.
 6. From now on use only `<stem>.deid.csv`. If asked to use the original, explain why not and offer the
    de-identified copy.
