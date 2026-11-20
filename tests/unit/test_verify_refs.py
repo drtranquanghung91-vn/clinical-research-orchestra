@@ -1,7 +1,11 @@
+import contextlib
+import io
 import json
 import tempfile
 import unittest
+import urllib.error
 from pathlib import Path
+from unittest import mock
 
 import _paths  # noqa: F401
 import verify_refs as vr
@@ -58,22 +62,84 @@ class TestCitations(unittest.TestCase):
             self.assertIn(("ret2019", "E-REF"), keys)
             self.assertNotIn("smith2024", {x["key"] for x in found})
 
+    def test_cite_keys_ignores_email_in_brackets(self):
+        self.assertEqual(vr.cite_keys("[contact foo@bar.com]"), [])
+        self.assertEqual(vr.cite_keys("[@a; @b]"), ["a", "b"])
+
+    def _run(self, argv, fetch):
+        out = io.StringIO()
+        orig = vr.fetch_pubmed
+        vr.fetch_pubmed = fetch
+        try:
+            with contextlib.redirect_stdout(out):
+                return vr.main(argv)
+        finally:
+            vr.fetch_pubmed = orig
+
+    def _proj(self, t, recs):
+        proj = Path(t)
+        (proj / "ledgers").mkdir()
+        ledgers.save_references(proj / "ledgers" / "references.json", recs)
+        return proj
+
     def test_main_write_updates_ledger(self):
         with tempfile.TemporaryDirectory() as t:
-            proj = Path(t)
-            (proj / "ledgers").mkdir()
-            ledgers.save_references(proj / "ledgers" / "references.json", [dict(REC)])
-            orig = vr.fetch_pubmed
-            vr.fetch_pubmed = lambda p: FOUND
-            try:
-                code = vr.main([str(proj), "--write"])
-            finally:
-                vr.fetch_pubmed = orig
+            proj = self._proj(t, [dict(REC)])
+            code = self._run([str(proj), "--write"], lambda p: FOUND)
             self.assertEqual(code, 0)
             rec = ledgers.load_references(proj / "ledgers" / "references.json")[0]
             self.assertTrue(rec["verified_by"].startswith("verify_refs.py"))
             self.assertIn("VERIFIED", rec["verified_by"])
             self.assertFalse(rec["retracted"])
+
+    def test_main_returns_1_on_not_found(self):
+        with tempfile.TemporaryDirectory() as t:
+            proj = self._proj(t, [dict(REC)])
+            self.assertEqual(self._run([str(proj)], lambda p: None), 1)
+
+    def test_main_returns_1_on_unknown_cite(self):
+        with tempfile.TemporaryDirectory() as t:
+            proj = self._proj(t, [dict(REC)])
+            f = Path(t) / "c.md"
+            f.write_text("Ghost [@ghost2020].", encoding="utf-8")
+            self.assertEqual(self._run([str(proj), "--cite", str(f)], lambda p: FOUND), 1)
+
+    def test_main_missing_cite_file_returns_2(self):
+        with tempfile.TemporaryDirectory() as t:
+            proj = self._proj(t, [dict(REC)])
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                code = self._run([str(proj), "--cite", str(Path(t) / "nope.md")], lambda p: FOUND)
+            self.assertEqual(code, 2)
+            self.assertIn("cannot read", err.getvalue())
+
+    def test_write_not_found_keeps_retracted_true(self):
+        with tempfile.TemporaryDirectory() as t:
+            proj = self._proj(t, [dict(REC, retracted=True)])
+            self._run([str(proj), "--write"], lambda p: None)
+            rec = ledgers.load_references(proj / "ledgers" / "references.json")[0]
+            self.assertTrue(rec["retracted"])
+            self.assertTrue(rec["verified_by"].endswith("NOT_FOUND"))
+
+
+class TestFetchers(unittest.TestCase):
+    def test_crossref_retraction(self):
+        msg = {"message": {"title": ["T"], "issued": {"date-parts": [[2020]]}, "author": [{"family": "Roe"}],
+                           "DOI": "10.1/x", "updated-by": [{"type": "retraction"}]}}
+        with mock.patch.object(vr, "_get", return_value=json.dumps(msg).encode()):
+            found = vr.fetch_crossref("10.1/x")
+        self.assertEqual(found["pubtypes"], ["Retracted Publication"])
+
+    def test_crossref_404_is_none(self):
+        def nf(url, *a, **k):
+            raise urllib.error.HTTPError(url, 404, "nf", {}, None)
+        with mock.patch.object(vr, "_get", side_effect=nf):
+            self.assertIsNone(vr.fetch_crossref("10.1/x"))
+
+    def test_pubmed_error_result_is_none(self):
+        body = json.dumps({"result": {"123": {"error": "cannot get document summary"}}}).encode()
+        with mock.patch.object(vr, "_get", return_value=body), mock.patch.object(vr.time, "sleep"):
+            self.assertIsNone(vr.fetch_pubmed("123"))
 
 
 if __name__ == "__main__":

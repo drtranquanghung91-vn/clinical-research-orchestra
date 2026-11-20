@@ -5,6 +5,7 @@ Records: PMID → PubMed esummary; DOI only → Crossref. Title (fuzzy ≥ 0.85)
 surname and PMID↔DOI agreement are compared. Retracted publications are reported as RETRACTED.
 Statuses: VERIFIED · MISMATCH · NOT_FOUND · RETRACTED · NO_IDENTIFIER · ERROR.
 Citations: every [@id] in the given Markdown files must exist in the ledger and not be retracted.
+verified_by records the last status; only a value ending in VERIFIED means verified.
 Adapted from grand-rounds verify_refs.py (MIT).
 
   python verify_refs.py <project_dir|references.json> [--write] [--json] [--cite FILE ...]
@@ -109,7 +110,7 @@ def verify(rec: dict, pubmed=None, crossref=None) -> tuple[str, list[str]]:
 
 
 CITE_BLOCK = re.compile(r"\[([^\[\]]*@[^\[\]]*)\]")
-CITE_KEY = re.compile(r"@([A-Za-z0-9_:\-]+)")
+CITE_KEY = re.compile(r"(?:^|(?<=[;,\s]))@([A-Za-z0-9_:\-]+)")
 
 
 def cite_keys(text: str) -> list[str]:
@@ -148,6 +149,12 @@ def main(argv=None) -> int:
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--cite", nargs="*", default=[], help="Markdown files whose [@id] citations to check")
     a = ap.parse_args(argv)
+    for f in a.cite:
+        try:
+            Path(f).read_text(encoding="utf-8")
+        except OSError:
+            print(f"verify_refs: cannot read {f}", file=sys.stderr)
+            return 2
     target = Path(a.target)
     path = target / "ledgers" / "references.json" if target.is_dir() else target
     refs = ledgers.load_references(path)
@@ -158,7 +165,7 @@ def main(argv=None) -> int:
         results.append({"id": r.get("id"), "status": status, "notes": notes})
         if a.write and status != "ERROR":
             r["verified_by"] = f"verify_refs.py {today} {status}"
-            r["retracted"] = status == "RETRACTED"
+            r["retracted"] = bool(r.get("retracted")) or status == "RETRACTED"
     if a.write:
         ledgers.save_references(path, refs)
     cites = check_citations([Path(f) for f in a.cite], refs)
