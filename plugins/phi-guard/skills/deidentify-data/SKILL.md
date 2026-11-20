@@ -1,6 +1,6 @@
 ---
 name: deidentify-data
-description: Use when the user wants to analyse, share or upload a patient data file (CSV, Excel) or asks to de-identify it. Triggers: "ẩn danh", "ẩn danh dữ liệu", "xoá thông tin định danh", "de-identify", "anonymise", "pseudonymise", "dữ liệu người bệnh", "file số liệu bệnh nhân", "bảng thu thập số liệu".
+description: 'Use when the user wants to analyse, share or upload a patient data file (CSV, Excel) or asks to de-identify it. Triggers: "ẩn danh", "ẩn danh dữ liệu", "xoá thông tin định danh", "de-identify", "anonymise", "pseudonymise", "dữ liệu người bệnh", "file số liệu bệnh nhân", "bảng thu thập số liệu".'
 ---
 
 # De-identify a data file

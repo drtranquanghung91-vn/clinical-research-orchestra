@@ -1,6 +1,6 @@
 ---
 name: research-project-setup
-description: Use when a user starts or resumes a research project, thesis, manuscript, review, case report or poster or an existing project needs resuming, or asks where their project stands. Triggers: "bắt đầu nghiên cứu", "tạo dự án nghiên cứu", "làm luận văn", "đề tài cơ sở", "làm tiếp đề tài", "start a research project", "set up my thesis", "where am I in my project".
+description: 'Use when a user starts or resumes a research project, thesis, manuscript, review, case report or poster or an existing project needs resuming, or asks where their project stands. Triggers: "bắt đầu nghiên cứu", "tạo dự án nghiên cứu", "làm luận văn", "đề tài cơ sở", "làm tiếp đề tài", "start a research project", "set up my thesis", "where am I in my project".'
 ---
 
 # Research project setup

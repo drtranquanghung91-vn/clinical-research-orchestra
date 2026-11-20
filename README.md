@@ -12,6 +12,11 @@ Vietnamese and English.
     /plugin install phi-guard@clinical-research-orchestra
     /plugin install orchestra@clinical-research-orchestra
 
+## What works in 0.1.0
+- `/orchestra:start`, `/orchestra:status`: create or resume a project folder with ledgers and gates.
+- `phi-guard`: blocks patient identifiers in outbound tool calls; `deidentify-data` skill.
+- Scripts: `search_lit.py`, `verify_refs.py`, `init_project.py`, `gate.py`, `ledgers.py check`.
+
 ## Authors
 
 Trần Quang Hưng, with Amelia Le (co-author of the research-methods skills). See CONTRIBUTORS.md

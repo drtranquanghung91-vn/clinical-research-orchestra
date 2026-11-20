@@ -1,6 +1,6 @@
 ---
 name: status
-description: Show where the current research project stands: stages, gates, ledger problems and the next action (xem tiến độ dự án).
+description: 'Show where the current research project stands: stages, gates, ledger problems and the next action (xem tiến độ dự án).'
 disable-model-invocation: true
 ---
 
