@@ -5,39 +5,27 @@ Sources: NCBI E-utilities (PubMed), Europe PMC (fallback and open-access full te
 ClinicalTrials.gov API v2. No API key is needed. Identifiers printed by this tool come from
 a live lookup, which is the point: never type a PMID or DOI from memory.
 
-Examples
-  python pubmed.py search "intismeran pembrolizumab melanoma" --max 5
-  python pubmed.py fetch 38246194            # metadata + abstract
-  python pubmed.py refs 38246194 > refs.json  # reference records (references.json shape)
-  python pubmed.py doi 10.1016/S0140-6736(23)02268-7
-  python pubmed.py fulltext PMC1234567        # open-access full text (Europe PMC), plain text
-  python pubmed.py trial NCT05933577
+CLI: see search_lit.py.
 """
 from __future__ import annotations
 
 import json
 import re
-import sys
 import time
 import urllib.parse
-import urllib.request
 import xml.etree.ElementTree as ET
 
-if hasattr(sys.stdout, "reconfigure"):  # Windows consoles default to cp1252
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+from .http import UA, get as _get  # noqa: F401  (UA re-exported)
 
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 EPMC = "https://www.ebi.ac.uk/europepmc/webservices/rest/"
 CTGOV = "https://clinicaltrials.gov/api/v2/studies/"
 TOOL = "clinical-research-orchestra"
-UA = "clinical-research-orchestra/0.1 (+https://github.com/drtranquanghung91-vn/clinical-research-orchestra)"
 _last_ncbi = 0.0
 
 
 def http_get(url: str, timeout: int = 30) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read()
+    return _get(url, timeout)
 
 
 def ncbi(endpoint: str, **params) -> bytes:
@@ -85,7 +73,7 @@ def summary_to_record(s: dict) -> dict:
         "pmid": s.get("uid", ""),
         "pmcid": ids.get("pmc", ""),
         "pubtypes": s.get("pubtype", []),
-        "retrieved_with": "pubmed.py esummary",
+        "retrieved_with": "litapi esummary",
         "access": "metadata",
     }
 
@@ -129,7 +117,7 @@ def epmc_search(query: str, retmax: int = 10) -> list[dict]:
             "pmid": r.get("pmid", ""),
             "pmcid": r.get("pmcid", ""),
             "abstract": r.get("abstractText", ""),
-            "retrieved_with": "pubmed.py europepmc",
+            "retrieved_with": "litapi europepmc",
             "access": "metadata",
         })
     return out
@@ -163,7 +151,7 @@ def crossref(doi: str) -> dict:
         "volume": data.get("volume", ""),
         "pages": data.get("page", ""),
         "doi": data.get("DOI", doi),
-        "retrieved_with": "pubmed.py crossref",
+        "retrieved_with": "litapi crossref",
         "access": "metadata",
     }
 
@@ -185,5 +173,5 @@ def trial(nct: str) -> dict:
                  for a in p.get("armsInterventionsModule", {}).get("armGroups", [])],
         "primary_outcomes": outcomes.get("primaryOutcomes", []),
         "secondary_outcomes": outcomes.get("secondaryOutcomes", []),
-        "retrieved_with": "pubmed.py trial (ClinicalTrials.gov API v2)",
+        "retrieved_with": "litapi trial (ClinicalTrials.gov API v2)",
     }

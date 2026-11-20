@@ -73,8 +73,12 @@ def main(argv=None) -> int:
         if args.source == "europepmc":
             out = litapi.epmc_search(args.query, args.max)
         else:
-            pmids = litapi.search(args.query, args.max)
-            out = litapi.summaries(pmids) if pmids else litapi.epmc_search(args.query, args.max)
+            try:
+                pmids = litapi.search(args.query, args.max)
+                out = litapi.summaries(pmids) if pmids else litapi.epmc_search(args.query, args.max)
+            except Exception as e:
+                print(f"# PubMed unavailable ({e}); using Europe PMC", file=sys.stderr)
+                out = litapi.epmc_search(args.query, args.max)
     elif args.cmd == "fetch":
         recs = litapi.summaries(args.pmids)
         abs_ = litapi.abstracts(args.pmids)

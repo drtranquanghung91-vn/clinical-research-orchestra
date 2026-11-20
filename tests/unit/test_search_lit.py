@@ -1,3 +1,5 @@
+import contextlib
+import io
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,7 +10,7 @@ from crolib import ledgers
 
 REC = {"id": "nguyen2026", "title": "Metformin in PMOS", "authors": ["Nguyen A"], "journal": "PLoS Med",
        "year": 2026, "doi": "10.1371/x", "pmid": "111", "pmcid": "", "pubtypes": ["Retracted Publication"],
-       "retrieved_with": "pubmed.py esummary", "access": "metadata"}
+       "retrieved_with": "litapi esummary", "access": "metadata"}
 
 
 class TestSearchLit(unittest.TestCase):
@@ -36,6 +38,24 @@ class TestSearchLit(unittest.TestCase):
                 self.assertEqual(len(refs), 2)
         finally:
             search_lit.litapi.summaries, search_lit.litapi.abstracts = orig_s, orig_a
+
+    def test_search_falls_back_to_europepmc_when_pubmed_raises(self):
+        orig_s, orig_e = search_lit.litapi.search, search_lit.litapi.epmc_search
+
+        def boom(query, retmax=10):
+            raise OSError("blocked")
+
+        try:
+            search_lit.litapi.search = boom
+            search_lit.litapi.epmc_search = lambda q, retmax=10: [{"title": "From EPMC"}]
+            out, err = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                rc = search_lit.main(["search", "x"])
+            self.assertEqual(rc, 0)
+            self.assertIn("From EPMC", out.getvalue())
+            self.assertIn("PubMed unavailable", err.getvalue())
+        finally:
+            search_lit.litapi.search, search_lit.litapi.epmc_search = orig_s, orig_e
 
 
 if __name__ == "__main__":
