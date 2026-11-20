@@ -93,6 +93,11 @@ class TestLintSkills(unittest.TestCase):
             errs = self._lint_desc(f"description: {value}")
             self.assertTrue(any("not valid plain YAML" in e for e in errs), (value, errs))
 
+    def test_bare_dash_or_question_mark_is_invalid(self):  # W3 minor
+        for value in ["-", "?"]:
+            errs = self._lint_desc(f"description: {value}")
+            self.assertTrue(any("not valid plain YAML" in e for e in errs), (value, errs))
+
     def test_plain_value_starting_with_dash_word_is_fine(self):
         with mock.patch.object(lint_skills, "yaml", None):
             fm, _ = lint_skills.parse_frontmatter("---\nname: s\ndescription: -1 dose, ?maybe\n---\nB\n")

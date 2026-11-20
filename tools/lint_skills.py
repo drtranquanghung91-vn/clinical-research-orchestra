@@ -40,7 +40,7 @@ def _scalar(key: str, val: str) -> str:
         if not isinstance(out, str):
             raise ValueError(f"frontmatter value for '{key}' is not a valid double-quoted YAML string")
         return out
-    if ": " in val or " #" in val or val.endswith(":") or val.startswith(INDICATORS):
+    if ": " in val or " #" in val or val.endswith(":") or val.startswith(INDICATORS) or val in ("-", "?"):
         raise ValueError(f"frontmatter value for '{key}' is not valid plain YAML; wrap it in single quotes")
     return val
 
