@@ -3,8 +3,10 @@
 
 Hook mode (PreToolUse, stdin JSON): strong signals (CCCD/CMND, BHYT card, labelled name, date of
 birth, record number, address) -> deny; weak signals (phone, email, full date, "BN/ông/bà <Name>")
--> ask. Bash is checked only for outbound commands (search_lit, curl, wget, Invoke-WebRequest,
-python -c with urllib/requests).
+-> ask. A name found only through a synthesised "key: value" (e.g. a tool's "name" argument) is weak
+unless the key names the patient (patient, patient_name, ho_ten, ...). Bash and PowerShell are checked
+only for outbound commands (search_lit, curl, wget, Invoke-WebRequest/RestMethod, irm, iwr,
+Start-BitsTransfer, inline python/py with urllib/requests/http.client, node -e with fetch/http).
 File mode: python phi_scan.py --file draft.md ... (exit 0 clean or warnings only, 1 on any strong
 finding, 2 if a file cannot be read).
 Allowlist: one tool-name regex per line in ~/.claude/phi-guard-allow.txt (default ^mcp__ccd_;
@@ -62,14 +64,38 @@ WEAK = [
     ("possible patient name", re.compile(r"(?i:\bBN|\bbệnh\s+nhân|\bngười\s+bệnh|\bông|\bbà|\banh|\bchị)\s+"
                                          + NAME3)),
 ]
-# Bash is checked only when the command sends something out (search_lit queries, HTTP clients).
-BASH_OUTBOUND = re.compile(r"search_lit|\bcurl\b|\bwget\b|Invoke-WebRequest", re.I)
-BASH_PY_C = re.compile(r"\bpython[0-9.]*(?:\.exe)?\b[^|;&\n]*?\s-c\b", re.I)
-BASH_PY_NET = re.compile(r"\burllib\b|\brequests\b")
+# Shell tools (Bash, PowerShell) are checked only when the command sends something out: search_lit
+# queries, HTTP clients, or inline Python/Node code that uses a network library.
+SHELL_TOOLS = ("Bash", "PowerShell")
+SHELL_OUTBOUND = re.compile(r"search_lit|\bcurl(?:\.exe)?\b|\bwget\b|Invoke-WebRequest|Invoke-RestMethod|\birm\b|"
+                            r"\biwr\b|Start-BitsTransfer", re.I)
+_CMD_START = r"(?:^|(?<=[\s;&|(]))"
+SHELL_PY_INLINE = re.compile(_CMD_START + r"(?:python[0-9.]*|py)(?:\.exe)?(?=\s)[^|;&\n]*?(?:\s-c\b|\s-(?=\s|$)|<<|<\s)",
+                             re.I | re.M)
+SHELL_PY_NET = re.compile(r"\burllib\b|\brequests\b|\bhttp\.client\b")
+SHELL_NODE_INLINE = re.compile(_CMD_START + r"node(?:\.exe)?\s[^|;&\n]*?(?:-e|--eval|-p|--print)\b", re.I | re.M)
+SHELL_NODE_NET = re.compile(r"\bfetch\s*\(|require\(\s*['\"](?:node:)?https?['\"]\s*\)|\bhttps?\.(?:get|request)\b|"
+                            r"from\s+['\"](?:node:)?https?['\"]|\baxios\b")
 
 
 def bash_is_outbound(command: str) -> bool:
-    return bool(BASH_OUTBOUND.search(command) or (BASH_PY_C.search(command) and BASH_PY_NET.search(command)))
+    """True when a Bash/PowerShell command can send data off the machine."""
+    return bool(SHELL_OUTBOUND.search(command)
+                or (SHELL_PY_INLINE.search(command) and SHELL_PY_NET.search(command))
+                or (SHELL_NODE_INLINE.search(command) and SHELL_NODE_NET.search(command)))
+
+
+# Dict keys that name the patient: a name in their value is a strong signal. For any other key
+# (e.g. a tool's "name" argument) a name found only through the synthesised "key: value" text is weak.
+PATIENT_KEYS = {"patient", "patient_name", "patients_name", "patient_s_name", "ho_ten", "ho_va_ten", "ten_benh_nhan",
+                "ten_nguoi_benh", "benh_nhan", "nguoi_benh", "bn", "ten_bn"}
+NAME_RX = re.compile(NAME)
+
+
+def _norm_key(k: str) -> str:
+    k = unicodedata.normalize("NFKD", str(k).replace("đ", "d").replace("Đ", "D"))
+    k = "".join(c for c in k if not unicodedata.combining(c)).lower()
+    return re.sub(r"[^a-z0-9]+", "_", k).strip("_")
 
 
 def _allow_patterns() -> list:
@@ -107,14 +133,15 @@ def _url_text(m: "re.Match") -> str:
 
 
 def _texts(obj, out: list) -> None:
-    """Collect scannable strings: every string value raw, plus 'key: value' for each dict entry."""
+    """Collect scannable strings: every string value raw, plus 'key: value' for each dict entry.
+    Raw texts are stored as str; synthesised ones as (text, key, value)."""
     if isinstance(obj, dict):
         for k, v in obj.items():
             out.append(str(k))
             if isinstance(v, (dict, list, tuple)):
                 _texts(v, out)
             elif isinstance(v, str):
-                out.append(f"{k}: {v}")
+                out.append((f"{k}: {v}", str(k), v))
                 out.append(v)
             elif v is not None:
                 out.append(str(v))
@@ -123,6 +150,20 @@ def _texts(obj, out: list) -> None:
             _texts(v, out)
     elif obj is not None:
         out.append(str(obj))
+
+
+def _scan_item(item) -> tuple[list[str], list[str]]:
+    if isinstance(item, str):
+        return scan(item)
+    text, key, value = item
+    strong, weak = scan(text)
+    if _norm_key(key) in PATIENT_KEYS:
+        if "patient name" not in strong and NAME_RX.search(unicodedata.normalize("NFC", value)):
+            strong.append("patient name")
+    elif "patient name" in strong:  # e.g. {"name": "Thesis Draft Folder"}: ask, do not block
+        strong.remove("patient name")
+        weak.append("possible patient name")
+    return strong, weak
 
 
 def scan(text: str) -> tuple[list[str], list[str]]:
@@ -135,7 +176,7 @@ def scan(text: str) -> tuple[list[str], list[str]]:
 def decide(tool: str, tool_input) -> dict | None:
     if allowed(tool):
         return None
-    if tool == "Bash":
+    if tool in SHELL_TOOLS:
         command = str(tool_input.get("command", "")) if isinstance(tool_input, dict) else str(tool_input)
         if not bash_is_outbound(command):
             return None  # local command: nothing leaves the machine
@@ -145,7 +186,7 @@ def decide(tool: str, tool_input) -> dict | None:
     strong: list = []
     weak: list = []
     for t in texts:
-        st, wk = scan(t)
+        st, wk = _scan_item(t)
         strong += [x for x in st if x not in strong]
         weak += [x for x in wk if x not in weak]
     if strong:

