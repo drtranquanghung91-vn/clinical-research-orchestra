@@ -4,30 +4,37 @@
 Hook mode (PreToolUse, stdin JSON): strong signals (CCCD/CMND, BHYT card, labelled name, date of
 birth, record number, address) -> deny; weak signals (phone, email, full date) -> ask.
 File mode: python phi_scan.py --file draft.md ... (exit 1 on any strong finding).
-Allowlist: one tool-name regex per line in ~/.claude/phi-guard-allow.txt (default ^mcp__ccd_).
+Allowlist: one tool-name regex per line in ~/.claude/phi-guard-allow.txt (default ^mcp__ccd_;
+override the path with PHI_GUARD_ALLOW_FILE).
 Heuristic: a clean scan does not prove a file is free of identifiers; images need a human look.
 """
 from __future__ import annotations
 
 import json
 import pathlib
+import os
 import re
 import sys
+import unicodedata
+import urllib.parse
 
 DEFAULT_ALLOW = [r"^mcp__ccd_"]
 STRIP = [
     re.compile(r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b"),
-    re.compile(r"https?://\S+"),
     re.compile(r"\b10\.\d{4,9}/\S+"),
     re.compile(r"\bPMC?ID[:\s]*\d+", re.I),
     re.compile(r"\bNCT\d{8}\b"),
 ]
-NAME = r"[A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+){1,4}"
+URL = re.compile(r"https?://\S+")
+VI_UPPER = ("AÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬBCDĐEÈÉẺẼẸÊỀẾỂỄỆFGHIÌÍỈĨỊJKLMNOÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢPQRSTUÙÚỦŨỤƯỪỨỬỮỰVWXYỲÝỶỸỴZ")
+VI_LOWER = VI_UPPER.lower()
+_U, _L = f"[{VI_UPPER}]", f"[{VI_LOWER}]"
+NAME = (rf"(?:{_U}{_L}+(?:\s+{_U}{_L}+){{1,4}}|{_U}{{1,7}}(?:\s+{_U}{{1,7}}){{1,4}})")
 STRONG = [
     ("CCCD number", re.compile(r"(?<!\d)0\d{2}[\s.]?\d{3}[\s.]?\d{6}(?!\d)")),
     ("BHYT card", re.compile(r"\b[A-Z]{2}\d{13}\b")),
     ("patient name", re.compile(r"(?i:họ\s*(?:và\s*)?tên|tên\s*(?:bệnh\s*nhân|người\s*bệnh)|bệnh\s*nhân|"
-                                r"người\s*bệnh|\bBN|patient(?:'s)?\s*name)\s*[:：]\s*" + NAME)),
+                                r"người\s*bệnh|\bBN|patient(?:'s)?[\s_]*name)\s*[:：]\s*" + NAME)),
     ("date of birth", re.compile(r"(?i:ngày\s*sinh|sinh\s*ngày|năm\s*sinh|\bDOB|date\s*of\s*birth)\s*[:：]?\s*"
                                  r"\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4}")),
     ("record number", re.compile(r"(?i:mã\s*(?:bệnh\s*án|hồ\s*sơ|BN|bệnh\s*nhân|người\s*bệnh)|số\s*(?:bệnh\s*án|"
@@ -42,15 +49,52 @@ WEAK = [
 ]
 
 
+def _allow_patterns() -> list:
+    pats = []
+    lines = list(DEFAULT_ALLOW)
+    f = pathlib.Path(os.environ.get("PHI_GUARD_ALLOW_FILE") or (pathlib.Path.home() / ".claude" / "phi-guard-allow.txt"))
+    try:
+        if f.exists():
+            lines += [l.strip() for l in f.read_text(encoding="utf-8", errors="replace").splitlines()
+                      if l.strip() and not l.strip().startswith("#")]
+    except OSError as e:
+        print(f"[phi-guard] cannot read allowlist {f}: {e}", file=sys.stderr)
+    for l in lines:
+        try:
+            pats.append(re.compile(l))
+        except re.error as e:
+            print(f"[phi-guard] ignoring invalid allowlist regex {l!r}: {e}", file=sys.stderr)
+    return pats
+
+
 def allowed(tool: str) -> bool:
-    pats = list(DEFAULT_ALLOW)
-    f = pathlib.Path.home() / ".claude" / "phi-guard-allow.txt"
-    if f.exists():
-        pats += [l.strip() for l in f.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
-    return any(re.search(p, tool) for p in pats)
+    return any(p.search(tool) for p in _allow_patterns())
+
+
+def _url_text(m: "re.Match") -> str:
+    parts = urllib.parse.urlsplit(m.group(0))
+    text = urllib.parse.unquote_plus(parts.path + " " + parts.query)
+    return " " + text.replace("&", " ").replace("=", " ") + " "
+
+
+def _texts(obj, out: list) -> None:
+    """Collect scannable strings: every string value raw, plus 'key: value' for each dict entry."""
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if isinstance(v, (dict, list, tuple)):
+                _texts(v, out)
+            elif v is not None:
+                out.append(f"{k}: {v}")
+                out.append(str(v))
+    elif isinstance(obj, (list, tuple)):
+        for v in obj:
+            _texts(v, out)
+    elif obj is not None:
+        out.append(str(obj))
 
 
 def scan(text: str) -> tuple[list[str], list[str]]:
+    text = URL.sub(_url_text, unicodedata.normalize("NFC", text))
     for rx in STRIP:
         text = rx.sub(" ", text)
     return [l for l, rx in STRONG if rx.search(text)], [l for l, rx in WEAK if rx.search(text)]
@@ -59,7 +103,14 @@ def scan(text: str) -> tuple[list[str], list[str]]:
 def decide(tool: str, tool_input) -> dict | None:
     if allowed(tool):
         return None
-    strong, weak = scan(json.dumps(tool_input, ensure_ascii=False))
+    texts: list = []
+    _texts(tool_input, texts)
+    strong: list = []
+    weak: list = []
+    for t in texts:
+        st, wk = scan(t)
+        strong += [x for x in st if x not in strong]
+        weak += [x for x in wk if x not in weak]
     if strong:
         return {"permissionDecision": "deny", "permissionDecisionReason": (
             f"[phi-guard] Blocked: input to {tool} looks like it contains a patient identifier "
@@ -76,7 +127,7 @@ def decide(tool: str, tool_input) -> dict | None:
 
 def scan_file(path: pathlib.Path) -> list[dict]:
     findings = []
-    for i, line in enumerate(pathlib.Path(path).read_text(encoding="utf-8").splitlines(), start=1):
+    for i, line in enumerate(pathlib.Path(path).read_text(encoding="utf-8", errors="replace").splitlines(), start=1):
         strong, weak = scan(line)
         findings += [{"code": "E-PHI", "severity": "block", "file": str(path), "line": i, "label": l} for l in strong]
         findings += [{"code": "E-PHI", "severity": "warn", "file": str(path), "line": i, "label": l} for l in weak]
@@ -106,9 +157,13 @@ def main(argv=None) -> int:
         return 1 if any(f["severity"] == "block" for f in findings) else 0
     try:
         data = json.loads(sys.stdin.buffer.read().decode("utf-8-sig", errors="replace"))
-    except Exception:
-        return 0
-    d = decide(str(data.get("tool_name", "")), data.get("tool_input", {}))
+        if not isinstance(data, dict):
+            raise ValueError("input is not a JSON object")
+        d = decide(str(data.get("tool_name", "")), data.get("tool_input", {}))
+    except Exception as e:  # fail safe: never let an error silently allow the call
+        d = {"permissionDecision": "ask", "permissionDecisionReason": (
+            f"[phi-guard] could not check this input ({type(e).__name__}: {e}); review it before allowing. / "
+            "Không kiểm tra được đầu vào, hãy xem lại trước khi cho phép.")}
     if d:
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", **d}}, ensure_ascii=False))
     return 0
