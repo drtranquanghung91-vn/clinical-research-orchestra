@@ -57,6 +57,50 @@ class TestGate(unittest.TestCase):
                 self.assertEqual(gate.main(["open", str(p), "G2", "--by", "A"]), 0)
                 self.assertEqual(gate.main(["check", str(p), "G2"]), 0)
 
+    def run_cli(self, *argv):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = gate.main(list(argv))
+        return code, out.getvalue(), err.getvalue()
+
+    def test_cli_lock_missing_file(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            code, _, err = self.run_cli("lock", str(p), "G3", "--by", "A", "--files", "nope.txt")
+            self.assertEqual(code, 2)
+            self.assertIn("cannot read", err)
+            self.assertIn("nope.txt", err)
+            self.assertNotIn("G3", (p / "gates" / "state.json").read_text(encoding="utf-8"))
+
+    def test_files_outside_project_rejected(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            (Path(t) / "x.txt").write_text("x", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                gate.open_gate(p, "G3", by="A", files=["../x.txt"])
+            with self.assertRaises(ValueError):
+                gate.open_gate(p, "G3", by="A", files=[str(Path(t) / "x.txt")])
+            code, _, err = self.run_cli("lock", str(p), "G3", "--by", "A", "--files", "../x.txt")
+            self.assertEqual(code, 2)
+            self.assertIn("file outside project", err)
+            self.assertNotIn("G3", (p / "gates" / "state.json").read_text(encoding="utf-8"))
+
+    def test_corrupt_state_fails_closed(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            sp = p / "gates" / "state.json"
+            sp.write_text("{not json", encoding="utf-8")
+            ok, why = gate.check_gate(p, "G1")
+            self.assertFalse(ok)
+            self.assertTrue(why[0].startswith("gates/state.json is unreadable:"))
+            code, out, _ = self.run_cli("check", str(p), "G1")
+            self.assertEqual(code, 1)
+            self.assertIn("unreadable", out)
+            code, _, err = self.run_cli("open", str(p), "G1", "--by", "A")
+            self.assertEqual(code, 2)
+            self.assertIn("unreadable", err)
+            self.assertEqual(sp.read_text(encoding="utf-8"), "{not json")
+
 
 if __name__ == "__main__":
     unittest.main()

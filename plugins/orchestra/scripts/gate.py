@@ -36,7 +36,12 @@ def _state_path(project: Path) -> Path:
 
 def _load(project: Path) -> dict:
     p = _state_path(project)
-    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    if not p.exists():
+        return {}
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise ValueError(f"gates/state.json is unreadable: {e}") from e
 
 
 def _waived(project: Path, gate: str) -> bool:
@@ -50,9 +55,14 @@ def open_gate(project: Path, gate: str, by: str, files: list[str] | None = None)
     if gate not in GATES:
         raise ValueError(f"gate must be one of {GATES}")
     project = Path(project)
+    root = project.resolve()
+    for f in files or []:
+        target = (project / f).resolve()
+        if Path(f).is_absolute() or not target.is_relative_to(root):
+            raise ValueError(f"file outside project: {f}")
+    state = _load(project)
     entry = {"status": "open", "at": dt.datetime.now().isoformat(timespec="seconds"), "by": by,
              "files": {f: sha256(project / f) for f in (files or [])}}
-    state = _load(project)
     state[gate] = entry
     _state_path(project).parent.mkdir(parents=True, exist_ok=True)
     _state_path(project).write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -65,7 +75,10 @@ def check_gate(project: Path, gate: str) -> tuple[bool, list[str]]:
     project = Path(project)
     if _waived(project, gate):
         return True, []
-    entry = _load(project).get(gate)
+    try:
+        entry = _load(project).get(gate)
+    except ValueError as e:
+        return False, [str(e)]
     if not entry or entry.get("status") != "open":
         return False, [f"{gate} is not open: the author has not approved it"]
     why = []
@@ -97,7 +110,14 @@ def main(argv=None) -> int:
         if a.cmd == "lock" and not a.files:
             print("gate: lock needs --files")
             return 2
-        open_gate(Path(a.project), a.gate, a.by, a.files)
+        try:
+            open_gate(Path(a.project), a.gate, a.by, a.files)
+        except OSError as e:
+            print(f"gate: cannot read {e.filename or e}", file=sys.stderr)
+            return 2
+        except ValueError as e:
+            print(f"gate: {e}", file=sys.stderr)
+            return 2
         print(f"{a.gate} open by {a.by}")
         return 0
     ok, why = check_gate(Path(a.project), a.gate)
