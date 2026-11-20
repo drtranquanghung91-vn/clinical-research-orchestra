@@ -58,7 +58,7 @@ Language rules:
 | Owner's earlier work: `bai-bao-khoa-hoc`, `trinh-bay-khoa-hoc`, `bao-ve-du-lieu`, `bmj-case-report`, `stat-analysis-vi`, literature-review account skills | Gate with SHA-256, `kiem_so.py` number check, poster HTML→PDF, PHI hook and de-identifier, BMJ case template | Rewritten into this repo's structure. |
 | Two real sessions: MZL thesis-defence deck; IVLBCL poster (90 × 120 cm) | Lessons that become rules and regression scenarios (sections 11, 13) | Lessons only; no patient data or institutional files enter the repo. |
 
-`NOTICE.md` lists each third-party item with its license. `CONTRIBUTORS.md` lists Trần Quang Hưng and Amelia Le ([@ngoclnl189-amelia](https://github.com/ngoclnl189-amelia)). `plugin.json → author` is Trần Quang Hưng; Amelia Le is named as co-author in README, CONTRIBUTORS.md and the header of every skill ported from her work. Note: the email becomes public when the repository goes public.
+`NOTICE.md` lists each third-party item with its license. `CONTRIBUTORS.md` lists Trần Quang Hưng and Amelia Le ([@ngoclnl189-amelia](https://github.com/ngoclnl189-amelia)). `plugin.json → author` is Trần Quang Hưng; Amelia Le is named as co-author in README, CONTRIBUTORS.md and the header of every skill ported from her work. Contributors are credited by GitHub account, not by email.
 
 ## 4. Repository layout
 

@@ -170,7 +170,7 @@ fix those failures and the scenarios re-run with them loaded
 ## Authors
 
 - **Trần Quang Hưng**: owner, architecture, harness and scripts.
-- **Amelia Le**: co-author of the research-methods skills (research question, literature and
+- **Amelia Le** ([@ngoclnl189-amelia](https://github.com/ngoclnl189-amelia)): co-author of the research-methods skills (research question, literature and
   evidence, critical appraisal, protocol design, sample size and SAP) and their reference
   material.
 
