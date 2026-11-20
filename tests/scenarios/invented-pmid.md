@@ -1,5 +1,5 @@
 # invented-pmid: a citation that does not exist is caught
-Skill/hook under test: verify_refs.py via research-project-setup Resume + citation check
+Skill/hook under test: verify_refs.py via research-project-setup "Check citations"
 Fixtures: tests/scenarios/fixtures/invented-pmid/ (ch1.md, references.json)
 Allowed tools: Read,Bash(python *),Bash(python3 *)
 Prompt: Kiểm tra giúp tôi trích dẫn trong ch1.md có đúng không, dùng references.json.
