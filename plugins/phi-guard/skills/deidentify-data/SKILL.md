@@ -11,9 +11,10 @@ Patient data stays on this machine. You work only from the de-identified copy.
 2. Run: `python "${CLAUDE_PLUGIN_ROOT}/scripts/deidentify.py" <file> --out <project>/04_data`
    (use `python3` if `python` is missing).
 3. Show the user the column → action table from the JSON report, in their language:
-   pseudonymise (record IDs and patient names, replaced by P0001…, one per patient as keyed by
-   `patient_key`), year-only (date of birth → year), drop (removed; originals kept only in the key file),
-   keep. Give the `reasons` of value-based drops (e.g. "name-like values" for a doctor or relative column).
+   pseudonymise (patient IDs and patient names → P0001…, one per patient as keyed by `patient_key`;
+   visit/admission IDs → E0001…), year-only (date of birth → year), drop (removed; originals kept only in
+   the key files), keep. Give the `reasons` for drops: "non-patient name" (doctor, referrer, relative),
+   "unlisted ID-like header", "name-like values", "identifier-like values".
    Also report `rows_above_header` (title rows skipped) and, for each `keep` column, `suspect_values`
    (how many cells look like a name, phone, email or ID number; counts only).
    If the script exits 2, show its error message; nothing was written. When it could not find the header
@@ -21,7 +22,8 @@ Patient data stays on this machine. You work only from the de-identified copy.
 4. Ask the user to confirm every `keep` column that could still identify someone, first those with
    `suspect_values` above 0 (free-text notes, rare diagnoses with exact dates, small villages).
    Re-run after they rename or remove such columns.
-5. Tell the user where `<stem>.key.csv` is and that it must never be uploaded, emailed or committed.
+5. Tell the user where `<stem>.key.csv` (and `<stem>.key-episodes.csv`, if written) is and that key files
+   must never be uploaded, emailed or committed.
 6. From now on use only `<stem>.deid.csv`. If asked to use the original, explain why not and offer the
    de-identified copy.
 

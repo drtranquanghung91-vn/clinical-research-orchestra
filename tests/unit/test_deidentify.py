@@ -52,8 +52,10 @@ class TestDeidentify(unittest.TestCase):
                 csv.writer(fh).writerows(table)
             with contextlib.redirect_stderr(err if err is not None else io.StringIO()):
                 rep = deidentify.deidentify_csv(src, Path(t), header_row=header_row)
-            return (rep, Path(rep["deid_file"]).read_text(encoding="utf-8-sig"),
-                    Path(rep["key_file"]).read_text(encoding="utf-8-sig"))
+            key = Path(rep["key_file"]).read_text(encoding="utf-8-sig")
+            if rep.get("key_episodes_file"):
+                key += Path(rep["key_episodes_file"]).read_text(encoding="utf-8-sig")
+            return rep, Path(rep["deid_file"]).read_text(encoding="utf-8-sig"), key
 
     def _rows(self, text):
         return list(csv.reader(io.StringIO(text)))
@@ -173,6 +175,99 @@ class TestDeidentify(unittest.TestCase):
     def test_name_phrase_with_clinical_word_is_not_kept(self):
         acts = deidentify.classify_columns(["Họ tên người giới thiệu"], [])
         self.assertNotEqual(acts["Họ tên người giới thiệu"], "keep")
+
+    # W3 N1: role-qualified name columns are not the patient: dropped to the key file, never keyed
+    def test_doctor_name_column_dropped_patient_name_keyed(self):
+        table = [["Họ tên bác sĩ", "Họ tên bệnh nhân", "Năm sinh"],
+                 ["Lê Văn Cường", "Nguyễn Văn An", "1958"], ["Phạm Thị Dung", "Nguyễn Văn An", "1958"],
+                 ["Lê Văn Cường", "Trần Thị Bình", "1970"]]
+        rep, deid, key = self._run(table)
+        self.assertEqual(rep["columns"]["Họ tên bác sĩ"], "drop")
+        self.assertEqual(rep["reasons"]["Họ tên bác sĩ"], "non-patient name")
+        self.assertEqual(rep["columns"]["Họ tên bệnh nhân"], "pseudonymise")
+        self.assertEqual(rep["patient_key"][0], "Họ tên bệnh nhân")
+        self.assertEqual([r[0] for r in self._rows(deid)[1:]], ["P0001", "P0001", "P0002"])
+        for secret in ("Lê Văn Cường", "Nguyễn Văn An"):
+            self.assertNotIn(secret, deid)
+            self.assertIn(secret, key)
+
+    def test_referrer_dropped_same_patient_same_pseudonym(self):
+        table = [["Họ tên người giới thiệu", "Họ và tên", "Ngày sinh"],
+                 ["Lê Văn Cường", "Nguyễn Văn An", "12/03/1958"], ["Phạm Thị Dung", "Nguyễn Văn An", "12/03/1958"]]
+        rep, deid, key = self._run(table)
+        self.assertEqual(rep["columns"]["Họ tên người giới thiệu"], "drop")
+        self.assertEqual(rep["reasons"]["Họ tên người giới thiệu"], "non-patient name")
+        self.assertEqual(rep["patient_key"], ["Họ và tên", "Ngày sinh"])
+        self.assertEqual(self._rows(deid), [["Họ và tên", "Ngày sinh"], ["P0001", "1958"], ["P0001", "1958"]])
+
+    def test_empty_pseudonymised_cell_stays_empty(self):
+        table = [["Mã BN", "Họ và tên", "Tuổi"], ["BN001", "", "67"], ["BN002", "Trần Thị Bình", "55"]]
+        rep, deid, key = self._run(table)
+        self.assertEqual(self._rows(deid)[1:], [["P0001", "", "67"], ["P0002", "P0002", "55"]])
+
+    # W3 N2: patient-level IDs key the patient; episode IDs get their own E-codes and key file
+    def test_episode_id_first_patient_id_keys(self):
+        table = [["Số vào viện", "Mã BN", "Tuổi"],
+                 ["VV24-0001", "BN001", "67"], ["VV24-0002", "BN002", "55"], ["VV25-0103", "BN001", "68"]]
+        rep, deid, key = self._run(table)
+        self.assertEqual(rep["patient_key"], ["Mã BN"])
+        rows = self._rows(deid)[1:]
+        self.assertEqual([r[1] for r in rows], ["P0001", "P0002", "P0001"])
+        self.assertEqual([r[0] for r in rows], ["E0001", "E0002", "E0003"])
+        for secret in ("VV24-0001", "VV25-0103", "BN001"):
+            self.assertNotIn(secret, deid)
+            self.assertIn(secret, key)  # episode originals come from <stem>.key-episodes.csv
+
+    def test_episode_key_file_maps_every_visit(self):
+        with tempfile.TemporaryDirectory() as t:
+            src = Path(t) / "v.csv"
+            with src.open("w", encoding="utf-8-sig", newline="") as fh:
+                csv.writer(fh).writerows([["MA_LK", "MA_BN", "TUOI"], ["LK1", "BN001", "67"], ["LK2", "BN001", "67"],
+                                          ["LK3", "BN002", "50"]])
+            with contextlib.redirect_stderr(io.StringIO()):
+                rep = deidentify.deidentify_csv(src, Path(t))
+            deid = self._rows(Path(rep["deid_file"]).read_text(encoding="utf-8-sig"))
+            self.assertEqual(rep["patient_key"], ["MA_BN"])
+            self.assertEqual([r[:2] for r in deid[1:]], [["E0001", "P0001"], ["E0002", "P0001"], ["E0003", "P0002"]])
+            epi = self._rows(Path(rep["key_episodes_file"]).read_text(encoding="utf-8-sig"))
+            self.assertEqual(epi, [["episode_pseudonym", "column", "original", "patient_pseudonym"],
+                                   ["E0001", "MA_LK", "LK1", "P0001"], ["E0002", "MA_LK", "LK2", "P0001"],
+                                   ["E0003", "MA_LK", "LK3", "P0002"]])
+            self.assertEqual(len(self._rows(Path(rep["key_file"]).read_text(encoding="utf-8-sig"))), 3)
+
+    def test_episode_id_keys_only_without_patient_id_or_name(self):
+        table = [["Số vào viện", "Tuổi"], ["VV1", "67"], ["VV1", "67"], ["VV2", "55"]]
+        rep, deid, _ = self._run(table)
+        self.assertEqual(rep["patient_key"], ["Số vào viện"])
+        self.assertEqual([r[0] for r in self._rows(deid)[1:]], ["E0001", "E0001", "E0002"])
+
+    # W3: unlisted ID-like headers are dropped; clinical codes are kept
+    def test_unlisted_id_like_headers(self):
+        drop = ["ID", "Mã khám bệnh", "Mã đợt điều trị", "Số phiếu", "Lab ID", "sample_id"]
+        keep = ["Mã ICD", "Mã bệnh", "Mã thuốc", "Mã dịch vụ", "Mã xét nghiệm", "Mã LOINC", "Mã ATC"]
+        rows = [["x"] * len(drop + keep)]
+        _, _, reasons = deidentify._classify_full(drop + keep, rows)
+        acts = deidentify.classify_columns(drop + keep, rows)
+        for i, h in enumerate(drop):
+            self.assertEqual(acts[h], "drop", h)
+            self.assertEqual(reasons[i], "unlisted ID-like header", h)
+        for h in keep:
+            self.assertEqual(acts[h], "keep", h)
+
+    # W3 minor: --header-row on a data row is refused without printing the row
+    def test_header_row_on_data_row_exits_2(self):
+        with tempfile.TemporaryDirectory() as t:
+            src = Path(t) / "h.csv"
+            with src.open("w", encoding="utf-8-sig", newline="") as fh:
+                csv.writer(fh).writerows([["Họ và tên", "CCCD"], ["Nguyễn Văn An", "079123456789"]])
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err), contextlib.redirect_stdout(io.StringIO()):
+                code = deidentify.main([str(src), "--header-row", "2"])
+            self.assertEqual(code, 2)
+            self.assertIn("row 2 looks like data, not a header", err.getvalue())
+            self.assertNotIn("079123456789", err.getvalue())
+            self.assertNotIn("Nguyễn", err.getvalue())
+            self.assertEqual(sorted(x.name for x in Path(t).iterdir()), ["h.csv"])
 
     def test_record_id_values_absent_from_deid(self):
         table = [["Mã số bệnh nhân", "Số BA", "Mã LK", "Tuổi", "Thôn/xóm"],

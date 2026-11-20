@@ -3,15 +3,19 @@
 
 Outputs next to --out (default: the source folder):
   <stem>.deid.csv  data for analysis with AI tools
-  <stem>.key.csv   pseudonym -> original identifiers; keep it local, never upload it
+  <stem>.key.csv   patient pseudonym -> original identifiers, one row per patient; keep it local
+  <stem>.key-episodes.csv  episode code (E0001...) -> original visit/admission ID (only if there are any)
   python deidentify.py data.csv [--out DIR] [--header-row N]
-Exit codes: 0 = done; 2 = missing, unreadable or empty input, or no header row found (nothing written).
+Exit codes: 0 = done; 2 = missing, unreadable or empty input, no header row found, or a forced header row
+that looks like data (nothing written).
 The header row is the first of the first 10 rows with >= 2 recognised column names (or row N given with
 --header-row, 1-based); rows above it (titles) are counted, not copied.
-Column rules, in order: drop (contact, ID cards, address) -> year-only (birth date) -> record ID
-(pseudonymise) -> name header (pseudonymise) -> clinical variable (keep) -> values: identifier-like or
-name-like values -> drop (originals go to the key file). One pseudonym P0001... per patient, keyed on the
-first record-ID column, else the name column(s) plus the birth-date column.
+Column rules, in order: drop (contact, ID cards, address) -> year-only (birth date/year) -> patient ID
+(P-code) / episode ID (E-code) -> patient-name header (P-code; a doctor, referrer or relative name is
+dropped as "non-patient name") -> clinical variable (keep) -> unlisted ID-like header (drop) -> values:
+identifier-like or name-like values -> drop. Dropped originals go to the key file. One P-code per patient,
+keyed on the first patient ID, else the patient name column(s) plus birth date, else the first episode ID.
+Empty cells stay empty.
 """
 from __future__ import annotations
 
@@ -42,14 +46,24 @@ EXACT_DROP = {"bhxh", "so bhxh", "so the", "ma the", "noi o", "cu tru", "noi cu 
 # without any diacritics fall back to the plain words (except "ap", exact only).
 ADDRESS_VI = ["thôn", "xóm", "xã", "phường", "ấp", "tổ dân phố"]
 ADDRESS_PLAIN = ["thon", "xom", "xa", "phuong", "to dan pho"]
-YEAR = ["ngay sinh", "dob", "date of birth", "birth"]
-RECORD_ID = ["ma bn", "ma so bn", "ma so benh nhan", "ma so nguoi benh", "ma benh nhan", "ma nguoi benh", "ma ba",
-             "so ba", "ma benh an", "so benh an", "ma ho so", "so ho so", "so luu tru", "ma lk", "ma dieu tri",
-             "ma tiep nhan", "ma y te", "ma dinh danh", "so vao vien", "so nhap vien", "mrn", "pid", "patient id"]
+YEAR = ["ngay sinh", "nam sinh", "dob", "date of birth", "year of birth", "birth"]
+# Record IDs: patient-level IDs key the patient (P0001...); episode-level IDs (one per visit/admission) get their
+# own codes E0001... and their originals go to <stem>.key-episodes.csv.
+RECORD_PATIENT = ["ma bn", "ma so bn", "ma so benh nhan", "ma so nguoi benh", "ma benh nhan", "ma nguoi benh",
+                  "ma y te", "ma dinh danh", "mrn", "pid", "patient id"]
+RECORD_EPISODE = ["so vao vien", "so nhap vien", "so ba", "ma ba", "ma benh an", "so benh an", "ma lk", "ma dieu tri",
+                  "ma tiep nhan", "so ho so", "ma ho so", "so luu tru"]
 NAME_PARTS = {"ho", "ten", "ho dem", "ten dem", "ho va ten dem", "first name", "last name", "surname",
               "given name"}
 EXACT_NAME = NAME_PARTS | {"full name", "name", "patient", "benh nhan", "nguoi benh", "ho ten", "ho va ten"}
 NAME_PHRASES = ["ho ten", "ho va ten", "ten benh nhan", "ten nguoi benh", "ten bn", "patient name", "full name"]
+# A name header naming someone else (doctor, referrer, relative...) is not the patient: drop it to the key file.
+NAME_ROLES = ["nguoi gioi thieu", "gioi thieu", "nguoi nha", "nguoi than", "nguoi lien he", "lien he", "bac si", "bs",
+              "dieu duong", "ky thuat vien", "me", "cha", "bo", "vo", "chong", "con", "referrer", "physician",
+              "doctor", "nurse", "contact", "relative", "mother", "father", "spouse"]
+# Headers no rule names but that look like an identifier ("Mã khám bệnh", "Số phiếu", "ID"); clinical codes excepted.
+CLINICAL_CODE = re.compile(r"\b(?:icd|ma benh|thuoc|dich vu|xet nghiem|chan doan|loinc|atc)\b")
+REASONS = {"name-other": "non-patient name", "id-like": "unlisted ID-like header"}
 # Clinical variables: kept when the header STARTS with one of these ("Tuổi bệnh nhân", not "Họ tên người giới thiệu").
 CLINICAL = ["tuoi", "gioi", "nhom", "so luong", "can nang", "chieu cao", "chan doan", "age", "sex", "gender",
             "group", "weight", "height", "diagnosis", "number of"]
@@ -83,20 +97,32 @@ def _is_address_part(col: str, h: str) -> bool:
     return _has(h, ADDRESS_PLAIN)
 
 
+def _is_id_like(h: str) -> bool:
+    return ((h.startswith("ma ") or h.startswith("so phieu") or h == "id" or h.endswith(" id"))
+            and not CLINICAL_CODE.search(h))
+
+
 def header_kind(col: str) -> str | None:
-    """drop | year-only | record | name | clinical | None (decide from the values)."""
+    """drop | year-only | record-patient | record-episode | name-patient | name-other | clinical | id-like |
+    None (decide from the values)."""
     h = _plain(col)
     clinical = any(re.match(rf"{re.escape(w)}\b", h) for w in CLINICAL)
     if h in EXACT_DROP or _has(h, DROP) or (not clinical and _is_address_part(col, h)):
         return "drop"
     if _has(h, YEAR):
         return "year-only"
-    if _has(h, RECORD_ID):
-        return "record"
-    if h in EXACT_NAME or _has(h, NAME_PHRASES):
-        return "name"
+    if _has(h, RECORD_PATIENT):
+        return "record-patient"
+    if _has(h, RECORD_EPISODE):
+        return "record-episode"
+    if h in EXACT_NAME:
+        return "name-patient"
+    if _has(h, NAME_PHRASES):
+        return "name-other" if _has(h, NAME_ROLES) else "name-patient"
     if clinical:
         return "clinical"
+    if _is_id_like(h):
+        return "id-like"
     return None
 
 
@@ -117,7 +143,11 @@ def _classify_full(header: list[str], rows: list[list[str]]) -> tuple[list[str],
         if kind in ("drop", "year-only"):
             acts.append(kind)
             continue
-        if kind in ("record", "name"):
+        if kind in REASONS:
+            acts.append("drop")
+            reasons[i] = REASONS[kind]
+            continue
+        if kind in ("record-patient", "record-episode", "name-patient"):
             acts.append("pseudonymise")
             continue
         vals = [r[i] for r in rows if i < len(r) and r[i].strip()][:200]
@@ -149,17 +179,18 @@ def find_header(table: list[list[str]]) -> int | None:
 
 
 def _patient_key_columns(kinds: list[str | None], acts: list[str], header: list[str]) -> list[int]:
-    """First record-ID column; else the name column(s) plus the birth-date column. Never value-only columns."""
-    records = [i for i, k in enumerate(kinds) if k == "record"]
+    """First patient-level ID; else the patient-name column(s) plus the birth-date column; else the first
+    episode-level ID. Never value-only or non-patient columns."""
+    records = [i for i, k in enumerate(kinds) if k == "record-patient"]
     if records:
         return records[:1]
-    names = [i for i, k in enumerate(kinds) if k == "name"]
-    if not names:
-        return []
-    parts = [i for i in names if _plain(header[i]) in NAME_PARTS]
-    cols = parts if names[0] in parts else names[:1]  # split name (Họ + Tên) is one name
-    dob = [i for i, a in enumerate(acts) if a == "year-only"]
-    return cols + dob[:1]
+    names = [i for i, k in enumerate(kinds) if k == "name-patient"]
+    if names:
+        parts = [i for i in names if _plain(header[i]) in NAME_PARTS]
+        cols = parts if names[0] in parts else names[:1]  # split name (Họ + Tên) is one name
+        dob = [i for i, a in enumerate(acts) if a == "year-only"]
+        return cols + dob[:1]
+    return [i for i, k in enumerate(kinds) if k == "record-episode"][:1]
 
 
 def _read(src: Path) -> list[list[str]]:
@@ -190,6 +221,8 @@ def deidentify_csv(src: Path, out_dir: Path, header_row: int | None = None) -> d
         if not 1 <= header_row <= len(table):
             raise SystemExit(f"deidentify: --header-row {header_row} is outside the file (1..{len(table)})")
         h_idx = header_row - 1
+        if any(rx.search(c) for c in table[h_idx] for rx in VALUE_RX):
+            raise SystemExit(f"deidentify: row {header_row} looks like data, not a header; nothing was written")
     else:
         h_idx = find_header(table)
         if h_idx is None:
@@ -198,11 +231,13 @@ def deidentify_csv(src: Path, out_dir: Path, header_row: int | None = None) -> d
     acts_l, kinds, reasons = _classify_full(header, rows)
     acts = dict(zip(header, acts_l))
     keep_idx = [i for i, a in enumerate(acts_l) if a != "drop"]
-    key_idx = [i for i, a in enumerate(acts_l) if a in ("pseudonymise", "drop")]
+    episode_idx = {i for i, k in enumerate(kinds) if k == "record-episode"}
+    key_idx = [i for i, a in enumerate(acts_l) if a in ("pseudonymise", "drop") and i not in episode_idx]
     pkey = _patient_key_columns(kinds, acts_l, header)
     cell = lambda r, i: r[i] if i < len(r) else ""  # noqa: E731
-    deid_rows, key_rows = [], []
+    deid_rows, key_rows, episode_rows = [], [], []
     by_patient: dict[tuple, str] = {}
+    by_episode: dict[tuple, str] = {}
     for r in rows:
         ident = tuple(cell(r, i).strip() for i in pkey)
         if any(ident) and ident in by_patient:
@@ -216,7 +251,16 @@ def deidentify_csv(src: Path, out_dir: Path, header_row: int | None = None) -> d
         for i in keep_idx:
             v = cell(r, i)
             if acts_l[i] == "pseudonymise":
-                v = pid
+                if not v.strip():  # empty stays empty, except a fully empty patient key (own pseudonym)
+                    v = pid if i in pkey and not any(ident) else ""
+                elif i in episode_idx:
+                    k = (i, v.strip())
+                    if k not in by_episode:
+                        by_episode[k] = f"E{len(episode_rows) + 1:04d}"
+                        episode_rows.append([by_episode[k], header[i], v, pid])
+                    v = by_episode[k]
+                else:
+                    v = pid
             elif acts_l[i] == "year-only":
                 m = YEAR_RX.search(v)
                 v = m.group(0) if m else ""
@@ -230,10 +274,16 @@ def deidentify_csv(src: Path, out_dir: Path, header_row: int | None = None) -> d
         csv.writer(fh).writerows([[header[i] for i in keep_idx]] + deid_rows)
     with key.open("w", encoding="utf-8-sig", newline="") as fh:
         csv.writer(fh).writerows([["pseudonym"] + [header[i] for i in key_idx]] + key_rows)
-    return {"deid_file": str(deid), "key_file": str(key), "columns": acts,
-            "reasons": {header[i]: why for i, why in reasons.items()}, "suspect_values": suspect,
+    key_ep = None
+    if episode_idx:
+        key_ep = out_dir / f"{src.stem}.key-episodes.csv"
+        with key_ep.open("w", encoding="utf-8-sig", newline="") as fh:
+            csv.writer(fh).writerows([["episode_pseudonym", "column", "original", "patient_pseudonym"]]
+                                     + episode_rows)
+    return {"deid_file": str(deid), "key_file": str(key), "key_episodes_file": str(key_ep) if key_ep else None,
+            "columns": acts, "reasons": {header[i]: why for i, why in reasons.items()}, "suspect_values": suspect,
             "patient_key": [header[i] for i in pkey], "rows": len(rows), "rows_above_header": h_idx,
-            "patients": len(key_rows)}
+            "patients": len(key_rows), "episodes": len(episode_rows)}
 
 
 def main(argv=None) -> int:
