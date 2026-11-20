@@ -22,7 +22,7 @@
 - Every reference that enters a project goes through `search_lit.py add` and `verify_refs.py`; skills never write a PMID or DOI from memory.
 - Sources are Amelia Le's v3 skills (20 Nov 2026) plus both change notes (18 Nov "Skill changes and justification" and v3 "Thay_doi_bo_skill_v3_2026-11-20"). Where the v3 skill text and the 18 Nov notes disagree, v3 wins; record the conflict in the inventory row.
 - Rules written for the author's own machine (for example the `input-router` mod, `~/.claude/skills/...` paths, "install the plugin again") are generalised: "a summarising layer that intercepts tool output", "the plugin root", or dropped with an inventory note saying why.
-- Every commit that ports or adapts Amelia Le's content (Tasks 3, 3a, 4–8) ends with both trailers, in this order:
+- Every commit that ports or adapts Amelia Le's content (Tasks 3, 3a, 4–8) ends with both trailers in ONE final paragraph (one `-m` holding both lines, no blank line between them), in this order:
   `Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>`
   `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
   Contributors are credited by GitHub account; never write a contributor's personal email into the repository.
@@ -306,7 +306,8 @@ Expected: all PASS. If `test_every_documented_example_runs` fails for an example
 
 ```bash
 git add plugins/orchestra/scripts/samplesize.py tests/unit/test_samplesize.py
-git commit -m "feat(orchestra): sample size calculator (Amelia Le) with golden tests" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): sample size calculator (Amelia Le) with golden tests" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -338,7 +339,8 @@ Adapted from Amelia Le's v3 `literature-evidence-research-vi/scripts/cite_render
 
 ```bash
 git add plugins/orchestra/scripts/cite_render.py tests/unit/test_cite_render.py NOTICE.md
-git commit -m "feat(orchestra): cite_render.py numbers [@id] citations in Vancouver style (adapted from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): cite_render.py numbers [@id] citations in Vancouver style (adapted from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 `md2docx.py` from the same source is not ported: Word export belongs to P3 `build_docx.py` (inventory: `deferred: P3 build_docx.py`).
@@ -385,7 +387,8 @@ Expected: 0 lint errors; all tests PASS; no inventory row with an empty `new loc
 
 ```bash
 git add plugins/orchestra/skills/research-question plugins/orchestra/references/workflows/research-question.md
-git commit -m "feat(orchestra): research-question skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): research-question skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -424,7 +427,8 @@ Expected: 0 lint errors, all PASS (including `test_every_skill_link_to_reference
 
 ```bash
 git add plugins/orchestra/skills/literature-search plugins/orchestra/references/workflows/literature-search.md plugins/orchestra/references/literature
-git commit -m "feat(orchestra): literature-search skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): literature-search skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -471,7 +475,8 @@ Run lint and tests as in Task 5 (expected 0 errors, all PASS, no empty inventory
 
 ```bash
 git add plugins/orchestra/skills/critical-appraisal plugins/orchestra/skills/appraise plugins/orchestra/references/appraisal-tools plugins/orchestra/references/workflows/critical-appraisal.md
-git commit -m "feat(orchestra): critical-appraisal skill and /orchestra:appraise (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): critical-appraisal skill and /orchestra:appraise (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -500,7 +505,8 @@ Translate the three reference files into `references/design/`, all rows kept, in
 
 ```bash
 git add plugins/orchestra/skills/protocol-design plugins/orchestra/references/design plugins/orchestra/references/workflows/protocol-design.md
-git commit -m "feat(orchestra): protocol-design skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): protocol-design skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -536,7 +542,8 @@ Translate the four reference files (`openevidence-queries.md` becomes `statistic
 
 ```bash
 git add plugins/orchestra/skills/sample-size-sap plugins/orchestra/references/statistics plugins/orchestra/references/workflows/sample-size-sap.md
-git commit -m "feat(orchestra): sample-size-sap skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): sample-size-sap skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
