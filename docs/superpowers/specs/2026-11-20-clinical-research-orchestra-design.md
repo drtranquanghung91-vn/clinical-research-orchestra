@@ -3,7 +3,7 @@
 - Date: 2026-11-20
 - Status: draft for review by Trần Quang Hưng
 - Authors: Trần Quang Hưng (owner), Amelia Le (co-author, research-methods skills)
-- Repository: `drtranquanghung91-vn/clinical-research-orchestra` (private until v1.0, then public)
+- Repository: `drtranquanghung91-vn/clinical-research-orchestra` (public since 0.1.0, 20 Nov 2026, by owner decision; earlier plan was private until v1.0)
 - License: MIT
 
 ## 1. Purpose
@@ -432,7 +432,7 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
 - Self-hosted marketplace in the repo. Install:
   `/plugin marketplace add drtranquanghung91-vn/clinical-research-orchestra`, then `/plugin install phi-guard@clinical-research-orchestra` and `/plugin install orchestra@clinical-research-orchestra`.
 - SemVer in `plugin.json` and `marketplace.json`; `CHANGELOG.md` from v0.1.0.
-- Private on GitHub during P0–P3; public at v1.0 after the owner's review.
+- Public on GitHub from 0.1.0 (owner decision, 20 Nov 2026). README states the phase status so users know which skills exist.
 - Codex and Antigravity manifests (as in grand-rounds) in P4.
 
 ## 16. Roadmap
@@ -443,7 +443,7 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
 | **P1 Plan the study** | port Amelia Le's 5 skills; `guideline-check`; `literature-review` modes (a) and (b); `samplesize.py`; references library | fictional cohort goes from idea to protocol + SAP + Chapter 1; PMOS, sample-size, reverse-causation, paper-by-paper scenarios GREEN |
 | **P2 Present** | `research-figures`, `research-poster`, `defense-prep`, `conference-abstract`, `prose-humanizer`, `consistency_audit.py`, `poster_preflight.py`, `lint_prose.py`, `invariants.py`, `committee-simulator` | poster with 3 layouts and defence deck built from fictional cohort; MZL and 87-dpi scenarios GREEN |
 | **P3 Write** | `statistical-analysis`, `manuscript`, `thesis`, `case-report`, `systematic-review`, `literature-review` mode (c), remaining reviewer agents, G3/G4 hooks, `build_docx.py` | fictional cohort yields manuscript .docx and thesis .docx passing `/orchestra:audit` |
-| **P4 Extend** | `ethics-and-crf`, `journal-selection`, `reviewer-response`, Codex/Antigravity manifests, autorater, landing page; v1.0 public | owner sign-off |
+| **P4 Extend** | `ethics-and-crf`, `journal-selection`, `reviewer-response`, Codex/Antigravity manifests, autorater, landing page; v1.0 release | owner sign-off |
 
 Each phase gets its own implementation plan in `docs/superpowers/plans/`.
 

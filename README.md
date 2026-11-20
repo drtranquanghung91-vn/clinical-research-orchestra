@@ -1,30 +1,203 @@
-# clinical-research-orchestra
+<h1 align="center">Clinical Research Orchestra: A Multi-Agent Harness for<br>Evidence-First Clinical Research</h1>
 
-Evidence-first Claude Code plugins for clinical research, from bedside question to podium.
-For medical students, residents, doctors and other healthcare professionals. Works in
-Vietnamese and English.
+<p align="center">
+  <b>From bedside question to podium, with every citation and number checked.</b><br>
+  Claude Code plugins that take medical students, residents, doctors and other healthcare
+  professionals through a research project: question, evidence, protocol, analysis,
+  manuscript or thesis, poster and defence.
+</p>
 
-> Status: P0 foundation (0.1.0). Not yet for general use.
+<p align="center">
+  <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-0F5E7A"></a>
+  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-C8372D">
+  <img alt="Languages" src="https://img.shields.io/badge/languages-English%20%7C%20Vietnamese-56677F">
+  <img alt="Status" src="https://img.shields.io/badge/status-0.1.0%20foundation-B7791F">
+  <a href="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml/badge.svg"></a>
+</p>
 
-## Install (Claude Code)
+> **Status: early.** Version 0.1.0 ships the foundation (project folder, ledgers, gates,
+> reference verification and patient-data protection). The research skills arrive phase by
+> phase; see [Roadmap](#roadmap). Do not rely on it for real studies yet.
 
-    /plugin marketplace add drtranquanghung91-vn/clinical-research-orchestra
-    /plugin install phi-guard@clinical-research-orchestra
-    /plugin install orchestra@clinical-research-orchestra
+---
 
-## What works in 0.1.0
-- `/orchestra:start`, `/orchestra:status`: create or resume a project folder with ledgers and gates.
-- `phi-guard`: detects common patient-identifier formats heuristically (CCCD/CMND, BHYT, labelled names,
-  dates of birth, record numbers, addresses, phones, emails) in outbound tool calls and blocks or asks;
-  detection is not proof that a text is free of identifiers. `deidentify-data` skill for CSV/Excel files.
-- Scripts: `search_lit.py`, `verify_refs.py`, `init_project.py`, `gate.py`, `ledgers.py check`.
+## Why this exists
+
+Ask a general-purpose agent to "write the literature review for my thesis" or "calculate the
+sample size" and you get fluent text in minutes. It is often wrong in the ways that a
+supervisor, an ethics committee or a journal reviewer will catch:
+
+- **References are recalled, not retrieved.** A PMID or DOI "from memory" ends up in the
+  reference list, or a real paper is cited for a claim it does not make.
+- **Numbers drift.** 85% in the abstract, 86.3% in the results; a sample size of "≈26"
+  that was never rounded up; a confidence-interval bound used in place of the point estimate.
+- **The review is a list of papers.** Chapter 1 reads "Smith found… Nguyen found…" instead
+  of a synthesis organised by question.
+- **Patient data leaks.** A name, a national ID number or a record number goes into a web
+  search or an external tool.
+- **The prose sounds machine-written**, and nothing says how AI was used.
+
+Clinical Research Orchestra turns these steps into a method with files, checks and gates,
+in the spirit of [Superpowers](https://github.com/obra/superpowers) and
+[PaperOrchestra](https://github.com/google-research/paper-orchestra). The agent reasons;
+scripts measure. Anything a script can verify (an identifier, a number, a sample-size
+calculation, a poster's print resolution) is not left to the model's word.
+
+## How it works
+
+Every project lives in one folder with stage directories (`01_question/` to `07_present/`),
+ledgers for references, results and claims, and four human gates:
+
+| Gate | Stops before | You decide |
+|---|---|---|
+| G1 Question | searching and protocol work | the research question, PICO/PECO and objectives |
+| G2 Protocol | data collection | design, eligibility, variables, sample size, analysis plan |
+| G3 Results lock | writing | the analysis outputs, locked with a SHA-256 hash |
+| G4 Release | sending anything out | the manuscript, thesis, poster or deck after all checks pass |
+
+Skills hand work forward through these files, not through the conversation, so you can
+enter at any stage (a thesis already half written, a poster due next week) and resume later
+with `/orchestra:status`. A gate can be waived only with a written reason in `decisions.md`.
+
+Two plugins ship from this marketplace:
+
+- **`orchestra`**: the research skills, commands, scripts and reference library.
+- **`phi-guard`**: a hook that scans outbound tool calls (web search, fetch, MCP tools,
+  network commands) for patient identifiers and blocks or asks, plus a
+  `deidentify-data` skill for CSV and Excel files. Install it on its own if you only want
+  the protection.
+
+## The skills
+
+| Stage | Skill | What it produces | Phase |
+|---|---|---|---|
+| 0 | `research-project-setup`, `/orchestra:start`, `/orchestra:status` | project folder, ledgers, gates, next step | 0.1.0 |
+| 0 | `deidentify-data` (phi-guard) | de-identified data file and a separate key file | 0.1.0 |
+| 1 | `research-question` | PICO/PECO, FINER check, objectives, hypotheses, title options | P1 |
+| 2 | `literature-search` | nomenclature check, search strategy, verified references, evidence table and map, gaps | P1 |
+| 2 | `critical-appraisal`, `/orchestra:appraise` | appraisal by the study's real design, with the matching tool | P1 |
+| 2 | `guideline-check` | current clinical and reporting guidelines, each with version and date | P1 |
+| 2 | `literature-review`, `/orchestra:review` | thesis Chapter 1 or manuscript background, synthesised by question | P1 |
+| 3 | `protocol-design` | design with trade-offs, eligibility, variables table, bias and confounding | P1 |
+| 3 | `sample-size-sap` | sample size with a sensitivity table (`samplesize.py`) and a statistical analysis plan | P1 |
+| 4 | `research-figures` | Table 1, Kaplan–Meier with numbers at risk, forest plots, flow diagrams | P2 |
+| 6 | `research-poster`, `defense-prep`, `conference-abstract` | poster with print preflight, thesis-defence deck, abstract | P2 |
+| 5–6 | `prose-humanizer` | rewrites AI-sounding prose, keeps every number and citation | P2 |
+| 4–5 | `statistical-analysis`, `manuscript`, `thesis`, `case-report`, `systematic-review` | reproducible analysis, manuscript and thesis .docx, CARE case report, PRISMA review | P3 |
+| 3, 7 | `ethics-and-crf`, `journal-selection`, `reviewer-response` | ethics dossier and CRF, journal shortlist, response to reviewers | P4 |
+
+You can talk to the skills in Vietnamese or English. The language of research documents is
+a project setting (`project.yaml → language.output`), so a thesis can be written in
+Vietnamese while the manuscript from the same study is in English.
+
+## What makes it different
+
+- **Verified references only.** Every reference enters through `search_lit.py add` and is
+  checked by `verify_refs.py` against PubMed, Europe PMC or Crossref. Citations in text use
+  `[@id]` keys that must exist in the ledger.
+- **Numbers from files.** Results come from a results ledger, not from the model's memory.
+  A consistency audit that flags numbers disagreeing between sections arrives in P2.
+- **Patient data protected by default.** `phi-guard` knows Vietnamese identifier formats
+  (CCCD/CMND, BHYT, record numbers, labelled names, dates of birth, addresses) as well as
+  phones and emails. Detection is heuristic and not proof that a text is clean.
+- **Tested like code.** Unit tests for every script, and behaviour scenarios that were run
+  first without the skills (RED) and then with them (GREEN).
+- **Honest about AI.** Manuscripts and theses get an AI-use disclosure; the humanizer
+  removes tells of machine prose without hiding that AI helped.
+
+## Install
+
+### Claude Code
+
+```
+/plugin marketplace add drtranquanghung91-vn/clinical-research-orchestra
+/plugin install phi-guard@clinical-research-orchestra
+/plugin install orchestra@clinical-research-orchestra
+```
+
+Then start a project:
+
+```
+/orchestra:start
+```
+
+### Tools the scripts use
+
+Python 3.10 or later, standard library only. Literature lookups call the public PubMed,
+Europe PMC and Crossref APIs; no API key is needed.
+
+## Roadmap
+
+| Phase | Scope | State |
+|---|---|---|
+| P0 Foundation | project folder, ledgers, gates, `phi-guard`, `verify_refs.py`, `search_lit.py`, CI | done (0.1.0) |
+| P1 Plan the study | research question, literature search, appraisal, guideline check, literature review, protocol, sample size and SAP | in progress |
+| P2 Present | figures, poster, defence deck, abstract, prose humanizer, consistency audit | planned |
+| P3 Write | statistical analysis, manuscript, thesis, case report, systematic review | planned |
+| P4 Extend | ethics and CRF, journal selection, reviewer response, Codex and Antigravity packaging | planned |
+
+The design spec is in [`docs/superpowers/specs/`](docs/superpowers/specs/) and each phase
+has its implementation plan in [`docs/superpowers/plans/`](docs/superpowers/plans/).
+
+## Repository layout
+
+```
+.claude-plugin/marketplace.json   marketplace manifest (plugins: orchestra, phi-guard)
+plugins/orchestra/                research skills, commands, scripts/, templates/project/
+plugins/phi-guard/                outbound PHI hook, phi_scan.py, deidentify.py, deidentify-data skill
+tests/unit/                       tests for every script
+tests/scenarios/                  RED/GREEN behaviour scenarios and the baseline record
+tools/lint_skills.py              skill frontmatter and length checks
+docs/superpowers/                 design spec and phase plans
+AGENTS.md                         conventions for agents working on this repository
+```
+
+## Testing
+
+```bash
+python -m unittest discover -s tests/unit -v
+python tools/lint_skills.py
+```
+
+CI runs both on Linux and Windows with Python 3.10 and 3.12 on every push.
+
+The skills are written test-first, as Superpowers prescribes. Each behaviour is first run on
+an agent without the plugin, and the failures are recorded in
+[`tests/scenarios/BASELINE.md`](tests/scenarios/BASELINE.md). The skills are then written to
+fix those failures and the scenarios re-run with them loaded
+([`tests/scenarios/README.md`](tests/scenarios/README.md)).
 
 ## Authors
 
-Trần Quang Hưng, with Amelia Le (co-author of the research-methods skills). See CONTRIBUTORS.md
-and NOTICE.md. Inspired by PaperOrchestra (Google Research) and built on the harness of
-grand-rounds.
+- **Trần Quang Hưng**: owner, architecture, harness and scripts.
+- **Amelia Le**: co-author of the research-methods skills (research question, literature and
+  evidence, critical appraisal, protocol design, sample size and SAP) and their reference
+  material.
 
-## License
+See [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
-MIT
+## Acknowledgements
+
+- [google-research/paper-orchestra](https://github.com/google-research/paper-orchestra):
+  outline-as-plan, two-stage citation verification, reviewer accept/revert loop (ideas only;
+  no code or prompt text copied)
+- [obra/superpowers](https://github.com/obra/superpowers): skills as methodology, TDD for
+  skills, subagent-driven development
+- [drtranquanghung91-vn/grand-rounds](https://github.com/drtranquanghung91-vn/grand-rounds):
+  the literature API client, reference verification and PHI patterns this harness builds on;
+  use it for medical talks beyond the thesis-defence path
+- The `humanizer` skill: the pattern catalog behind `prose-humanizer`
+
+Details and licences are in [NOTICE.md](NOTICE.md).
+
+## Disclaimer
+
+Clinical Research Orchestra helps plan, write and present research. It does not give medical
+advice and does not replace a supervisor, a statistician or an ethics committee. The author
+is responsible for the study, for checking every claim against its source, for ethics
+approval and patient consent, for de-identifying data, and for disclosing AI use as their
+institution and journal require.
+
+## Licence
+
+[MIT](LICENSE) © 2026 Trần Quang Hưng and contributors.
