@@ -32,6 +32,8 @@ with `summarize_run.py`. Every run's init event showed `mcp_servers: []`; RED ru
 ## Skill changes without a new scenario
 
 - `phi-guard:deidentify-data` (fix wave 2026-11-20): only reports the new `rows_above_header` / `suspect_values` fields and exit 2. The script behaviour is covered by `tests/unit/test_deidentify.py`; no model-facing decision changed, so no scenario was added.
+- `phi-guard:deidentify-data` (fix wave 2): reports `patient_key` and `reasons`, and on "could not find a header row" asks the user for the row and re-runs with `--header-row N`. Covered by `test_headerless_file_writes_nothing_and_exits_2` and `test_header_row_option_forces_row`; a scenario needs a real-looking patient file, which the repo does not ship, so none was added.
+- phi-guard hook (fix wave 2): matcher adds `PowerShell` (same outbound-only branch as Bash). Covered by `test_powershell_outbound_commands`; the phi scenarios above do not use PowerShell.
 
 ## Script check
 
