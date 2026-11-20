@@ -109,7 +109,7 @@ All research skills, agents, scripts, references and the gate hook. Install ID `
 
 Installed first and usable with any other plugin.
 
-- **Hook:** `PreToolUse` on `mcp__.*`, `WebFetch`, `WebSearch`. Scans the outgoing tool input for Vietnamese and generic identifiers: CCCD/CMND, BHYT card number, phone, email, full name next to date of birth, hospital record number patterns. Strong signal → block (exit 2) with an explanation in the user's language. Weak signal → ask. Clean → allow.
+- **Hook:** `PreToolUse` on `mcp__.*`, `WebFetch`, `WebSearch`. Scans the outgoing tool input for Vietnamese and generic identifiers: CCCD/CMND, BHYT card number, phone, email, full name next to date of birth, hospital record number patterns. Strong signal → block (`permissionDecision: deny`) with a bilingual explanation. Weak signal → ask. Clean → allow.
 - **Skill `deidentify-data`:** CSV/XLSX in, de-identified file plus key table out; the key table stays local. The original file's contents never enter the conversation beyond column names and masked samples.
 
 ### 5.3 Not bundled
@@ -203,7 +203,7 @@ Worker roles inside orchestrators (literature, methods, results, writer, discuss
 title: ...
 type: thesis-ckii | thesis-masters | thesis-phd | de-tai-co-so | manuscript | review | systematic-review | case-report | poster-only
 design: rct | cohort | case-control | cross-sectional | diagnostic-accuracy | prediction-model | qualitative | mixed | case-report | systematic-review | scoping-review | narrative-review
-reporting_guideline: CONSORT-2025 | SPIRIT-2025 | STROBE | STARD-2015 | TRIPOD+AI | PRISMA-2020 | PRISMA-ScR | CARE | SRQR | COREQ | CHEERS-2022
+reporting_guideline: CONSORT-2025 | SPIRIT-2025 | STROBE | STARD-2015 | TRIPOD+AI | PRISMA-2020 | PRISMA-ScR | CARE | SRQR | COREQ | GRAMMS | SANRA | CHEERS-2022
 language: { chat: vi | en, output: vi | en }
 institution: { name: ..., template: 00_inputs/templates/... }
 citation_style: vancouver | apa | vn-thesis
@@ -213,10 +213,10 @@ evidence_sources: [openevidence, pubmed, europepmc, crossref]
 
 ### 7.3 Ledger records
 
-`references.json`, one record per source:
+`references.json` is `{"references": [...]}`, one record per source; the identifier field is `id`, as in grand-rounds, so a project folder can feed both plugins. In-text citations in Markdown drafts use `[@id]` or `[@id1; @id2]`.
 
 ```json
-{"key": "smith2024", "pmid": "...", "doi": "...", "title": "...", "authors": ["..."], "journal": "...", "year": 2024,
+{"id": "smith2024", "pmid": "...", "doi": "...", "title": "...", "authors": ["..."], "journal": "...", "year": 2024,
  "abstract": "...", "fulltext_read": false, "retracted": false, "design": "cohort", "rob": "some concerns",
  "verified_by": "verify_refs.py 2026-11-20", "used_in": ["06_writing/thesis/ch1.md#p4"]}
 ```
@@ -454,7 +454,7 @@ Each phase gets its own implementation plan in `docs/superpowers/plans/`.
 | Vietnamese thesis rules differ by school and degree | template matching plus `vn-academic/` defaults the author can override in `project.yaml` |
 | Literature APIs rate-limit or change | backoff, cached results in `ledgers/`, clear "not verified" status instead of silent pass |
 | Users without Python or R | skills still work; any check that could not run is reported as "not checked by script", never as passed |
-| Hook false positives in `phi-guard` | weak signals ask instead of block; allowlist in `project.yaml` |
+| Hook false positives in `phi-guard` | weak signals ask instead of block; tool allowlist in `~/.claude/phi-guard-allow.txt` |
 | Humanizer altering meaning | invariants plus per-paragraph revert |
 | Skill count raises context cost | short descriptions; detail in references; scenario tests for activation |
 | Content in Amelia Le's skills becomes outdated (guidelines change) | `guideline-check` dates each guideline; CHANGELOG entry required for reference updates |
