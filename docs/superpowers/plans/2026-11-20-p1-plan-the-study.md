@@ -4,7 +4,7 @@
 
 **Goal:** A user can go from a clinical idea to a verified evidence base, an appraised literature set, a written Chapter 1 / background, a protocol, a sample size with SAP and a list of current guidelines, inside one project folder.
 
-**Architecture:** Port Amelia Le's five research-methods skills (version 18 Nov 2026) into English skill bodies of at most 500 words, with every rule preserved in plugin-level `references/`. Add `guideline-check`, `literature-review` (modes a and b), `samplesize.py` and `review_lint.py`. Spec: `docs/superpowers/specs/2026-11-20-clinical-research-orchestra-design.md`. Depends on P0 (`docs/superpowers/plans/2026-11-20-p0-foundation.md`) being complete.
+**Architecture:** Port Amelia Le's five research-methods skills (version 3 of 20 Nov 2026, which supersedes the 18 Nov version) into English skill bodies of at most 500 words, with every rule preserved in plugin-level `references/`. Add `guideline-check`, `literature-review` (modes a and b), `samplesize.py` and `review_lint.py`. Spec: `docs/superpowers/specs/2026-11-20-clinical-research-orchestra-design.md`. Depends on P0 (`docs/superpowers/plans/2026-11-20-p0-foundation.md`) being complete.
 
 **Tech Stack:** Markdown skills, Python 3.10+ stdlib scripts, `unittest`, Claude Code CLI for scenarios.
 
@@ -20,6 +20,12 @@
 - Judgement-call thresholds are written as defaults the author may override, never as standards.
 - Output paths in a project: `01_question/question.md`; `02_evidence/search-strategy.md`, `02_evidence/evidence-table.md`, `02_evidence/evidence-map.md`, `02_evidence/gaps.md`, `02_evidence/appraisal/<ref-id>.md`, `02_evidence/guidelines.md`; `03_protocol/protocol.md`, `03_protocol/variables.md`, `03_protocol/sample-size.md`, `03_protocol/sap.md`; `06_writing/thesis/ch1-literature-review.md` or `06_writing/manuscript/background.md`.
 - Every reference that enters a project goes through `search_lit.py add` and `verify_refs.py`; skills never write a PMID or DOI from memory.
+- Sources are Amelia Le's v3 skills (20 Nov 2026) plus both change notes (18 Nov "Skill changes and justification" and v3 "Thay_doi_bo_skill_v3_2026-11-20"). Where the v3 skill text and the 18 Nov notes disagree, v3 wins; record the conflict in the inventory row.
+- Rules written for the author's own machine (for example the `input-router` mod, `~/.claude/skills/...` paths, "install the plugin again") are generalised: "a summarising layer that intercepts tool output", "the plugin root", or dropped with an inventory note saying why.
+- Every commit that ports or adapts Amelia Le's content (Tasks 3, 3a, 4–8) ends with both trailers, in this order:
+  `Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>`
+  `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
+  Contributors are credited by GitHub account; never write a contributor's personal email into the repository.
 
 ---
 
@@ -37,9 +43,10 @@ plugins/orchestra/references/
   workflows/{research-question.md, literature-search.md, critical-appraisal.md, protocol-design.md, sample-size-sap.md}
 plugins/orchestra/scripts/samplesize.py
 plugins/orchestra/scripts/review_lint.py
+plugins/orchestra/scripts/cite_render.py
 plugins/orchestra/skills/{research-question, literature-search, critical-appraisal, protocol-design,
                           sample-size-sap, guideline-check, literature-review, review, appraise}/SKILL.md
-tests/unit/{test_samplesize.py, test_review_lint.py, test_reference_library.py}
+tests/unit/{test_samplesize.py, test_cite_render.py, test_review_lint.py, test_reference_library.py}
 tests/scenarios/{pmos-nomenclature.md, sample-size-lower-ci.md, reverse-causation.md, chapter1-paper-by-paper.md}
 examples/fictional-cohort/
 ```
@@ -53,17 +60,19 @@ examples/fictional-cohort/
 **Files:**
 - Create (not committed, `_sources/` is git-ignored): `_sources/amelia/<skill>/...`, `_sources/amelia-change-notes.txt`, `_sources/inventory/<skill>.md`
 
-- [ ] **Step 1: Unzip the five skills into `_sources/amelia/`**
+- [ ] **Step 1: Unzip the v3 bundle and the five skills into `_sources/amelia/`**
 
 ```bash
-mkdir -p _sources/amelia _sources/inventory
+mkdir -p _sources/amelia _sources/inventory _sources/v3
+unzip -o -q "C:/Users/Admin/Downloads/medical-research-skill-update.zip" -d _sources/v3
+V=_sources/v3/skills_da_sua_v3_2026-11-20
 for z in research-question-refinement-vi literature-evidence-research-vi protocol-design-vi sample-size-planning-vi critical-appraisal-vi; do
-  unzip -o -q "C:/Users/Admin/Downloads/$z.zip" -d "_sources/amelia/$z"
+  unzip -o -q "$V/$z.zip" -d "_sources/amelia/$z"
 done
 find _sources/amelia -type f | sort
 ```
 
-Expected: 5 `SKILL.md` files, 17 reference files, `scripts/samplesize.py`.
+Expected: 5 `SKILL.md` files, 20 files under `reference/`, and 3 scripts (`sample-size-planning-vi/.../scripts/samplesize.py`, `literature-evidence-research-vi/.../scripts/cite_render.py`, `literature-evidence-research-vi/.../scripts/md2docx.py`). `reference/evidence-tools.md` appears in all five skills: the four copies outside `literature-evidence-research-vi` are identical to each other; the `literature-evidence-research-vi` copy differs. Inventory `evidence-tools.md` once, from the `literature-evidence-research-vi` copy, plus one row per line that exists only in the other copy (`diff` the two).
 
 - [ ] **Step 2: Extract the change notes to text**
 
@@ -80,12 +89,15 @@ for p in re.findall(r'<w:p[ >].*?</w:p>',x,re.S):
 
 Expected: about 270 lines, starting "Vietnamese Health-Research Skills: Summary of Changes and Justification".
 
+Run the same extraction on `_sources/v3/skills_da_sua_v3_2026-11-20/Thay_doi_bo_skill_v3_2026-11-20.docx` → `_sources/amelia-change-notes-v3.txt` (starts "Thay đổi bộ skill nghiên cứu *-vi — 20/11/2026"; sections "Dùng chung", one per skill, "Đợt 2", "Đợt 3", "Chưa làm") and on `_sources/v3/skills_da_sua_v3_2026-11-20/Tom_tat_T2D_loi_song_RCT.docx` → `_sources/amelia-example-t2d.txt` (a worked output from her test case; use it as the model of a finished evidence summary in Task 5, do not copy its content into the repository).
+
 - [ ] **Step 3: Write one inventory per skill**
 
 For each source `SKILL.md` and each of its reference files, write `_sources/inventory/<new-skill-name>.md` as a table with one row per atomic item: every numbered step, every rule sentence that uses "must/không được/luôn/never/bắt buộc", every threshold, every row of every error/pitfall table, every citation, every output-file instruction, every "Giả định" rule. Columns: `#`, `source file:line`, `item (Vietnamese, verbatim or near-verbatim)`, `new location` (left empty now).
-Also add, to the matching inventory, every item from `_sources/amelia-change-notes.txt` sections "research-question-refinement-vi changes", "literature-evidence-research-vi changes", "protocol-design-vi changes", "sample-size-planning-vi changes", "critical-appraisal-vi (new)", "Judgement-call thresholds".
+Also add, to the matching inventory, every item from `_sources/amelia-change-notes.txt` sections "research-question-refinement-vi changes", "literature-evidence-research-vi changes", "protocol-design-vi changes", "sample-size-planning-vi changes", "critical-appraisal-vi (new)", "Judgement-call thresholds", and every bullet of `_sources/amelia-change-notes-v3.txt` except the "Chưa làm (cần người dùng)" section (installation notes for her own machine). "Dùng chung" bullets go to `_sources/inventory/evidence-policy.md` (a sixth inventory, filled in Task 2).
+Allowed `new location` values: a file and section in this repository, `deferred: P3 build_docx.py` (only for `md2docx.py` and rules about exporting Word), or `dropped: <reason>` (only for rules about the author's own machine, per Global Constraints).
 
-Expected: five inventory files; each has at least as many rows as the source has numbered steps plus error-table rows.
+Expected: six inventory files (five skills plus `evidence-policy.md`); each skill inventory has at least as many rows as the source has numbered steps plus error-table rows.
 
 No commit (sources are not part of the repo).
 
@@ -144,7 +156,7 @@ Expected: FAIL / ERROR (`FileNotFoundError` for `evidence-policy.md`).
 
 - [ ] **Step 3: Write `evidence-policy.md`**
 
-Build it from `_sources/amelia/literature-evidence-research-vi/.../reference/evidence-tools.md` (translate to English, keep every rule, including the 5-question self-appraisal gate) plus these sections, written in full:
+Build it from `_sources/amelia/literature-evidence-research-vi/.../reference/evidence-tools.md` (translate to English, keep every rule, including the 5-question self-appraisal gate, and the v3 tool rules: Consensus without a connected account returns 3 papers per call; OpenEvidence has three failure branches (geo-block, not signed in, technical failure such as the MCP browser not starting); PubMed queries allow at most 20 Boolean operators, so batch at most 10 PMIDs per query; read JSON with `python -I -X utf8`; when a summarising layer sits between a tool and the agent, key numbers are re-read from the raw JSON and metadata lookups run one at a time, never in parallel) plus these sections, written in full. Fill `_sources/inventory/evidence-policy.md` as you go:
 
 ```markdown
 # Evidence policy
@@ -243,6 +255,23 @@ class TestSampleSize(unittest.TestCase):
     def test_prevalence(self):
         self.assertEqual(run("prevalence", "--p", "0.15", "--width", "0.05")["n_total_final"], 196)
 
+    def test_v3_checked_values(self):
+        # values Amelia Le re-checked in v3 (change notes, 20 Nov 2026)
+        out = run("two-means", "--delta", "3", "--sd", "5.5")
+        self.assertEqual((out["n1_raw"], out["n1_final"]), (53.72, 54))
+        self.assertEqual(run("two-props", "--p1", "0.30", "--p2", "0.15")["n1_final"], 121)
+        self.assertEqual(run("prevalence", "--p", "0.5", "--width", "0.05")["n_total_final"], 385)
+        surv = run("survival", "--hr", "0.70", "--p-event-ctrl", "0.40", "--p-event-trt", "0.30")
+        self.assertEqual(surv["events_required"], 247)
+
+    def test_runs_without_scipy(self):
+        code = ("import sys; sys.modules['scipy'] = None; "
+                "sys.argv = ['samplesize.py', 'two-means', '--delta', '5', '--sd', '12', '--json']; "
+                f"exec(compile(open(r'{SCRIPT}', encoding='utf-8').read(), 'samplesize.py', 'exec'), {{'__name__': '__main__'}})")
+        r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(json.loads(r.stdout)["n1_final"], 92)
+
     def test_every_documented_example_runs(self):
         doc = SCRIPT.read_text(encoding="utf-8").split('"""')[1]
         for line in doc.splitlines():
@@ -277,8 +306,42 @@ Expected: all PASS. If `test_every_documented_example_runs` fails for an example
 
 ```bash
 git add plugins/orchestra/scripts/samplesize.py tests/unit/test_samplesize.py
-git commit -m "feat(orchestra): sample size calculator (Amelia Le) with golden tests" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): sample size calculator (Amelia Le) with golden tests" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
+
+---
+
+### Task 3a: `cite_render.py` (Vancouver numbering from the ledger)
+
+Adapted from Amelia Le's v3 `literature-evidence-research-vi/scripts/cite_render.py`: same numbering rules, but keys and records come from this project's ledger instead of a hand-made JSON.
+
+**Files:**
+- Create: `plugins/orchestra/scripts/cite_render.py`, `tests/unit/test_cite_render.py`
+- Modify: `NOTICE.md` (add a row: `cite_render.py` numbering logic, Amelia Le v3, contributed under MIT, adapted to the ledger)
+
+**Interfaces:**
+- Consumes: `<project>/ledgers/references.json` (`{"references": [...]}`, records with `id, title, authors[], journal, year, volume, issue, pages, doi, pmid, retracted`; any field except `id` and `title` may be missing or empty). Citations in Markdown: `[@id]` or `[@id1; @id2]` (spec 7.3).
+- Produces: CLI `cite_render.py <project> <draft.md> <out.md> [--start-marker TEXT]`.
+  - Every citation group becomes Vancouver numbers in order of first appearance: `[@a]` becomes `[1]`; a group is sorted and compressed exactly as the source script does (`[1,2]` for two consecutive numbers, `[1–3]` with an en dash for three or more, `[1–3,5]`).
+  - `--start-marker TEXT`: numbering starts at the first citation after the first line containing TEXT; citations before it reuse those numbers, and ids seen only before it are numbered after all others (source semantics).
+  - A line that is exactly `{REFERENCES}` is replaced by the numbered list, one entry per line: `<n>. <Vancouver entry>`.
+  - Vancouver entry: authors as stored, first six then `et al.` when there are more than six, joined by `, `, ending `.`; then `Title.`; then `Journal. Year;Volume(Issue):Pages.` (omit missing parts and their punctuation); then ` doi:DOI.` and ` PMID: N.` when present.
+  - Exit 0 and write `<out.md>`; stdout `<k> references numbered; unused: <ids or none>`.
+  - Exit 1, write nothing, print `E-REF <id>: not in references.json` or `E-REF <id>: retracted` for every bad id.
+  - Exit 2 for usage, I/O or JSON errors (stderr).
+
+- [ ] **Step 1: Write the failing tests** in `tests/unit/test_cite_render.py` using a temporary project folder with a ledger of three to eight records: order of first appearance; `[@a; @b; @c]` becomes `[1–3]` and `[@a; @b]` becomes `[1,2]`; `--start-marker`; `{REFERENCES}` list with an eight-author record rendered with six names and `et al.`; a record with no volume, issue or pages renders without stray punctuation; missing id gives exit 1 and no output file; retracted id gives exit 1; unused ids reported; a non-existent draft gives exit 2.
+- [ ] **Step 2: Run them, expect FAIL** (`python -m unittest discover -s tests/unit -p "test_cite_render.py" -v`).
+- [ ] **Step 3: Implement** with the standard library only, reusing `crolib.ledgers.load_references`. Keep the source script's `compress` logic.
+- [ ] **Step 4: Run the full suite and the lint**; all PASS, 0 errors.
+- [ ] **Step 5: Commit**
+
+```bash
+git add plugins/orchestra/scripts/cite_render.py tests/unit/test_cite_render.py NOTICE.md
+git commit -m "feat(orchestra): cite_render.py numbers [@id] citations in Vancouver style (adapted from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+`md2docx.py` from the same source is not ported: Word export belongs to P3 `build_docx.py` (inventory: `deferred: P3 build_docx.py`).
 
 ---
 
@@ -302,7 +365,7 @@ description: 'Use when a medical student, doctor or health worker has a clinical
 1. Attribution line (Global Constraints).
 2. **Core rule**: the question must be answerable with data the user can actually collect and must not already be answered by a textbook, guideline or recent systematic review (a "lookup question" is not a research question).
 3. **Inputs**: `project.yaml`; nothing else required. Use the Skill tool with `research-project-setup` first if no project exists.
-4. **Steps** (one line each, details in the workflow file): 0 one combined intake question (six items: clinical idea, site, purpose, time, data sources, patient numbers; do not re-ask what was given); 1 broad topic → explore 3–5 angles; 2.0 renamed-condition check (`evidence-policy.md` nomenclature check); 2 regular vs research question test; 3 hypothesis first, then PICO/PECO; 4 FINER with the data × idea novelty matrix; 5 "So what?" with the AND/BUT/HOW story; 6 assumptions list; 7 qualitative questions and the "n = 30" myth check; 8 objectives aligned with design; 9 title options.
+4. **Steps** (one line each, details in the workflow file): 0 one combined intake question (six items: clinical idea, site, purpose, time, data sources, patient numbers; do not re-ask what was given); 1 broad topic → explore 3–5 angles; 2.0 renamed-condition check (`evidence-policy.md` nomenclature check); 2 regular vs research question test (if a review already exists, reuse its search log and query only the new angle); 2b IDEAL stage (Pre-IDEAL to 4) for device, robot or AI ideas, and Feasible = 1 for an effectiveness comparison when the device is not available at the site; 3 hypothesis first, then PICO/PECO; 4 FINER with the data × idea novelty matrix, and Ethical includes equipoise (no placebo RCT of a regimen already proven effective); 5 "So what?" with the AND/BUT/HOW story; 6 assumptions list; 7 qualitative questions and the "n = 30" myth check; 8 objectives aligned with design; 9 title options.
 5. **"Just do it" rule**: proceed with an **Assumptions / Giả định** box and record it in `decisions.md`.
 6. **Output**: `01_question/question.md` in `language.output`; update `STATUS.md` row 1 to `doing`; ask the author to approve, then `gate.py open <project> G1 --by "<author>"`.
 7. **Hand-off**: next skill `literature-search`.
@@ -322,7 +385,7 @@ Expected: 0 lint errors; all tests PASS; no inventory row with an empty `new loc
 
 ```bash
 git add plugins/orchestra/skills/research-question plugins/orchestra/references/workflows/research-question.md
-git commit -m "feat(orchestra): research-question skill (ported from Amelia Le)" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): research-question skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -346,7 +409,7 @@ Writing the review as prose is out of scope here: the body ends with "To write C
 
 - [ ] **Step 2: Body (≤ 500 words), sections in order**
 
-1. Attribution line. 2. Core rule: every claim traces to a PMID/DOI returned by a tool in this session (`evidence-policy.md`). 3. Scope: structured narrative or scoping evidence synthesis; a true systematic review needs PROSPERO, two independent screeners and PRISMA 2020 → say so and point to `systematic-review` (phase P3). 4. Steps: 0 nomenclature check; 1 search plan (targeted vs exploratory) → `02_evidence/search-strategy.md`; 2 run searches with `search_lit.py search`, add chosen records with `search_lit.py add <project> <pmids>`; 3 `verify_refs.py <project> --write`; 4a evidence table with RoB column; 4b source credibility (retractions, predatory journals, COI); 4c appraise key studies with the Skill tool `critical-appraisal`; 5 GRADE / GRADE-CERQual certainty; 6 apples-vs-pears (I², prediction interval); 7 read CIs by clinical importance; 8 evidence map and gaps → `02_evidence/evidence-map.md`, `02_evidence/gaps.md`; 9 PRISMA-S fields and ICMJE AI-use note. 5. "Just do it" rule. 6. Outputs and `STATUS.md` row 2. 7. Workflow link.
+1. Attribution line. 2. Core rule: every claim traces to a PMID/DOI returned by a tool in this session (`evidence-policy.md`). 3. Scope: structured narrative or scoping evidence synthesis; a true systematic review needs PROSPERO, two independent screeners and PRISMA 2020 → say so and point to `systematic-review` (phase P3). 4. Steps: 0 nomenclature check; 1 search plan (targeted vs exploratory) → `02_evidence/search-strategy.md`; 2 run searches with `search_lit.py search` (ClinicalTrials.gov always also filtered by the study country, as the counter-check for a population gap), add chosen records with `search_lit.py add <project> <pmids>`; 3 `verify_refs.py <project> --write`; 4a evidence table with RoB column; 4b source credibility (retractions checked in batches, predatory journals, COI, duplicate publications of the same trial); 4c appraise key studies with the Skill tool `critical-appraisal`; 5 GRADE / GRADE-CERQual certainty; 6 apples-vs-pears (I², prediction interval); 7 read CIs by clinical importance; 8 evidence map and gaps → `02_evidence/evidence-map.md`, `02_evidence/gaps.md`, references numbered by `cite_render.py`, never by hand; 9 PRISMA-S fields, ICMJE AI-use note, and the default limitation "IEEE/arXiv not searched" for AI or engineering topics unless they were. 5. "Just do it" rule. 6. Outputs and `STATUS.md` row 2. 7. Workflow link.
 
 - [ ] **Step 3: Workflow and literature references**
 
@@ -361,7 +424,7 @@ Expected: 0 lint errors, all PASS (including `test_every_skill_link_to_reference
 
 ```bash
 git add plugins/orchestra/skills/literature-search plugins/orchestra/references/workflows/literature-search.md plugins/orchestra/references/literature
-git commit -m "feat(orchestra): literature-search skill (ported from Amelia Le)" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): literature-search skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -408,7 +471,7 @@ Run lint and tests as in Task 5 (expected 0 errors, all PASS, no empty inventory
 
 ```bash
 git add plugins/orchestra/skills/critical-appraisal plugins/orchestra/skills/appraise plugins/orchestra/references/appraisal-tools plugins/orchestra/references/workflows/critical-appraisal.md
-git commit -m "feat(orchestra): critical-appraisal skill and /orchestra:appraise (ported from Amelia Le)" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): critical-appraisal skill and /orchestra:appraise (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -429,15 +492,15 @@ description: 'Use when a study must be designed or a protocol drafted or reviewe
 
 - [ ] **Step 2: Body (≤ 500 words)**
 
-Sections: attribution; core rule "design follows the question; every choice states why and what it costs"; scope (sample size → `sample-size-sap`; ethics/CRF → `ethics-and-crf`, phase P4); inputs `01_question/question.md`, `02_evidence/*`, gate G1 open (`gate.py check <project> G1`; if closed, say so and stop unless waived); steps: 1 design on two axes (time direction vs design type; "prospective" ≠ "cohort") via `design/design-selection.md`; 2 diagnostic criteria with citations (e.g. ADA, KDIGO, DSM-5 current versions via `guideline-check`); 3 population, eligibility, sampling, representativeness only for prevalence aims; 4 outcomes and variables table → `03_protocol/variables.md`; 5 measurement and questionnaire rules; 6 bias, confounding, reverse causation (`design/bias-confounding.md`), Bradford Hill; 7 intervention reporting (TIDieR, CERT) and STROBE-Equity where relevant; 8 qualitative protocol essentials; 9 SPIRIT 2025 map (34 items) and CONSORT 2025 for trials, with the open caveat that the full SPIRIT 2013→2025 numbering map is unverified; 10 dummy tables. Output `03_protocol/protocol.md`; gate G2 after `sample-size-sap`; workflow link.
+Sections: attribution; core rule "design follows the question; every choice states why and what it costs"; scope (sample size → `sample-size-sap`; ethics/CRF → `ethics-and-crf`, phase P4); inputs `01_question/question.md`, `02_evidence/*`, gate G1 open (`gate.py check <project> G1`; if closed, say so and stop unless waived); steps: 1 design on two axes (time direction vs design type; "prospective" ≠ "cohort") via `design/design-selection.md`; 2 diagnostic criteria with citations (e.g. ADA, KDIGO, DSM-5 current versions via `guideline-check`); 3 population, eligibility, sampling, representativeness only for prevalence aims; 4 outcomes and variables table → `03_protocol/variables.md`; 5 measurement and questionnaire rules; 6 bias, confounding, reverse causation (`design/bias-confounding.md`), Bradford Hill; 6b drug or device intervention checklist (regulatory status and off-label use, drug source and blinding, women of reproductive age, washout at enrolment, standardised hormone assays, dose escalation, safety and DSMB); 6c phase label and background therapy (phases I–IV only for drugs, otherwise "Phase: Not Applicable"; add-on trials need one background-dose adjustment protocol for all arms and rescue criteria; estimand per ICH E9(R1)); 7 intervention reporting (TIDieR, CERT) and STROBE-Equity where relevant; 8 qualitative protocol essentials; 9 SPIRIT 2025 map (34 items) and CONSORT 2025 for trials, with the open caveat that the full SPIRIT 2013→2025 numbering map is unverified; 10 dummy tables. Output `03_protocol/protocol.md`; gate G2 after `sample-size-sap`; workflow link.
 
 - [ ] **Step 3: References, traceability, lint, tests, commit**
 
-Translate the three reference files into `references/design/`, all rows and the 5 new error rows kept. Write the workflow file. Fill inventory, run lint and tests (0 errors, all PASS).
+Translate the three reference files into `references/design/`, all rows kept, including the 5 error rows from the 18 Nov notes and the v3 rows (AI model development/validation design row; AI biases: data leakage, overfitting to the validation set, spectrum bias, dataset shift; behavioural/lifestyle RCT row: contamination, co-intervention, waning effect, adherence, CACE). Where a step needs a Word file, point to the `docx` skill if installed; `md2docx.py` is deferred to P3. Write the workflow file. Fill inventory, run lint and tests (0 errors, all PASS).
 
 ```bash
 git add plugins/orchestra/skills/protocol-design plugins/orchestra/references/design plugins/orchestra/references/workflows/protocol-design.md
-git commit -m "feat(orchestra): protocol-design skill (ported from Amelia Le)" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): protocol-design skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -465,15 +528,15 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/samplesize.py" <design> [options] --json
 python "${CLAUDE_PLUGIN_ROOT}/scripts/samplesize.py" sensitivity --design <design> --vary <param> --values a,b,c
 ```
 
-with the rule "report n exactly as the script returns it; the script divides the unrounded n by (1 − dropout) and then rounds up; never round first"; always run a sensitivity table on the most uncertain parameter and `power` when n is fixed; descriptive and analytic aims both → compute both, take the larger; qualitative studies → information power and saturation (Malterud 2016; Hennink & Kaiser 2022), no formula; pilot/feasibility trials sized by precision, no efficacy power; ANCOVA n × (1 − r²); matched case-control caveat; infeasibility rule (n above about 3 × feasible recruitment, a default from `judgement-defaults.md`). Outputs `03_protocol/sample-size.md` (with a "how to explain this to the committee" paragraph in `language.output`) and `03_protocol/sap.md`; then ask the author to approve and run `gate.py open <project> G2 --by "<author>"`. Workflow link.
+with the rule "report n exactly as the script returns it; the script divides the unrounded n by (1 − dropout) and then rounds up; never round first"; always run a sensitivity table on the most uncertain parameter and `power` when n is fixed; descriptive and analytic aims both → compute both, take the larger; qualitative studies → information power and saturation (Malterud 2016; Hennink & Kaiser 2022), no formula; pilot/feasibility trials sized by precision, no efficacy power; ANCOVA n × (1 − r²); matched case-control caveat; power for the key secondary outcome under hierarchical testing (step 6); for AI/ML studies the validation set counts patients and uses `--n-clusters --icc` for clustering, prediction models follow Riley (pmsampsize), training sets use learning curves; Δ and SD taken at the same time point as the primary outcome, SD converted when the source trial has more than two arms, add-on effects assumed smaller, cluster sizing when contamination is likely; infeasibility rule (n above about 3 × feasible recruitment, a default from `judgement-defaults.md`). Outputs `03_protocol/sample-size.md` (with a "how to explain this to the committee" paragraph in `language.output`) and `03_protocol/sap.md`; then ask the author to approve and run `gate.py open <project> G2 --by "<author>"`. Workflow link.
 
 - [ ] **Step 3: References, traceability, lint, tests, commit**
 
-Translate the four reference files (`openevidence-queries.md` becomes `statistics/evidence-queries.md`, generalised to "evidence source" while keeping every query). Write the workflow file with the 5 new error rows. Fill inventory, run lint and tests.
+Translate the four reference files (`openevidence-queries.md` becomes `statistics/evidence-queries.md`, generalised to "evidence source" while keeping every query). Write the workflow file with the 5 error rows from the 18 Nov notes and the v3 error rows. `statistics/sample-size-formulas.md` keeps the v3 sections (pooled SD, absolute-to-percent conversion with its worked example, "AI / machine-learning models", SD conversion for more than two arms with the SUSTAIN 5 example). Fill inventory, run lint and tests.
 
 ```bash
 git add plugins/orchestra/skills/sample-size-sap plugins/orchestra/references/statistics plugins/orchestra/references/workflows/sample-size-sap.md
-git commit -m "feat(orchestra): sample-size-sap skill (ported from Amelia Le)" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): sample-size-sap skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
