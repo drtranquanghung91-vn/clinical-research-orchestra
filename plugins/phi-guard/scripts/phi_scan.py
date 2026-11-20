@@ -68,12 +68,16 @@ WEAK = [
 # queries, HTTP clients, or inline Python/Node code that uses a network library.
 SHELL_TOOLS = ("Bash", "PowerShell")
 SHELL_OUTBOUND = re.compile(r"search_lit|\bcurl(?:\.exe)?\b|\bwget\b|Invoke-WebRequest|Invoke-RestMethod|\birm\b|"
-                            r"\biwr\b|Start-BitsTransfer", re.I)
-_CMD_START = r"(?:^|(?<=[\s;&|(]))"
-SHELL_PY_INLINE = re.compile(_CMD_START + r"(?:python[0-9.]*|py)(?:\.exe)?(?=\s)[^|;&\n]*?(?:\s-c\b|\s-(?=\s|$)|<<|<\s)",
-                             re.I | re.M)
-SHELL_PY_NET = re.compile(r"\burllib\b|\brequests\b|\bhttp\.client\b")
-SHELL_NODE_INLINE = re.compile(_CMD_START + r"node(?:\.exe)?\s[^|;&\n]*?(?:-e|--eval|-p|--print)\b", re.I | re.M)
+                            r"\biwr\b|Start-BitsTransfer|\bNet\.WebClient\b|\bSystem\.Net\.Http\b", re.I)
+# An interpreter name at the start of a command word, also when called by path (C:\...\python.exe,
+# /usr/bin/python3, & "C:\Python312\python.exe").
+_CMD_START = r"(?:^|(?<=[\s;&|(\"'\\/]))"
+_CMD_END = r"(?:\.exe)?(?=[\s\"'])"
+SHELL_PY_INLINE = re.compile(_CMD_START + r"(?:python[0-9.]*|py)" + _CMD_END +
+                             r"[^|;&\n]*?(?:\s-c\b|\s-(?=\s|$)|<<|<\s)", re.I | re.M)
+SHELL_PY_NET = re.compile(r"\burllib3?\b|\brequests\b|\bhttp\.client\b|\bhttpx\b|\baiohttp\b")
+SHELL_NODE_INLINE = re.compile(_CMD_START + r"node" + _CMD_END + r"[^|;&\n]*?(?:-e|--eval|-p|--print)\b",
+                               re.I | re.M)
 SHELL_NODE_NET = re.compile(r"\bfetch\s*\(|require\(\s*['\"](?:node:)?https?['\"]\s*\)|\bhttps?\.(?:get|request)\b|"
                             r"from\s+['\"](?:node:)?https?['\"]|\baxios\b")
 
@@ -88,14 +92,27 @@ def bash_is_outbound(command: str) -> bool:
 # Dict keys that name the patient: a name in their value is a strong signal. For any other key
 # (e.g. a tool's "name" argument) a name found only through the synthesised "key: value" text is weak.
 PATIENT_KEYS = {"patient", "patient_name", "patients_name", "patient_s_name", "ho_ten", "ho_va_ten", "ten_benh_nhan",
-                "ten_nguoi_benh", "benh_nhan", "nguoi_benh", "bn", "ten_bn"}
+                "ten_nguoi_benh", "benh_nhan", "nguoi_benh", "bn", "ten_bn", "ho_ten_benh_nhan",
+                "ho_va_ten_benh_nhan", "ho_ten_nguoi_benh"}
+# A name-like key nested under a patient key ({"patient": {"name": ...}}) also names the patient.
+PATIENT_PARENTS = PATIENT_KEYS | {"patients"}
+CHILD_NAME_KEYS = {"name", "full_name", "fullname", "ho_ten", "ho_va_ten", "ten", "first_name", "last_name",
+                   "given_name", "family_name"}
 NAME_RX = re.compile(NAME)
 
 
-def _norm_key(k: str) -> str:
+def _norm_key(k) -> str:
+    """'patientName', 'PatientName', 'patient-name', 'Họ tên' -> 'patient_name', 'patient_name', ..., 'ho_ten'."""
     k = unicodedata.normalize("NFKD", str(k).replace("đ", "d").replace("Đ", "D"))
-    k = "".join(c for c in k if not unicodedata.combining(c)).lower()
+    k = "".join(c for c in k if not unicodedata.combining(c))
+    k = re.sub(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", "_", k).lower()
     return re.sub(r"[^a-z0-9]+", "_", k).strip("_")
+
+
+def _is_patient_key(key, parent) -> bool:
+    nk = _norm_key(key)
+    return nk in PATIENT_KEYS or (parent is not None and nk in CHILD_NAME_KEYS
+                                  and _norm_key(parent) in PATIENT_PARENTS)
 
 
 def _allow_patterns() -> list:
@@ -132,22 +149,22 @@ def _url_text(m: "re.Match") -> str:
     return " " + text.replace("&", " ").replace("=", " ") + " " + tail
 
 
-def _texts(obj, out: list) -> None:
+def _texts(obj, out: list, parent=None) -> None:
     """Collect scannable strings: every string value raw, plus 'key: value' for each dict entry.
-    Raw texts are stored as str; synthesised ones as (text, key, value)."""
+    Raw texts are stored as str; synthesised ones as (text, key, value, parent key)."""
     if isinstance(obj, dict):
         for k, v in obj.items():
             out.append(str(k))
             if isinstance(v, (dict, list, tuple)):
-                _texts(v, out)
+                _texts(v, out, parent=k)
             elif isinstance(v, str):
-                out.append((f"{k}: {v}", str(k), v))
+                out.append((f"{k}: {v}", str(k), v, parent))
                 out.append(v)
             elif v is not None:
                 out.append(str(v))
     elif isinstance(obj, (list, tuple)):
         for v in obj:
-            _texts(v, out)
+            _texts(v, out, parent=parent)
     elif obj is not None:
         out.append(str(obj))
 
@@ -155,9 +172,9 @@ def _texts(obj, out: list) -> None:
 def _scan_item(item) -> tuple[list[str], list[str]]:
     if isinstance(item, str):
         return scan(item)
-    text, key, value = item
+    text, key, value, parent = item
     strong, weak = scan(text)
-    if _norm_key(key) in PATIENT_KEYS:
+    if _is_patient_key(key, parent):
         if "patient name" not in strong and NAME_RX.search(unicodedata.normalize("NFC", value)):
             strong.append("patient name")
     elif "patient name" in strong:  # e.g. {"name": "Thesis Draft Folder"}: ask, do not block
