@@ -1,3 +1,5 @@
+import contextlib
+import io
 import json
 import tempfile
 import unittest
@@ -60,6 +62,56 @@ class TestLedgers(unittest.TestCase):
             errs = ledgers.check_project(Path(t))
             self.assertTrue(any("duplicate id" in e for e in errs))
             self.assertTrue(any("R-001" in e for e in errs))
+
+    def _project(self, t, **files):
+        led = Path(t) / "ledgers"
+        led.mkdir()
+        for name, text in files.items():
+            (led / name).write_text(text, encoding="utf-8")
+        return Path(t)
+
+    def test_check_project_invalid_json_is_an_error_not_a_crash(self):
+        with tempfile.TemporaryDirectory() as t:
+            proj = self._project(t, **{"references.json": "{not json"})
+            errs = ledgers.check_project(proj)
+            self.assertTrue(any("references.json" in e and "invalid JSON" in e for e in errs))
+
+    def test_check_project_bad_top_level_is_an_error(self):
+        with tempfile.TemporaryDirectory() as t:
+            proj = self._project(t, **{"references.json": "[]", "claims.json": '{"claims": "x"}'})
+            errs = ledgers.check_project(proj)
+            self.assertTrue(any("references.json" in e and "top level" in e for e in errs))
+            self.assertTrue(any("claims.json" in e and "must be a list" in e for e in errs))
+
+    def test_check_project_non_object_record_is_an_error(self):
+        with tempfile.TemporaryDirectory() as t:
+            body = json.dumps({"results": [RES, RES | {"id": "R-002"}, "oops"]})
+            proj = self._project(t, **{"results-ledger.json": body})
+            errs = ledgers.check_project(proj)
+            self.assertTrue(any("record 3 is not an object" in e for e in errs))
+
+    def test_check_project_non_string_id_is_an_error(self):
+        with tempfile.TemporaryDirectory() as t:
+            body = json.dumps({"results": [dict(RES, id=["R-001"])]})
+            proj = self._project(t, **{"results-ledger.json": body})
+            errs = ledgers.check_project(proj)
+            self.assertTrue(any("id must be a string" in e for e in errs))
+
+    def test_check_project_idless_records_are_not_duplicates(self):
+        with tempfile.TemporaryDirectory() as t:
+            body = json.dumps({"results": [dict(RES, id=""), dict(RES, id="")]})
+            proj = self._project(t, **{"results-ledger.json": body})
+            errs = ledgers.check_project(proj)
+            self.assertFalse(any("duplicate id" in e for e in errs))
+            self.assertEqual(sum("missing 'id'" in e for e in errs), 2)
+
+    def test_main_returns_1_on_malformed_ledger(self):
+        with tempfile.TemporaryDirectory() as t:
+            proj = self._project(t, **{"claims.json": "{"})
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(ledgers.main(["check", str(proj)]), 1)
+            self.assertIn("invalid JSON", out.getvalue())
 
 
 if __name__ == "__main__":

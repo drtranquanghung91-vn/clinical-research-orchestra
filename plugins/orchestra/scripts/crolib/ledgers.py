@@ -76,19 +76,45 @@ def unique_id(base: str, taken: set[str]) -> str:
     return f"{base}{n}"
 
 
+def _load_checked(path: Path, key: str) -> tuple[list, list[str]]:
+    """Like _load, but reports malformed data as error strings instead of raising."""
+    fname = path.name
+    if not path.exists():
+        return [], []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (ValueError, OSError) as e:
+        return [], [f"{fname}: invalid JSON: {e}"]
+    if not isinstance(data, dict):
+        return [], [f"{fname}: top level must be an object with key '{key}'"]
+    recs = data.get(key, [])
+    if not isinstance(recs, list):
+        return [], [f"{fname}: '{key}' must be a list"]
+    return recs, []
+
+
 def check_project(project: Path) -> list[str]:
     led = Path(project) / "ledgers"
     checks = [("references", validate_reference), ("results", validate_result), ("claims", validate_claim)]
     errs: list[str] = []
     for key, fn in checks:
         fname = FILES[key]
+        recs, load_errs = _load_checked(led / fname, key)
+        errs += load_errs
         seen: set[str] = set()
-        for rec in _load(led / fname, key):
-            rid = rec.get("id", "?")
-            if rid in seen:
-                errs.append(f"{fname}: duplicate id '{rid}'")
-            seen.add(rid)
-            errs += [f"{fname}: {rid}: {e}" for e in fn(rec)]
+        for n, rec in enumerate(recs, start=1):
+            if not isinstance(rec, dict):
+                errs.append(f"{fname}: record {n} is not an object")
+                continue
+            rid = rec.get("id")
+            label = rid if isinstance(rid, str) and rid else f"record {n}"
+            if rid not in (None, "") and not isinstance(rid, str):
+                errs.append(f"{fname}: {label}: id must be a string")
+            elif isinstance(rid, str) and rid:
+                if rid in seen:
+                    errs.append(f"{fname}: duplicate id '{rid}'")
+                seen.add(rid)
+            errs += [f"{fname}: {label}: {e}" for e in fn(rec)]
     return errs
 
 
