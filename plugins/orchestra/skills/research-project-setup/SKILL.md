@@ -16,7 +16,7 @@ Every orchestra skill reads and writes one project folder. `<project>` below mea
 2. Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/init_project.py" <dest> --title "<title>" --type <type> --design <design> --output-lang <vi|en> --chat-lang <vi|en>`.
    Use `python3` if `python` is not found. `--chat-lang` is the language the user is writing in.
    Put the title in double quotes and escape any `\"`, `$` or backtick in it.
-   If it exits 1, show its message, fix the arguments or destination, and do not say the project was created.
+   If it exits 2, show its message, fix the arguments or destination, and do not say the project was created.
 3. Ask the user to copy their existing files into `00_inputs/` (protocol, data, outputs, PDFs,
    institution template, journal or conference rules). Do not read patient data files; route them to
    the `phi-guard:deidentify-data` skill.

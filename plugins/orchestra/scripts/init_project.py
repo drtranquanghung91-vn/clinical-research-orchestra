@@ -2,6 +2,8 @@
 """Create a research project folder from the orchestra template.
 
   python init_project.py <dest> --title "..." --type thesis-masters --design cohort --output-lang vi --chat-lang vi
+
+Exit codes: 0 = created; 2 = bad arguments, destination already has project.yaml, or cannot write.
 """
 from __future__ import annotations
 
@@ -76,9 +78,9 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     try:
         d = create(Path(a.dest), a.title, a.ptype, a.design, a.output_lang, a.chat_lang)
-    except (FileExistsError, ValueError) as e:
-        print(f"init_project: {e}")
-        return 1
+    except (OSError, ValueError) as e:  # existing project, destination is a file, no permission, ...
+        print(f"init_project: {e}", file=sys.stderr)
+        return 2
     print(f"created {d}")
     return 0
 

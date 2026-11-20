@@ -16,6 +16,14 @@ Read `docs/superpowers/specs/2026-11-20-clinical-research-orchestra-design.md` f
   email; never patient data.
 - Every change to a skill ships with a scenario in `tests/scenarios/` or a note why none applies.
 
+## CLI conventions
+- Exit codes for every script: 0 = ok / clean; 1 = findings, listed (for `gate.py check`: the gate
+  is closed); 2 = usage error, missing or unreadable input, network/API error or internal error.
+- Results go to stdout; errors and warnings go to stderr. Never print patient data cell values.
+- A wrong path (missing project, no `ledgers/` folder, missing file) is an error (2), never an
+  empty clean result. Network failures are 2, never "verified" or "not found".
+- Scripts that print Vietnamese call `sys.stdout.reconfigure(encoding="utf-8")` inside `try/except`.
+
 ## Commands
 - Tests: `python -m unittest discover -s tests/unit -v`
 - Skill lint: `python tools/lint_skills.py`

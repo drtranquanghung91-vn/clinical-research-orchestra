@@ -63,6 +63,27 @@ class TestGate(unittest.TestCase):
             code = gate.main(list(argv))
         return code, out.getvalue(), err.getvalue()
 
+    # I10: usage errors go to stderr with exit 2; a missing project folder is an error, not "closed"
+    def test_cli_usage_errors_on_stderr(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            code, out, err = self.run_cli("open", str(p), "G1")
+            self.assertEqual(code, 2)
+            self.assertIn("--by is required", err)
+            self.assertEqual(out, "")
+            code, out, err = self.run_cli("lock", str(p), "G3", "--by", "A")
+            self.assertEqual(code, 2)
+            self.assertIn("lock needs --files", err)
+            self.assertEqual(out, "")
+
+    def test_cli_missing_project_exits_2(self):
+        with tempfile.TemporaryDirectory() as t:
+            for argv in (("check", str(Path(t) / "nope"), "G1"), ("open", str(Path(t) / "nope"), "G1", "--by", "A")):
+                code, out, err = self.run_cli(*argv)
+                self.assertEqual(code, 2, argv)
+                self.assertIn("not found", err, argv)
+            self.assertFalse((Path(t) / "nope").exists())
+
     def test_cli_lock_missing_file(self):
         with tempfile.TemporaryDirectory() as t:
             p = project(t)

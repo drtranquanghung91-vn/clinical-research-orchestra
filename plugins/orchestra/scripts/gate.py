@@ -8,6 +8,9 @@ starting with "WAIVE G<n>:".
   python gate.py open  <project> G1 --by "Author name"
   python gate.py lock  <project> G3 --by "Author name" --files ledgers/results-ledger.json 05_analysis/output/km.txt
   python gate.py check <project> G3
+
+Exit codes: open/lock 0 = recorded; check 0 = open (or waived), 1 = closed (reasons listed);
+2 = usage error, missing project folder or file, unreadable state (open/lock). Errors go to stderr.
 """
 from __future__ import annotations
 
@@ -103,12 +106,15 @@ def main(argv=None) -> int:
     ap.add_argument("--by", default="")
     ap.add_argument("--files", nargs="*", default=[])
     a = ap.parse_args(argv)
+    if not Path(a.project).is_dir():
+        print(f"gate: project folder {a.project} not found", file=sys.stderr)
+        return 2
     if a.cmd in ("open", "lock"):
         if not a.by:
-            print("gate: --by is required (who approved)")
+            print("gate: --by is required (who approved)", file=sys.stderr)
             return 2
         if a.cmd == "lock" and not a.files:
-            print("gate: lock needs --files")
+            print("gate: lock needs --files", file=sys.stderr)
             return 2
         try:
             open_gate(Path(a.project), a.gate, a.by, a.files)

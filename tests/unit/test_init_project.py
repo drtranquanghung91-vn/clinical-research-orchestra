@@ -1,3 +1,5 @@
+import contextlib
+import io
 import json
 import tempfile
 import unittest
@@ -35,6 +37,37 @@ class TestInitProject(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             with self.assertRaises(ValueError):
                 init_project.create(Path(t) / "p", "A", "manuscript", "astrology", "en", "en")
+
+    # I10: input errors -> stderr + exit 2
+    def _main(self, argv):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = init_project.main(argv)
+        return code, out.getvalue(), err.getvalue()
+
+    def test_main_existing_project_exits_2(self):
+        with tempfile.TemporaryDirectory() as t:
+            dest = str(Path(t) / "p")
+            args = [dest, "--title", "A", "--type", "manuscript", "--design", "cohort"]
+            self.assertEqual(self._main(args)[0], 0)
+            code, out, err = self._main(args)
+            self.assertEqual(code, 2)
+            self.assertIn("already has project.yaml", err)
+            self.assertNotIn("created", out)
+
+    def test_main_destination_is_a_file_exits_2(self):
+        with tempfile.TemporaryDirectory() as t:
+            f = Path(t) / "afile"
+            f.write_text("x", encoding="utf-8")
+            code, out, err = self._main([str(f), "--title", "A", "--type", "manuscript", "--design", "cohort"])
+            self.assertEqual(code, 2)
+            self.assertIn("init_project:", err)
+
+    def test_main_bad_choice_exits_2(self):
+        with tempfile.TemporaryDirectory() as t:
+            with self.assertRaises(SystemExit) as cm, contextlib.redirect_stderr(io.StringIO()):
+                init_project.main([str(Path(t) / "p"), "--title", "A", "--type", "x", "--design", "cohort"])
+            self.assertEqual(cm.exception.code, 2)
 
     def test_guideline_map_covers_all_designs(self):
         for d in init_project.DESIGNS:
