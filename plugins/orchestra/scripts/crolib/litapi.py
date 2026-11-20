@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import re
 import time
+import unicodedata
 import urllib.parse
 import xml.etree.ElementTree as ET
 
@@ -54,7 +55,9 @@ def summaries(pmids: list[str]) -> list[dict]:
         return []
     data = json.loads(ncbi("esummary.fcgi", db="pubmed", id=",".join(pmids), retmode="json"))
     res = data.get("result", {})
-    return [summary_to_record(res[p]) for p in res.get("uids", []) if p in res]
+    # NCBI answers an unknown PMID with {"uid": ..., "error": "cannot get document summary"}: not a record.
+    return [summary_to_record(res[p]) for p in res.get("uids", [])
+            if isinstance(res.get(p), dict) and "error" not in res[p]]
 
 
 def summary_to_record(s: dict) -> dict:
@@ -95,7 +98,9 @@ def abstracts(pmids: list[str]) -> dict[str, str]:
 
 
 def make_id(first_author: str, year: str) -> str:
-    surname = re.sub(r"[^a-z]", "", (first_author.split(" ")[0] if first_author else "ref").lower())
+    first = (first_author.split(" ")[0] if first_author else "ref").replace("đ", "d").replace("Đ", "D")
+    first = unicodedata.normalize("NFKD", first).encode("ascii", "ignore").decode()  # Nguyễn -> Nguyen
+    surname = re.sub(r"[^a-z]", "", first.lower())
     return f"{surname or 'ref'}{year}"
 
 

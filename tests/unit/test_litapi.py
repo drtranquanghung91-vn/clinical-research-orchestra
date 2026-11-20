@@ -34,6 +34,18 @@ class TestLitapi(unittest.TestCase):
         self.assertEqual(litapi.make_id("Le Thi B", "2025"), "le2025")
         self.assertEqual(litapi.make_id("", ""), "ref")
 
+    def test_make_id_folds_diacritics(self):
+        self.assertEqual(litapi.make_id("Nguyễn Văn A", "2024"), "nguyen2024")
+        self.assertEqual(litapi.make_id("Đặng T", "2020"), "dang2020")
+        self.assertEqual(litapi.make_id("Müller K", "2019"), "muller2019")
+
+    def test_summaries_skip_error_entries(self):
+        body = {"result": {"uids": ["111", "99999999"], "111": ESUMMARY["result"]["111"],
+                           "99999999": {"uid": "99999999", "error": "cannot get document summary"}}}
+        litapi.http_get = lambda url, timeout=30: json.dumps(body).encode()
+        recs = litapi.summaries(["111", "99999999"])
+        self.assertEqual([r["pmid"] for r in recs], ["111"])
+
 
 if __name__ == "__main__":
     unittest.main()
