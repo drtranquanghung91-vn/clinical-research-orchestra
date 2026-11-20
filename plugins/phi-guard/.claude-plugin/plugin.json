@@ -1,0 +1,9 @@
+{
+  "name": "phi-guard",
+  "version": "0.1.0",
+  "description": "Patient-identifier guard for Claude Code: blocks identifiers in outbound tool calls and de-identifies data files.",
+  "author": { "name": "Trần Quang Hưng" },
+  "license": "MIT",
+  "repository": "https://github.com/drtranquanghung91-vn/clinical-research-orchestra",
+  "keywords": ["privacy", "phi", "de-identification", "hook"]
+}

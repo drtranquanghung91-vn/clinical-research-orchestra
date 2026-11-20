@@ -1,0 +1,20 @@
+{
+  "name": "clinical-research-orchestra",
+  "owner": { "name": "Trần Quang Hưng" },
+  "metadata": {
+    "description": "Evidence-first Claude Code plugins for clinical research: question, evidence, protocol, analysis, manuscript, thesis, poster and defence.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "phi-guard",
+      "source": "./plugins/phi-guard",
+      "description": "Blocks patient identifiers from leaving the machine through MCP, WebFetch or WebSearch; de-identifies CSV/XLSX files. Install first."
+    },
+    {
+      "name": "orchestra",
+      "source": "./plugins/orchestra",
+      "description": "Research lifecycle skills: question, literature, appraisal, protocol, sample size, analysis, manuscript, thesis, poster and defence, with verified references and checked numbers."
+    }
+  ]
+}
