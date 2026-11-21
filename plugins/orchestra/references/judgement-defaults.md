@@ -13,7 +13,7 @@ apply one.
 | Qualitative interviews | 12–20 interviews | Protocol design, sample-size planning | Rounded up from Hennink & Kaiser's 9–17 to allow stratification |
 | Questionnaire pilot | Pilot a new questionnaire on 10–20 people | Protocol design | Common practice; not from a specific text |
 | Illustrative clinical thresholds | RR ≤ 0.90 or ≥ 1.10 | Reading confidence intervals against clinical thresholds | Illustration only; clinicians must set it per outcome |
-| Normality check | Shapiro–Wilk when n < 50; |skewness| < 1 when n ≥ 50 | Statistical analysis | Visual checks and context may override |
+| Normality check | Shapiro–Wilk when n < 50; \|skewness\| < 1 when n ≥ 50 | Statistical analysis | Visual checks and context may override |
 | Summary statistic | mean (SD) if normal and n ≥ 30, else median (IQR) | Statistical analysis | Convention from `stat-analysis-vi` |
 | Exact tests | Fisher/exact when any expected cell < 5 or n < 20 per group | Statistical analysis | Cochran's rule of thumb |
 | Outliers | flagged when outside quartiles ± IQR × 1.5; never removed automatically | Data preparation | Tukey's convention |
