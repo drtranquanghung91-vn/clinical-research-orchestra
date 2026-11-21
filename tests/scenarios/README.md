@@ -21,7 +21,7 @@ copy only the fixtures into it, `cd` there, then run (bash; `REPO` = absolute pa
     # RED: no plugins
     claude -p "<prompt>" --model sonnet --allowedTools "<tools>" \
       --setting-sources "" --strict-mcp-config --mcp-config '{"mcpServers":{}}' --no-chrome \
-      --output-format stream-json --verbose < /dev/null > run.jsonl
+      --output-format stream-json --verbose < /dev/null > ../run.jsonl
     # GREEN: same command plus only the plugins under test, absolute paths
     #   --plugin-dir "$REPO/plugins/orchestra" --plugin-dir "$REPO/plugins/phi-guard"
 
@@ -32,12 +32,14 @@ What each isolation flag does (Claude Code 2.1.226):
 - `--no-chrome` removes the browser extension tools.
 - Do not use `--bare`: it skips OAuth and needs an API key. Do not use `--dangerously-skip-permissions`; grant tools
   only through `--allowedTools`. `< /dev/null` stops the stdin wait.
+- Write the transcript outside the run folder (`../run.jsonl`, one parent folder per run): an agent that lists its
+  working folder otherwise finds `run.jsonl` and reads its own transcript (seen in three P1 runs).
 - Still present and cannot be removed: Claude Code's built-in tools and built-in skills (deep-research, code-review,
   loop, ...), and the login of the real account. The model is called as the logged-in user.
 
 Check the run (do this every time, the run is only valid if the init event is clean):
 
-    python "$REPO/tests/scenarios/summarize_run.py" run.jsonl
+    python "$REPO/tests/scenarios/summarize_run.py" ../run.jsonl
 
 It prints the init event (`plugins` must be `[]` for RED and exactly the plugins under test for GREEN;
 `mcp_servers` must be `[]`; `memory_paths` must point at a fresh empty folder), every tool call with its input,
