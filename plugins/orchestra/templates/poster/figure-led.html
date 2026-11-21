@@ -12,14 +12,14 @@
 <div class="sheet figure-led" style="%%VARS%%">
   <header class="title-band box">%%LOGO%%<h1>%%TITLE%%</h1>%%AUTHORS%%%%AFFIL%%</header>
   <div class="main">
-    <div class="hero-row">
-      <div class="hero-figure box">%%HERO%%</div>
-      <aside class="key-side box"><div class="key">%%KEY%%</div></aside>
+    <div class="hero-row %%HERO_CLASS%%">
+      <div class="hero-figure box" data-area="hero">%%HERO%%</div>
+      %%KEYSIDE%%
     </div>
     <div class="cols three">
-      <div class="col box">%%COL1%%</div>
-      <div class="col box">%%COL2%%</div>
-      <div class="col box">%%COL3%%</div>
+      <div class="col box" data-area="col-1">%%COL1%%</div>
+      <div class="col box" data-area="col-2">%%COL2%%</div>
+      <div class="col box" data-area="col-3">%%COL3%%</div>
     </div>
   </div>
   %%REFS%%

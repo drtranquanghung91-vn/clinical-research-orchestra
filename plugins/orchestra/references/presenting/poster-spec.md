@@ -55,12 +55,12 @@ the spec (vi uses the decimal comma); an unknown id exits 2 and nothing is writt
 
 - `size_cm` (default `target.poster_size_cm` in `project.yaml`, else 90 × 120; at most 142 per side), `bleed_mm` (default 3; 0 for none),
   `lang` (default `language.output`), `font` (CSS font-family list; default Arial with Liberation Sans fallback),
-  `body_pt` (body size at 90 cm; default per layout, see below; sizes scale with the poster width), `colors`
+  `body_pt` (body size at 90 cm: a number, or `{"editorial": 50, "pathway": 42, "figure-led": 34}`; default per layout, at least 18; all sizes scale with `min(width / 90, height / 120)`), `colors`
   (`accent`, `tint`, `ink` as `#rrggbb`), `layouts` (default all three).
 - `title`, `sections` required. `key_message` is one sentence (see the key-message test in `poster-rules.md`).
 - A section has `heading` and any of: `body` (Markdown subset: `#` headings, paragraphs, `**bold**`, `*italic*`, `-`/`1.` lists,
   pipe tables), `figure` (`"F1"` or `{id, caption, alt}`; the files come from `07_present/figures/<id>.svg|png`, so run
-  `figures.py` first), `lab_table`, `checklist`, `column` (1-based, to force a column when the automatic balance is off).
+  `figures.py` first; `F<n>.poster.svg|png`, from `figures.py --profile poster`, is used when it exists), `lab_table`, `checklist`, `column` (1-based, to force a column when the automatic balance is off).
 - `lab_table` rows: `{"test", "value", "unit", "flag": "high|low|normal"}`; a `high` row shows an up arrow, `low` a down arrow,
   both coloured. Lab values go in a table, never in a sentence.
 - `checklist` items: a string (unchecked) or `{"text", "checked"}`; they print as ☐ and ☑. Criteria go in a checklist.
@@ -72,9 +72,10 @@ the spec (vi uses the decimal comma); an unknown id exits 2 and nothing is writt
   references strip at the foot. Sections flow in reading order, balanced by weight across the columns.
 - **pathway**: title band, key-message band, then numbered steps in reading order (down column 1, then column 2). Use it when the
   poster tells a sequence: question, method, result, meaning.
-- **figure-led**: title band, one dominant figure (the `hero`, default the first figure) in a box that covers at least 45 % of the
-  body area, with the key message beside it in a solid block; the hero section's text sits under the figure. Other sections go in
-  three small text columns, so keep their text short. It needs at least one figure.
+- **figure-led**: title band, one dominant figure (the `hero`, default the first figure) in a box that it fills edge to edge, and the key
+  message in a solid block. A very wide figure takes the full width with the key message above it; otherwise the figure sits beside the
+  key message. The box height follows the figure's aspect ratio, so the hero is the largest element on the poster. Other sections go in
+  three small text columns under it, so keep their text short. It needs a figure: without one the layout is skipped with a warning.
 
 All three: no rounded boxes, no gradients, no shadows (a test greps `poster.css`). Body text is 38 pt (editorial), 36 pt (pathway) or 30 pt (figure-led) at 90 cm, never below 24 pt,
 headings 50 pt, captions 26 pt, references 24 pt; `body_pt` overrides the body size.
@@ -97,3 +98,10 @@ or figure-led layout for it. SVG is inlined, so it stays vector in the PDF; the 
 - Look at the PNG of every layout before sending: nothing cut off (the build warns when a box overflows), text readable from
   1.5 m, layouts visibly different.
 - Print note for the author: print at 100 %, request the bleed, make sure the printer has the font (or use the PDF, which embeds it).
+
+## Checks the build prints
+
+`poster_build.py` reads the DOM dump: `box(es) overflow` (text or a figure is cut off) and `col-N is only X % full` (a column below 75 %:
+raise `body_pt`, add text or force a section into another column with `column`). Both are warnings; fix them before sending the PDF.
+Invalid values in `poster.json` (`body_pt`, `colors`, `size_cm`, a lab `flag` other than high, low or normal) exit 2 with a message.
+In Markdown, `2023. text` at the start of a line stays a paragraph; a list needs `1.` to `99.` followed by a space. A `|` inside a table cell is not supported.

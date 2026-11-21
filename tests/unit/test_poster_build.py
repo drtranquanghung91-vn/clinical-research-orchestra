@@ -1,6 +1,8 @@
 import json
 import re
 import struct
+import subprocess
+import sys
 import tempfile
 import unittest
 import zlib
@@ -141,9 +143,9 @@ class TestHtml(unittest.TestCase):
         ed, pw, fl = (self.html(x) for x in pb.LAYOUTS)
         self.assertEqual(fl.count('class="hero-figure box"'), 1)
         self.assertEqual(ed.count("hero-figure box"), 0)
-        self.assertEqual(ed.count('<div class="col box">'), 3)
-        self.assertEqual(pw.count('<div class="col box">'), 2)
-        self.assertEqual(fl.count('<div class="col box">'), 3)
+        self.assertEqual(ed.count('<div class="col box" data-area="col-'), 3)
+        self.assertEqual(pw.count('<div class="col box" data-area="col-'), 2)
+        self.assertEqual(fl.count('<div class="col box" data-area="col-'), 3)
         self.assertIn('class="step"', pw)
         self.assertNotIn('class="step"', ed)
         self.assertIn('class="key-band box"', pw)
@@ -226,10 +228,135 @@ class TestHtml(unittest.TestCase):
         self.assertEqual(rc, 2)
         self.assertTrue(any("F1" in e for e in errs))
 
-    def test_hero_covers_45_percent(self):
+    def test_hero_wide_figure_takes_full_width(self):
         spec = pb.load_spec(self.root, self.poster / "poster.json")
-        geo = pb.geometry("figure-led", spec)
-        self.assertGreaterEqual(geo["hero_w"] * geo["hero_h"] / (geo["inner_w"] * geo["main_h"]), 0.45)
+        make_png(self.root / "07_present" / "figures" / "F1.png", 600, 200)
+        spec["sections"][1]["body"] = ""
+        assets = pb.Assets(self.root, self.poster)
+        geo = pb.geometry("figure-led", spec, assets)  # 600 x 200: very wide
+        self.assertTrue(geo["hero_wide"])
+        self.assertAlmostEqual(geo["hero_w"], geo["inner_w"])
+        (self.poster / "poster.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+        run(self.root, layouts=["figure-led"])
+        self.assertIn('class="hero-row wide"', self.html("figure-led"))
+
+    def test_hero_tall_figure_sits_beside_key_message(self):
+        make_png(self.root / "07_present" / "figures" / "F1.png", 400, 400)
+        run(self.root, layouts=["figure-led"])
+        h = self.html("figure-led")
+        self.assertIn('class="hero-row "', h)
+        self.assertLess(h.index('data-area="hero"'), h.index('class="key-side box"'))
+
+    def test_body_pt_per_layout(self):
+        spec = pb.load_spec(self.root, self.poster / "poster.json")
+        spec["body_pt"] = {"editorial": 50, "pathway": 40}
+        self.assertEqual(pb.body_pt_of(spec, "editorial"), 50.0)
+        self.assertEqual(pb.body_pt_of(spec, "figure-led"), float(pb.BODY_PT["figure-led"]))
+        raw = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))
+        raw["body_pt"] = {"poster": 40}
+        (self.poster / "poster.json").write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
+        rc, _, errs = run(self.root)
+        self.assertEqual(rc, 2)
+
+    def test_scale_uses_the_limiting_side(self):
+        spec = pb.load_spec(self.root, self.poster / "poster.json")
+        spec["size_cm"] = [120.0, 90.0]
+        self.assertAlmostEqual(pb.geometry("editorial", spec)["k"], 0.75)
+        spec["size_cm"] = [90.0, 120.0]
+        self.assertAlmostEqual(pb.geometry("editorial", spec)["k"], 1.0)
+
+    def test_distribute_balances_estimated_heights(self):
+        secs = [{"heading": str(i)} for i in range(5)]
+        cols = pb.distribute(secs, 3, [10, 10, 30, 10, 10])
+        self.assertEqual(cols, [[0, 1], [2], [3, 4]])
+        cols = pb.distribute(secs, 2, [10, 10, 10, 10, 10])
+        self.assertEqual(sorted(len(c) for c in cols), [2, 3])
+        self.assertEqual(sum(cols, []), [0, 1, 2, 3, 4])
+
+    def test_poster_profile_figure_preferred(self):
+        figs = self.root / "07_present" / "figures"
+        make_png(figs / "F1.poster.png", 300, 600)
+        info = pb.Assets(self.root, self.poster).figure("F1")
+        self.assertTrue(str(info["png"]).endswith("F1.poster.png"))
+        self.assertAlmostEqual(info["aspect"], 2.0)
+        run(self.root, layouts=["editorial"])
+        self.assertIn("F1.poster.png", self.html("editorial"))
+
+    def test_template_tokens_in_user_text_stay_literal(self):
+        spec = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))
+        spec["title"] = "Tiêu đề %%KEY%% và %%COL1%%"
+        (self.poster / "poster.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+        run(self.root, layouts=["editorial"])
+        h = self.html("editorial")
+        self.assertIn("<h1>Tiêu đề %%KEY%% và %%COL1%%</h1>", h)
+
+    def test_invalid_spec_values_exit_2_without_traceback(self):
+        bad = [("body_pt", "abc"), ("body_pt", 8), ("colors", {"accent": "red"}), ("size_cm", [90, "x"]),
+               ("bleed_mm", "3"), ("references", "not a list"), ("key_message", 5)]
+        for key, val in bad:
+            spec = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))
+            spec[key] = val
+            (self.poster / "poster.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+            rc, _, errs = run(self.root)
+            self.assertEqual(rc, 2, (key, val))
+            self.assertTrue(errs and "poster_build:" in errs[0], (key, val))
+            spec.pop(key)
+            (self.poster / "poster.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+
+    def test_bad_lab_flag_exits_2(self):
+        spec = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))
+        spec["sections"][2]["lab_table"][0]["flag"] = "HIGH"
+        (self.poster / "poster.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+        rc, _, errs = run(self.root)
+        self.assertEqual(rc, 2)
+        self.assertTrue(any("flag" in e for e in errs))
+
+    def test_year_at_line_start_is_not_a_list(self):
+        out = pb.md_to_html("2023. Kết quả được công bố.")
+        self.assertEqual(out, "<p>2023. Kết quả được công bố.</p>")
+        self.assertIn("<ol>", pb.md_to_html("1. một\n2. hai"))
+        self.assertIn("<ol>", pb.md_to_html("12) mười hai"))
+        self.assertNotIn("<ol>", pb.md_to_html("Dòng một\n2. không phải danh sách"))
+
+    def test_empty_key_message_prints_no_rules(self):
+        spec = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))
+        spec["key_message"] = ""
+        (self.poster / "poster.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+        run(self.root)
+        for layout in pb.LAYOUTS:
+            h = self.html(layout)
+            self.assertNotIn('<div class="key">', h)
+            self.assertNotIn('class="key-band', h)
+            self.assertNotIn('class="key-side', h)
+
+    def test_figure_led_skipped_when_no_figure_others_still_build(self):
+        spec = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))
+        for sec in spec["sections"]:
+            sec.pop("figure", None)
+        (self.poster / "poster.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+        rc, _, errs = run(self.root)
+        self.assertTrue(any("figure-led skipped" in e for e in errs))
+        self.assertTrue((self.poster / "editorial.html").exists())
+        self.assertTrue((self.poster / "pathway.html").exists())
+        self.assertFalse((self.poster / "figure-led.html").exists())
+
+    def test_browser_command_sandbox_flag_only_off_windows(self):
+        old = pb.sys.platform
+        try:
+            pb.sys.platform = "linux"
+            self.assertIn("--no-sandbox", pb._browser_cmd("chrome", "/tmp/x", []))
+            pb.sys.platform = "win32"
+            self.assertNotIn("--no-sandbox", pb._browser_cmd("chrome", "C:/x", []))
+        finally:
+            pb.sys.platform = old
+
+    def test_timeout_kills_the_process(self):
+        import subprocess
+        import time
+        t0 = time.time()
+        with self.assertRaises(subprocess.TimeoutExpired):
+            pb._run_cmd([sys.executable, "-c", "import time; time.sleep(60)"], 1.5)
+        self.assertLess(time.time() - t0, 30)
 
     def test_explicit_column_wins(self):
         spec = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))
@@ -237,7 +364,7 @@ class TestHtml(unittest.TestCase):
         (self.poster / "poster.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
         run(self.root, layouts=["editorial"])
         h = self.html("editorial")
-        col3 = h.split('<div class="col box">')[3]
+        col3 = h.split('<div class="col box" data-area="col-')[3]
         self.assertIn("Đặt vấn đề", col3)
 
     def test_bad_size(self):
@@ -282,6 +409,7 @@ class TestBrowser(unittest.TestCase):
             root = make_project(Path(tmp) / "dự án mẫu", size=(20, 30), svg=True)
             rc, msgs, errs = run(root, layouts=["editorial"], browser=BROWSER)
             self.assertEqual(rc, 0, errs)
+            self.assertFalse([e for e in errs if "overflow" in e], errs)
             poster = root / "07_present" / "poster"
             for ext in (".pdf", ".png", ".dom.html"):
                 self.assertTrue((poster / f"editorial{ext}").stat().st_size > 1000, ext)
@@ -293,6 +421,78 @@ class TestBrowser(unittest.TestCase):
             w, h = struct.unpack(">II", png[16:24])
             long_side = max(w, h)
             self.assertLess(abs(long_side - 2000) / 2000, 0.10, (w, h))
+            pdf = (poster / "editorial.pdf").read_bytes()
+            box = re.search(rb"/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]", pdf)
+            self.assertTrue(box)
+            self.assertAlmostEqual(float(box.group(1)), 20.6 / 2.54 * 72, delta=1.5)  # 20 cm + 2 x 3 mm bleed
+            self.assertAlmostEqual(float(box.group(2)), 30.6 / 2.54 * 72, delta=1.5)
+            self.assertEqual(len(re.findall(rb"/Type\s*/Page[^s]", pdf)), 1)
+            self.assertRegex(dom, r'data-fill="[\d.]+"')
+
+    def test_overflow_and_underfill_are_reported(self):
+        with tempfile.TemporaryDirectory(prefix="poster qua ") as tmp:
+            root = make_project(Path(tmp) / "p", size=(20, 30), svg=True)
+            poster = root / "07_present" / "poster"
+            spec = json.loads((poster / "poster.json").read_text(encoding="utf-8"))
+            spec["sections"][0]["body"] = "Rất dài. " * 400
+            spec["sections"][0]["column"] = 1
+            spec["sections"][4]["column"] = 3
+            (poster / "poster.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+            rc, msgs, errs = run(root, layouts=["editorial"], browser=BROWSER)
+            self.assertTrue([e for e in errs if "overflow" in e], errs)
+            self.assertTrue([e for e in errs if "% full" in e], errs)
+
+    def test_landscape_poster_no_overflow_in_any_layout(self):
+        with tempfile.TemporaryDirectory(prefix="poster ngang ") as tmp:
+            root = make_project(Path(tmp) / "p", size=(40, 30), svg=True,
+                                extra={"title": "Tiêu đề dài hai dòng cho poster khổ ngang, kiểm tra thang chữ"})
+            poster = root / "07_present" / "poster"
+            spec = pb.load_spec(root, poster / "poster.json")
+            assets = pb.Assets(root, poster)
+            for layout in pb.LAYOUTS:
+                html_path = poster / f"{layout}.html"
+                html_path.write_text(pb.build_html(layout, spec, assets, poster), encoding="utf-8")
+                pb.run_browser(BROWSER, html_path, poster / layout, pb.geometry(layout, spec, assets), outputs=("dom",))
+                dom = (poster / f"{layout}.dom.html").read_text(encoding="utf-8")
+                self.assertIn('data-preflight="done"', dom)
+                over = re.findall(r'<(\w+) class="([^"]*)"[^>]*data-overflow="1"', dom)
+                self.assertEqual(over, [], layout)
+
+    def test_hero_figure_fills_its_box(self):
+        for size, label in (((20, 30), "wide"), ((30, 30), "tall")):
+            with tempfile.TemporaryDirectory(prefix="poster hero ") as tmp:
+                root = make_project(Path(tmp) / "p", size=size, svg=(label == "wide"))
+                if label == "tall":
+                    make_png(root / "07_present" / "figures" / "F1.png", 400, 400)
+                poster = root / "07_present" / "poster"
+                spec = pb.load_spec(root, poster / "poster.json")
+                assets = pb.Assets(root, poster)
+                html_path = poster / "figure-led.html"
+                html_path.write_text(pb.build_html("figure-led", spec, assets, poster), encoding="utf-8")
+                pb.run_browser(BROWSER, html_path, poster / "figure-led", pb.geometry("figure-led", spec, assets),
+                               outputs=("dom",))
+                dom = (poster / "figure-led.dom.html").read_text(encoding="utf-8")
+                box = re.search(r'class="hero-figure box"[^>]*data-box-w-cm="([\d.]+)"', dom)
+                fig = re.search(r'<(?:svg|img)[^>]*data-placed-w-cm="([\d.]+)"', dom[dom.index("hero-figure"):])
+                self.assertTrue(box and fig, label)
+                self.assertGreaterEqual(float(fig.group(1)), 0.95 * float(box.group(1)), label)
+
+    def test_preflight_reports_the_drawn_size_of_a_letterboxed_image(self):
+        with tempfile.TemporaryDirectory(prefix="pre flight ") as tmp:
+            tmp = Path(tmp)
+            make_png(tmp / "wide.png", 600, 200)
+            js = (pb.TEMPLATES / "preflight.js").read_text(encoding="utf-8")
+            page = tmp / "t.html"
+            page.write_text('<!DOCTYPE html><html><body style="margin:0">'
+                            '<img src="wide.png" alt="x" style="display:block;width:10cm;height:20cm;object-fit:contain">'
+                            f'<script>{js}</script></body></html>', encoding="utf-8")
+            code, out, err = pb._run_cmd(pb._browser_cmd(BROWSER, str(tmp / "ud"), ["--dump-dom", page.as_uri()]), 120)
+            dom = out.decode("utf-8")
+            self.assertIn('data-preflight="done"', dom)
+            w = float(re.search(r'data-placed-w-cm="([\d.]+)"', dom).group(1))
+            h = float(re.search(r'data-placed-h-cm="([\d.]+)"', dom).group(1))
+            self.assertAlmostEqual(w, 10.0, delta=0.05)
+            self.assertAlmostEqual(h, 10.0 / 3, delta=0.05)  # 600 x 200 drawn inside 10 x 20 cm
 
 
 if __name__ == "__main__":
