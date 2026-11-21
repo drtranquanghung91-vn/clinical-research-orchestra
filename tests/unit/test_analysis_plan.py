@@ -101,6 +101,21 @@ class TestAnalysisPlan(unittest.TestCase):
         self.assertIn("malformed DEVIATION line", out)
         self.assertIn("decisions.md:1", out)
 
+    def test_wrapped_declaration_with_final_period_ok(self):
+        (self.p / "decisions.md").write_text(
+            "## 2026-11-21 — Post-hoc\n\nPOST-HOC A7: does the effect differ by age (< 65 vs ≥ 65),\n"
+            "requested because the committee may ask, requested by Example\nauthor, 2026-11-21.\n\n"
+            "Scope: this subgroup only, requested by nobody, 2026-01-01\n", encoding="utf-8")
+        self.results(res("R-A0-001", "A0"), res("R-A1-001", "A1"), res("R-A2-001", "A2"),
+                     res("R-A7-001", "A7", "posthoc"))
+        self.assertEqual(analysis_plan.check(self.p, []), [])
+
+    def test_wrapped_declaration_stops_at_blank_line(self):
+        (self.p / "decisions.md").write_text(
+            "POST-HOC A7: subgroup by sex\n\nrequested by Example author, 2026-11-21\n", encoding="utf-8")
+        self.results(res("R-A0-001", "A0"), res("R-A1-001", "A1"), res("R-A2-001", "A2"))
+        self.assertIn("malformed POST-HOC line", self._msgs())
+
     def test_posthoc_on_register_id_blocks(self):
         (self.p / "decisions.md").write_text("POST-HOC A2: late, requested by X, 2026-11-21\n", encoding="utf-8")
         self.base()

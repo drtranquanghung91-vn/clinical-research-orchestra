@@ -22,8 +22,21 @@ from crolib import projectcfg  # noqa: E402
 
 HEADING = re.compile(r"(?im)^#{2,3}\s.*(analysis register|đăng ký phân tích).*$")
 DECL = re.compile(r"(?m)^\s*(?:[-*]\s+)?(POST-HOC|DEVIATION) (A\d+)\b.*$")
-POSTHOC_OK = re.compile(r"POST-HOC A\d+: .+, requested by .+, \d{4}-\d{2}-\d{2}\s*$")
-DEVIATION_OK = re.compile(r"DEVIATION A\d+: .+, \d{4}-\d{2}-\d{2}\s*$")
+POSTHOC_OK = re.compile(r"POST-HOC A\d+: .+, requested by .+, \d{4}-\d{2}-\d{2}\.?\s*$", re.S)
+DEVIATION_OK = re.compile(r"DEVIATION A\d+: .+, \d{4}-\d{2}-\d{2}\.?\s*$", re.S)
+CONTINUATION_STOP = re.compile(r"^\s*(?:#|[-*]\s|\d+\.\s|(?:POST-HOC|DEVIATION) A\d+\b)")
+
+
+def _declaration(text: str, end: int, first_line: str) -> str:
+    """The declaration line plus its wrapped continuation lines (until a blank line, heading,
+    list item or another declaration), joined with single spaces."""
+    parts = [first_line.strip().lstrip("-*").strip()]
+    rest = text[end:].split("\n")[1:]
+    for line in rest:
+        if not line.strip() or CONTINUATION_STOP.match(line):
+            break
+        parts.append(line.strip())
+    return " ".join(parts)
 DERIVED = re.compile(r"<!--\s*derived:(.*?)-->", re.S)
 RESULT_ID = re.compile(r"R-A\d+-\d{3}")
 DEV_LABEL = re.compile(r"(?i)\bdeviations?\b|changed from (?:the )?(?:SAP|protocol)|differs from|sai lệch|thay đổi so với (?:SAP|đề cương|kế hoạch)")
@@ -63,7 +76,7 @@ def declared(decisions_text: str, problems: list | None = None) -> dict[str, set
     out: dict[str, set[str]] = {"POST-HOC": set(), "DEVIATION": set()}
     for m in DECL.finditer(decisions_text):
         kind, aid = m.group(1), m.group(2)
-        line = m.group(0).strip().lstrip("-*").strip()
+        line = _declaration(decisions_text, m.end(), m.group(0))
         if not (POSTHOC_OK if kind == "POST-HOC" else DEVIATION_OK).match(line):
             if problems is not None:
                 n = decisions_text.count("\n", 0, m.start()) + 1
