@@ -209,8 +209,8 @@ def import_results(project: Path, src: Path | None = None, verify_raw: bool = Fa
     existing = project / "ledgers" / "results-ledger.json"
     records = [dict(r, data_sha256=doc.get("data_sha256", ""), locked=False) for r in doc["results"]]
     new_bytes = (json.dumps({"results": records}, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
-    if existing.is_file() and existing.read_bytes() == new_bytes:
-        return len(records), []  # identical bytes: nothing to write (also keeps a G3 lock valid)
+    if existing.is_file() and existing.read_bytes().replace(b"\r\n", b"\n") == new_bytes:
+        return len(records), []  # same content (any line ending): write nothing, so a G3 lock stays valid
     if _g3_locks_ledger(project):
         raise LockedError("G3 is locked; the ledger is unchanged — re-run only after the author re-opens "
                           "G3 for a new analysis")
@@ -262,7 +262,7 @@ def main(argv=None) -> int:
     if probs:
         print(f"results_ledger: {len(probs)} problems; ledger not written")
         return 1
-    if before is not None and led.read_bytes() == before:
+    if before is not None and led.is_file() and led.read_bytes() == before:
         print(f"results_ledger: {n} results imported; ledger unchanged")
     else:
         print(f"results_ledger: {n} results imported")

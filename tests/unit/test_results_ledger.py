@@ -281,3 +281,13 @@ class TestResultsLedger(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn("ledger unchanged", r.stdout)
         self.assertEqual(led.read_bytes(), before)
+
+    def test_crlf_ledger_with_same_content_left_alone(self):
+        self.doc(result())
+        self.run_cli("import", str(self.p))
+        led = self.p / "ledgers" / "results-ledger.json"
+        crlf = led.read_bytes().replace(b"\n", b"\r\n")
+        led.write_bytes(crlf)
+        r = self.run_cli("import", str(self.p))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(led.read_bytes(), crlf)
