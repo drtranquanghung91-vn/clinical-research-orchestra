@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Draw the figures of a project from 07_present/figures/figures.json.
 
-  python figures.py <project> [--only F1,F2] [--dpi 300]
+  python figures.py <project> [--only F1,F2] [--dpi 300] [--profile document|poster]
 
 Types: forest, km (Kaplan-Meier from the de-identified CSV), rates, flow. Every plotted estimate comes
 from the results ledger by id; nothing is typed. Writes F<n>.svg, .pdf, .png and F<n>.data.json (every number
-drawn plus the native-chart series slides use) into 07_present/figures/. Format: references/presenting/figures-spec.md.
+drawn plus the native-chart series slides use) into 07_present/figures/. --profile poster writes
+F<n>.poster.{svg,pdf,png} at poster_width_cm / font_pt instead (no data.json). Format: references/presenting/figures-spec.md.
 Needs matplotlib (the install hint is printed when it is missing).
 Exit codes: 0 = done; 2 = usage error, bad spec, unknown ledger id, bad data file, or matplotlib missing.
 """
@@ -32,6 +33,8 @@ from crolib import derived, numfmt, projectcfg  # noqa: E402
 SPEC_REL = "07_present/figures/figures.json"
 OUT_REL = "07_present/figures"
 TYPES = ("forest", "km", "rates", "flow")
+PROFILES = ("document", "poster")
+POSTER_WIDTH_CM, POSTER_FONT_PT = 30.0, 24.0
 ID_OK = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*\Z")
 PALETTE = ["#1f4e79", "#c0504d", "#4f9a4f", "#8064a2", "#e69f00", "#2c9fb0"]
 GREY = "#555555"
@@ -176,65 +179,172 @@ def _read_km(project: Path, fig: dict) -> tuple[dict, str, str]:
 
 
 # ---------------------------------------------------------------- drawing helpers
+#
+# Layout rule: every distance is a multiple of the font size ("em", 1 em = font_pt in cm) or a width measured
+# from the rendered text, never a fixed number of cm. Text columns are measured with matplotlib's renderer,
+# the plot area gets what is left of the figure width, and the figure only grows (never clips) when the text
+# needs more room than the requested width gives.
+
+PT_CM = 2.54 / 72
+MIN_AXES_EM = 10.0  # narrowest plot area, in em
+
 
 class Ctx:
-    def __init__(self, plt, style: dict, lang: str, dpi: int):
+    def __init__(self, plt, style: dict, lang: str, dpi: int, size: float | None = None, width_cm: float | None = None):
         self.plt, self.lang, self.dpi = plt, lang, dpi
         self.colors = style.get("colors") if isinstance(style.get("colors"), dict) else {}
         self.font = str(style.get("font", "Arial"))
-        self.size = float(style.get("font_size", 9))
-        self.width_cm = float(style.get("width_cm", 16))
+        self.size = float(size if size is not None else style.get("font_size", 9))
+        self.width_cm = float(width_cm if width_cm is not None else style.get("width_cm", 16))
+        self.em = self.size * PT_CM  # cm
+        self.s = self.size / 9.0  # scale for line widths, markers, tick lengths
+        self._scratch = None
+        self._cache: dict = {}
 
     def color(self, key: str, i: int = 0) -> str:
         return self.colors.get(key) or PALETTE[i % len(PALETTE)]
 
-    def figure(self, fig: dict, height_cm: float):
-        width = float(fig.get("width_cm", self.width_cm)) / 2.54
+    def figure(self, height_cm: float, width_cm: float | None = None):
+        self.plt.rcParams["font.size"] = self.size
+        width = (width_cm if width_cm is not None else self.width_cm) / 2.54
         return self.plt.figure(figsize=(width, height_cm / 2.54))
 
     def fmt_axis(self, v: float) -> str:
         s = f"{v:g}"
         return s.replace(".", ",") if self.lang == "vi" else s
 
+    # -- measuring text with the renderer
+    def measure(self, text: str, size: float | None = None, bold: bool = False) -> tuple:
+        """(width_cm, height_cm) of `text` as rendered, with a 3 % margin for dpi/hinting differences."""
+        from matplotlib.backends.backend_agg import FigureCanvasAgg
+        from matplotlib.figure import Figure
+        key = (text, size or self.size, bold)
+        if key in self._cache:
+            return self._cache[key]
+        if self._scratch is None:
+            fg = Figure(figsize=(4, 4), dpi=100)
+            FigureCanvasAgg(fg)
+            self._scratch = fg
+        fg = self._scratch
+        t = fg.text(0, 0, _esc(text), fontsize=size or self.size, fontweight="bold" if bold else "normal")
+        bb = t.get_window_extent(fg.canvas.get_renderer())
+        t.remove()
+        k = 2.54 / fg.dpi
+        self._cache[key] = (bb.width * k * 1.03, bb.height * k)
+        return self._cache[key]
 
-def _style_axes(ax) -> None:
+    def width(self, text: str, size: float | None = None, bold: bool = False) -> float:
+        return self.measure(text, size, bold)[0]
+
+    def wrap(self, text: str, max_cm: float, size: float | None = None, bold: bool = False) -> str:
+        """Greedy word wrap so every line is at most `max_cm` wide as rendered (long words split by character)."""
+        out = []
+        for para in str(text).split("\n"):
+            line = ""
+            for word in para.split(" "):
+                cand = f"{line} {word}" if line else word
+                if not line or self.width(cand, size, bold) <= max_cm:
+                    line = cand
+                    continue
+                out.append(line)
+                line = word
+            while len(line) > 1 and self.width(line, size, bold) > max_cm:
+                k = len(line) - 1
+                while k > 1 and self.width(line[:k], size, bold) > max_cm:
+                    k -= 1
+                out.append(line[:k])
+                line = line[k:]
+            out.append(line)
+        return "\n".join(out)
+
+    def lines_h(self, text: str, size: float | None = None) -> float:
+        """Height in cm of a block of text lines at 1.3 line spacing."""
+        return (str(text).count("\n") + 1) * (size or self.size) * PT_CM * 1.3
+
+
+def _style_axes(ctx: Ctx, ax) -> None:
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
-    ax.tick_params(length=3, width=0.6)
+    ax.tick_params(length=3 * ctx.s, width=0.6 * ctx.s, labelsize=ctx.size, pad=3.5 * ctx.s)
     for side in ("left", "bottom"):
-        ax.spines[side].set_linewidth(0.6)
+        ax.spines[side].set_linewidth(0.6 * ctx.s)
 
 
-def _source_note(ctx: Ctx, f, text: str | None) -> None:
-    if text:
-        f.text(0.01, 0.012, _esc(text), ha="left", va="bottom", fontsize=ctx.size - 1.5, color=GREY)
+def _note_size(ctx: Ctx) -> float:
+    return ctx.size if ctx.size >= 18 else ctx.size * 0.85  # big (poster) text is never below the body size
 
 
-def _save(ctx: Ctx, f, outdir: Path, fid: str) -> None:
+def _title_size(ctx: Ctx) -> float:
+    return ctx.size + ctx.size / 9
+
+
+class Frame:
+    """Vertical bookkeeping shared by every figure: title block on top, source note at the bottom."""
+
+    def __init__(self, ctx: Ctx, fig: dict, source: str | None, width: float):
+        self.ctx, self.width = ctx, width
+        em = ctx.em
+        self.margin = 0.8 * em
+        text_w = max(width - 2 * self.margin, 4 * em)
+        title = fig.get("title")
+        self.title = ctx.wrap(title, text_w, _title_size(ctx), True) if title else ""
+        self.title_h = (ctx.lines_h(self.title, _title_size(ctx)) + 0.6 * em) if title else 0.0
+        self.note = ctx.wrap(source, text_w, _note_size(ctx)) if source else ""
+        self.note_h = (ctx.lines_h(self.note, _note_size(ctx)) + 0.4 * em) if source else 0.0
+        self.top = 0.6 * em + self.title_h  # cm above the plot area
+        self.bottom0 = self.note_h + 0.2 * em  # cm reserved at the bottom for the source note
+
+    def finish(self, f, height: float) -> None:
+        ctx = self.ctx
+        if self.title:
+            f.text(self.margin / self.width, 1 - 0.3 * ctx.em / height, _esc(self.title), ha="left", va="top",
+                   fontsize=_title_size(ctx), fontweight="bold", linespacing=1.15)
+        if self.note:
+            f.text(self.margin / self.width, 0.2 * ctx.em / height, _esc(self.note), ha="left", va="bottom",
+                   fontsize=_note_size(ctx), color=GREY, linespacing=1.15)
+
+
+def _xlabel_block(ctx: Ctx, label: str, axes_w: float) -> tuple:
+    """(wrapped label, height in cm of tick labels + axis label below the axis)."""
+    lab = ctx.wrap(label, axes_w, ctx.size) if label else ""
+    h = ctx.em * (0.35 + 0.4 + 1.3) + (ctx.lines_h(lab) + 0.5 * ctx.em if lab else 0.0)
+    return lab, h
+
+
+def _save(ctx: Ctx, f, outdir: Path, fid: str, suffix: str = "") -> None:
     for ext in ("svg", "pdf", "png"):
         kw = {"dpi": ctx.dpi} if ext == "png" else {}
         if ext == "svg":
             kw["metadata"] = {"Date": None}
         elif ext == "pdf":
             kw["metadata"] = {"CreationDate": None, "Creator": "figures.py"}
-        f.savefig(outdir / f"{fid}.{ext}", format=ext, **kw)
+        f.savefig(outdir / f"{fid}{suffix}.{ext}", format=ext, **kw)
     ctx.plt.close(f)
 
 
 def _draw_forest(ctx: Ctx, fig: dict, rows: list[dict]):
-    n = len(rows)
-    height = 3.2 + 0.85 * n + (0.9 if fig.get("title") else 0)
-    f = ctx.figure(fig, height)
-    bottom = 1.9 / height
-    top = 1 - (1.1 if fig.get("title") else 0.5) / height
-    ax = f.add_axes([0.27, bottom, 0.45, top - bottom])
+    from matplotlib.transforms import blended_transform_factory
+    n, em, s = len(rows), ctx.em, ctx.s
+    row_h = 2.6 * em
+    hdr = _lang_text(ctx.lang, "Ước lượng (KTC 95%)", "Estimate (95% CI)")
+    left = 0.8 * em + max(ctx.width(r["label"]) for r in rows) + 0.5 * em
+    right = 1.0 * em + max([ctx.width(hdr, bold=True)] + [ctx.width(r["text"]) for r in rows]) + 0.8 * em
+    width = max(ctx.width_cm, left + right + MIN_AXES_EM * em)
+    axes_w = width - left - right
+    fr = Frame(ctx, fig, fig.get("source"), width)
+    xlab, xblock = _xlabel_block(ctx, fig.get("x_label", ""), axes_w)
+    hdr_h = 1.6 * em
+    axes_h = n * row_h
+    height = fr.top + hdr_h + axes_h + xblock + fr.bottom0
+    f = ctx.figure(height, width)
+    ax = f.add_axes([left / width, (fr.bottom0 + xblock) / height, axes_w / width, axes_h / height])
     null = fig.get("null", 1)
     ys = list(range(n, 0, -1))
     col = ctx.color("forest", 0)
     for y, r in zip(ys, rows):
-        ax.plot([r["lo"], r["hi"]], [y, y], color=col, lw=1.1, solid_capstyle="butt")
-        ax.plot([r["est"]], [y], marker="s", ms=5.5, color=col, mfc=col if r["filled"] else "white", mew=1.1)
-    ax.axvline(null, color=GREY, lw=0.8, ls="--")
+        ax.plot([r["lo"], r["hi"]], [y, y], color=col, lw=1.1 * s, solid_capstyle="butt")
+        ax.plot([r["est"]], [y], marker="s", ms=5.5 * s, color=col, mfc=col if r["filled"] else "white", mew=1.1 * s)
+    ax.axvline(null, color=GREY, lw=0.8 * s, ls="--")
     if fig.get("log_scale"):
         ax.set_xscale("log")
         lo, hi = min(r["lo"] for r in rows + [{"lo": null}]), max(r["hi"] for r in rows + [{"hi": null}])
@@ -245,107 +355,135 @@ def _draw_forest(ctx: Ctx, fig: dict, rows: list[dict]):
         ax.minorticks_off()
     ax.set_yticks(ys)
     ax.set_yticklabels([_esc(r["label"]) for r in rows])
-    ax.set_ylim(0.4, n + 0.6)
-    ax.set_xlabel(_esc(fig.get("x_label", "")))
-    _style_axes(ax)
+    ax.set_ylim(0.5, n + 0.5)
+    ax.set_xlabel(_esc(xlab), fontsize=ctx.size, labelpad=0.4 * ctx.size)
+    _style_axes(ctx, ax)
     ax.spines["left"].set_visible(False)
-    ax.tick_params(axis="y", length=0)
-    tr = ax.get_yaxis_transform()
-    ax.text(1.06, n + 0.5, _lang_text(ctx.lang, "Ước lượng (KTC 95%)", "Estimate (95% CI)"), transform=tr, ha="left",
-            va="bottom", fontsize=ctx.size, fontweight="bold")
+    ax.tick_params(axis="y", length=0, pad=0.5 * ctx.size)
+    tr = blended_transform_factory(f.transFigure, ax.transData)
+    x_text = (left + axes_w + 1.0 * em) / width
+    ax.text(x_text, n + 0.5, hdr, transform=tr, ha="left", va="bottom", fontsize=ctx.size, fontweight="bold",
+            clip_on=False)
     for y, r in zip(ys, rows):
-        ax.text(1.06, y, _esc(r["text"]), transform=tr, ha="left", va="center", fontsize=ctx.size)
-    if fig.get("title"):
-        f.text(0.01, 1 - 0.3 / height, _esc(fig["title"]), ha="left", va="top", fontsize=ctx.size + 1, fontweight="bold")
-    _source_note(ctx, f, fig.get("source"))
+        ax.text(x_text, y, _esc(r["text"]), transform=tr, ha="left", va="center", fontsize=ctx.size, clip_on=False)
+    fr.finish(f, height)
     return f
 
 
 def _draw_rates(ctx: Ctx, fig: dict, rows: list[dict]):
-    n = len(rows)
-    height = 3.0 + 0.9 * n + (0.9 if fig.get("title") else 0)
-    f = ctx.figure(fig, height)
-    bottom = 1.9 / height
-    top = 1 - (1.1 if fig.get("title") else 0.5) / height
-    ax = f.add_axes([0.2, bottom, 0.5, top - bottom])
+    from matplotlib.transforms import blended_transform_factory
+    n, em, s = len(rows), ctx.em, ctx.s
+    row_h = 2.6 * em
+    left = 0.8 * em + max(ctx.width(r["label"]) for r in rows) + 0.5 * em
+    right = 0.8 * em + max(ctx.width(r["text"]) for r in rows) + 0.8 * em
+    width = max(ctx.width_cm, left + right + MIN_AXES_EM * em)
+    axes_w = width - left - right
+    fr = Frame(ctx, fig, fig.get("source"), width)
+    xlab, xblock = _xlabel_block(ctx, fig.get("unit", ""), axes_w)
+    axes_h = n * row_h
+    height = fr.top + 0.4 * em + axes_h + xblock + fr.bottom0
+    f = ctx.figure(height, width)
+    ax = f.add_axes([left / width, (fr.bottom0 + xblock) / height, axes_w / width, axes_h / height])
     ys = list(range(n, 0, -1))
     xmax = max((r["hi"] if r["hi"] is not None else r["est"]) for r in rows)
     for i, (y, r) in enumerate(zip(ys, rows)):
         col = ctx.color(r["label"], i)
-        ax.barh(y, r["est"], height=0.55, color=col if r["filled"] else "white", edgecolor=col, linewidth=1.1)
+        ax.barh(y, r["est"], height=0.55, color=col if r["filled"] else "white", edgecolor=col, linewidth=1.1 * s)
         if r["lo"] is not None:
-            ax.plot([r["lo"], r["hi"]], [y, y], color="black", lw=1.0)
+            ax.plot([r["lo"], r["hi"]], [y, y], color="black", lw=1.0 * s)
             for x in (r["lo"], r["hi"]):
-                ax.plot([x, x], [y - 0.14, y + 0.14], color="black", lw=1.0)
+                ax.plot([x, x], [y - 0.14, y + 0.14], color="black", lw=1.0 * s)
     ax.set_xlim(0, xmax * 1.08)
     ax.set_ylim(0.4, n + 0.6)
     ax.set_yticks(ys)
     ax.set_yticklabels([_esc(r["label"]) for r in rows])
-    ax.set_xlabel(_esc(fig.get("unit", "")))
+    ax.set_xlabel(_esc(xlab), fontsize=ctx.size, labelpad=0.4 * ctx.size)
     ax.xaxis.set_major_formatter(ctx.plt.FuncFormatter(lambda v, _p: ctx.fmt_axis(v)))
-    _style_axes(ax)
-    tr = ax.get_yaxis_transform()
+    _style_axes(ctx, ax)
+    tr = blended_transform_factory(f.transFigure, ax.transData)
+    x_text = (left + axes_w + 0.8 * em) / width
     for y, r in zip(ys, rows):
-        ax.text(1.04, y, _esc(r["text"]), transform=tr, ha="left", va="center", fontsize=ctx.size)
-    if fig.get("title"):
-        f.text(0.01, 1 - 0.3 / height, _esc(fig["title"]), ha="left", va="top", fontsize=ctx.size + 1, fontweight="bold")
-    _source_note(ctx, f, fig.get("source"))
+        ax.text(x_text, y, _esc(r["text"]), transform=tr, ha="left", va="center", fontsize=ctx.size, clip_on=False)
+    fr.finish(f, height)
     return f
 
 
 def _draw_km(ctx: Ctx, fig: dict, series: list[dict], groups: dict, at_risk: dict, max_time, labels: dict, note: str):
-    k = len(series)
-    height = 8.0 + 0.55 * (k + 1) + (0.8 if fig.get("title") else 0)
-    f = ctx.figure(fig, height)
-    tbl_h = (0.55 * (k + 0.8)) / height
-    tbl_b = 1.45 / height
-    ax_b = tbl_b + tbl_h + 1.6 / height
-    top = 1 - (1.1 if fig.get("title") else 0.5) / height
-    ax = f.add_axes([0.14, ax_b, 0.8, top - ax_b])
-    for i, s in enumerate(series):
-        col = ctx.color(s["name"], i)
-        xs, ys = [p[0] for p in s["points"]], [p[1] for p in s["points"]]
-        ax.plot(xs, ys, color=col, lw=1.4, label=_esc(s["name"]), solid_joinstyle="miter")
-        cens = [(t, _surv_at(s["points"], t)) for t, e in groups[s["name"]] if not e and t < max_time]
+    k, em, s = len(series), ctx.em, ctx.s
+    names = [r["name"] for r in at_risk["rows"]]
+    nums = [str(v) for r in at_risk["rows"] for v in r["n"]]
+    num_w = max(ctx.width(x, ctx.size) for x in nums)
+    tick_w = max(ctx.width(ctx.fmt_axis(v)) for v in (0.0, 0.5, 1.0))
+    xt_w = max(ctx.width(ctx.fmt_axis(t)) for t in at_risk["times"])
+    ylab_w, ylab_h = ctx.measure(labels["y"])
+    table_pad = num_w / 2 + 1.0 * em  # names sit left of the first number, which is centred on x = 0
+    names_w = max(ctx.width(nm) for nm in names) + table_pad
+    ylabel_col = ylab_h + 0.6 * em + tick_w + 0.6 * em  # rotated y label + gap + tick labels + tick
+    left = 0.6 * em + max(ylabel_col, names_w)
+    right = max(0.8 * em, num_w / 2 + 0.3 * em, xt_w / 2 + 0.3 * em)
+    width = max(ctx.width_cm, left + right + MIN_AXES_EM * em)
+    axes_w = width - left - right
+    fr = Frame(ctx, fig, note, width)
+    xlab, xblock = _xlabel_block(ctx, labels["x"], axes_w)
+    row = 2.0 * em
+    tbl_h = row * (k + 0.8)
+    hdr_h = 1.5 * em
+    gap = xblock + hdr_h + 0.5 * em  # x tick labels + x label + "number at risk" header, between plot and table
+    axes_h = max(0.42 * axes_w, ylab_w + 2 * em, 14 * em, (k + 1) * 1.8 * em)
+    height = fr.top + axes_h + gap + tbl_h + fr.bottom0
+    f = ctx.figure(height, width)
+    tbl_b = fr.bottom0
+    ax_b = tbl_b + tbl_h + gap
+    ax = f.add_axes([left / width, ax_b / height, axes_w / width, axes_h / height])
+    for i, sr in enumerate(series):
+        col = ctx.color(sr["name"], i)
+        xs, ys = [p[0] for p in sr["points"]], [p[1] for p in sr["points"]]
+        ax.plot(xs, ys, color=col, lw=1.4 * s, label=_esc(sr["name"]), solid_joinstyle="miter")
+        cens = [(t, _surv_at(sr["points"], t)) for t, e in groups[sr["name"]] if not e and t < max_time]
         if cens:
-            ax.plot([c[0] for c in cens], [c[1] for c in cens], ls="none", marker="|", ms=4, mew=0.7, color=col)
+            ax.plot([c[0] for c in cens], [c[1] for c in cens], ls="none", marker="|", ms=4 * s, mew=0.7 * s, color=col)
     ax.set_xlim(0, max_time)
     ax.set_ylim(0, 1.02)
     ax.set_xticks(at_risk["times"])
     ax.yaxis.set_major_formatter(ctx.plt.FuncFormatter(lambda v, _p: ctx.fmt_axis(round(v, 1))))
-    ax.set_xlabel(_esc(labels["x"]))
-    ax.set_ylabel(_esc(labels["y"]))
-    _style_axes(ax)
+    ax.set_xlabel(_esc(xlab), fontsize=ctx.size, labelpad=0.4 * ctx.size)
+    ax.set_ylabel(_esc(labels["y"]), fontsize=ctx.size, labelpad=0.4 * ctx.size)
+    _style_axes(ctx, ax)
     ax.legend(frameon=False, loc="lower left", fontsize=ctx.size)
-    tb = f.add_axes([0.14, tbl_b, 0.8, tbl_h], sharex=ax)
+    tb = f.add_axes([left / width, tbl_b / height, axes_w / width, tbl_h / height], sharex=ax)
     tb.set_ylim(-0.6, k - 0.4)
     tb.set_yticks(range(k))
     tb.set_yticklabels([_esc(r["name"]) for r in reversed(at_risk["rows"])])
     for tick, r in zip(tb.get_yticklabels(), reversed(at_risk["rows"])):
-        tick.set_color(ctx.color(r["name"], [s["name"] for s in series].index(r["name"])))
+        tick.set_color(ctx.color(r["name"], [x["name"] for x in series].index(r["name"])))
     for spine in tb.spines.values():
         spine.set_visible(False)
     tb.tick_params(axis="x", length=0, labelbottom=False)
-    tb.tick_params(axis="y", length=0, pad=18)
+    tb.tick_params(axis="y", length=0, pad=table_pad / PT_CM, labelsize=ctx.size)
     for j, r in enumerate(reversed(at_risk["rows"])):
         for t, nn in zip(at_risk["times"], r["n"]):
-            tb.text(t, j, str(nn), ha="center", va="center", fontsize=ctx.size - 0.5)
-    f.text(0.14, tbl_b + tbl_h + 0.05 / height * 0 + 0.25 / height, _lang_text(ctx.lang, "Số người còn trong theo dõi",
-           "Number at risk"), ha="left", va="bottom", fontsize=ctx.size - 0.5, fontweight="bold")
-    if fig.get("title"):
-        f.text(0.01, 1 - 0.3 / height, _esc(fig["title"]), ha="left", va="top", fontsize=ctx.size + 1, fontweight="bold")
-    _source_note(ctx, f, note)
+            tb.text(t, j, str(nn), ha="center", va="center", fontsize=ctx.size)
+    f.text(left / width, (tbl_b + tbl_h + 0.3 * em) / height, _lang_text(ctx.lang, "Số người còn trong theo dõi",
+           "Number at risk"), ha="left", va="bottom", fontsize=ctx.size, fontweight="bold")
+    fr.finish(f, height)
     return f
 
 
-def _draw_flow(ctx: Ctx, fig: dict, nodes: list[dict], edges: list[dict]):
-    n_main = sum(1 for n in nodes if n["id"].startswith("n"))
-    content = n_main * FLOW_BOX_CM + (n_main - 1) * FLOW_GAP_CM  # the diagram's content box, in cm
-    height = content + 1.3 + (0.8 if fig.get("title") else 0)
-    f = ctx.figure(fig, height)
-    bottom = 0.9 / height
-    top = bottom + content / height
-    ax = f.add_axes([0.02, bottom, 0.96, top - bottom])
+def _flow_geometry(ctx: Ctx, texts: list, widths: list, width: float) -> tuple:
+    """Wrap every box text to its box width; return (uniform box height cm, gap cm)."""
+    em = ctx.em
+    wrapped = [ctx.wrap(t, w * 0.96 * width - 1.2 * em) for t, w in zip(texts, widths)]
+    need = max(ctx.lines_h(t) for t in wrapped) + 1.0 * em
+    return max(FLOW_BOX_CM * ctx.s, need), max(FLOW_GAP_CM * ctx.s, 1.6 * em)
+
+
+def _draw_flow(ctx: Ctx, fig: dict, nodes: list[dict], edges: list[dict], content: float, width: float):
+    em, s = ctx.em, ctx.s
+    fr = Frame(ctx, fig, fig.get("source"), width)
+    height = fr.top + content + 0.4 * em + fr.bottom0
+    f = ctx.figure(height, width)
+    bottom = fr.bottom0 + 0.2 * em
+    ax = f.add_axes([0.02, bottom / height, 0.96, content / height])
     ax.set_xlim(0, 1)
     ax.set_ylim(1, 0)
     ax.axis("off")
@@ -354,26 +492,24 @@ def _draw_flow(ctx: Ctx, fig: dict, nodes: list[dict], edges: list[dict]):
     for n in nodes:
         side = not n["id"].startswith("n")
         ax.add_patch(Rectangle((n["x"], n["y"]), n["w"], n["h"], fill=True, facecolor="#f2f2f2" if side else "white",
-                               edgecolor="black", linewidth=0.9))
-        lines = n["text"].split("\n")
-        body = "\n".join(textwrap.fill(s, 30 if n["w"] > 0.35 else 24) for s in lines)
-        ax.text(n["x"] + n["w"] / 2, n["y"] + n["h"] / 2, _esc(body), ha="center", va="center", fontsize=ctx.size)
+                               edgecolor="black", linewidth=0.9 * s))
+        body = ctx.wrap(n["text"], n["w"] * 0.96 * width - 1.2 * em)
+        ax.text(n["x"] + n["w"] / 2, n["y"] + n["h"] / 2, _esc(body), ha="center", va="center", fontsize=ctx.size,
+                linespacing=1.15)
     for e in edges:
         a, b = by[e["from"]], by[e["to"]]
         if "from_side" in e:  # exclusion: from the middle of the gap under `from`, to the left edge of the side box
             ymid = b["y"] + b["h"] / 2
             xs = a["x"] + a["w"] / 2
-            ax.plot([xs, xs], [a["y"] + a["h"], ymid], color="black", lw=0.9)
-            p = FancyArrowPatch((xs, ymid), (b["x"], ymid), arrowstyle="-|>", mutation_scale=8, color="black", lw=0.9,
-                                shrinkA=0, shrinkB=0)
+            ax.plot([xs, xs], [a["y"] + a["h"], ymid], color="black", lw=0.9 * s)
+            p = FancyArrowPatch((xs, ymid), (b["x"], ymid), arrowstyle="-|>", mutation_scale=8 * s, color="black",
+                                lw=0.9 * s, shrinkA=0, shrinkB=0)
         else:
             xs = a["x"] + a["w"] / 2
             p = FancyArrowPatch((xs, a["y"] + a["h"]), (b["x"] + b["w"] / 2, b["y"]), arrowstyle="-|>",
-                                mutation_scale=8, color="black", lw=0.9, shrinkA=0, shrinkB=0)
+                                mutation_scale=8 * s, color="black", lw=0.9 * s, shrinkA=0, shrinkB=0)
         ax.add_patch(p)
-    if fig.get("title"):
-        f.text(0.01, 1 - 0.3 / height, _esc(fig["title"]), ha="left", va="top", fontsize=ctx.size + 1, fontweight="bold")
-    _source_note(ctx, f, fig.get("source"))
+    fr.finish(f, height)
     return f
 
 
@@ -454,10 +590,16 @@ def build_flow(ctx: Ctx, fig: dict, by_id: dict, lang: str, **_):
     if not isinstance(excl, list):
         raise FigureError(f"{fid}: 'exclusions' must be a list")
     n_box = len(boxes)
-    content = n_box * FLOW_BOX_CM + (n_box - 1) * FLOW_GAP_CM
-    h = FLOW_BOX_CM / content
-    step = (FLOW_BOX_CM + FLOW_GAP_CM) / content
     mx, mw = (0.08, 0.46) if excl else (0.3, 0.4)
+    width = ctx.width_cm
+    texts = [b.get("text", "") if isinstance(b, dict) else "" for b in boxes] + \
+        [x.get("text", "") if isinstance(x, dict) else "" for x in excl]
+    texts = [t + "\nn = 0" if isinstance(t, str) else "" for t in texts]  # room for the "n = ..." line
+    ws = [mw] * n_box + [0.32] * len(excl)
+    box_cm, gap_cm = _flow_geometry(ctx, [t if isinstance(t, str) else "" for t in texts], ws, width)
+    content = n_box * box_cm + (n_box - 1) * gap_cm
+    h = box_cm / content
+    step = (box_cm + gap_cm) / content
     nodes, edges, values = [], [], []
 
     def make(prefix: str, i: int, item, x: float, y: float, w: float):
@@ -483,12 +625,90 @@ def build_flow(ctx: Ctx, fig: dict, by_id: dict, lang: str, **_):
         y = after * step - (step - h) / 2 - h / 2
         make("x", k, x, 0.66, max(0.0, y), 0.32)
         edges.append({"from": f"n{after}", "to": f"x{k + 1}", "from_side": 2, "to_side": 1})
-    f = _draw_flow(ctx, fig, nodes, edges)
+    f = _draw_flow(ctx, fig, nodes, edges, content, width)
     return f, fig.get("source", ""), {"values": values,
                                        "chart": {"kind": "diagram", "nodes": nodes, "edges": edges}}
 
 
 BUILDERS = {"forest": build_forest, "rates": build_rates, "km": build_km, "flow": build_flow}
+
+
+def _num_key(fid: str, fig: dict, key: str, default: float) -> float:
+    v = fig.get(key, default)
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or v <= 0:
+        raise FigureError(f"{fid}: '{key}' must be a positive number")
+    return float(v)
+
+
+def _ctx_for(plt, style: dict, lang: str, dpi: int, fig: dict, profile: str) -> Ctx:
+    """Font size and width for one figure. document: style font_size / width_cm (figure width_cm overrides);
+    poster: figure font_pt (default 24) and poster_width_cm (default 30)."""
+    fid = fig["id"]
+    if profile == "poster":
+        return Ctx(plt, style, lang, dpi, size=_num_key(fid, fig, "font_pt", POSTER_FONT_PT),
+                   width_cm=_num_key(fid, fig, "poster_width_cm", POSTER_WIDTH_CM))
+    return Ctx(plt, style, lang, dpi, width_cm=_num_key(fid, fig, "width_cm", float(style.get("width_cm", 16))))
+
+
+def _configure(matplotlib, style: dict) -> None:
+    rc = matplotlib.rcParams
+    rc["svg.fonttype"] = "none"
+    rc["pdf.fonttype"] = 42
+    rc["svg.hashsalt"] = "clinical-research-orchestra"
+    rc["font.family"] = "sans-serif"
+    rc["font.sans-serif"] = [str(style.get("font", "Arial")), "DejaVu Sans"]
+    rc["axes.unicode_minus"] = False
+
+
+def render_figure(project: Path, fig: dict, *, width_cm: float, font_pt: float, lang: str | None = None,
+                  style: dict | None = None, dpi: int = 100):
+    """Draw one figure spec at an explicit width and font size and return (matplotlib figure, source, data)
+    without saving. The caller closes the figure. Used by the tests and by anything that needs the geometry."""
+    import logging
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
+    project = Path(project)
+    style = style or {}
+    _configure(matplotlib, style)
+    lang = lang or projectcfg.output_lang(project)
+    ctx = Ctx(plt, style, lang, dpi, size=font_pt, width_cm=width_cm)
+    by_id = None if fig["type"] == "km" else derived.ledger_by_id(project)
+    return BUILDERS[fig["type"]](ctx, fig, by_id=by_id, lang=lang, project=project)
+
+
+def text_artists(f) -> list:
+    """Every visible, non-empty text artist of a figure: free text, axes text, titles, axis labels, tick labels,
+    legend entries."""
+    out = []
+
+    def add(t):
+        if t.get_visible() and t.get_text().strip():
+            out.append(t)
+
+    for t in f.texts:
+        add(t)
+    for ax in f.axes:
+        if not ax.axison:
+            for t in ax.texts:
+                add(t)
+            continue
+        for t in ax.texts:
+            add(t)
+        for t in (ax.title, ax.xaxis.label, ax.yaxis.label):
+            add(t)
+        for axis in (ax.xaxis, ax.yaxis):
+            lo, hi = sorted(axis.get_view_interval())
+            labels, locs = axis.get_majorticklabels(), axis.get_majorticklocs()
+            for t, loc in zip(labels, locs):  # ticks outside the view are not drawn
+                if lo - 1e-9 <= loc <= hi + 1e-9:
+                    add(t)
+        leg = ax.get_legend()
+        if leg is not None:
+            for t in leg.get_texts():
+                add(t)
+    return out
 
 
 # ---------------------------------------------------------------- main
@@ -498,6 +718,9 @@ def main(argv=None) -> int:
     ap.add_argument("project")
     ap.add_argument("--only", default="", help="comma-separated figure ids")
     ap.add_argument("--dpi", type=int, default=300)
+    ap.add_argument("--profile", choices=PROFILES, default="document",
+                    help="document (default: font_size, width_cm; F<n>.*) or poster (poster_width_cm default 30, "
+                         "font_pt default 24; F<n>.poster.*)")
     args = ap.parse_args(argv)
     project = Path(args.project)
     try:
@@ -548,16 +771,7 @@ def _run(project: Path, args, plt, matplotlib) -> int:
     style = spec.get("style") if isinstance(spec.get("style"), dict) else {}
     lang = projectcfg.output_lang(project)
     ctx_style = style
-    rc = matplotlib.rcParams
-    rc["svg.fonttype"] = "none"
-    rc["pdf.fonttype"] = 42
-    rc["svg.hashsalt"] = "clinical-research-orchestra"
-    family = str(ctx_style.get("font", "Arial"))
-    rc["font.family"] = "sans-serif"
-    rc["font.sans-serif"] = [family, "DejaVu Sans"]
-    rc["font.size"] = float(ctx_style.get("font_size", 9))
-    rc["axes.unicode_minus"] = False
-    ctx = Ctx(plt, ctx_style, lang, args.dpi)
+    _configure(matplotlib, ctx_style)
     by_id = None
     outdir = project / OUT_REL
     outdir.mkdir(parents=True, exist_ok=True)
@@ -570,7 +784,12 @@ def _run(project: Path, args, plt, matplotlib) -> int:
                 by_id = derived.ledger_by_id(project)
             except (OSError, ValueError) as e:
                 raise FigureError(f"{fid}: cannot read the results ledger: {e}") from e
+        ctx = _ctx_for(plt, ctx_style, lang, args.dpi, fig, args.profile)
         f, source, data = BUILDERS[fig["type"]](ctx, fig, by_id=by_id, lang=lang, project=project)
+        if args.profile == "poster":
+            _save(ctx, f, outdir, fid, ".poster")
+            print(f"{fid} {fig['type']} → {OUT_REL}/{fid}.poster.{{svg,pdf,png}}")
+            continue
         _save(ctx, f, outdir, fid)
         out = {"id": fid, "type": fig["type"], "source": source, "values": data["values"]}
         for k in ("data_file", "data_sha256"):
