@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from crolib import numfmt, projectcfg  # noqa: E402
 
 PLACEHOLDER = re.compile(r"\{\{(R-A\d+-\d{3})(?:\.(value|ci|p|n|full))?\}\}")
+MALFORMED = re.compile(r"\{\{[^{}]*R-[^{}]*\}\}", re.IGNORECASE)
 
 
 def render_text(text: str, by_id: dict, lang: str) -> tuple[str, list[str]]:
@@ -38,6 +39,8 @@ def render_text(text: str, by_id: dict, lang: str) -> tuple[str, list[str]]:
             except (TypeError, ValueError, IndexError, ArithmeticError):
                 probs.append(f"{n}: {m.group(0)} cannot be formatted from its ledger record")
                 return m.group(0)
+        for bad in MALFORMED.findall(PLACEHOLDER.sub(" ", line)):
+            probs.append(f"{n}: malformed placeholder {bad}")
         out_lines.append(PLACEHOLDER.sub(rep, line))
     return "\n".join(out_lines), probs
 
@@ -63,8 +66,9 @@ def main(argv=None) -> int:
         print(f"render_results: {type(e).__name__}: {e}", file=sys.stderr)
         return 2
     results = ledger.get("results") if isinstance(ledger, dict) else None
-    if not isinstance(results, list) or not all(isinstance(r, dict) for r in results):
-        print("render_results: results ledger must be an object with a 'results' list of objects",
+    if not isinstance(results, list) or not all(
+            isinstance(r, dict) and isinstance(r.get("id"), str) for r in results):
+        print("render_results: results ledger must be an object with a 'results' list of objects with string ids",
               file=sys.stderr)
         return 2
     by_id = {r.get("id"): r for r in results}

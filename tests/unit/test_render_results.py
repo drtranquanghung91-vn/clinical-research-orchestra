@@ -82,6 +82,43 @@ class TestRender(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual((self.p / "ch3.rendered.md").read_bytes(), "a 12,5%\r\nb\r\n".encode("utf-8"))
 
+    def test_malformed_placeholders_block(self):
+        forms = ["{{R-A1-1}}", "{{R-A1-001.foo}}", "{{ R-A1-001 }}", "{{r-a1-001}}", "{{R-A1-001.CI}}"]
+        for form in forms:
+            f = self.p / "ch3.md"
+            f.write_text("ok {{R-A0-001}}\nbad " + form + "\n", encoding="utf-8")
+            r = self.run_cli(f)
+            self.assertEqual(r.returncode, 1, form)
+            self.assertIn(":2: malformed placeholder " + form, r.stdout)
+            self.assertEqual(r.stdout.count("E-NUM block"), 1, form)
+            self.assertFalse((self.p / "ch3.rendered.md").exists())
+
+    def test_plain_braces_left_alone(self):
+        f = self.p / "ch3.md"
+        f.write_text("x {{x}} and {{ y }}\n", encoding="utf-8")
+        r = self.run_cli(f)
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertEqual((self.p / "ch3.rendered.md").read_text(encoding="utf-8"), "x {{x}} and {{ y }}\n")
+
+    def test_non_string_id_exit_2(self):
+        f = self.p / "ch3.md"
+        f.write_text("A {{R-A0-001}}\n", encoding="utf-8")
+        ledger = self.p / "ledgers" / "results-ledger.json"
+        for rid in ('["x"]', "5", "null"):
+            ledger.write_text('{"results": [{"id": %s, "kind": "n", "value": 1}]}' % rid, encoding="utf-8")
+            r = self.run_cli(f)
+            self.assertEqual(r.returncode, 2, rid)
+            self.assertNotIn("Traceback", r.stderr)
+            self.assertTrue(r.stderr.strip())
+
+    def test_table_cell(self):
+        f = self.p / "ch3.md"
+        f.write_text("| OR | p |\n|---|---|\n| {{R-A1-001}} | {{R-A1-001.p}} |\n", encoding="utf-8")
+        r = self.run_cli(f)
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertEqual((self.p / "ch3.rendered.md").read_text(encoding="utf-8"),
+                         "| OR | p |\n|---|---|\n| 1,84 | 0,004 |\n")
+
 
 if __name__ == "__main__":
     unittest.main()
