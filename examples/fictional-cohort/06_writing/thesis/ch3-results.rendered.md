@@ -28,14 +28,14 @@ Ghi chú: ĐLC: độ lệch chuẩn; KTPV: khoảng tứ phân vị; ≥1 bện
 Nhận xét: Tuổi trung bình của 1070 người bệnh là 63,1 ± 10,5 năm, tương đồng giữa 3 nhóm HbA1c; trong đó nữ chiếm 536 (50,1%). Nhóm HbA1c >9% có tỷ lệ dùng insulin khi nằm viện (160 (49,8%)) cao hơn rõ so với nhóm <7% (33 (14,0%)), phù hợp thực hành kiểm soát đường huyết; đây là biến mô tả, không hiệu chỉnh trong mô hình chính vì là trung gian nghi ngờ.
 
 Bảng 3.2. Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm, chung và theo nhóm HbA1c
-| Nhóm HbA1c | n | Tái nhập viện (%) | KTC 95% |
+| Nhóm HbA1c | N | Tái nhập viện, n (%) | KTC 95% |
 |---|---|---|---|
-| Chung | 1070 | 22,1% | 19,7–24,6 |
-| <7% | 235 | 19,6% | 15,0–25,1 |
-| 7–9% | 514 | 21,0% | 17,7–24,7 |
-| >9% | 321 | 25,5% | 21,1–30,6 |
+| Chung | 1070 | 236<!-- derived: R-A0-061.count --> (22,1%) | 19,7–24,6 |
+| <7% | 235 | 46<!-- derived: R-A0-062.count --> (19,6%) | 15,0–25,1 |
+| 7–9% | 514 | 108<!-- derived: R-A0-063.count --> (21,0%) | 17,7–24,7 |
+| >9% | 321 | 82<!-- derived: R-A0-064.count --> (25,5%) | 21,1–30,6 |
 Nguồn: số liệu nghiên cứu (mô phỏng).
-Ghi chú: KTC: khoảng tin cậy, phương pháp Wilson.
+Ghi chú: N: số người bệnh trong nhóm; n: số người tái nhập viện; KTC: khoảng tin cậy, phương pháp Wilson.
 
 Nhận xét: Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm chung là 22,1% (KTC 95%: 19,7–24,6); tỷ lệ này tăng dần theo nhóm HbA1c, từ 19,6% ở nhóm <7% đến 25,5% ở nhóm >9%, nhưng khoảng tin cậy của 3 nhóm còn chồng lấp.
 
@@ -59,7 +59,7 @@ Bảng 3.3. Tái nhập viện mọi nguyên nhân trong 1 năm theo nhóm HbA1c
 Nguồn: số liệu nghiên cứu (mô phỏng); hồi quy logistic đa biến, script phân tích analysis.py (A1).
 Ghi chú: OR: tỷ số chênh; KTC: khoảng tin cậy; hiệu chỉnh theo tuổi, giới, thời gian mắc ĐTĐ, ≥1 bệnh đồng mắc.
 
-Nhận xét: Sau hiệu chỉnh theo tuổi, giới, thời gian mắc đái tháo đường và bệnh đồng mắc, nhóm HbA1c >9% có tỷ số chênh tái nhập viện là 1,42 so với nhóm <7% (KTC 95%: 0,94–2,15; p = 0,097) và nhóm 7–9% là 1,10 (KTC 95%: 0,74–1,62; p = 0,641); cả hai khoảng tin cậy đều chứa giá trị 1 nên ước lượng còn kém chính xác, tương thích với từ không khác biệt đến tăng vừa phải nguy cơ tái nhập viện, chưa đủ bằng chứng xác nhận mối liên quan ở cỡ mẫu này. Mô hình có diện tích dưới đường cong ROC là 0,588 và số sự kiện trên mỗi biến (EPV) là 39,00, trên ngưỡng mặc định tối thiểu là 10 <!-- not-a-result: ngưỡng mặc định EPV --> nên không cần cảnh báo mô hình thăm dò.
+Nhận xét: Sau hiệu chỉnh theo tuổi, giới, thời gian mắc đái tháo đường và bệnh đồng mắc, nhóm HbA1c >9% có tỷ số chênh tái nhập viện là 1,42 so với nhóm <7% (KTC 95%: 0,94–2,15; p = 0,097) và nhóm 7–9% là 1,10 (KTC 95%: 0,74–1,62; p = 0,641); cả hai khoảng tin cậy đều chứa giá trị 1 nên ước lượng còn kém chính xác, tương thích với từ không khác biệt đến tăng vừa phải nguy cơ tái nhập viện, chưa đủ bằng chứng xác nhận mối liên quan ở cỡ mẫu này. Mô hình có diện tích dưới đường cong ROC là 0,588 và số sự kiện trên mỗi biến (EPV) là 39 <!-- derived: R-A1-010.value, làm tròn đến số nguyên -->; EPV ≥ 10 <!-- not-a-result: ngưỡng mặc định EPV --> nên không có cảnh báo về số biến cố trên mỗi biến.
 
 ## 3.3 Kết quả các phân tích phụ
 
@@ -108,7 +108,7 @@ Bảng 3.6. Thời gian đến lần tái nhập viện đầu tiên theo nhóm 
 Nguồn: số liệu nghiên cứu (mô phỏng); hồi quy Cox, kiểm duyệt tại 1 năm, script phân tích analysis.py (A4).
 Ghi chú: HR: tỷ số nguy cơ; KTC: khoảng tin cậy; phân tích phụ, thăm dò; giả định tỷ số nguy cơ không đổi theo thời gian được kiểm tra bằng phần dư Schoenfeld, không ghi nhận vi phạm ở cả hai mô hình.
 
-Nhận xét: Thời gian đến lần tái nhập viện đầu tiên ngắn hơn ở nhóm HbA1c cao hơn, với tỷ số nguy cơ hiệu chỉnh là 1,35 ở nhóm >9% (KTC 95%: 0,94–1,93; p = 0,109) và 1,07 ở nhóm 7–9% (KTC 95%: 0,75–1,51; p = 0,717) so với nhóm <7%; cả hai khoảng tin cậy đều chứa giá trị 1, hướng và độ lớn tương tự tỷ số chênh ở mục 3.2.2.
+Nhận xét: Thời gian đến lần tái nhập viện đầu tiên có xu hướng ngắn hơn ở nhóm HbA1c cao hơn, với tỷ số nguy cơ hiệu chỉnh là 1,35 ở nhóm >9% (KTC 95%: 0,94–1,93; p = 0,109) và 1,07 ở nhóm 7–9% (KTC 95%: 0,75–1,51; p = 0,717) so với nhóm <7%; cả hai khoảng tin cậy đều chứa giá trị 1, hướng và độ lớn tương tự tỷ số chênh ở mục 3.2.2.
 
 ### 3.3.4 Tử vong trong viện trong 1 năm
 

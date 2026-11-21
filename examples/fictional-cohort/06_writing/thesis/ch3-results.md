@@ -28,14 +28,14 @@ Ghi chú: ĐLC: độ lệch chuẩn; KTPV: khoảng tứ phân vị; ≥1 bện
 Nhận xét: Tuổi trung bình của {{R-A0-001.n}} người bệnh là {{R-A0-001.full}} năm, tương đồng giữa 3 nhóm HbA1c; trong đó nữ chiếm {{R-A0-009.full}}. Nhóm HbA1c >9% có tỷ lệ dùng insulin khi nằm viện ({{R-A0-056.full}}) cao hơn rõ so với nhóm <7% ({{R-A0-054.full}}), phù hợp thực hành kiểm soát đường huyết; đây là biến mô tả, không hiệu chỉnh trong mô hình chính vì là trung gian nghi ngờ.
 
 Bảng 3.2. Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm, chung và theo nhóm HbA1c
-| Nhóm HbA1c | n | Tái nhập viện (%) | KTC 95% |
+| Nhóm HbA1c | N | Tái nhập viện, n (%) | KTC 95% |
 |---|---|---|---|
-| Chung | {{R-A0-061.n}} | {{R-A0-061.value}} | {{R-A0-061.ci}} |
-| <7% | {{R-A0-062.n}} | {{R-A0-062.value}} | {{R-A0-062.ci}} |
-| 7–9% | {{R-A0-063.n}} | {{R-A0-063.value}} | {{R-A0-063.ci}} |
-| >9% | {{R-A0-064.n}} | {{R-A0-064.value}} | {{R-A0-064.ci}} |
+| Chung | {{R-A0-061.n}} | 236<!-- derived: R-A0-061.count --> ({{R-A0-061.value}}) | {{R-A0-061.ci}} |
+| <7% | {{R-A0-062.n}} | 46<!-- derived: R-A0-062.count --> ({{R-A0-062.value}}) | {{R-A0-062.ci}} |
+| 7–9% | {{R-A0-063.n}} | 108<!-- derived: R-A0-063.count --> ({{R-A0-063.value}}) | {{R-A0-063.ci}} |
+| >9% | {{R-A0-064.n}} | 82<!-- derived: R-A0-064.count --> ({{R-A0-064.value}}) | {{R-A0-064.ci}} |
 Nguồn: số liệu nghiên cứu (mô phỏng).
-Ghi chú: KTC: khoảng tin cậy, phương pháp Wilson.
+Ghi chú: N: số người bệnh trong nhóm; n: số người tái nhập viện; KTC: khoảng tin cậy, phương pháp Wilson.
 
 Nhận xét: Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm chung là {{R-A0-061.value}} (KTC 95%: {{R-A0-061.ci}}); tỷ lệ này tăng dần theo nhóm HbA1c, từ {{R-A0-062.value}} ở nhóm <7% đến {{R-A0-064.value}} ở nhóm >9%, nhưng khoảng tin cậy của 3 nhóm còn chồng lấp.
 
@@ -59,7 +59,7 @@ Bảng 3.3. Tái nhập viện mọi nguyên nhân trong 1 năm theo nhóm HbA1c
 Nguồn: số liệu nghiên cứu (mô phỏng); hồi quy logistic đa biến, script phân tích analysis.py (A1).
 Ghi chú: OR: tỷ số chênh; KTC: khoảng tin cậy; hiệu chỉnh theo tuổi, giới, thời gian mắc ĐTĐ, ≥1 bệnh đồng mắc.
 
-Nhận xét: Sau hiệu chỉnh theo tuổi, giới, thời gian mắc đái tháo đường và bệnh đồng mắc, nhóm HbA1c >9% có tỷ số chênh tái nhập viện là {{R-A1-004.value}} so với nhóm <7% (KTC 95%: {{R-A1-004.ci}}; p = {{R-A1-004.p}}) và nhóm 7–9% là {{R-A1-003.value}} (KTC 95%: {{R-A1-003.ci}}; p = {{R-A1-003.p}}); cả hai khoảng tin cậy đều chứa giá trị 1 nên ước lượng còn kém chính xác, tương thích với từ không khác biệt đến tăng vừa phải nguy cơ tái nhập viện, chưa đủ bằng chứng xác nhận mối liên quan ở cỡ mẫu này. Mô hình có diện tích dưới đường cong ROC là {{R-A1-009.value}} và số sự kiện trên mỗi biến (EPV) là {{R-A1-010.value}}, trên ngưỡng mặc định tối thiểu là 10 <!-- not-a-result: ngưỡng mặc định EPV --> nên không cần cảnh báo mô hình thăm dò.
+Nhận xét: Sau hiệu chỉnh theo tuổi, giới, thời gian mắc đái tháo đường và bệnh đồng mắc, nhóm HbA1c >9% có tỷ số chênh tái nhập viện là {{R-A1-004.value}} so với nhóm <7% (KTC 95%: {{R-A1-004.ci}}; p = {{R-A1-004.p}}) và nhóm 7–9% là {{R-A1-003.value}} (KTC 95%: {{R-A1-003.ci}}; p = {{R-A1-003.p}}); cả hai khoảng tin cậy đều chứa giá trị 1 nên ước lượng còn kém chính xác, tương thích với từ không khác biệt đến tăng vừa phải nguy cơ tái nhập viện, chưa đủ bằng chứng xác nhận mối liên quan ở cỡ mẫu này. Mô hình có diện tích dưới đường cong ROC là {{R-A1-009.value}} và số sự kiện trên mỗi biến (EPV) là 39 <!-- derived: R-A1-010.value, làm tròn đến số nguyên -->; EPV ≥ 10 <!-- not-a-result: ngưỡng mặc định EPV --> nên không có cảnh báo về số biến cố trên mỗi biến.
 
 ## 3.3 Kết quả các phân tích phụ
 
@@ -108,7 +108,7 @@ Bảng 3.6. Thời gian đến lần tái nhập viện đầu tiên theo nhóm 
 Nguồn: số liệu nghiên cứu (mô phỏng); hồi quy Cox, kiểm duyệt tại 1 năm, script phân tích analysis.py (A4).
 Ghi chú: HR: tỷ số nguy cơ; KTC: khoảng tin cậy; phân tích phụ, thăm dò; giả định tỷ số nguy cơ không đổi theo thời gian được kiểm tra bằng phần dư Schoenfeld, không ghi nhận vi phạm ở cả hai mô hình.
 
-Nhận xét: Thời gian đến lần tái nhập viện đầu tiên ngắn hơn ở nhóm HbA1c cao hơn, với tỷ số nguy cơ hiệu chỉnh là {{R-A4-006.value}} ở nhóm >9% (KTC 95%: {{R-A4-006.ci}}; p = {{R-A4-006.p}}) và {{R-A4-005.value}} ở nhóm 7–9% (KTC 95%: {{R-A4-005.ci}}; p = {{R-A4-005.p}}) so với nhóm <7%; cả hai khoảng tin cậy đều chứa giá trị 1, hướng và độ lớn tương tự tỷ số chênh ở mục 3.2.2.
+Nhận xét: Thời gian đến lần tái nhập viện đầu tiên có xu hướng ngắn hơn ở nhóm HbA1c cao hơn, với tỷ số nguy cơ hiệu chỉnh là {{R-A4-006.value}} ở nhóm >9% (KTC 95%: {{R-A4-006.ci}}; p = {{R-A4-006.p}}) và {{R-A4-005.value}} ở nhóm 7–9% (KTC 95%: {{R-A4-005.ci}}; p = {{R-A4-005.p}}) so với nhóm <7%; cả hai khoảng tin cậy đều chứa giá trị 1, hướng và độ lớn tương tự tỷ số chênh ở mục 3.2.2.
 
 ### 3.3.4 Tử vong trong viện trong 1 năm
 

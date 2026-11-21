@@ -172,9 +172,21 @@ rendered chapter. `05_analysis/crostats.py` is the plugin's `crostats.py` plus i
 
 ### P2 edits made by hand
 
-No content was edited by hand. File placement only: the example's `.gitignore` gained the template's
-exceptions for `04_data/codebook.md` and `04_data/cleaning-log.md`, the repository `.gitignore` an
-exception for this example's `out/` (the .docx), and this README was left out of the run folder.
+- File placement: the example's `.gitignore` gained the template's exceptions for
+  `04_data/codebook.md` and `04_data/cleaning-log.md`, the repository `.gitignore` an exception for
+  this example's `out/` (the .docx), and this README was left out of the run folder.
+- decisions.md entries reordered chronologically by hand (skills inserted above the last entry; fixed
+  in the plugin in the final P2 fix wave): the SAP amendment now follows the G2 entry. Wording
+  unchanged; the two data-stage closure entries are both kept (the second also records the analysis
+  run).
+- `STATUS.md` row 5: G3 marked as locked by the author (results-writing had updated row 6 only).
+- `06_writing/thesis/ch3-results.md` after the author's review: "có xu hướng ngắn hơn" for the time to
+  readmission (both CIs include 1); EPV written as the integer 39 (a `derived` marker on the ledger
+  value, which renders with two decimals as kind `other`) with a plain sentence about the EPV ≥ 10
+  rule; Table 3.2 shows n (%) with the event counts from the ledger's `count` field (`derived`
+  markers, since placeholders have no `count` part). Render, `check_numbers.py`,
+  `analysis_plan.py check --text` and `build_docx.py` re-run (all exit 0); the ledger, `results.json`
+  and the other locked files were not touched, and `gate.py check … G3` still exits 0.
 
 ### P2 known issues
 
@@ -192,10 +204,12 @@ exception for this example's `out/` (the .docx), and this README was left out of
   for plain sentences in stage 6.
 - **decisions.md order.** Stages 1 and 2 inserted their entries above the SAP amendment written
   before the run instead of appending, and the data-stage closure is recorded under two headings.
-  Kept as produced.
+  Reordered by hand (see above).
 - **Missing-data rule overlooked.** The cleaning log says the SAP has no rule for missing diabetes
   duration; SAP §11 has one (≤ 5% → complete case). The author pointed to it in stage 2.
-- **STATUS row 5 after the lock.** Its next action still says the author will lock G3; results-writing
-  updated row 6 only.
+- **STATUS row 5 after the lock.** Its next action still said the author would lock G3;
+  results-writing updated row 6 only. Fixed by hand (see above).
+- **Counts in placeholders.** Placeholders have no `count` part, and `.full` prints the CI instead of
+  the count when a CI exists, so "n (%)" with a CI needs a `derived` count.
 - **eGFR.** The task plan named eGFR among the simulated variables, but `variables.md` has none;
   kidney disease enters as the `ckd` flag of the comorbidity confounder.

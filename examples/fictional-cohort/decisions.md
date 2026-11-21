@@ -119,6 +119,13 @@ exclusions; actual power depends on the real HbA1c group distribution, unknown a
 Author opened gate G2 themselves: `gate.py open . G2 --by "Example author"`. `STATUS.md` row 3 set
 to `done`.
 
+## 2026-11-21 — SAP amended: analysis register
+
+SAP amended 2026-11-21 to add the analysis register before any outcome data were analysed (no data existed).
+SAP 1.1 (`03_protocol/sap.md` §15–16): register A0–A5 (A0 descriptive, A1 primary, A2–A5 secondary as
+in SAP §7–9); Fine-Gray sensitivity analysis removed (in-hospital death after discharge can only follow
+a readmission, so it is not a competing risk); analysis software Python with the vendored `crostats.py`.
+
 ## 2026-11-21 — Data preparation (codebook, audit, cleaning log) — pending author confirmation
 
 Ran `data-preparation` on the existing `04_data/cohort.deid.csv` (SIMULATED, 1,070 rows, generated
@@ -196,13 +203,6 @@ primary adjusted estimates (A1: OR 7-9% vs <7% and >9% vs <7%) point in the hypo
 their 95% CIs include 1 — consistent with the power risk the author already accepted at G2
 (`sample-size.md` §4/10). `STATUS.md` row 5 set to `doing` (not `done`) — the author must review
 `05_analysis/analysis-report.rendered.md` and lock gate G3 themselves; this skill never locks G3.
-
-## 2026-11-21 — SAP amended: analysis register
-
-SAP amended 2026-11-21 to add the analysis register before any outcome data were analysed (no data existed).
-SAP 1.1 (`03_protocol/sap.md` §15–16): register A0–A5 (A0 descriptive, A1 primary, A2–A5 secondary as
-in SAP §7–9); Fine-Gray sensitivity analysis removed (in-hospital death after discharge can only follow
-a readmission, so it is not a competing risk); analysis software Python with the vendored `crostats.py`.
 
 ## 2026-11-21 — Post-hoc subgroup by age (A6)
 
