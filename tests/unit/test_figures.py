@@ -241,5 +241,124 @@ class TestFigures(unittest.TestCase):
         self.assertEqual(self.run_cli("--only", "F77").returncode, 2)
 
 
+LONG_SPEC = {"style": {"colors": {"<7": "#1f4e79", "7-9": "#c0504d"}}, "figures": [
+    {"id": "F1", "type": "forest", "title": "Nguy cơ tái nhập viện theo nhóm HbA1c, hiệu chỉnh theo tuổi và giới",
+     "null": 1, "log_scale": True, "x_label": "OR (KTC 95%), thang logarit", "source": "Bảng 3.3",
+     "rows": [{"label": "HbA1c 7-9% so với <7%", "result": "R-A1-003"},
+              {"label": "HbA1c >9% so với <7%", "result": "R-A1-004"}]},
+    {"id": "F2", "type": "km", "title": "Tái nhập viện trong 1 năm", "data": "04_data/cohort.deid.csv",
+     "time": "t_days", "event": "ev", "group": "grp", "order": ["<7", "7-9"], "at_risk": [0, 6, 12],
+     "max_time": 12, "time_unit": "ngày"},
+    {"id": "F3", "type": "rates", "unit": "%", "title": "Tỷ lệ tái nhập viện",
+     "rows": [{"label": "HbA1c <7%", "result": "R-A0-062"}, {"label": "HbA1c 7-9%", "result": "R-A0-063"}]},
+    {"id": "F4", "type": "flow", "title": "Sơ đồ chọn mẫu", "source": "Hồ sơ bệnh án",
+     "boxes": [{"text": "Hồ sơ đủ tiêu chuẩn chọn vào nghiên cứu", "n": "R-A0-001.n"},
+               {"text": "Đưa vào phân tích", "n": "R-A0-002.n"}],
+     "exclusions": [{"text": "Loại trừ do thiếu dữ liệu HbA1c", "n": "R-A0-001.n - R-A0-002.n"}]},
+]}
+
+
+@unittest.skipUnless(HAVE_MPL, "matplotlib is not installed")
+class TestFigureLayout(unittest.TestCase):
+    """Layout is relative to the font size: no clipping, no overlapping text at any (width, font) pair."""
+
+    SIZES = [(16, 9), (30, 24), (60, 36)]
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.p = Path(self.tmp.name)
+        (self.p / "ledgers").mkdir()
+        (self.p / "ledgers" / "results-ledger.json").write_text(json.dumps(LEDGER), encoding="utf-8")
+        (self.p / "project.yaml").write_text("language:\n  output: vi\n", encoding="utf-8")
+        (self.p / "04_data").mkdir()
+        (self.p / "04_data" / "cohort.deid.csv").write_text(csv_text(), encoding="utf-8")
+        (self.p / "07_present" / "figures").mkdir(parents=True)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def check(self, fig_spec, width, pt):
+        import figures
+        import matplotlib.pyplot as plt
+        f, _src, _data = figures.render_figure(self.p, fig_spec, width_cm=width, font_pt=pt, lang="vi")
+        try:
+            f.canvas.draw()
+            r = f.canvas.get_renderer()
+            W, H = f.bbox.width, f.bbox.height
+            items = [(t, t.get_window_extent(r)) for t in figures.text_artists(f)]
+            self.assertGreaterEqual(len(items), 3)
+            tag = f"{fig_spec['type']} {width}cm {pt}pt"
+            for t, bb in items:
+                self.assertGreaterEqual(bb.x0, -0.5, f"{tag}: {t.get_text()!r} left of canvas")
+                self.assertGreaterEqual(bb.y0, -0.5, f"{tag}: {t.get_text()!r} below canvas")
+                self.assertLessEqual(bb.x1, W + 0.5, f"{tag}: {t.get_text()!r} right of canvas")
+                self.assertLessEqual(bb.y1, H + 0.5, f"{tag}: {t.get_text()!r} above canvas")
+            for i in range(len(items)):
+                for j in range(i + 1, len(items)):
+                    a, b = items[i][1], items[j][1]
+                    ox = min(a.x1, b.x1) - max(a.x0, b.x0)
+                    oy = min(a.y1, b.y1) - max(a.y0, b.y0)
+                    self.assertFalse(ox > 1 and oy > 1, f"{tag}: {items[i][0].get_text()!r} overlaps "
+                                                         f"{items[j][0].get_text()!r}")
+            # the figure is at least as wide as asked (it only grows when the text needs it)
+            self.assertGreaterEqual(f.get_figwidth() * 2.54, width - 0.01)
+        finally:
+            plt.close(f)
+
+    def test_each_type_each_size(self):
+        for spec in (LONG_SPEC, SPEC):
+            for fig in spec["figures"]:
+                for w, pt in self.SIZES:
+                    with self.subTest(type=fig["type"], w=w, pt=pt, spec=len(spec["figures"][0].get("title", ""))):
+                        self.check(fig, w, pt)
+
+    def test_text_scales_with_font_not_width(self):
+        import figures
+        import matplotlib.pyplot as plt
+        f, _s, _d = figures.render_figure(self.p, LONG_SPEC["figures"][0], width_cm=30, font_pt=24, lang="vi")
+        try:
+            sizes = {round(t.get_fontsize()) for t in figures.text_artists(f)}
+            self.assertGreaterEqual(min(sizes), 24 - 1)
+        finally:
+            plt.close(f)
+
+    def test_poster_profile_files_and_defaults(self):
+        spec = json.loads(json.dumps(SPEC))
+        spec["figures"][0]["poster_width_cm"] = 40
+        (self.p / "07_present" / "figures" / "figures.json").write_text(json.dumps(spec), encoding="utf-8")
+        r = subprocess.run([sys.executable, str(SCRIPT), str(self.p), "--profile", "poster", "--dpi", "50"],
+                           capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        out = self.p / "07_present" / "figures"
+        for n in (1, 2, 3, 4):
+            for ext in ("svg", "pdf", "png"):
+                self.assertTrue((out / f"F{n}.poster.{ext}").exists(), f"F{n}.poster.{ext}")
+        self.assertFalse((out / "F1.svg").exists())
+        self.assertFalse((out / "F1.poster.data.json").exists())
+        svg1 = (out / "F1.poster.svg").read_text(encoding="utf-8")
+        svg3 = (out / "F3.poster.svg").read_text(encoding="utf-8")
+        import re
+        m1 = re.search(r'width="([\d.]+)pt"', svg1)
+        m3 = re.search(r'width="([\d.]+)pt"', svg3)
+        self.assertAlmostEqual(float(m1.group(1)) / 72 * 2.54, 40, delta=0.5)
+        self.assertAlmostEqual(float(m3.group(1)) / 72 * 2.54, 30, delta=0.5)
+        # SVG keeps text (svg.fonttype none); the poster font size appears in the style attribute
+        self.assertRegex(svg3, r"font:[^\"]*24px|font-size:\s*24")
+
+    def test_document_profile_default_unchanged_names(self):
+        (self.p / "07_present" / "figures" / "figures.json").write_text(json.dumps(SPEC), encoding="utf-8")
+        r = subprocess.run([sys.executable, str(SCRIPT), str(self.p), "--profile", "document", "--dpi", "50"],
+                           capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue((self.p / "07_present" / "figures" / "F1.svg").exists())
+        self.assertTrue((self.p / "07_present" / "figures" / "F1.data.json").exists())
+
+    def test_slide_profile_refused(self):
+        (self.p / "07_present" / "figures" / "figures.json").write_text(json.dumps(SPEC), encoding="utf-8")
+        r = subprocess.run([sys.executable, str(SCRIPT), str(self.p), "--profile", "slide"],
+                           capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(r.returncode, 2)
+
+
 if __name__ == "__main__":
     unittest.main()

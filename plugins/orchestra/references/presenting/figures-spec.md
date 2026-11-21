@@ -1,8 +1,28 @@
 # Figures spec
 
-`figures.py PROJECT [--only F1,F2] [--dpi 300]` reads `07_present/figures/figures.json` and writes, per figure,
+`figures.py PROJECT [--only F1,F2] [--dpi 300] [--profile document|poster]` reads `07_present/figures/figures.json` and writes, per figure,
 `F<n>.svg`, `F<n>.pdf` (vector, editable text), `F<n>.png` (`--dpi`, default 300) and `F<n>.data.json` into
 `07_present/figures/`. It needs matplotlib (`python -m pip install matplotlib`); without it the exit code is 2.
+
+## Profiles
+
+- `document` (default): `style.font_size` (9 pt) and `style.width_cm` (16 cm; a figure's `width_cm` overrides). Writes
+  `F<n>.{svg,pdf,png}` and `F<n>.data.json` as before.
+- `poster`: text size is the figure's `font_pt` (default 24) and width its `poster_width_cm` (default 30). Writes
+  `F<n>.poster.{svg,pdf,png}` only; `data.json` stays one per figure (from the document run). Place the figure at its
+  own width on the poster (scale 1:1) so the printed type equals `font_pt`; scaling a document-profile figure up is
+  what made text clip or collide.
+- `slide` is not offered: slides use native charts built from `data.json`.
+
+## Layout
+
+Every distance is a multiple of the font size or a width measured from the rendered text (matplotlib's renderer),
+not a fixed number of cm: left label column, right estimate column, row height, tick and axis-label block, KM
+at-risk table and its header, flow box height and wrapping, title and source note (both wrapped to the figure width).
+The plot area gets the width that is left, at least 10 em. If the text needs more than the requested width, the figure
+is made wider (never clipped); line widths, markers and tick lengths scale with the font size. In poster text no line
+is smaller than `font_pt`. A test renders every type at 16 cm / 9 pt, 30 cm / 24 pt and 60 cm / 36 pt and checks that
+no text leaves the canvas or overlaps another.
 
 ## Rules
 
