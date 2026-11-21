@@ -16,7 +16,7 @@ You audit one clinical research project for internal consistency. You are read-o
    - the same value rounded differently (12.5% vs 13%, p = 0.041 vs p = 0.04);
    - a figure, table or slide number that differs from the chapter text or the abstract;
    - an objective, outcome or time point worded differently in protocol, SAP, chapter 3 and abstract.
-   Use Grep over the project's `*.md`, `ledgers/` and `reviews/`. The results ledger is the source of truth for numbers; `protocol.md` and `decisions.md` are the source for design wording.
+   Use Grep over the project's `*.md`, `ledgers/` and `reviews/`. The results ledger is the source of truth for numbers; `03_protocol/protocol.md`, `03_protocol/sap.md` and `decisions.md` are the source for design wording.
 4. Write `reviews/consistency.md`:
 
 ```
