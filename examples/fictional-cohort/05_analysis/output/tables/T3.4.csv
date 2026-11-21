@@ -1,0 +1,8 @@
+id,label,value,ci_low,ci_high,p,n
+R-A2-001,"OR C(sex)[T.Nữ], readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any",0.9345245805093612,0.6965762672531278,1.2537553066803482,0.6515176955688263,1043
+R-A2-002,"OR hba1c, readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any",1.0189446164541962,0.9329261013585715,1.1128942902219614,0.6766335194875741,1043
+R-A2-003,"OR age, readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any",1.017829899096707,1.0027842815128383,1.0331012587595585,0.020024446423797703,1043
+R-A2-004,"OR dm_duration_years, readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any",1.012611417925543,0.984811383214766,1.0411962140059516,0.3775727473371979,1043
+R-A2-005,"OR comorb_any, readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any",1.3734791539016082,1.0051009235331911,1.8768712096800517,0.046382065047133776,1043
+R-A2-006,"AUC (apparent), readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any",0.5765849999471755,,,,1043
+R-A2-007,"EPV, mô hình A2",46.8,,,,1043

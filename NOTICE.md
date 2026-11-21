@@ -10,4 +10,5 @@ This repository is MIT-licensed (see LICENSE). It includes or adapts the followi
 | Design patterns (outline-as-plan, two-stage citation verification, reviewer accept/revert loop) | PaperOrchestra, Google Research (github.com/google-research/paper-orchestra) | Apache-2.0 | inspiration only; no code or prompt text copied |
 | `cite_render.py` numbering logic | Amelia Le, version 3 | contributed under MIT | adapted to the reference ledger (`[@id]` keys) |
 | `samplesize.py` | Amelia Le, version 3 | contributed under MIT | unchanged |
+| Statistical-analysis workflow (`statistical-analysis`, `crostats.py` test choices and reporting defaults) | `stat-analysis-vi` skill by Trần Quang Hưng (repository owner) | MIT | ported to English, adapted (SAP register, post-hoc rules) |
 | `build_docx.py` | Amelia Le, `md2docx.py` (v3, 20 Nov 2026) | contributed under MIT | approach adapted (WordprocessingML written directly; Markdown subset, numbered tables) |

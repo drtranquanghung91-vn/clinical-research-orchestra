@@ -1,0 +1,17 @@
+id,label,value,ci_low,ci_high,p,n
+R-A1-001,"crude OR, HbA1c 2. 7-9% vs 1. <7%",1.092953523238381,0.7430827960501973,1.6075562646702628,,749
+R-A1-002,"crude OR, HbA1c 3. >9% vs 1. <7%",1.409678006185192,0.9370717068946203,2.1206403592182417,,556
+R-A1-003,"OR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%], readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.0975160894901683,0.742276835802005,1.6227659393254874,0.6409789420700254,1043
+R-A1-004,"OR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%], readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.4216250761778106,0.9386356164580091,2.153144225278797,0.09671923863460445,1043
+R-A1-005,"OR C(sex)[T.Nữ], readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",0.9244368770222453,0.6886871871047227,1.2408878161235382,0.6009141778009388,1043
+R-A1-006,"OR age, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.0184088976795396,1.0033036091982306,1.0337416045993069,0.016731739323371176,1043
+R-A1-007,"OR dm_duration_years, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.012575116303433,0.9847455511426708,1.0411911635113988,0.37946926157424177,1043
+R-A1-008,"OR comorb_any, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.380500135473658,1.0095178833414151,1.8878126435312095,0.043457401439151375,1043
+R-A1-009,"AUC (apparent), readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",0.5880162276948433,,,,1043
+R-A1-010,"EPV, mô hình hiệu chỉnh A1",39.0,,,,1043
+R-A1-011,"VIF C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%]",1.677376212371296,,,,1043
+R-A1-012,"VIF C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%]",1.6840915232779219,,,,1043
+R-A1-013,VIF C(sex)[T.Nữ],1.0061370031974066,,,,1043
+R-A1-014,VIF age,1.1005750791385303,,,,1043
+R-A1-015,VIF dm_duration_years,1.0052666833768922,,,,1043
+R-A1-016,VIF comorb_any,1.1042409892884038,,,,1043

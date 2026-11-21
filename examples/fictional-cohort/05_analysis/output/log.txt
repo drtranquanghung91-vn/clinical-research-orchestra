@@ -1,0 +1,173 @@
+derived columns (in-memory only): comorb_any = htn|ckd|cvd; hba1c_grp3 relabels hba1c_group [('7-9', '2. 7-9%'), ('<7', '1. <7%'), ('>9', '3. >9%')] so table/model group order follows clinical severity, reference group '1. <7%'
+A0 Table T3.1 Đặc điểm chung theo nhóm HbA1c lúc nhập viện: by hba1c_grp3, N=1070, groups 1. <7%=235, 2. 7-9%=514, 3. >9%=321; 0 rows with missing hba1c_grp3 excluded
+A0 age: mean ± SD (every group normal with n >= 30)
+R-A0-001 age [overall]: value=63.08130841 n=1070
+R-A0-002 age [1. <7%]: value=63.70638298 n=235
+R-A0-003 age [2. 7-9%]: value=63.19066148 n=514
+R-A0-004 age [3. >9%]: value=62.44859813 n=321
+R-A0-005 sex = Nam [overall]: value=49.90654206 n=1070
+R-A0-006 sex = Nam [1. <7%]: value=53.19148936 n=235
+R-A0-007 sex = Nam [2. 7-9%]: value=50.58365759 n=514
+R-A0-008 sex = Nam [3. >9%]: value=46.41744548 n=321
+R-A0-009 sex = Nữ [overall]: value=50.09345794 n=1070
+R-A0-010 sex = Nữ [1. <7%]: value=46.80851064 n=235
+R-A0-011 sex = Nữ [2. 7-9%]: value=49.41634241 n=514
+R-A0-012 sex = Nữ [3. >9%]: value=53.58255452 n=321
+A0 dm_duration_years: 27 missing values excluded
+A0 dm_duration_years: mean ± SD (every group normal with n >= 30)
+R-A0-013 dm_duration_years [overall]: value=9.151102589 n=1043
+R-A0-014 dm_duration_years [1. <7%]: value=9.042920354 n=226
+R-A0-015 dm_duration_years [2. 7-9%]: value=9.204 n=500
+R-A0-016 dm_duration_years [3. >9%]: value=9.144794953 n=317
+R-A0-017 htn = 0 [overall]: value=65.04672897 n=1070
+R-A0-018 htn = 0 [1. <7%]: value=62.12765957 n=235
+R-A0-019 htn = 0 [2. 7-9%]: value=67.70428016 n=514
+R-A0-020 htn = 0 [3. >9%]: value=62.92834891 n=321
+R-A0-021 htn = 1 [overall]: value=34.95327103 n=1070
+R-A0-022 htn = 1 [1. <7%]: value=37.87234043 n=235
+R-A0-023 htn = 1 [2. 7-9%]: value=32.29571984 n=514
+R-A0-024 htn = 1 [3. >9%]: value=37.07165109 n=321
+R-A0-025 ckd = 0 [overall]: value=85.88785047 n=1070
+R-A0-026 ckd = 0 [1. <7%]: value=85.10638298 n=235
+R-A0-027 ckd = 0 [2. 7-9%]: value=85.01945525 n=514
+R-A0-028 ckd = 0 [3. >9%]: value=87.85046729 n=321
+R-A0-029 ckd = 1 [overall]: value=14.11214953 n=1070
+R-A0-030 ckd = 1 [1. <7%]: value=14.89361702 n=235
+R-A0-031 ckd = 1 [2. 7-9%]: value=14.98054475 n=514
+R-A0-032 ckd = 1 [3. >9%]: value=12.14953271 n=321
+R-A0-033 cvd = 0 [overall]: value=82.42990654 n=1070
+R-A0-034 cvd = 0 [1. <7%]: value=79.57446809 n=235
+R-A0-035 cvd = 0 [2. 7-9%]: value=81.3229572 n=514
+R-A0-036 cvd = 0 [3. >9%]: value=86.29283489 n=321
+R-A0-037 cvd = 1 [overall]: value=17.57009346 n=1070
+R-A0-038 cvd = 1 [1. <7%]: value=20.42553191 n=235
+R-A0-039 cvd = 1 [2. 7-9%]: value=18.6770428 n=514
+R-A0-040 cvd = 1 [3. >9%]: value=13.70716511 n=321
+R-A0-041 comorb_any = 0 [overall]: value=46.26168224 n=1070
+R-A0-042 comorb_any = 0 [1. <7%]: value=42.12765957 n=235
+R-A0-043 comorb_any = 0 [2. 7-9%]: value=46.692607 n=514
+R-A0-044 comorb_any = 0 [3. >9%]: value=48.59813084 n=321
+R-A0-045 comorb_any = 1 [overall]: value=53.73831776 n=1070
+R-A0-046 comorb_any = 1 [1. <7%]: value=57.87234043 n=235
+R-A0-047 comorb_any = 1 [2. 7-9%]: value=53.307393 n=514
+R-A0-048 comorb_any = 1 [3. >9%]: value=51.40186916 n=321
+R-A0-049 insulin = 0 [overall]: value=69.90654206 n=1070
+R-A0-050 insulin = 0 [1. <7%]: value=85.95744681 n=235
+R-A0-051 insulin = 0 [2. 7-9%]: value=74.90272374 n=514
+R-A0-052 insulin = 0 [3. >9%]: value=50.15576324 n=321
+R-A0-053 insulin = 1 [overall]: value=30.09345794 n=1070
+R-A0-054 insulin = 1 [1. <7%]: value=14.04255319 n=235
+R-A0-055 insulin = 1 [2. 7-9%]: value=25.09727626 n=514
+R-A0-056 insulin = 1 [3. >9%]: value=49.84423676 n=321
+A0 los_days: median (Q1–Q3) (a group is not normal or has n < 30)
+R-A0-057 los_days [overall]: value=7 n=1070
+R-A0-058 los_days [1. <7%]: value=7 n=235
+R-A0-059 los_days [2. 7-9%]: value=7 n=514
+R-A0-060 los_days [3. >9%]: value=7 n=321
+TABLE T3.1 Đặc điểm chung theo nhóm HbA1c lúc nhập viện: 05_analysis/output/tables/T3.1.csv (21 rows; analyses A0)
+A0 tỷ lệ tái nhập viện 1 năm: tỷ lệ với KTC 95% Wilson (statsmodels proportion_confint, method='wilson'), không có sẵn trong crostats
+R-A0-061 tỷ lệ tái nhập viện 1 năm [Chung]: value=22.05607477 ci=19.67412998,24.63794746 n=1070
+R-A0-062 tỷ lệ tái nhập viện 1 năm [1. <7%]: value=19.57446809 ci=15.00814793,25.11949963 n=235
+R-A0-063 tỷ lệ tái nhập viện 1 năm [2. 7-9%]: value=21.01167315 ci=17.71130845,24.74212108 n=514
+R-A0-064 tỷ lệ tái nhập viện 1 năm [3. >9%]: value=25.54517134 ci=21.08299218,30.5857386 n=321
+TABLE T3.2 Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm, chung và theo nhóm HbA1c: 05_analysis/output/tables/T3.2.csv (4 rows; analyses A0)
+A1 số sự kiện tái nhập viện mỗi nhóm HbA1c: {'1. <7%': 46, '2. 7-9%': 108, '3. >9%': 82}; quy tắc đổi sang kiểm định thay thế (sap.md §8) áp dụng nếu một nhóm có < 5 sự kiện
+A1 mọi nhóm có >= 5 sự kiện — hồi quy logistic đa biến tiến hành như đăng ký, không cần đổi kiểm định
+A1 crude OR 2. 7-9% vs 1. <7%: Woolf CI; Haldane correction not needed
+R-A1-001 crude OR, HbA1c 2. 7-9% vs 1. <7%: value=1.092953523 ci=0.7430827961,1.607556265 n=749
+A1 crude OR 3. >9% vs 1. <7%: Woolf CI; Haldane correction not needed
+R-A1-002 crude OR, HbA1c 3. >9% vs 1. <7%: value=1.409678006 ci=0.9370717069,2.120640359 n=556
+A1 logistic regression readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: reason: binary outcome; n=1043, events=234, non-events=809, parameters=6, EPV=39.0
+R-A1-003 OR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%], readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.097516089 ci=0.7422768358,1.622765939 p=0.6409789421 n=1043
+R-A1-004 OR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%], readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.421625076 ci=0.9386356165,2.153144225 p=0.09671923863 n=1043
+R-A1-005 OR C(sex)[T.Nữ], readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=0.924436877 ci=0.6886871871,1.240887816 p=0.6009141778 n=1043
+R-A1-006 OR age, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.018408898 ci=1.003303609,1.033741605 p=0.01673173932 n=1043
+R-A1-007 OR dm_duration_years, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.012575116 ci=0.9847455511,1.041191164 p=0.3794692616 n=1043
+R-A1-008 OR comorb_any, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.380500135 ci=1.009517883,1.887812644 p=0.04345740144 n=1043
+A1 diagnostics: AUC=0.5880162277; Hosmer-Lemeshow chi2=5.992571427 df=8 p=0.6480640436
+R-A1-009 AUC (apparent), readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=0.5880162277 n=1043
+R-A1-010 EPV, mô hình hiệu chỉnh A1: value=39 n=1043
+A1 VIF (statsmodels variance_inflation_factor, ngưỡng quy ước VIF > 5 gợi ý đa cộng tuyến; không có sẵn trong crostats), n=1043
+A1 VIF C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%] = 1.677
+R-A1-011 VIF C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%]: value=1.677376212 n=1043
+A1 VIF C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%] = 1.684
+R-A1-012 VIF C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%]: value=1.684091523 n=1043
+A1 VIF C(sex)[T.Nữ] = 1.006
+R-A1-013 VIF C(sex)[T.Nữ]: value=1.006137003 n=1043
+A1 VIF age = 1.101
+R-A1-014 VIF age: value=1.100575079 n=1043
+A1 VIF dm_duration_years = 1.005
+R-A1-015 VIF dm_duration_years: value=1.005266683 n=1043
+A1 VIF comorb_any = 1.104
+R-A1-016 VIF comorb_any: value=1.104240989 n=1043
+A1 linearity check (age, quadratic-term LR test): LR=0.5346, df=1, p=0.4647 (không có bằng chứng phi tuyến tính)
+A1 linearity check (dm_duration_years, quadratic-term LR test): LR=0.1374, df=1, p=0.7109 (không có bằng chứng phi tuyến tính)
+TABLE T3.3 Tái nhập viện 1 năm theo nhóm HbA1c: OR thô và OR hiệu chỉnh: 05_analysis/output/tables/T3.3.csv (16 rows; analyses A1)
+A2 logistic regression readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any: reason: binary outcome; n=1043, events=234, non-events=809, parameters=5, EPV=46.8
+R-A2-001 OR C(sex)[T.Nữ], readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any: value=0.9345245805 ci=0.6965762673,1.253755307 p=0.6515176956 n=1043
+R-A2-002 OR hba1c, readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any: value=1.018944616 ci=0.9329261014,1.11289429 p=0.6766335195 n=1043
+R-A2-003 OR age, readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any: value=1.017829899 ci=1.002784282,1.033101259 p=0.02002444642 n=1043
+R-A2-004 OR dm_duration_years, readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any: value=1.012611418 ci=0.9848113832,1.041196214 p=0.3775727473 n=1043
+R-A2-005 OR comorb_any, readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any: value=1.373479154 ci=1.005100924,1.87687121 p=0.04638206505 n=1043
+A2 diagnostics: AUC=0.5765849999; Hosmer-Lemeshow chi2=14.40992127 df=8 p=0.071687061
+R-A2-006 AUC (apparent), readmit_1y ~ hba1c + age + C(sex) + dm_duration_years + comorb_any: value=0.5765849999 n=1043
+R-A2-007 EPV, mô hình A2: value=46.8 n=1043
+TABLE T3.4 Tái nhập viện 1 năm theo HbA1c liên tục (mỗi 1%), OR hiệu chỉnh: 05_analysis/output/tables/T3.4.csv (7 rows; analyses A2)
+A3 logistic regression readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: reason: binary outcome; n=1043, events=94, non-events=949, parameters=6, EPV=15.7
+R-A3-001 OR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%], readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=2.969494208 ci=1.310256475,6.729900607 p=0.009126032232 n=1043
+R-A3-002 OR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%], readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=5.503020831 ci=2.424608423,12.48995012 p=0.00004545300163 n=1043
+R-A3-003 OR C(sex)[T.Nữ], readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=0.8486907205 ci=0.5510242219,1.307158398 p=0.4565865663 n=1043
+R-A3-004 OR age, readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.011296443 ci=0.9894115698,1.03366539 p=0.314256602 n=1043
+R-A3-005 OR dm_duration_years, readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.021529453 ci=0.9810586923,1.063669718 p=0.3017060299 n=1043
+R-A3-006 OR comorb_any, readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.537468249 ci=0.9639193122,2.452288887 p=0.07096542811 n=1043
+A3 diagnostics: AUC=0.6698820707; Hosmer-Lemeshow chi2=11.30162248 df=8 p=0.185187489
+R-A3-007 AUC (apparent), readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=0.6698820707 n=1043
+R-A3-008 EPV, mô hình A3: value=15.66666667 n=1043
+TABLE T3.5 Tái nhập viện liên quan ĐTĐ trong 1 năm theo nhóm HbA1c, OR hiệu chỉnh: 05_analysis/output/tables/T3.5.csv (8 rows; analyses A3)
+A4 Cox regression Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')): reason: time-to-event outcome; n=1070, events=236, parameters=2, EPV=118.0
+R-A4-001 HR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%], Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')): value=1.073446384 ci=0.7601752022,1.515817848 p=0.6872814183 n=1070
+R-A4-002 HR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%], Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')): value=1.352923333 ci=0.9429041754,1.941238136 p=0.1008335831 n=1070
+A4 diagnostics: concordance=0.5311756264; PH test min p=0.4721654273
+R-A4-003 concordance, mô hình Cox thô A4: value=0.5311756264 n=1070
+R-A4-004 PH test min p, mô hình Cox thô A4: value=0.4721654273 n=1070
+A4 Cox regression Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: reason: time-to-event outcome; n=1043, events=234, parameters=6, EPV=39.0
+R-A4-005 HR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%], Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.066082157 ci=0.7544170415,1.506502508 p=0.7168353121 n=1043
+R-A4-006 HR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%], Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.345502262 ci=0.935833931,1.934505982 p=0.1091605983 n=1043
+R-A4-007 HR age, Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.015207613 ci=1.002126506,1.028459474 p=0.02254858912 n=1043
+R-A4-008 HR C(sex)[T.Nữ], Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=0.9417818222 ci=0.7283109902,1.217821799 p=0.6474136204 n=1043
+R-A4-009 HR dm_duration_years, Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.010313841 ci=0.9861112597,1.035110438 p=0.4068624343 n=1043
+R-A4-010 HR comorb_any, Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.331513602 ci=1.009305508,1.756582579 p=0.04281711532 n=1043
+A4 diagnostics: concordance=0.5779452745; PH test min p=0.2739494139
+R-A4-011 EPV, mô hình Cox hiệu chỉnh A4: value=39 n=1043
+R-A4-012 concordance, mô hình Cox hiệu chỉnh A4: value=0.5779452745 n=1043
+R-A4-013 PH test min p, mô hình Cox hiệu chỉnh A4: value=0.2739494139 n=1043
+TABLE T3.6 Thời gian đến lần tái nhập viện đầu tiên theo nhóm HbA1c: HR thô và HR hiệu chỉnh: 05_analysis/output/tables/T3.6.csv (13 rows; analyses A4)
+A5 tỷ lệ tử vong trong viện: tỷ lệ với KTC 95% Wilson (statsmodels proportion_confint, method='wilson'), không có sẵn trong crostats
+R-A5-001 tỷ lệ tử vong trong viện [Chung]: value=2.242990654 ci=1.511847809,3.315816312 n=1070
+R-A5-002 tỷ lệ tử vong trong viện [1. <7%]: value=1.276595745 ci=0.4350902188,3.68540832 n=235
+R-A5-003 tỷ lệ tử vong trong viện [2. 7-9%]: value=2.33463035 ci=1.340456317,4.035988219 n=514
+R-A5-004 tỷ lệ tử vong trong viện [3. >9%]: value=2.803738318 ci=1.481932354,5.241796477 n=321
+TABLE T3.7 Tỷ lệ tử vong trong viện trong 1 năm, chung và theo nhóm HbA1c: 05_analysis/output/tables/T3.7.csv (4 rows; analyses A5)
+A6 subgroup age_grp = < 65: the next model is fitted in this age subgroup only (POST-HOC, decisions.md)
+A6 logistic regression readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: reason: binary outcome; n=572, events=113, non-events=459, parameters=6, EPV=18.8
+R-A6-001 tuổi < 65: OR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%], readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.219131984 ci=0.6650452544,2.234859634 p=0.5216574087 n=572
+R-A6-002 tuổi < 65: OR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%], readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.610291753 ci=0.8598897696,3.015548761 p=0.1366518409 n=572
+R-A6-003 tuổi < 65: OR C(sex)[T.Nữ], readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.122362066 ci=0.7377456868,1.707494371 p=0.5897397219 n=572
+R-A6-004 tuổi < 65: OR age, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.024105696 ci=0.9894921705,1.05993004 p=0.1745237494 n=572
+R-A6-005 tuổi < 65: OR dm_duration_years, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.018911822 ci=0.9787046441,1.060770792 p=0.3617335243 n=572
+R-A6-006 tuổi < 65: OR comorb_any, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.75701015 ci=1.14528697,2.69546825 p=0.009844670488 n=572
+A6 diagnostics: AUC=0.6166541346; Hosmer-Lemeshow chi2=8.940705315 df=8 p=0.3473226808
+R-A6-007 tuổi < 65: AUC (apparent), readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=0.6166541346 n=572
+A6 subgroup age_grp = >= 65: the next model is fitted in this age subgroup only (POST-HOC, decisions.md)
+A6 logistic regression readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: reason: binary outcome; n=471, events=121, non-events=350, parameters=6, EPV=20.2
+R-A6-008 tuổi >= 65: OR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%], readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.000581079 ci=0.5941271626,1.685098002 p=0.9982571645 n=471
+R-A6-009 tuổi >= 65: OR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%], readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.269297109 ci=0.718177178,2.243339387 p=0.4118282244 n=471
+R-A6-010 tuổi >= 65: OR C(sex)[T.Nữ], readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=0.7444869435 ci=0.4914275254,1.127858698 p=0.1638518618 n=471
+R-A6-011 tuổi >= 65: OR age, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.01258719 ci=0.9776771903,1.048743724 p=0.4846857544 n=471
+R-A6-012 tuổi >= 65: OR dm_duration_years, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.009107419 ci=0.9705533643,1.049192986 p=0.648281104 n=471
+R-A6-013 tuổi >= 65: OR comorb_any, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=1.01716272 ci=0.6479643002,1.596723768 p=0.9410393419 n=471
+A6 diagnostics: AUC=0.5552302243; Hosmer-Lemeshow chi2=5.855457006 df=8 p=0.6634189709
+R-A6-014 tuổi >= 65: AUC (apparent), readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any: value=0.5552302243 n=471
+A6 interaction C(hba1c_grp3, Treatment(reference='1. <7%'))×age_grp (logit): likelihood-ratio test, readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age_grp + age + C(sex) + dm_duration_years + comorb_any vs readmit_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age_grp + age + C(sex) + dm_duration_years + comorb_any + C(hba1c_grp3, Treatment(reference='1. <7%')):age_grp; n=1043, LR=0.3610197605, df=2; reason: effect modification tested on the same complete cases
+R-A6-015 p-interaction, nhóm HbA1c × nhóm tuổi: value=0.8348444322 n=1043
+TABLE T3.8 Tái nhập viện 1 năm theo nhóm HbA1c, trong từng nhóm tuổi (hậu kiểm): 05_analysis/output/tables/T3.8.csv (14 rows; analyses A6)

@@ -10,5 +10,17 @@
     "at": "2026-11-21T14:07:06",
     "by": "Example author",
     "files": {}
+  },
+  "G3": {
+    "status": "open",
+    "at": "2026-11-21T23:34:17",
+    "by": "Example author",
+    "files": {
+      "ledgers/results-ledger.json": "edf4303f7689179552be8bab95b28836316d4709e3794af78e4b433330276b45",
+      "05_analysis/output/results.json": "c04e27feb39e94022819751b4861a7f7ae9c8c367f940e94825d72575e20a7b0",
+      "05_analysis/analysis.py": "1f5d32804538ac5d3a0f15eb8b6500b1613a31c9e17c3531b5291d40528b10b3",
+      "05_analysis/crostats.py": "c7a2fc92896fdb78545d919a60e304bcf7560a5b74a77c54d367cbabbf66ea23",
+      "04_data/cohort.deid.csv": "7b127ad0ccfdd23c55450f6106aa540f9943d2dd50a73d9825ed5009053e5248"
+    }
   }
 }
