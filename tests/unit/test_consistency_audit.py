@@ -226,6 +226,63 @@ class TestFilesAndJson(Base):
         self.assertEqual(self.blocks(self.run_audit(files=[a])), [])
 
 
+class TestRealTextFalsePositives(Base):
+    def test_ci_bounds_never_compared(self):
+        self.w("06_writing/thesis/a.md", "OR thô 1,09 (KTC 95%: 0,74–1,61) ở nhóm A.\n")
+        self.w("06_writing/thesis/b.md",
+               "Tỷ lệ chung 22,1% (KTC 95%: 19,7–24,6) và khoảng tin cậy 95% 0,94 đến 2,12.\n")
+        self.assertEqual(self.blocks(), [])
+
+    def test_group_labels_and_ranges(self):
+        self.w("06_writing/thesis/a.md",
+               "So với nhóm HbA1c <7% (tham chiếu), tỷ lệ tái nhập viện ở nhóm 7–9% là 20% "
+               "và ở nhóm >9% là 25%.\n")
+        self.w("06_writing/thesis/b.md", "Tỷ lệ tái nhập viện ở nhóm <7% là 19% và nhóm 7–9% là 21%.\n")
+        self.assertEqual(self.blocks(), [])
+
+    def test_section_and_figure_references(self):
+        self.w("06_writing/thesis/a.md", "Xem mục 1.7, bảng 3.2, biểu đồ 2.1 và figure 4.1, chương 12.\n")
+        self.w("06_writing/thesis/b.md", "Xem mục 1.5, bảng 3.3, biểu đồ 2.2 và figure 4.2, chương 13.\n")
+        self.assertEqual(self.blocks(), [])
+
+    def test_time_points_keyed_with_unit_and_following_words(self):
+        self.w("06_writing/thesis/a.md", "Tuổi chiếm ưu thế ở mốc 30 ngày, các chỉ số viêm nổi lên.\n")
+        self.w("06_writing/thesis/b.md", "Biến chứng chiếm ưu thế ở mốc 365 ngày (phân tích SHAP).\n")
+        self.assertEqual(self.blocks(), [])
+        self.w("06_writing/thesis/c.md", "Thời điểm theo dõi 30 ngày sau xuất viện.\n")
+        self.w("06_writing/thesis/d.md", "Thời điểm theo dõi 90 ngày sau xuất viện.\n")
+        self.assertEqual(len(self.blocks()), 1)
+
+    def test_vietnamese_thousands_separator(self):
+        self.w("06_writing/thesis/a.md",
+               "Một nghiên cứu khác trên 1.627 người bệnh và 12.041 người bệnh (cùng 2.007 người bệnh dùng).\n")
+        self.assertEqual(self.blocks(), [])
+        self.w("06_writing/thesis/b.md", "Cỡ mẫu n = 1.627 người bệnh; n = 26,65 người bệnh.\n")
+        self.assertEqual(len(self.blocks(needle="sample size")), 1)
+
+    def test_numbered_copy_not_audited_twice(self):
+        self.w("06_writing/thesis/ch1.md", "Cỡ mẫu ≈26 bệnh nhân.\n")
+        self.w("06_writing/thesis/ch1.numbered.md", "1 Cỡ mẫu ≈26 bệnh nhân.\n")
+        self.assertEqual(len(self.blocks(needle="sample size")), 1)
+
+    def test_overall_row_is_not_a_sum_row(self):
+        self.w("06_writing/thesis/ch3.md",
+               "| Nhóm | Tái nhập, n (%) |\n|---|---|\n| Chung | 22,1% |\n| A | 19,6% |\n| B | 25,5% |\n")
+        self.assertEqual(self.warns(needle="sum"), [])
+
+    def test_total_row_must_be_100(self):
+        self.w("06_writing/thesis/ch3.md", "| A | 10% |\n| B | 10% |\n| Tổng | 50% |\n")
+        self.assertEqual(self.warns(needle="sum"), [])
+        self.w("06_writing/thesis/ch4.md", "| A | 60% |\n| B | 30% |\n| Tổng cộng | 100% |\n")
+        self.assertEqual(len(self.warns(needle="sum")), 1)
+
+    def test_fictional_cohort_has_no_blocks(self):
+        ex = _paths.ROOT / "examples" / "fictional-cohort"
+        if not ex.is_dir():
+            self.skipTest("examples/fictional-cohort not present")
+        self.assertEqual(self.blocks(ca.audit(ex)), [])
+
+
 class TestCli(Base):
     def run_cli(self, *args):
         r = subprocess.run([sys.executable, str(SCRIPT), *map(str, args)], capture_output=True,

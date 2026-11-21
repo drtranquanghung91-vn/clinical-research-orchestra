@@ -12,6 +12,17 @@ written approximately or as a decimal = block; date ranges sharing one end but n
 abstract numbers found nowhere else = warn; percentage columns not summing to the total row = warn;
 term variants (project.yaml terms: + built-ins) = warn. A line containing <!-- cons-ok: reason --> is
 skipped. Exit 0 = no block; 1 = at least one block; 2 = usage or I/O error. Standard library only.
+
+Deliberate blind spots (noise trade-offs; the consistency-auditor agent covers them):
+- integers <= 10 and years 1900-2100 are never compared as quantities ("5 deaths" vs "7 deaths");
+- a quantity whose last key word is p, or, rr, hr, ci, ktc, sd, auc, a group word (nhóm, group) or a
+  reference word (mục, bảng, hình, figure, table...) is skipped; so are CI bounds, ranges (7-9%),
+  comparisons (<7%) and anything inside a CI expression ("OR 1,42" vs "OR 1,52" is not caught);
+- the key is only the words BEFORE the number, so "tỷ lệ đáp ứng là 85%" and "có 86,3% tỷ lệ đáp ứng"
+  are different keys;
+- date ranges are compared globally, so an enrolment and a follow-up window sharing a start can block
+  (escape with cons-ok);
+- the percentage-sum check only runs on a row whose first cell is Tổng / Tổng cộng / Total and says 100%.
 """
 from __future__ import annotations
 
@@ -30,6 +41,14 @@ import render_results  # noqa: E402
 STOP = frozenset("là của có và được trong với ở cho các những một này "
                  "is was of the a an in at to".split())
 SKIP_LAST = frozenset({"p", "pvalue", "p-value", "ci", "ktc", "or", "rr", "hr", "sd", "auc"})
+REF_WORDS = frozenset("mục bảng hình đồ chương lục xem section table figure fig appendix".split())
+GROUP_WORDS = frozenset({"nhóm", "group", "arm"})
+CI_WORDS = frozenset({"ktc", "ci"})
+TIME_UNITS = frozenset("ngày tháng năm tuần giờ day days month months year years week weeks hour hours".split())
+_N = r"\d+(?:[.,]\d+)*%?"
+CMP = re.compile(r"(?<![\w.,])[<>≤≥]=?\s*" + _N + r"|(?<![\w.,])" + _N + r"\s*[–—-]\s*" + _N)
+THOUSANDS = {"vi": re.compile(r"\d{1,3}(?:\.\d{3})+"), "en": re.compile(r"\d{1,3}(?:,\d{3})+")}
+FOLLOW = re.compile(r"[^\w]*([^\W\d_]+)")
 BUILTIN_TERMS = {"HbA1c": ["HbA1C", "Hba1c", "HBA1C"], "đái tháo đường": ["tiểu đường"]}
 
 CONS_OK = re.compile(r"<!--\s*cons-ok\b[^>]*-->", re.I)
@@ -62,7 +81,7 @@ PART = re.compile(r"(?<!\w)(?:bệnh nhân|người bệnh|đối tượng|trư�
                   r"subjects?|cases?)(?!\w)", re.I)
 PRE_N = re.compile(r"(?:(?<!\w)n|cỡ mẫu|sample size)[^.;|\d]{0,20}$", re.I)
 PRE_N_DEC = re.compile(r"(?:(?<!\w)n\s*[=:≈~]?|cỡ mẫu[^.;|\d]{0,20}|sample size[^.;|\d]{0,20})\s*$", re.I)
-TOTAL_ROW = re.compile(r"^\W*(tổng|total|chung)\b", re.I)
+TOTAL_ROW = re.compile(r"^[\s*_]*(tổng|tổng cộng|total)[\s*_:.]*$", re.I)
 SEP_CELL = re.compile(r"^\s*:?-{2,}:?\s*$")
 
 
@@ -178,6 +197,15 @@ def _load_doc(path: Path, project: Path, by_id: dict, lang: str, findings: list)
     return Doc(label, _md_lines(label, text), is_abs)
 
 
+def _numbered_copy(p: Path) -> bool:
+    """x.numbered.md (or its rendered form) when the plain x.md / x.rendered.md exists."""
+    stem = p.name[:-len(".rendered.md")] if p.name.endswith(".rendered.md") else p.name[:-len(".md")]
+    if not stem.endswith(".numbered"):
+        return False
+    plain = stem[:-len(".numbered")]
+    return p.with_name(plain + ".md").exists() or p.with_name(plain + ".rendered.md").exists()
+
+
 def _discover(project: Path) -> list[Path]:
     found: list[Path] = []
     for sub in ("06_writing", "07_present"):
@@ -185,6 +213,8 @@ def _discover(project: Path) -> list[Path]:
         if not base.is_dir():
             continue
         for p in sorted(base.rglob("*.md")):
+            if _numbered_copy(p):
+                continue
             if p.name.endswith(".rendered.md"):
                 found.append(p)
             elif not p.with_name(p.stem + ".rendered.md").exists():
@@ -243,13 +273,17 @@ def _locate(line: str, tok: str, pos: int) -> int:
     return i
 
 
-def _tokens(dm: str) -> list[tuple[str, Decimal, int, int]]:
+def _tokens(dm: str, lang: str = "vi") -> list[tuple[str, Decimal, int, int]]:
     out, pos = [], 0
+    thousands = THOUSANDS.get(lang)
     for tok, val, dec in numfmt.parse_tokens(dm, "any"):
         i = _locate(dm, tok, pos)
         if i < 0:
             continue
         pos = i + len(tok)
+        body = tok.rstrip("%")
+        if thousands is not None and thousands.fullmatch(body):
+            val, dec = Decimal(re.sub(r"[.,]", "", body)), 0
         out.append((tok, val, dec, i))
     return out
 
@@ -291,10 +325,10 @@ def _dates(text: str):
 
 
 class Info:
-    __slots__ = ("loc", "dm", "tokens", "ranges")
+    __slots__ = ("loc", "dm", "km", "tokens", "ranges", "cmp_idx")
 
 
-def _analyse(doc: Doc) -> list[Info]:
+def _analyse(doc: Doc, lang: str = "vi") -> list[Info]:
     out = []
     for ln in doc.lines:
         if ln.skip:
@@ -303,10 +337,14 @@ def _analyse(doc: Doc) -> list[Info]:
         info.loc = ln.loc
         masked = mask(ln.text)
         info.dm, info.ranges = _dates(masked)
+        info.km, info.cmp_idx = info.dm, set()
+        for m in CMP.finditer(info.dm):
+            info.km = info.km[:m.start()] + " " * (m.end() - m.start()) + info.km[m.end():]
+            info.cmp_idx.update(range(m.start(), m.end()))
         if ln.nonum:
             info.tokens = []
         else:
-            info.tokens = _tokens(info.dm)
+            info.tokens = _tokens(info.dm, lang)
             lm = LIST_MARK.match(info.dm)
             if lm:
                 ds = re.search(r"\d", info.dm).start()
@@ -335,13 +373,24 @@ def _key(dm: str, idx: int, end: int, unit: str):
     seg = CUT.split(dm[:idx])[-1]
     words = [w for w in (nfc(x.lower()) for x in WORD.findall(seg)) if w not in STOP]
     prefix = tuple(words[-4:])
+    ci = bool(CI_WORDS & set(words)) or "khoảng tin cậy" in " ".join(words)
     nxt = ""
     if unit != "%":
         mm = NEXT_WORD.match(dm, end)
         if mm:
             w = nfc(mm.group(1).lower())
-            nxt = "" if w in STOP else w
-    return prefix, nxt
+            if w in TIME_UNITS:  # a time point: keyed with its unit and the words after it
+                follow, pos = [], mm.start(1)
+                while len(follow) < 4:
+                    fm = FOLLOW.match(dm, pos)
+                    if not fm:
+                        break
+                    follow.append(nfc(fm.group(1).lower()))
+                    pos = fm.end()
+                nxt = " ".join(follow)
+            else:
+                nxt = "" if w in STOP else w
+    return prefix, nxt, ci
 
 
 def _suffix(a: tuple, b: tuple) -> bool:
@@ -357,10 +406,10 @@ def _check_quantities(infos: list[Info], out: list) -> None:
     for info in infos:
         for tok, val, dec, idx in info.tokens:
             unit = _unit(tok, dec)
-            if _trivial(tok, val, dec):
+            if _trivial(tok, val, dec) or idx in info.cmp_idx:
                 continue
-            prefix, nxt = _key(info.dm, idx, idx + len(tok), unit)
-            if len(prefix) < 2 or prefix[-1] in SKIP_LAST:
+            prefix, nxt, ci = _key(info.km, idx, idx + len(tok), unit)
+            if ci or len(prefix) < 2 or prefix[-1] in SKIP_LAST | REF_WORDS | GROUP_WORDS:
                 continue
             bucket = buckets.setdefault((unit, nxt, prefix[-2:]), [])
             for o_tok, o_val, o_dec, o_prefix, o_loc in bucket:
@@ -507,7 +556,7 @@ def _sum_table(block: list[Line], lang: str, out: list) -> None:
             continue
         for j in range(1, len(tcells)):
             tp = _first_pct(tcells[j])
-            if tp is None:
+            if tp is None or abs(tp[1] - 100) > Decimal("0.5"):
                 continue
             vals, valid = [], True
             for _, cells in data_rows:
@@ -565,7 +614,7 @@ def audit(project: Path, files: list[Path] | None = None, lang: str | None = Non
                 raise FileNotFoundError(f"no such file: {f}")
             paths.append(p)
     docs = [_load_doc(p, project, by_id, lang, findings) for p in paths]
-    infos_by_doc = [_analyse(d) for d in docs]
+    infos_by_doc = [_analyse(d, lang) for d in docs]
     infos = [i for infos_ in infos_by_doc for i in infos_]
     _check_quantities(infos, findings)
     _check_sample_size(infos, findings)
@@ -577,10 +626,11 @@ def audit(project: Path, files: list[Path] | None = None, lang: str | None = Non
 
 
 def main(argv=None) -> int:
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("project")
     ap.add_argument("files", nargs="*")
