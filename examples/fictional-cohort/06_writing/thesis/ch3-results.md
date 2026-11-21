@@ -30,10 +30,10 @@ Nhận xét: Tuổi trung bình của {{R-A0-001.n}} người bệnh là {{R-A0-
 Bảng 3.2. Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm, chung và theo nhóm HbA1c
 | Nhóm HbA1c | N | Tái nhập viện, n (%) | KTC 95% |
 |---|---|---|---|
-| Chung | {{R-A0-061.n}} | 236<!-- derived: R-A0-061.count --> ({{R-A0-061.value}}) | {{R-A0-061.ci}} |
-| <7% | {{R-A0-062.n}} | 46<!-- derived: R-A0-062.count --> ({{R-A0-062.value}}) | {{R-A0-062.ci}} |
-| 7–9% | {{R-A0-063.n}} | 108<!-- derived: R-A0-063.count --> ({{R-A0-063.value}}) | {{R-A0-063.ci}} |
-| >9% | {{R-A0-064.n}} | 82<!-- derived: R-A0-064.count --> ({{R-A0-064.value}}) | {{R-A0-064.ci}} |
+| Chung | {{R-A0-061.n}} | {{R-A0-061.count}} ({{R-A0-061.value}}) | {{R-A0-061.ci}} |
+| <7% | {{R-A0-062.n}} | {{R-A0-062.count}} ({{R-A0-062.value}}) | {{R-A0-062.ci}} |
+| 7–9% | {{R-A0-063.n}} | {{R-A0-063.count}} ({{R-A0-063.value}}) | {{R-A0-063.ci}} |
+| >9% | {{R-A0-064.n}} | {{R-A0-064.count}} ({{R-A0-064.value}}) | {{R-A0-064.ci}} |
 Nguồn: số liệu nghiên cứu (mô phỏng).
 Ghi chú: N: số người bệnh trong nhóm; n: số người tái nhập viện; KTC: khoảng tin cậy, phương pháp Wilson.
 

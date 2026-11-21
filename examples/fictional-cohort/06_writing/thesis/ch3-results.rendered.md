@@ -30,10 +30,10 @@ Nhận xét: Tuổi trung bình của 1070 người bệnh là 63,1 ± 10,5 năm
 Bảng 3.2. Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm, chung và theo nhóm HbA1c
 | Nhóm HbA1c | N | Tái nhập viện, n (%) | KTC 95% |
 |---|---|---|---|
-| Chung | 1070 | 236<!-- derived: R-A0-061.count --> (22,1%) | 19,7–24,6 |
-| <7% | 235 | 46<!-- derived: R-A0-062.count --> (19,6%) | 15,0–25,1 |
-| 7–9% | 514 | 108<!-- derived: R-A0-063.count --> (21,0%) | 17,7–24,7 |
-| >9% | 321 | 82<!-- derived: R-A0-064.count --> (25,5%) | 21,1–30,6 |
+| Chung | 1070 | 236 (22,1%) | 19,7–24,6 |
+| <7% | 235 | 46 (19,6%) | 15,0–25,1 |
+| 7–9% | 514 | 108 (21,0%) | 17,7–24,7 |
+| >9% | 321 | 82 (25,5%) | 21,1–30,6 |
 Nguồn: số liệu nghiên cứu (mô phỏng).
 Ghi chú: N: số người bệnh trong nhóm; n: số người tái nhập viện; KTC: khoảng tin cậy, phương pháp Wilson.
 
