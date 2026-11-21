@@ -128,6 +128,9 @@ def verify(rec: dict, pubmed=None, crossref=None, epmc=None) -> tuple[str, list[
                 source = "Europe PMC"
                 info.append(EPMC_NOTE)
             if not found:
+                if source == "Europe PMC":  # Europe PMC lags PubMed: a miss here is not "not found"
+                    return "ERROR", [f"PubMed unreachable; Europe PMC has no record of PMID {pmid}; "
+                                     "could not confirm"]
                 return "NOT_FOUND", [f"PMID {pmid} not found on {source}"]
             if doi and found.get("doi") and found["doi"].lower() != doi.lower():
                 problems.append(f"PMID {pmid} has DOI {found['doi']}, record says {doi}")

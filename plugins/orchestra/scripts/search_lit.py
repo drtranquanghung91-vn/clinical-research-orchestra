@@ -14,11 +14,12 @@ Every identifier this tool prints comes from a live lookup. Never type a PMID or
 
 `add` takes PMIDs (digits) and DOIs (10.x/..., a doi.org URL prefix is stripped; looked up on Crossref).
 `add-manual` records a source the author holds but that has no PMID/DOI (source "manual", no identifier).
-PubMed lookups (fetch, add) fall back to Europe PMC when NCBI is unreachable.
+PubMed lookups (fetch, add) fall back to Europe PMC when NCBI is unreachable. A PMID that Europe PMC
+does not have is then "not checked", never "not found" (Europe PMC lags PubMed): exit 2, retry later.
 
 Exit codes: 0 = ok; 1 = some PMID/DOI/NCT not found (listed on stderr; records found are still
 printed or added); 2 = usage error (e.g. an id that is neither a PMID nor a DOI, empty --seen-in),
-missing or unreadable ledger, or network/API error.
+missing or unreadable ledger, network/API error, or a PMID not checked because PubMed was unreachable.
 """
 from __future__ import annotations
 
@@ -70,20 +71,26 @@ def classify_id(x: str) -> tuple[str, str] | None:
     return None
 
 
-def pubmed_records(pmids: list[str]) -> tuple[list[dict], dict[str, str]]:
-    """PubMed summaries + abstracts; Europe PMC when PubMed raises a network/HTTP error."""
+def pubmed_records(pmids: list[str]) -> tuple[list[dict], dict[str, str], bool]:
+    """PubMed summaries + abstracts; Europe PMC when PubMed raises a network/HTTP error.
+
+    The third value (fallback_used) is True when Europe PMC answered instead of PubMed: a PMID
+    missing from the result was then not checked, not shown to be absent."""
     if not pmids:
-        return [], {}
+        return [], {}, False
     try:
-        return litapi.summaries(pmids), litapi.abstracts(pmids)
+        return litapi.summaries(pmids), litapi.abstracts(pmids), False
     except (OSError, ValueError, ET.ParseError) as e:
         print(f"# PubMed unavailable ({e}); using Europe PMC", file=sys.stderr)
         recs = litapi.epmc_by_pmid(pmids)
-        return recs, {str(r.get("pmid")): r.get("abstract", "") for r in recs}
+        return recs, {str(r.get("pmid")): r.get("abstract", "") for r in recs}, True
 
 
-def add_ids(project: Path, ids: list[str]) -> tuple[list[str], list[str]]:
-    """Add PMIDs and DOIs not yet in the ledger. Returns (ids added, identifiers not found)."""
+def add_ids(project: Path, ids: list[str]) -> tuple[list[str], list[str], list[str]]:
+    """Add PMIDs and DOIs not yet in the ledger.
+
+    Returns (ids added, identifiers not found, PMIDs not checked because PubMed was unreachable
+    and Europe PMC had no record)."""
     path = Path(project) / "ledgers" / "references.json"
     refs = ledgers.load_references(path)
     have_pmid = {str(r.get("pmid")) for r in refs if r.get("pmid")}
@@ -97,14 +104,15 @@ def add_ids(project: Path, ids: list[str]) -> tuple[list[str], list[str]]:
         elif kind == "doi" and v.lower() not in have_doi and v.lower() not in [d.lower() for d in dois]:
             dois.append(v)
     if not pmids and not dois:
-        return [], []
+        return [], [], []
     recs: list[tuple[dict, str]] = []
     missing: list[str] = []
+    unchecked: list[str] = []
     if pmids:
-        found, abstracts = pubmed_records(pmids)
+        found, abstracts, fallback_used = pubmed_records(pmids)
         got = {str(r.get("pmid")) for r in found}
         recs += [(r, abstracts.get(str(r.get("pmid")), "")) for r in found]
-        missing += [p for p in pmids if p not in got]
+        (unchecked if fallback_used else missing).extend(p for p in pmids if p not in got)
     for d in dois:
         try:
             recs.append((litapi.crossref(d), ""))
@@ -132,11 +140,12 @@ def add_ids(project: Path, ids: list[str]) -> tuple[list[str], list[str]]:
                 no_pmid_doi.add(str(r["doi"]).lower())
     if added:
         ledgers.save_references(path, refs)
-    return added, missing
+    return added, missing, unchecked
 
 
 def add_pmids(project: Path, pmids: list[str]) -> tuple[list[str], list[str]]:
-    return add_ids(project, pmids)
+    added, missing, unchecked = add_ids(project, pmids)
+    return added, missing + unchecked
 
 
 def add_to_ledger(project: Path, pmids: list[str]) -> list[str]:
@@ -170,27 +179,31 @@ def _check_pmids(pmids: list[str]) -> list[str]:
     return [p for p in pmids if not p.isdigit()]
 
 
-def _run(args) -> tuple[object, list[str]]:
-    """Do the command; return (output, identifiers not found)."""
+def _run(args) -> tuple[object, list[str], list[str]]:
+    """Do the command; return (output, identifiers not found, PMIDs not checked)."""
     if args.cmd == "search":
         if args.source == "europepmc":
-            return litapi.epmc_search(args.query, args.max), []
+            return litapi.epmc_search(args.query, args.max), [], []
         try:
             pmids = litapi.search(args.query, args.max)
-            return (litapi.summaries(pmids) if pmids else litapi.epmc_search(args.query, args.max)), []
+            return (litapi.summaries(pmids) if pmids else litapi.epmc_search(args.query, args.max)), [], []
         except (OSError, ValueError, ET.ParseError) as e:
             print(f"# PubMed unavailable ({e}); using Europe PMC", file=sys.stderr)
-            return litapi.epmc_search(args.query, args.max), []
+            return litapi.epmc_search(args.query, args.max), [], []
     if args.cmd == "fetch":
-        recs, abs_ = pubmed_records(args.pmids)
+        recs, abs_, fallback_used = pubmed_records(args.pmids)
         found = {str(r.get("pmid")) for r in recs}
+        gone = [p for p in args.pmids if p not in found]
         return ([to_ledger_record(r, abs_.get(str(r.get("pmid")), "")) for r in recs],
-                [p for p in args.pmids if p not in found])
+                ([] if fallback_used else gone), (gone if fallback_used else []))
     if args.cmd == "add":
-        added, missing = add_ids(Path(args.project), args.ids)
-        return {"added": added, "not_found": missing}, missing
+        added, missing, unchecked = add_ids(Path(args.project), args.ids)
+        out = {"added": added, "not_found": missing}
+        if unchecked:
+            out["not_checked"] = unchecked
+        return out, missing, unchecked
     try:
-        return (litapi.crossref(args.doi) if args.cmd == "doi" else litapi.trial(args.nct)), []
+        return (litapi.crossref(args.doi) if args.cmd == "doi" else litapi.trial(args.nct)), [], []
     except urllib.error.HTTPError as e:
         e.close()
         if e.code == 404:
@@ -259,7 +272,7 @@ def main(argv=None) -> int:
         print(new_id)
         return 0
     try:
-        out, missing = _run(args)
+        out, missing, unchecked = _run(args)
     except NotFound as e:
         print(f"search_lit: {e} not found", file=sys.stderr)
         return 1
@@ -270,8 +283,12 @@ def main(argv=None) -> int:
     print(json.dumps(out, ensure_ascii=False, indent=2))
     if missing:
         print(f"search_lit: not found (PubMed/Europe PMC/Crossref): {', '.join(missing)}", file=sys.stderr)
-        return 1
-    return 0
+    if unchecked:
+        print(f"search_lit: could not be checked (PubMed unreachable; Europe PMC has no record): "
+              f"{', '.join(unchecked)}. Retry later; never type an identifier from memory instead.",
+              file=sys.stderr)
+        return 2
+    return 1 if missing else 0
 
 
 if __name__ == "__main__":

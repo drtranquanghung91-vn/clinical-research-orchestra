@@ -66,7 +66,9 @@ def summary_to_record(s: dict) -> dict:
     return {
         "id": make_id(s.get("sortfirstauthor") or "", year.group(0) if year else ""),
         "title": (s.get("title") or "").rstrip("."),
-        "authors": [a.get("name") for a in s.get("authors", []) if a.get("authtype") == "Author"],
+        # Group authors (authtype "CollectiveName") are authors too; PubMed marks some with "*".
+        "authors": [a["name"].rstrip("*").strip() for a in s.get("authors", []) or []
+                    if a.get("authtype") in ("Author", "CollectiveName") and a.get("name")],
         "journal": s.get("source", ""),
         "year": int(year.group(0)) if year else None,
         "volume": s.get("volume", ""),
@@ -111,7 +113,10 @@ def _epmc_record(r: dict) -> dict:
     return {
         "id": make_id(r.get("authorString", "").split(",")[0], str(r.get("pubYear", ""))),
         "title": (r.get("title") or "").rstrip("."),
-        "authors": [a.get("fullName") for a in r.get("authorList", {}).get("author", [])],
+        # Group authors carry "collectiveName" instead of "fullName"; authorList may be null.
+        "authors": [a.get("fullName") or a.get("collectiveName")
+                    for a in ((r.get("authorList") or {}).get("author") or [])
+                    if a.get("fullName") or a.get("collectiveName")],
         "journal": ji.get("journal", {}).get("medlineAbbreviation", ""),
         "year": int(r["pubYear"]) if str(r.get("pubYear", "")).isdigit() else None,
         "volume": ji.get("volume", "") or "",
@@ -163,8 +168,12 @@ def epmc_fulltext(pmcid: str) -> str:
 def crossref(doi: str) -> dict:
     data = json.loads(http_get("https://api.crossref.org/works/" + urllib.parse.quote(doi)))["message"]
     year = (data.get("issued", {}).get("date-parts") or [[None]])[0][0]
-    authors = [f"{a.get('family', '')} {''.join(x[0] for x in a.get('given', '').split() if x)}".strip()
-               for a in data.get("author", [])]
+    authors = []
+    for a in data.get("author", []) or []:
+        if a.get("family"):  # person: "Family GI"
+            authors.append(f"{a['family']} {''.join(x[0] for x in (a.get('given') or '').split() if x)}".strip())
+        elif a.get("name"):  # organisation (group author)
+            authors.append(a["name"].strip())
     return {
         "id": make_id(authors[0] if authors else "", str(year or "")),
         "title": (data.get("title") or [""])[0],

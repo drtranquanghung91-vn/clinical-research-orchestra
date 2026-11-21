@@ -118,6 +118,22 @@ class TestCiteRender(unittest.TestCase):
         p = self.run_cr("[@a]\n")
         self.assertIn("unused: none", p.stdout)
 
+    def test_no_authors_warns_exit_0(self):
+        self.write_refs(REFS + [{"id": "g", "title": "Group work", "authors": [None, " "], "year": 2026}])
+        p = self.run_cr("See [@g] and [@a].\n\n{REFERENCES}\n")
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertIn("cite_render: g has no authors; check the record", p.stderr)
+        self.assertNotIn("cite_render: a has", p.stderr)
+        self.assertNotIn("None", self.output())
+        self.assertIn("1. Group work. 2026.", self.output())
+
+    def test_none_author_skipped(self):
+        self.write_refs(REFS + [{"id": "h", "title": "Half", "authors": [None, "Vo T"], "year": 2026}])
+        p = self.run_cr("[@h]\n{REFERENCES}\n")
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(p.stderr, "")
+        self.assertIn("1. Vo T. Half. 2026.", self.output())
+
     def test_missing_draft_exit_2(self):
         p = self.run_cr(None, draft_name="nope.md")
         self.assertEqual(p.returncode, 2)

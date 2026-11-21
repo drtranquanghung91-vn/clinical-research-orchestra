@@ -11,6 +11,9 @@ compressed: [1,2], [1-3] (en dash), [1-3,5]. A line that is exactly {REFERENCES}
 --start-marker TEXT: numbering starts at the first citation after the first line containing TEXT.
 Citations before it reuse those numbers; ids seen only before it are numbered after all others.
 
+A cited record with no authors is rendered without them and warned about on stderr
+("cite_render: <id> has no authors; check the record"); the exit code is unchanged.
+
 Exit codes: 0 written; 1 findings (E-REF <id>: not in references.json / retracted), nothing written;
 2 usage, I/O or JSON error (stderr).
 
@@ -47,9 +50,14 @@ def _end(s: str) -> str:
     return s if s.endswith(".") else s + "."
 
 
+def author_names(rec: dict) -> list[str]:
+    """Non-empty author names; None and blank entries are skipped (never rendered as "None")."""
+    return [str(a).strip() for a in (rec.get("authors") or []) if a is not None and str(a).strip()]
+
+
 def vancouver(rec: dict) -> str:
     parts: list[str] = []
-    authors = [str(a).strip() for a in (rec.get("authors") or []) if str(a).strip()]
+    authors = author_names(rec)
     if authors:
         names = authors[:6] + (["et al."] if len(authors) > 6 else [])
         parts.append(_end(", ".join(names)))
@@ -152,6 +160,9 @@ def main(argv: list[str] | None = None) -> int:
         print("\n".join(bad))
         return 1
     result, order = render(text, by_id, marker)
+    for k in order:
+        if not author_names(by_id[k]):
+            print(f"cite_render: {k} has no authors; check the record", file=sys.stderr)
     try:
         out.write_text(result, encoding="utf-8", newline="")
     except OSError as e:

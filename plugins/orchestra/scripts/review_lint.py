@@ -2,8 +2,9 @@
 """Flag literature reviews written paper by paper ("Author A found... Author B found...").
 
 A paragraph is flagged when >= 2 sentences, and >= 50% of its sentences, open with an author or
-study as the subject. The file blocks (E-LIT) when >= 2 paragraphs and >= 30% of prose paragraphs
-are flagged.  python review_lint.py chapter1.md [--json]
+study as the subject ("Smith et al. (2019)", "Smith [@smith2019]", "Nguyen et al, 2020", "Study by",
+"Tác giả", "Nghiên cứu của", "Năm 2021, ..."). The file blocks (E-LIT) when >= 2 paragraphs and
+>= 30% of prose paragraphs are flagged.  python review_lint.py chapter1.md [--json]
 Exit codes: 0 clean, 1 blocking (E-LIT), 2 usage or IO error.
 """
 from __future__ import annotations
@@ -19,8 +20,14 @@ PATTERNS = [
     re.compile(rf"^[{UP}][\w'’\-]*\.?(?:\s+[{UP}][\w'’\-]*\.?)*\s+(?:et al\.?|and [{UP}][\w'’\-]+|&\s*[{UP}][\w'’\-]+|và cộng sự|và cs\.?)?\s*\(\d{{4}}[a-z]?\)"),
     re.compile(rf"^[{UP}][\w'’\-]+\s+et al\."),
     re.compile(rf"^(?:In\s+)?(?:a|the|their|his|her)\s+(?:\d{{4}}\s+)?(?:study|trial|cohort|review)\s+(?:by|of)\s+[{UP}]", re.I),
+    # "Study by Smith (2019)": no leading article; case-sensitive so "Review of the evidence" passes.
+    re.compile(rf"^(?:Study|Trial|Cohort|Review|Research)\s+(?:by|of)\s+[{UP}][\w'’\-]+"),
     re.compile(rf"^(?:Tác giả|Nghiên cứu của|Theo nghiên cứu của|Theo tác giả)\s+[{UP}]"),
     re.compile(rf"^Năm\s+\d{{4}},?\s+(?:tác giả\s+)?[{UP}]"),
+    # Author-led opener in the project's own citation syntax: "Smith [@smith2019] found",
+    # "Smith et al. [3] reported", "Nguyen et al, 2020 showed".
+    re.compile(rf"^[{UP}][\w'’\-]+(?:\s+(?:et al\.?|and [{UP}][\w'’\-]+|&\s*[{UP}][\w'’\-]+|và cộng sự|và cs\.?))?"
+               rf",?\s*(?:\[@[^\]]+\]|\[\d+(?:[,–-]\d+)*\]|,\s*\d{{4}}\b)"),
 ]
 SPLIT = re.compile(rf"(?<=[.!?])\s+(?=[{UP}])")
 

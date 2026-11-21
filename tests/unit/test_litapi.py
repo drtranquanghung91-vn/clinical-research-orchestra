@@ -73,5 +73,44 @@ class TestLitapi(unittest.TestCase):
         self.assertEqual(litapi.epmc_by_pmid(["5"]), [])
 
 
+    # --- group (collective) authors, one test per lookup path (final review #1)
+
+    def test_esummary_keeps_collective_name(self):
+        body = {"result": {"uids": ["222"], "222": {
+            "uid": "222", "title": "Diabetes care in the hospital.",
+            "sortfirstauthor": "American Diabetes Association Professional Practice Committee for Diabetes*",
+            "authors": [{"name": "American Diabetes Association Professional Practice Committee for Diabetes*",
+                         "authtype": "CollectiveName"},
+                        {"name": "", "authtype": "Author"}],
+            "source": "Diabetes Care", "pubdate": "2026 Jan", "articleids": []}}}
+        litapi.http_get = lambda url, timeout=30: json.dumps(body).encode()
+        rec = litapi.summaries(["222"])[0]
+        self.assertEqual(rec["authors"],
+                         ["American Diabetes Association Professional Practice Committee for Diabetes"])
+        self.assertEqual(rec["id"], "american2026")
+
+    def test_epmc_collective_name_and_null_author_list(self):
+        body = {"resultList": {"result": [
+            {"pmid": "333", "title": "Guideline.", "authorString": "WHO Guideline Group, Le B.", "pubYear": "2025",
+             "authorList": {"author": [{"collectiveName": "WHO Guideline Group"}, {"fullName": "Le B"}, {}]}},
+            {"pmid": "444", "title": "No authors.", "authorString": "", "pubYear": "2024", "authorList": None},
+        ]}}
+        litapi.http_get = lambda url, timeout=30: json.dumps(body).encode()
+        recs = {r["pmid"]: r for r in (litapi.epmc_search("x"))}
+        self.assertEqual(recs["333"]["authors"], ["WHO Guideline Group", "Le B"])
+        self.assertNotIn(None, recs["333"]["authors"])
+        self.assertEqual(recs["444"]["authors"], [])
+
+    def test_crossref_organisation_author(self):
+        body = {"message": {"DOI": "10.9/org", "title": ["Consensus statement"],
+                            "issued": {"date-parts": [[2023]]},
+                            "author": [{"name": "Vietnam Society of Cardiology"},
+                                       {"family": "Tran", "given": "Van An"}, {"given": "Orphan"}]}}
+        litapi.http_get = lambda url, timeout=30: json.dumps(body).encode()
+        rec = litapi.crossref("10.9/org")
+        self.assertEqual(rec["authors"], ["Vietnam Society of Cardiology", "Tran VA"])
+        self.assertEqual(rec["id"], "vietnam2023")
+
+
 if __name__ == "__main__":
     unittest.main()

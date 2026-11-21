@@ -77,6 +77,14 @@ class TestVerify(unittest.TestCase):
             raise urllib.error.URLError("blocked")
         self.assertEqual(vr.verify(REC, pubmed=down, epmc=down)[0], "ERROR")
 
+    def test_pubmed_down_and_epmc_miss_is_error_not_not_found(self):
+        def down(p):
+            raise urllib.error.HTTPError("u", 503, "unavailable", None, None)
+        st, notes = vr.verify(REC, pubmed=down, epmc=lambda p: None)
+        self.assertEqual(st, "ERROR")
+        self.assertIn("could not confirm", notes[0])
+        self.assertIn("PubMed unreachable", notes[0])
+
     def test_fetch_epmc_maps_record(self):
         rec = {"title": "T", "year": 2024, "authors": ["Smith J"], "doi": "10.1/abc", "journal": "BMJ",
                "pubtypes": ["Retracted Publication"]}
@@ -131,6 +139,26 @@ class TestVerify(unittest.TestCase):
                     self.assertEqual(vr.main([str(proj)]), 2)
             finally:
                 vr.fetch_pubmed, vr.fetch_epmc = o, e
+
+
+    def test_main_pubmed_down_epmc_miss_exit_2_and_write_keeps_verified_by(self):
+        def down(p):
+            raise urllib.error.URLError("blocked")
+        with tempfile.TemporaryDirectory() as t:
+            proj = Path(t)
+            (proj / "ledgers").mkdir()
+            path = proj / "ledgers" / "references.json"
+            ledgers.save_references(path, [dict(REC, verified_by="verify_refs 2026-11-01 VERIFIED")])
+            o, e = vr.fetch_pubmed, vr.fetch_epmc
+            vr.fetch_pubmed, vr.fetch_epmc = down, (lambda p: None)
+            out = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+                    self.assertEqual(vr.main([str(proj), "--write"]), 2)
+            finally:
+                vr.fetch_pubmed, vr.fetch_epmc = o, e
+            self.assertNotIn("NOT_FOUND", out.getvalue())
+            self.assertEqual(ledgers.load_references(path)[0]["verified_by"], "verify_refs 2026-11-01 VERIFIED")
 
 
 class TestCitations(unittest.TestCase):

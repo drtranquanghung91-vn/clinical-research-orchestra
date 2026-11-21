@@ -292,5 +292,36 @@ class TestSearchLitCli(unittest.TestCase):
         self.assertEqual(out, "")
 
 
+    # ---- PubMed down + Europe PMC miss is "not checked" (exit 2), never "not found" (final review #2)
+    def epmc_only(self, pmids_known):
+        def fake(url, timeout=30):
+            if "europepmc" in url:
+                q = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)["query"][0]
+                hits = [{"pmid": p, "title": "Metformin in PMOS.", "pubYear": "2026", "authorString": "Nguyen A",
+                         "authorList": {"author": [{"fullName": "Nguyen A"}]}}
+                        for p in pmids_known if f"EXT_ID:{p} " in q]
+                return json.dumps({"resultList": {"result": hits}}).encode()
+            raise urllib.error.URLError("NCBI blocked")
+        return mock.patch.object(litapi, "http_get", fake)
+
+    def test_add_pubmed_down_epmc_miss_exit_2_not_found_never_said(self):
+        with self.epmc_only(["111"]):
+            code, out, err = self.run_cli("add", str(self.proj), "111", "42000001")
+        self.assertEqual(code, 2)
+        self.assertIn("could not be checked", err)
+        self.assertIn("42000001", err)
+        self.assertNotIn("not found", err)
+        res = json.loads(out)
+        self.assertEqual((res["added"], res["not_found"], res["not_checked"]), (["nguyen2026"], [], ["42000001"]))
+        self.assertEqual([r["pmid"] for r in self.refs()], ["111"])
+
+    def test_fetch_pubmed_down_epmc_miss_exit_2(self):
+        with self.epmc_only([]):
+            code, out, err = self.run_cli("fetch", "42000001")
+        self.assertEqual(code, 2)
+        self.assertIn("could not be checked (PubMed unreachable", err)
+        self.assertNotIn("not found", err)
+        self.assertEqual(json.loads(out), [])
+
 if __name__ == "__main__":
     unittest.main()
