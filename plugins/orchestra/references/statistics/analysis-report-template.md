@@ -47,7 +47,9 @@ thuyết." One subsection per `A<n>`, each quoting its `POST-HOC A<n>:` or `DEVI
 - univariable screening (all variables, sorted by p) and data-driven selection, only when the author asked;
 - ROC/AUC with the Youden cut-off, sensitivity and specificity;
 - sensitivity analyses (alternative cut-offs or definitions): estimate per alternative;
-- subgroups: the effect per subgroup with the p for interaction, never a separate significance claim;
+- subgroups: the effect in each subgroup (one table, the subgroup named in each row) with the p for
+  interaction, never a separate significance claim; an interaction that failed (`nan`, `MODEL FAILED`
+  in the log) is reported as a failed test with its reason, never as a p-value;
 - replacement models after a failed model (Firth, exact, merged categories).
 
 ## 6. Test choice and assumptions [Lý do chọn phép kiểm và giả định]

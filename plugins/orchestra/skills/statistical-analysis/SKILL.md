@@ -8,9 +8,8 @@ Analysis workflow adapted from the owner's stat-analysis-vi skill.
 # Statistical analysis
 
 ## 1. Core rule
-The SAP decides what is analysed. Every number comes from code or from the author's exported output
-file, never from mental arithmetic. Post-hoc analyses are allowed, declared and labelled exploratory;
-they are never promoted to primary.
+The SAP decides what is analysed. Every number comes from code or the author's exported output, never
+from mental arithmetic. Post-hoc analyses are allowed, declared, labelled exploratory, never promoted.
 
 ## 2. Preconditions
 - `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" check . G2` exits 0 (open or waived); else stop.
@@ -19,16 +18,16 @@ they are never promoted to primary.
 Set `STATUS.md` row 5 to `doing`.
 
 ## 3. Mode
-Run mode when the data should be analysed here; import mode when the author ran SPSS, Stata or R.
+Run mode analyses the data here; import mode brings in SPSS, Stata or R output.
 
 ## 4. Run mode
-1. Read `sap.md`, `04_data/codebook.md` and the data; ask one question only if the primary outcome,
-   unit of analysis or patient ID is unclear.
+1. Read `sap.md`, `04_data/codebook.md` and the data; ask one question only if the primary outcome or
+   exposure, unit of analysis or patient ID is unclear.
 2. Write `05_analysis/analysis.py`: vendor `crostats` first (workflow), then one block per register
    analysis in ID order; seeded, no network, reads only the `.deid.csv`.
-3. Run it; read `05_analysis/output/log.txt`.
+3. Run it; read the log.
 4. Post-hoc or deviating analyses only after the author's request or agreement, each with its
-   `decisions.md` line, registered with that status.
+   `decisions.md` line and status.
 5. `analysis_plan.py check` and `results_ledger.py import`; fix findings.
 6. Write `05_analysis/analysis-report.md` with `{{R-…}}` placeholders
    (`${CLAUDE_PLUGIN_ROOT}/references/statistics/analysis-report-template.md`), post-hoc and
@@ -45,20 +44,21 @@ One line in `decisions.md` per analysis, before it runs:
 - `POST-HOC A<n>: <reason>, requested by <author>, <date>`
 - `DEVIATION A<n>: <what changed and why>, <date>`
 
-A registered analysis not run needs `DEVIATION A<n>: not done because …`. A failed model is reported,
-never dropped; its replacement is a `DEVIATION`.
+A registered analysis not run needs `DEVIATION A<n>: not done because …`. A failed model (`MODEL
+FAILED` in the log; `interaction` returns `nan`, never a p-value) is reported, never dropped; its
+replacement is a `DEVIATION`.
 
 ## 7. Rules kept and changed from stat-analysis-vi
 Kept as labelled defaults: normality check, median (IQR), exact tests, EPV caveat, reporting
 precision, plain-language summary (`${CLAUDE_PLUGIN_ROOT}/references/judgement-defaults.md`). Changed:
 no default p < 0.20 screening or backward selection (covariates come from the SAP); no baseline
 p-values in an RCT; ROC/Youden cut-offs, extra subgroups and sensitivity analyses not registered are
-post-hoc; subgroups only with an interaction test. Test tables:
+post-hoc; subgroups as per-subgroup effects plus an interaction test. Test tables:
 `${CLAUDE_PLUGIN_ROOT}/references/statistics/stat-tests.md`.
 
 ## 8. Missing dependency
-Print `python -m pip install pandas scipy statsmodels openpyxl` (add `lifelines` for Cox) and stop.
-Never compute by hand instead.
+Print `python -m pip install pandas scipy statsmodels openpyxl` (add `lifelines` for Cox) and stop;
+never compute by hand.
 
 ## 9. Checks before hand-back
 From the project folder, scripts in `${CLAUDE_PLUGIN_ROOT}/scripts/`, all exit 0:

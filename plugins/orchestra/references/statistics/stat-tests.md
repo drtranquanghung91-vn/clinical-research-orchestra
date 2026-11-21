@@ -27,7 +27,7 @@ number recorded with `rec.add(...)`. Nothing is computed by hand.
 | Outcome | Distribution | Test | Effect estimate | crostats |
 |---|---|---|---|---|
 | Continuous | normal in both groups and n ≥ 30 | Welch t-test | mean difference (95% CI) | `compare_two` |
-| Continuous | skewed, or n < 30 | Mann–Whitney U | median (IQR) per group; p | `compare_two` |
+| Continuous | skewed, or n < 30 | Mann–Whitney U | median (IQR) per group; Hodges–Lehmann shift (95% CI) as the estimate; p | `compare_two` (p only; Hodges–Lehmann not computed by crostats yet) |
 | Binary | every expected count ≥ 5 and both groups n ≥ 20 | Pearson chi-square, no Yates correction | OR / RR / RD (95% CI) | `compare_props` + `crude_effect` |
 | Binary | any expected count < 5, or a group n < 20 | Fisher exact | OR / RR / RD (95% CI) | `compare_props` + `crude_effect` |
 | Ordinal | — | Mann–Whitney U | p | scipy `mannwhitneyu` in `analysis.py` (`compare_two` would pick Welch t for a score that looks normal) |
@@ -37,19 +37,23 @@ Normality rule (default): Shapiro–Wilk when n < 50, |skewness| < 1 when n ≥ 
 and n ≥ 30, otherwise median (IQR). `crostats.describe` applies it and `compare_two` / `table1` follow it.
 The source also listed standardised effect sizes (Cohen's d, rank-biserial r, Cramér's V); report them only
 when the SAP names them, computed in `analysis.py` and recorded with kind `other`. The main result is the
-effect estimate with its 95% CI (test-selection.md, "Estimation before testing").
+effect estimate with its 95% CI (test-selection.md, "Estimation before testing"). For Mann–Whitney the
+estimate is the Hodges–Lehmann shift (median of all pairwise differences) with its 95% CI: `crostats` does
+not compute it yet, so compute it in `analysis.py` with numpy/scipy (Moses CI, or a seeded bootstrap) and
+`rec.add` it with kind `md`, or report its absence as a limitation.
 
 ## 2. Three or more groups
 
 | Outcome | Distribution | Overall test | Pairwise follow-up | crostats |
 |---|---|---|---|---|
-| Continuous | normal | one-way ANOVA (Welch ANOVA when Levene p < 0.05) | Tukey HSD | `compare_k` |
+| Continuous | normal | one-way ANOVA; Welch ANOVA when Levene p < 0.05 | Tukey HSD after classic ANOVA; Games–Howell after Welch ANOVA | `compare_k` (the log says which ANOVA it chose) |
 | Continuous | skewed | Kruskal–Wallis | Dunn test (Bonferroni) | `compare_k` |
 | Binary | — | chi-square (Monte Carlo exact when any expected count < 5) | pairwise Fisher exact | `compare_props` |
 | Ordinal | — | Kruskal–Wallis | Dunn test | scipy `kruskal` in `analysis.py` (`compare_k` may pick ANOVA) |
 
 Pairwise follow-up tests are pre-specified only when the SAP lists them; otherwise they are post-hoc
-analyses with their own ID and `POST-HOC` line. Tukey and Dunn are written in `analysis.py`.
+analyses with their own ID and `POST-HOC` line. Tukey, Games–Howell and Dunn are written in `analysis.py`;
+read the `compare_k` log line first to pick Tukey (classic ANOVA) or Games–Howell (Welch ANOVA).
 
 ## 3. Paired or matched data
 
@@ -80,7 +84,7 @@ still fitted. Dropping a covariate is a `DEVIATION`.
 |---|---|---|---|---|
 | Binary | logistic | logit | adjusted OR (95% CI) | `fit_logistic` |
 | Continuous, normal residuals | linear (OLS) | identity | β (95% CI), R² | `fit_linear` |
-| Continuous, strongly skewed | quantile regression or OLS on log scale | — | median difference | statsmodels `quantreg` in `analysis.py` |
+| Continuous, strongly skewed | quantile regression (median); or OLS on the log scale | — | median difference (quantile regression); ratio of geometric means, exp(β) (log-OLS) | statsmodels `quantreg` or `ols` in `analysis.py` |
 | Count, overdispersed | negative binomial | log | IRR | statsmodels in `analysis.py` |
 | Count, not overdispersed | Poisson | log | IRR | `fit_poisson` |
 | Time to event | Cox proportional hazards | — | HR (95% CI) | `fit_cox` (needs lifelines) |
@@ -100,8 +104,10 @@ they never choose the adjustment set of a pre-specified model.
 | Cox | proportional hazards by Schoenfeld residuals (rank time transform) | `fit_cox` returns `ph_min_p` |
 | Poisson | dispersion = Pearson χ² / residual df; > 2 → negative binomial | `fit_poisson` returns `dispersion` |
 
-Every model fit returns `{"failed": True, ...}` and logs `MODEL FAILED A<n>: …` on separation,
-non-convergence or collinearity; see "Common errors".
+On separation, non-convergence or collinearity a model records nothing and logs `MODEL FAILED A<n>: …`:
+`fit_logistic` / `fit_linear` / `fit_poisson` / `fit_cox` return `{"failed": True, ...}`; `interaction`
+returns `nan`. A `nan` interaction p means "model failed, see the log": report it as failed, never as a
+p-value. See "Common errors".
 
 ## 7. From the source's Python templates to crostats
 
@@ -111,13 +117,14 @@ non-convergence or collinearity; see "Common errors".
 | Mann–Whitney U + rank-biserial r | `crostats.compare_two(df, outcome, group, rec, "A<n>")` (Welch t or Mann–Whitney by the normality rule) | as registered |
 | Chi-square vs Fisher auto-select | `crostats.compare_props(df, outcome, group, rec, "A<n>")` | as registered |
 | Univariable logistic screening, sorted by p | a loop of `crostats.fit_logistic(df, outcome, [x], rec, "A<n>", status="posthoc")` | **post-hoc only** |
-| ROC + Youden cut-off | `r = crostats.roc_youden(y, score)` then `rec.add("A<n>", status, "AUC …", r["auc"], "auc")` (+ cut-off, Se, Sp as kind `other` / `percent`) | post-hoc unless registered |
+| ROC + Youden cut-off | `r = crostats.roc_youden(y, score, rec=rec, analysis_id="A<n>", status=..., label="AUC …")` records the AUC and logs cut-off, Se, Sp; `rec.add` the cut-off (kind `other`) and Se/Sp (kind `percent`) only if the report cites them | post-hoc unless registered |
 | Sensitivity analysis over cut-offs | a loop over cut-offs with `crude_effect` + `rec.add` | post-hoc unless registered |
-| Subgroup effect | `p = crostats.interaction(df, outcome, exposure, modifier, covariates, family)` then `rec.add("A<n>", status, "p-interaction …", p, "p")` | post-hoc unless registered |
+| Subgroup effect | the model (e.g. `fit_logistic`) fitted in each subgroup level with the register's status, plus `p = crostats.interaction(df, outcome, exposure, modifier, covariates, family, rec=rec, analysis_id="A<n>", status=...)`, which records the p itself; `nan` = model failed | post-hoc unless registered |
 
-`roc_youden`, `interaction` and `crude_effect` return numbers but record nothing; the analysis script
-records them with `rec.add`. Subgroups are reported with the interaction p, never as separate significance
-claims per subgroup.
+With `rec=rec, analysis_id=...`, `roc_youden` (AUC) and `interaction` (p) record their own results: never
+`rec.add` them again. `crude_effect` records nothing, so the script records its estimates with `rec.add`.
+Subgroups are reported as the effect in each subgroup plus the interaction p, never as separate
+significance claims per subgroup.
 
 ## 8. Assumption templates (report section on test choice)
 
@@ -130,8 +137,9 @@ the gloss.
   Shapiro–Wilk p < 0.05; Mann–Whitney U needs no normal distribution. If an effect size is reported:
   rank-biserial |r| < 0.3 small, 0.3–0.5 medium, > 0.5 large.
 - Fisher exact instead of chi-square: "Fisher exact test được áp dụng thay Chi-square khi bất kỳ ô nào
-  trong bảng có tần số kỳ vọng < 5 (quy tắc Cochran, 1954) hoặc một nhóm có n < 20." Gloss: exact p for small
-  expected counts; conservative for type I error.
+  trong bảng có tần số kỳ vọng < 5 (quy tắc Cochran, 1954) hoặc một nhóm có n < 20. Fisher exact cho
+  p-value chính xác hơn với small-count cells và bảo thủ hơn (conservative) về type I error." Gloss:
+  exact p for small expected counts; conservative for type I error.
 - EPV < 10: "Mô hình đa biến có [N] tham số với [M] biến cố → EPV = [M/N], chưa đạt ngưỡng mặc định
   EPV ≥ 10. Ước lượng hiệu chỉnh cần diễn giải thận trọng, xem là thăm dò, cần xác nhận trên mẫu lớn
   hơn." Gloss: below the default EPV, adjusted estimates are exploratory.

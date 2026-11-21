@@ -34,7 +34,7 @@ every document, and are never promoted to primary or reported without their labe
 1. **Read** `sap.md` (register, covariates, multiplicity), `project.yaml` (design, `language.output`),
    `04_data/codebook.md` and the data's columns. From them take design, primary outcome and its type,
    exposure, covariates and unit of analysis. Ask **one question only**, and only when the primary
-   outcome, the unit of analysis or the patient ID for repeated measures cannot be identified
+   outcome or exposure, the unit of analysis or the patient ID for repeated measures cannot be identified
    (`stat-tests.md` §10). Everything else: infer and list the assumption in the report's test-choice
    section.
 2. **Vendor the library.** If absent, copy `${CLAUDE_PLUGIN_ROOT}/scripts/crostats.py` to
@@ -68,12 +68,14 @@ Column names, groups and IDs are examples; take them from the register and the c
 Reads only 04_data/cohort.deid.csv; writes 05_analysis/output/{results.json, log.txt, tables/}.
 Run from the project folder: python 05_analysis/analysis.py
 """
+import math
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))  # the vendored 05_analysis/crostats.py
 try:
+    import pandas as pd
     import crostats
 except ImportError as e:
     sys.exit(f"{e}\nInstall: python -m pip install pandas scipy statsmodels openpyxl (and lifelines for Cox)")
@@ -83,6 +85,16 @@ DATA = "04_data/cohort.deid.csv"
 df = crostats.load_data(PROJECT / DATA)
 rec = crostats.Recorder(PROJECT, DATA)
 
+
+def records_table(table_id, title, analysis_ids):
+    """Write tables/<table_id>.csv from the results recorded with table=table_id."""
+    rows = [{"id": r["id"], "label": r["label"], "value": r["value"],
+             "ci_low": (r.get("ci") or [None, None])[0], "ci_high": (r.get("ci") or [None, None])[1],
+             "p": r.get("p"), "n": r.get("n")}
+            for r in rec.results if r.get("table") == table_id]
+    rec.add_table(table_id, title, pd.DataFrame(rows), analysis_ids)
+
+
 # A0 descriptive statistics (Table 1); show_p=False in an RCT
 crostats.table1(df, ["age", "sex", "egfr", "hba1c"], "hba1c_high", rec, "T3.1", "Baseline characteristics")
 
@@ -91,35 +103,51 @@ crostats.compare_props(df, "readmit", "hba1c_high", rec, "A1", table="T3.2")
 d = df.dropna(subset=["readmit", "hba1c_high"])
 a = int(((d.hba1c_high == 1) & (d.readmit == 1)).sum()); b = int(((d.hba1c_high == 1) & (d.readmit == 0)).sum())
 c = int(((d.hba1c_high == 0) & (d.readmit == 1)).sum()); e = int(((d.hba1c_high == 0) & (d.readmit == 0)).sum())
-ce = crostats.crude_effect(a, b, c, e)  # records nothing itself
+ce = crostats.crude_effect(a, b, c, e)  # returns OR/RR/RD; records nothing itself
 rec.log(f"A1 crude OR: Woolf CI; Haldane correction {'applied' if ce['corrected'] else 'not needed'}")
 est, lo, hi = ce["or"]
 rec.add("A1", "prespecified", "crude OR, HbA1c >= 8% vs < 8%", est, "or", ci=[lo, hi], n=a + b + c + e, table="T3.2")
 m = crostats.fit_logistic(df, "readmit", ["hba1c_high", "age", "C(sex)", "egfr"], rec, "A1", table="T3.2")
 if m["failed"]:
-    print(f"A1 model failed: {m['reason']} (report it; a replacement is a DEVIATION A1 analysis)")
+    print(f"A1 model failed: {m['reason']} (report it as failed; a replacement is a DEVIATION A1 analysis)")
+records_table("T3.2", "Readmission by HbA1c group: crude and adjusted", ["A1"])
 
 # A2 key secondary: length of stay, difference stated as "1 − 0"
 crostats.compare_two(df, "los", "hba1c_high", rec, "A2", order=(1, 0))
 
 # A7 POST-HOC (decisions.md: "POST-HOC A7: <reason>, requested by <author>, <date>")
-r = crostats.roc_youden(df["readmit"], df["hba1c"])  # records nothing itself
-rec.log("A7 ROC of hba1c for readmit (post-hoc): Youden cut-off over unique values")
-rec.add("A7", "posthoc", "AUC, HbA1c for readmission", r["auc"], "auc", n=int(df[["readmit", "hba1c"]].dropna().shape[0]))
+r = crostats.roc_youden(df["readmit"], df["hba1c"], rec=rec, analysis_id="A7", status="posthoc",
+                        label="AUC, HbA1c for readmission")  # records the AUC and logs cut-off, Se, Sp
+# roc_youden records only the AUC; record the cut-off, Se and Sp only if the report cites them
 rec.add("A7", "posthoc", "Youden cut-off, HbA1c", r["cutoff"], "other", unit="%")
-rec.add("A7", "posthoc", "sensitivity at the cut-off", 100 * r["sens"], "percent")
-rec.add("A7", "posthoc", "specificity at the cut-off", 100 * r["spec"], "percent")
+rec.add("A7", "posthoc", "sensitivity at the Youden cut-off", 100 * r["sens"], "percent")
+rec.add("A7", "posthoc", "specificity at the Youden cut-off", 100 * r["spec"], "percent")
 
-# A8 POST-HOC subgroup: the interaction p, never a significance claim per subgroup
-p_int = crostats.interaction(df, "readmit", "hba1c_high", "sex", ["age", "egfr"], family="logit")
-rec.add("A8", "posthoc", "p for interaction, HbA1c group x sex", p_int, "p")
+# A8 POST-HOC subgroups by sex: the effect in each subgroup plus the interaction p
+for level in sorted(df["sex"].dropna().unique()):
+    rec.log(f"A8 subgroup sex = {level}: the next model is fitted in this subgroup only")
+    ms = crostats.fit_logistic(df[df["sex"] == level], "readmit", ["hba1c_high", "age", "egfr"], rec, "A8",
+                               status="posthoc", table="T3.3")
+    if ms["failed"]:
+        print(f"A8 model in sex = {level} failed: {ms['reason']} (report it as failed)")
+p_int = crostats.interaction(df, "readmit", "hba1c_high", "sex", ["age", "egfr"], family="logit",
+                             rec=rec, analysis_id="A8", status="posthoc",
+                             label="p-interaction, HbA1c group × sex")  # records the p itself
+if math.isnan(p_int):
+    print("A8 interaction model failed: see MODEL FAILED in log.txt; report it as failed, never as a p-value")
+records_table("T3.3", "Readmission by HbA1c group within sex (post-hoc)", ["A8"])
 
 print(rec.save())
 ```
 
-`compare_two`, `compare_k`, `compare_props`, `table1` and `fit_logistic` / `fit_linear` / `fit_poisson` /
-`fit_cox` record their own results; `crude_effect`, `roc_youden` and `interaction` do not, so the script
-calls `rec.add` itself (OR kind `or`, AUC kind `auc`, interaction p kind `p`).
+`compare_two`, `compare_k`, `compare_props`, `table1`, `fit_logistic` / `fit_linear` / `fit_poisson` /
+`fit_cox`, and `roc_youden` / `interaction` called with `rec=rec, analysis_id="A<n>"` record their own
+results; never `rec.add` the same number again. `roc_youden` records only the AUC (it logs the cut-off,
+sensitivity and specificity), so those three get `rec.add` when the report cites them. `crude_effect`
+records nothing, so its estimates get `rec.add`. Every `table=` id used must be written with
+`rec.add_table` (here `records_table`), so each table id in `results.json` has its CSV. A
+`fit_*` model does not put the subgroup in its labels; the log line before it does, and the report's table
+names the subgroup.
 
 ## Post-hoc and deviating analyses
 
@@ -133,14 +161,16 @@ calls `rec.add` itself (OR kind `or`, AUC kind `auc`, interaction p kind `p`).
   pre-specified model.
 - A registered analysis that is not run needs `DEVIATION A<n>: not done because <reason>, <date>`.
 - No baseline p-values in an RCT (CONSORT; `sap-template.md` §7): `table1(..., show_p=False)`.
-- Subgroups: interaction test only.
+- Subgroups: the effect in each subgroup plus the interaction p; never a significance claim per subgroup.
 - A request to "find a subgroup with p < 0.05": explain the multiplicity risk; run only what the author
   then confirms, as post-hoc.
 
 ## Model failure (spec §8)
 
-A `crostats` model that meets separation, non-convergence or collinearity returns `{"failed": True,
-"reason": …}`, records nothing and logs `MODEL FAILED A<n>: <reason>; <advice>`. Then:
+A `crostats` model that meets separation, non-convergence or collinearity records nothing and logs
+`MODEL FAILED A<n>: <reason>; <advice>`. `fit_logistic` / `fit_linear` / `fit_poisson` / `fit_cox` return
+`{"failed": True, "reason": …}`; `interaction` returns `nan` instead of a p. A `nan` p means "model failed,
+see the log": report it as failed, never as a p-value. Then:
 1. Never drop the analysis silently: report it as failed in its section, with the reason.
 2. Ask the author whether to replace it. A replacement (Firth or exact logistic, Firth-penalised Cox,
    merged sparse categories, fewer terms) is a `DEVIATION A<n>:` analysis with status `deviation`, written
@@ -165,5 +195,5 @@ Show the author the rendered report. After review, the author locks G3:
 Import mode locks the files actually used:
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" lock . G3 --by "<author>" --files ledgers/results-ledger.json 05_analysis/output/results.json 00_inputs/<export file> … 04_data/<file>.deid.csv`
 (one entry per export file the records cite). The `00_inputs/` exports are hashed locally by `gate.py` but
-not versioned (git ignores `00_inputs/`). This skill never locks G3 itself. Set `STATUS.md` row 5 to `done` once the author accepts the report; the next step
-is `/orchestra:results` (`results-writing`).
+not versioned (git ignores `00_inputs/`). This skill never locks G3 itself. Set `STATUS.md` row 5 to
+`done` once the author accepts the report; the next step is `/orchestra:results` (`results-writing`).
