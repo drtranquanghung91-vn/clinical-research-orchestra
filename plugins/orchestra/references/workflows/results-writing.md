@@ -34,13 +34,15 @@ the agent writes.
 | `manuscript` (or the author asks for a paper) | `06_writing/manuscript/results.md` | `out/results.docx` |
 
 Write in `project.yaml → language.output`. A thesis author who also wants a manuscript gets two files from
-the same ledger.
+the same ledger. An English manuscript inside a `language.output: vi` project: add `--lang en` to
+`render_results.py` and `check_numbers.py` (otherwise it renders and is checked with decimal commas).
 
 ## 3. Outline
 
-Order (STROBE items 13–17; CONSORT 13–19; other designs: the Results items of the guideline in
-`project.yaml → reporting_guideline`, listed in `index.md`; use the Skill tool with `guideline-check` for its
-checklist), mapped onto the register:
+Order: the Results items of the reporting guideline the project uses (`project.yaml → reporting_guideline`;
+records in `${CLAUDE_PLUGIN_ROOT}/references/reporting-guidelines/guidelines.json`, summary in `index.md`).
+Take the item numbers from that guideline version: use the Skill tool with `guideline-check` for the item
+list, never numbers from memory (example: STROBE (2007) items 13–17). Map them onto the register:
 1. Participants and flow (screened, eligible, excluded with reasons, analysed; missing data per key
    variable). The flow figure is P3 (`research-figures`, not available yet): leave a placeholder line.
 2. Table 1 (`A0`). In an RCT, no baseline p-values.
@@ -86,7 +88,7 @@ with its placeholders, so the row stays true if the analysis is re-run:
 ```json
 {"id": "ch3-3.2-R-A1-001", "file": "06_writing/thesis/ch3-results.md",
  "location": "3.2, Nhận xét Bảng 3.2, câu 2",
- "text": "Sau hiệu chỉnh theo tuổi và giới, HbA1c ≥ 8% liên quan với odds tái nhập viện cao hơn (OR {{R-A1-001}}; KTC 95%: {{R-A1-001.ci}}; p = {{R-A1-001.p}}).",
+ "text": "Sau hiệu chỉnh theo tuổi và giới, HbA1c ≥ 8% liên quan với tỷ số chênh tái nhập viện cao hơn (OR {{R-A1-001}}; KTC 95%: {{R-A1-001.ci}}; p = {{R-A1-001.p}}).",
  "kind": "observed", "refs": [], "results": ["R-A1-001"], "status": "unverified"}
 ```
 
@@ -116,9 +118,11 @@ Findings and fixes:
 - `E-STAT block …: post-hoc result R-A3-001 is not labelled …` (step 3): add the label to that paragraph.
 - `E-STAT warn …: causal wording "leads to" with an observational design`: rewrite as association.
 
-Example: the "before" text in `results-writing.md` gives two E-NUM blocks (`31.6%`, `8%`), one E-STAT
-block (unlabelled `R-A3-001`) and one causal-wording warning; the "after" text and the `vn-chapter3.md`
-example give 0 findings at every step.
+Example: the "before" text in `results-writing.md`, checked as English (`language.output: en` or
+`--lang en`), gives two E-NUM blocks (`31.6%`, `8%`), one E-STAT block (unlabelled `R-A3-001`) and one
+causal-wording warning; checked as Vietnamese it gives three E-NUM blocks (`31`, `6%`, `8%`), because the
+decimal point is not a Vietnamese decimal separator. The "after" text (`--lang en`) and the
+`vn-chapter3.md` example give 0 findings at every step.
 
 ## 8. Hand-off
 

@@ -19,7 +19,8 @@ Headings 3.1, 3.1.1. Section numbers follow the chapter, not the analysis IDs.
 - Caption **above**: `Bảng 3.n. <tiêu đề>` (numbered in order of appearance in the chapter; the source
   CSV's `T…` id need not match), directly followed by the pipe table.
 - `Nguồn:` and `Ghi chú:` lines **directly below** the table, no blank line between (abbreviations, the
-  model and its covariates, the test used).
+  model and its covariates, the test used). Define OR as "tỷ số chênh" there; never write "odds" in
+  Vietnamese text.
 - Every cell number is a placeholder; columns with n (%) use `.full` of a `percent` record, mean ± ĐLC
   use `.full` of a `mean` record.
 - A literal `|` inside a cell is written `\|`, a literal `*` as `\*`.
@@ -34,8 +35,8 @@ Figures are captioned `Biểu đồ 3.n. <tiêu đề>` below the figure. They a
 (P3, not available yet): leave a line `[Biểu đồ 3.n: <nội dung> — chờ research-figures]` where it belongs.
 
 ## Numbers
-Decimal comma, no thousands separator, en dash in ranges (all from `render_results.py`). Ngưỡng phân nhóm
-or tiêu chuẩn chọn (HbA1c ≥ 8%, 18–65 tuổi) carry `<!-- not-a-result: … -->`; numbers computed from
+Decimal comma, no thousands separator, en dash in ranges (all from `render_results.py`). Grouping cut-offs
+and eligibility limits (HbA1c ≥ 8%, ages 18–65) carry `<!-- not-a-result: … -->`; numbers computed from
 results carry `<!-- derived: … -->`.
 
 ## Length
@@ -45,7 +46,7 @@ the author and record the decision in `decisions.md`.
 ## Example (fictional ids, `design: cohort`)
 
 `R-A3-…` are `posthoc`. This block passes `render_results.py`, `check_numbers.py` on the rendered file,
-`analysis_plan.py check --text` and `build_docx.py` (workflow, section 6).
+`analysis_plan.py check --text` and `build_docx.py` (workflow, section 7).
 
 ```markdown
 # CHƯƠNG 3. KẾT QUẢ NGHIÊN CỨU
@@ -70,11 +71,11 @@ Bảng 3.2. Tái nhập viện trong 1 năm theo nhóm HbA1c
 | ≥ 8% <!-- not-a-result: ngưỡng phân nhóm --> | {{R-A1-002.n}} | {{R-A1-002.full}} | {{R-A1-001}} ({{R-A1-001.ci}}) | {{R-A1-001.p}} |
 | < 8% <!-- not-a-result: ngưỡng phân nhóm --> | {{R-A1-003.n}} | {{R-A1-003.full}} | 1 (tham chiếu) | |
 Nguồn: số liệu nghiên cứu.
-Ghi chú: OR hiệu chỉnh theo tuổi và giới (hồi quy logistic); KTC: khoảng tin cậy.
+Ghi chú: OR: tỷ số chênh, hiệu chỉnh theo tuổi và giới (hồi quy logistic); KTC: khoảng tin cậy.
 
-Nhận xét: Tỷ lệ tái nhập viện trong 1 năm là {{R-A1-002}} ở nhóm HbA1c ≥ 8% <!-- not-a-result: ngưỡng phân nhóm --> và {{R-A1-003}} ở nhóm còn lại, chênh lệch 11,2 <!-- derived: R-A1-002 − R-A1-003 --> điểm phần trăm. Sau hiệu chỉnh theo tuổi và giới, HbA1c ≥ 8% <!-- not-a-result: ngưỡng phân nhóm --> liên quan với odds tái nhập viện cao hơn (OR {{R-A1-001}}; KTC 95%: {{R-A1-001.ci}}; p = {{R-A1-001.p}}).
+Nhận xét: Tỷ lệ tái nhập viện trong 1 năm là {{R-A1-002}} ở nhóm HbA1c ≥ 8% <!-- not-a-result: ngưỡng phân nhóm --> và {{R-A1-003}} ở nhóm còn lại, chênh lệch 11,2 <!-- derived: R-A1-002 − R-A1-003 --> điểm phần trăm. Sau hiệu chỉnh theo tuổi và giới, HbA1c ≥ 8% <!-- not-a-result: ngưỡng phân nhóm --> liên quan với tỷ số chênh tái nhập viện cao hơn (OR {{R-A1-001}}; KTC 95%: {{R-A1-001.ci}}; p = {{R-A1-001.p}}).
 
 ## 3.3 Phân tích thăm dò (hậu kiểm)
 
-Phân tích thăm dò (hậu kiểm) theo giới, không có trong kế hoạch phân tích, cho thấy OR hiệu chỉnh là {{R-A3-001.full}} ở nữ và {{R-A3-002.full}} ở nam (p tương tác = {{R-A3-003}}); kết quả này chỉ mang tính tạo giả thuyết.
+Phân tích thăm dò (hậu kiểm) theo giới, theo đề xuất của người hướng dẫn sau phân tích chính và không có trong kế hoạch phân tích, cho thấy OR hiệu chỉnh là {{R-A3-001.full}} ở nữ và {{R-A3-002.full}} ở nam (p tương tác = {{R-A3-003}}); kết quả này chỉ mang tính tạo giả thuyết.
 ```

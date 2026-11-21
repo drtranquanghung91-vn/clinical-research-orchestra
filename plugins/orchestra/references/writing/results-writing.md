@@ -27,11 +27,12 @@ Estimate-first sentence templates:
 | Situation | English | Tiếng Việt |
 |---|---|---|
 | Proportion by group | Readmission occurred in {{R-A1-002.full}} patients in group A and {{R-A1-003.full}} in group B. | Tỷ lệ tái nhập viện là {{R-A1-002}} ở nhóm A và {{R-A1-003}} ở nhóm B. |
-| Ratio measure | X was associated with higher odds of Y (adjusted OR {{R-A1-001}}, 95% CI {{R-A1-001.ci}}; p = {{R-A1-001.p}}). | X liên quan với odds Y cao hơn (OR hiệu chỉnh {{R-A1-001}}; KTC 95%: {{R-A1-001.ci}}; p = {{R-A1-001.p}}). |
+| Ratio measure | X was associated with higher odds of Y (adjusted OR {{R-A1-001}}, 95% CI {{R-A1-001.ci}}; p = {{R-A1-001.p}}). | X liên quan với tỷ số chênh Y cao hơn (OR hiệu chỉnh {{R-A1-001}}; KTC 95%: {{R-A1-001.ci}}; p = {{R-A1-001.p}}). |
 | Mean difference | The mean Y was {{R-A2-001}} units higher in group A (95% CI {{R-A2-001.ci}}; p = {{R-A2-001.p}}). | Y trung bình ở nhóm A cao hơn {{R-A2-001}} đơn vị (KTC 95%: {{R-A2-001.ci}}; p = {{R-A2-001.p}}). |
 | Derived difference | … an absolute difference of 11.2 <!-- derived: R-A1-002 − R-A1-003 --> percentage points. | … chênh lệch 11,2 <!-- derived: R-A1-002 − R-A1-003 --> điểm phần trăm. |
 
-Put a `derived` or `not-a-result` marker right after the number (before any unit word), or
+In Vietnamese, OR is "tỷ số chênh" (define it in the table's `Ghi chú:`); never write "odds" in Vietnamese
+text. Put a `derived` or `not-a-result` marker right after the number (before any unit word), or
 `check_numbers.py` cannot see it.
 
 ## 2. Wording by confidence interval
@@ -40,7 +41,7 @@ Put a `derived` or `not-a-result` marker right after the number (before any unit
 |---|---|---|
 | excludes the null (1 for ratios, 0 for differences) | "was associated with higher odds (OR …, 95% CI …)"; "… cao hơn (OR …; KTC 95%: …)" | "significantly higher" without the estimate; "proves"; causal verbs (observational design) |
 | includes the null, and is narrow around it | "the CI is compatible with at most a small difference (…–…)"; "KTC tương thích với khác biệt nhỏ hoặc không có khác biệt" | "there was no difference"; "không có sự khác biệt" as a finding |
-| includes the null and is wide | "the estimate was imprecise; the data are compatible with anything from a … to a …"; "ước lượng chưa chính xác; KTC tương thích với cả … lẫn …" | "no effect"; "a trend towards significance"; "gần có ý nghĩa thống kê" |
+| includes the null and is wide | "the estimate was imprecise; the data are compatible with anything from a … to a …"; "ước lượng kém chính xác (KTC rộng); KTC tương thích với cả … lẫn …" | "no effect"; "a trend towards significance"; "gần có ý nghĩa thống kê" |
 | excludes the null but is wide | "associated with higher odds, though the estimate was imprecise (…)" | "a strong effect" from the point estimate alone |
 
 Observational designs (cohort, case-control, cross-sectional, diagnostic accuracy, prediction model):
@@ -71,8 +72,8 @@ subgroup. A deviation states what changed (from its `DEVIATION A<n>:` line).
 
 ## 5. Before and after (fictional ids)
 
-Fictional cohort, `design: cohort`; `R-A3-…` are `posthoc` (declared in `decisions.md`). The blocks
-below are checked with the scripts (expected output in the workflow, section 6).
+Fictional cohort, `design: cohort`, English text (`--lang en`); `R-A3-…` are `posthoc` (declared in
+`decisions.md`). The blocks below are checked with the scripts (expected output in the workflow, section 7).
 
 Before:
 
@@ -99,7 +100,7 @@ Of the {{R-A0-001}} patients analysed, readmission within one year occurred in {
 
 The mean index length of stay was {{R-A2-001}} days longer in the higher-HbA1c group (95% CI {{R-A2-001.ci}}; p = {{R-A2-001.p}}); the interval is compatible with a slightly shorter to a moderately longer stay.
 
-In an exploratory post-hoc analysis by sex, not specified in the analysis plan, the adjusted OR was {{R-A3-001.full}} in women and {{R-A3-002.full}} in men (p for interaction = {{R-A3-003}}); this difference may be due to chance and needs confirmation.
+In an exploratory post-hoc analysis by sex, suggested by the supervisor after the primary analysis and not specified in the analysis plan, the adjusted OR was {{R-A3-001.full}} in women and {{R-A3-002.full}} in men (p for interaction = {{R-A3-003}}); this difference may be due to chance and needs confirmation.
 ```
 
 In the .docx (comments removed), the first sentence reads: "Of the 412 patients analysed, readmission

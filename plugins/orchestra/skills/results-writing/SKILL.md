@@ -17,15 +17,16 @@ results. Otherwise stop: say which files changed since the lock (from the `check
 never locked, and hand back to `statistical-analysis`. Set `STATUS.md` row `6 Writing` to `doing`.
 
 ## 3. Structure
-Follow the reporting guideline (`project.yaml → reporting_guideline`; STROBE items 13–17, CONSORT 13–19)
-and the analysis-register order: participants and flow, Table 1, primary, secondary, then post-hoc and
+Follow the Results items of the reporting guideline in `project.yaml → reporting_guideline` (item list:
+use the Skill tool with `guideline-check`; e.g. STROBE (2007) items 13–17) and the analysis-register order: participants and flow, Table 1, primary, secondary, then post-hoc and
 deviations in their own labelled subsection.
 
 ## 4. Mode
 - Thesis (`type: thesis-*`, `de-tai-co-so`): `06_writing/thesis/ch3-results.md`, Vietnamese Chapter 3
   conventions in `${CLAUDE_PLUGIN_ROOT}/references/writing/vn-chapter3.md`.
 - Manuscript: `06_writing/manuscript/results.md` in `language.output` (usually English); key estimates
-  only, no table repeated in prose.
+  only, no table repeated in prose. English text in a `vi` project: add `--lang en` to `render_results.py`
+  and `check_numbers.py`.
 
 ## 5. Wording rules
 Detail and sentence templates: `${CLAUDE_PLUGIN_ROOT}/references/writing/results-writing.md`.
