@@ -159,6 +159,59 @@ class TestCli(unittest.TestCase):
         self.assertEqual(out.count("S20 warn"), 1)
         self.assertNotIn("cures", out)
 
+    def test_nfd_input_matches(self):
+        import unicodedata
+        nfd = unicodedata.normalize("NFD", VI_SLOP)
+        codes = [c for _, c, _ in lint_prose.find_hits(nfd, "vi")]
+        self.assertEqual(codes.count("P01"), 2)
+        self.assertEqual(codes.count("P02"), 1)
+        self.assertEqual(lint_prose.word_count(nfd), lint_prose.word_count(VI_SLOP))
+        p = self.write("nfd.md", nfd)
+        self.assertEqual(run_cli(p).returncode, 1)
+
+    def test_slides_plain_section_body_linted(self):
+        p = self.write("e.html", "<html><body><section><h2>Methods</h2><p>This chart shows a drug that "
+                       "cures all.</p><aside class='notes'>cures notes</aside></section></body></html>")
+        out = run_cli("--slides", p).stdout.decode("utf-8")
+        self.assertIn("S17 warn", out)
+        self.assertIn("S20 warn", out)
+        self.assertIn("S21 warn", out)
+
+    def test_slides_heading_only_deck_body_linted(self):
+        p = self.write("f.html", "<html><body><h2>Drug X lowers readmissions</h2><p>As shown above.</p>"
+                       "<h2>Methods</h2><p>Text.</p></body></html>")
+        out = run_cli("--slides", p).stdout.decode("utf-8")
+        self.assertIn("S20 warn f.html:1", out.replace(str(self.dir) + os.sep, ""))
+        self.assertIn("S17 warn", out)
+
+    def test_slides_h1_deck_title_exempt_and_hype(self):
+        p = self.write("g.html", "<html><body><section class='slide'><h1>Deck title</h1></section>"
+                       "<section class='slide'><h2>Drug X lowers readmissions</h2>"
+                       "<p>A revolutionary, groundbreaking and game-changing result.</p></section></body></html>")
+        out = run_cli("--slides", p).stdout.decode("utf-8")
+        self.assertNotIn("S17", out)
+        self.assertIn("S21 warn", out)
+
+    def test_slides_pptx_groups_and_tables(self):
+        try:
+            from pptx import Presentation
+            from pptx.util import Inches
+        except ImportError:
+            self.skipTest("python-pptx not installed")
+        prs = Presentation()
+        s = prs.slides.add_slide(prs.slide_layouts[5])
+        s.shapes.title.text = "Drug X lowers readmissions"
+        grp = s.shapes.add_group_shape()
+        tb = grp.shapes.add_textbox(Inches(1), Inches(1), Inches(3), Inches(1))
+        tb.text_frame.text = "This chart shows the rates."
+        tbl = s.shapes.add_table(1, 1, Inches(1), Inches(3), Inches(3), Inches(1)).table
+        tbl.cell(0, 0).text = "The drug cures everything"
+        p = self.dir / "h.pptx"
+        prs.save(str(p))
+        out = run_cli("--slides", p).stdout.decode("utf-8")
+        self.assertIn("S20 warn", out)
+        self.assertIn("S21 warn", out)
+
     def test_slides_pptx(self):
         try:
             from pptx import Presentation

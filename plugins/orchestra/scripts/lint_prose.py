@@ -21,6 +21,7 @@ import html.parser
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 for _s in (sys.stdout, sys.stderr):
@@ -51,7 +52,7 @@ def _blank_comment(m: re.Match) -> str:
 
 def prepare(text: str) -> list[dict]:
     """Return paragraphs: {line, text, section_end}. Skipped blocks become separators (line numbers kept)."""
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    text = unicodedata.normalize("NFC", text).replace("\r\n", "\n").replace("\r", "\n")
     text = COMMENT.sub(_blank_comment, text)
     text = PLACEHOLDER.sub("X", text)
     paras: list[dict] = []
@@ -92,7 +93,8 @@ def _words(text: str) -> int:
 
 
 def word_count(text: str) -> int:
-    """Words in prose: headings, tables, code, comments, citation groups and a leading **Label:** are excluded;
+    """Words in prose (symbol-only tokens such as = or % are not words, so "n = 5" is 2; this follows conference
+    practice of counting words, not symbols): headings, tables, code, comments, citation groups and a leading **Label:** are excluded;
     a {{placeholder}} counts as one word."""
     n = 0
     for p in prepare(text):
@@ -326,8 +328,8 @@ S20_RX = re.compile(r"\b(?:this|the)\s+(?:chart|graph|figure|slide|plot|table)\s
                     r"\b(?:biểu\s+đồ|hình|bảng|slide)\s+(?:này|trên|dưới)\s+cho\s+thấy\b|\bnhư\s+(?:hình|biểu\s+đồ|bảng)\s+(?:trên|dưới)\b", re.I)
 HYPE_RX = re.compile(
     r"\b(?:dramatically|remarkably|greatly|vastly|massively|completely|totally)\s+(?:improv|reduc|increas|decreas|lower|rais|prevent|eliminat|cur)\w*|"
-    r"\b(?:cures?|proven\s+to|undoubtedly|definitively|guarantees?|breakthrough)\b|"
-    r"\b(?:vượt\s+trội|ngoạn\s+mục|rõ\s+rệt|triệt\s+để|chữa\s+khỏi\s+hoàn\s+toàn)\b|\bchắc\s+chắn\s+(?:hiệu\s+quả|giảm|tăng)", re.I)
+    r"\b(?:cures?|proven\s+to|undoubtedly|definitively|guarantees?|breakthrough|revolutionary|game-chang(?:er|ing)|groundbreaking)\b|"
+    r"\b(?:vượt\s+trội|ngoạn\s+mục|rõ\s+rệt|triệt\s+để|chữa\s+khỏi\s+hoàn\s+toàn|đột\s+phá|mang\s+tính\s+cách\s+mạng)\b|\bchắc\s+chắn\s+(?:hiệu\s+quả|giảm|tăng)", re.I)
 HEDGE_RX = re.compile(r"\b(?:may|might|could|suggests?|appears?|possibly|potentially|likely|tends?\s+to|có\s+thể|gợi\s+ý|có\s+xu\s+hướng|"
                       r"dường\s+như|nhiều\s+khả\s+năng)\b", re.I)
 
@@ -340,6 +342,7 @@ def topic_title(title: str) -> bool:
 
 
 class _SlideHTML(html.parser.HTMLParser):
+    """A slide is a <section> (class "slide" or plain) or, without sections, everything from one heading to the next."""
     VOID = {"br", "img", "hr", "meta", "link", "input", "source", "wbr", "area", "col", "embed", "param", "track"}
     SKIP_TAGS = {"script", "style", "template", "aside", "svg", "noscript"}
     NOTES_CLS = re.compile(r"\b(?:notes?|speaker-notes|footer|credit|source|cite)\b", re.I)
@@ -347,31 +350,31 @@ class _SlideHTML(html.parser.HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.slides: list[dict] = []
-        self.stack: list[tuple[str, bool, bool]] = []   # tag, skip, is_slide
+        self.stack: list[tuple[str, bool]] = []   # tag, skip
         self.cur: dict | None = None
+        self.sections_open = 0
         self.head_buf: list[str] | None = None
         self.head_tag = ""
-        self.has_sections = False
+        self.seen_heading = False
 
-    def _slide(self) -> dict:
-        if self.cur is None:
-            self.cur = {"title": "", "body": [], "index": len(self.slides) + 1}
-            self.slides.append(self.cur)
+    def _new(self) -> dict:
+        self.cur = {"title": "", "body": [], "index": len(self.slides) + 1, "is_title_layout": False}
+        self.slides.append(self.cur)
         return self.cur
 
+    def _slide(self) -> dict:
+        return self.cur if self.cur is not None else self._new()
+
     def handle_starttag(self, tag, attrs):
-        a = dict(attrs)
-        cls = a.get("class", "") or ""
         if tag in self.VOID:
             return
-        is_slide = tag == "section" and re.search(r"\bslide\b", cls) is not None
+        cls = dict(attrs).get("class", "") or ""
         skip = tag in self.SKIP_TAGS or bool(self.NOTES_CLS.search(cls))
-        if is_slide:
-            self.has_sections = True
-            self.cur = None
-            self._slide()
-        self.stack.append((tag, skip, is_slide))
-        if tag in ("h1", "h2", "h3") and not any(s for _, s, _ in self.stack[:-1]):
+        if tag == "section" and not any(s for _, s in self.stack):
+            self.sections_open += 1
+            self._new()
+        self.stack.append((tag, skip))
+        if tag in ("h1", "h2", "h3") and not any(s for _, s in self.stack[:-1]):
             self.head_buf = []
             self.head_tag = tag
 
@@ -379,37 +382,62 @@ class _SlideHTML(html.parser.HTMLParser):
         if tag in self.VOID:
             return
         while self.stack:
-            t, _, _ = self.stack.pop()
+            t, _ = self.stack.pop()
             if t == tag:
                 break
         if self.head_buf is not None and tag == self.head_tag:
             title = " ".join("".join(self.head_buf).split())
             self.head_buf = None
-            sl = self._slide() if not self.has_sections else (self.cur or self._slide())
-            if tag != "h1" or self.has_sections:
-                if not sl["title"]:
-                    sl["title"] = title
-                else:
-                    sl["body"].append(title)
-            if not self.has_sections:
-                self.cur = None   # one slide per heading when there are no <section class="slide">
+            if not self.sections_open and (self.cur is None or self.cur["title"]):
+                self._new()   # no sections: each heading starts a slide
+            sl = self._slide()
+            if not sl["title"]:
+                sl["title"] = title
+                if tag == "h1" and not self.seen_heading:
+                    sl["is_title_layout"] = True   # the first h1 is the deck title
+            else:
+                sl["body"].append(title)
+            self.seen_heading = True
+        if tag == "section" and self.sections_open:
+            self.sections_open -= 1
+            if not self.sections_open:
+                self.cur = None
 
     def handle_data(self, data):
-        if any(skip for _, skip, _ in self.stack):
+        if any(skip for _, skip in self.stack):
             return
         if self.head_buf is not None:
             self.head_buf.append(data)
             return
-        if self.stack and any(t in ("body", "section", "div", "p", "li", "td", "span", "ul", "ol") for t, _, _ in self.stack):
-            txt = " ".join(data.split())
-            if txt and (self.has_sections or self.cur is not None):
-                self._slide()["body"].append(txt)
+        txt = " ".join(data.split())
+        if txt and (self.cur is not None or self.seen_heading or self.sections_open):
+            self._slide()["body"].append(txt)
 
 
 def _load_html(path: str) -> list[dict]:
     p = _SlideHTML()
-    p.feed(Path(path).read_text(encoding="utf-8-sig", errors="replace"))
+    p.feed(unicodedata.normalize("NFC", Path(path).read_text(encoding="utf-8-sig", errors="replace")))
     return p.slides
+
+
+def _shape_texts(shapes, skip=None):
+    """Text paragraphs of shapes, descending into groups and table cells; notes are never reached."""
+    for sh in shapes:
+        if skip is not None and sh.shape_id == skip.shape_id:
+            continue
+        if hasattr(sh, "shapes"):   # group shape
+            yield from _shape_texts(sh.shapes)
+            continue
+        if getattr(sh, "has_table", False):
+            paras = [p for row in sh.table.rows for cell in row.cells for p in cell.text_frame.paragraphs]
+        elif getattr(sh, "has_text_frame", False):
+            paras = list(sh.text_frame.paragraphs)
+        else:
+            continue
+        for para in paras:
+            t = unicodedata.normalize("NFC", "".join(r.text for r in para.runs)).strip()
+            if t:
+                yield t
 
 
 def _load_pptx(path: str) -> list[dict]:
@@ -423,15 +451,8 @@ def _load_pptx(path: str) -> list[dict]:
     slides = []
     for i, s in enumerate(prs.slides, 1):
         title_shape = s.shapes.title
-        title = title_shape.text_frame.text.strip() if title_shape is not None and title_shape.has_text_frame else ""
-        body = []
-        for sh in s.shapes:
-            if sh is title_shape or not sh.has_text_frame:
-                continue
-            for para in sh.text_frame.paragraphs:
-                t = "".join(r.text for r in para.runs).strip()
-                if t:
-                    body.append(t)
+        title = unicodedata.normalize("NFC", title_shape.text_frame.text).strip() if title_shape is not None and title_shape.has_text_frame else ""
+        body = list(_shape_texts(s.shapes, title_shape))
         slides.append({"title": title, "body": body, "index": i,
                        "is_title_layout": s.slide_layout.name.lower() == "title slide"})
     return slides
