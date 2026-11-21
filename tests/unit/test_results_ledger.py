@@ -102,3 +102,68 @@ class TestResultsLedger(unittest.TestCase):
     def test_missing_results_json_exit_2(self):
         r = self.run_cli("import", str(self.p))
         self.assertEqual(r.returncode, 2)
+
+    def test_rooted_and_absolute_source_rejected(self):
+        outside = self.p.parent / (self.p.name + "-abs.txt")
+        outside.write_text("x", encoding="utf-8")
+        try:
+            for src in ("\\Users\\x.txt", "C:\\x.txt", "/etc/x", str(outside)):
+                probs = results_ledger.validate_doc(self.doc(result(source_file=src)), self.p)
+                self.assertTrue(any("source_file" in x for x in probs), src)
+        finally:
+            outside.unlink()
+
+    def test_sibling_folder_with_same_prefix_rejected(self):
+        sib = self.p.parent / (self.p.name + "2")
+        sib.mkdir()
+        (sib / "x.txt").write_text("x", encoding="utf-8")
+        try:
+            probs = results_ledger.validate_doc(
+                self.doc(result(source_file=f"../{sib.name}/x.txt")), self.p)
+            self.assertTrue(any("source_file" in x for x in probs))
+        finally:
+            (sib / "x.txt").unlink()
+            sib.rmdir()
+
+    def test_wrong_types_give_problems_not_crashes(self):
+        d = self.doc(result())
+        d["results"] = ["oops", result(analysis_id=1), result(id=5, status=["a"], kind={})]
+        probs = results_ledger.validate_doc(d, self.p)
+        self.assertGreaterEqual(len(probs), 3)
+        self.assertEqual(results_ledger.validate_doc([1, 2], self.p)[0].split(":")[0], "document")
+        self.assertTrue(results_ledger.validate_doc("x", self.p))
+
+    def test_top_level_list_cli_exit_1(self):
+        (self.p / "05_analysis" / "output" / "results.json").write_text("[1]", encoding="utf-8")
+        r = self.run_cli("import", str(self.p))
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+
+    def test_invalid_json_exit_2(self):
+        (self.p / "05_analysis" / "output" / "results.json").write_text("{", encoding="utf-8")
+        r = self.run_cli("import", str(self.p))
+        self.assertEqual(r.returncode, 2)
+
+    def test_missing_sheet_is_a_problem(self):
+        x = self.p / "05_analysis" / "output" / "s.xlsx"
+        with zipfile.ZipFile(x, "w") as z:
+            z.writestr("xl/workbook.xml", '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+                       'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                       '<sheets><sheet name="Out" sheetId="1" r:id="rId1"/></sheets></workbook>')
+        d = self.doc(result(source_file="05_analysis/output/s.xlsx", locator="Nope!B7", raw="x"))
+        probs = results_ledger.validate_doc(d, self.p, verify_raw=True)
+        self.assertTrue(any("cannot be located" in x and "Nope" in x for x in probs), probs)
+
+    def test_bad_xml_is_a_problem(self):
+        x = self.p / "05_analysis" / "output" / "s.xlsx"
+        with zipfile.ZipFile(x, "w") as z:
+            z.writestr("xl/workbook.xml", "<not xml")
+        d = self.doc(result(source_file="05_analysis/output/s.xlsx", locator="Out!B7", raw="x"))
+        probs = results_ledger.validate_doc(d, self.p, verify_raw=True)
+        self.assertTrue(any("cannot be located" in x for x in probs), probs)
+
+    def test_data_file_must_be_under_04_data(self):
+        d = self.doc(result())
+        d["data_file"] = "00_inputs/raw.deid.csv"
+        probs = results_ledger.validate_doc(d, self.p)
+        self.assertTrue(any("data_file" in x for x in probs))

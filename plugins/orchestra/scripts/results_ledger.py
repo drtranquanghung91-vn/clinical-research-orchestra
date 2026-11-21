@@ -21,6 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from crolib import numfmt  # noqa: E402
 
+STRING_FIELDS = ("id", "analysis_id", "status", "kind", "source_file", "locator", "raw")
 REQUIRED = ("id", "analysis_id", "status", "label", "value", "kind", "source_file", "locator", "raw")
 STATUSES = ("prespecified", "posthoc", "deviation")
 NS = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
@@ -31,9 +32,13 @@ def read_xlsx_cell(path: Path, ref: str) -> str:
     sheet, _, cell = ref.partition("!")
     with zipfile.ZipFile(path) as z:
         wb = ET.fromstring(z.read("xl/workbook.xml"))
-        rid = next(s.get(RNS) for s in wb.iter("{%s}sheet" % NS["m"]) if s.get("name") == sheet)
+        rid = next((s.get(RNS) for s in wb.iter("{%s}sheet" % NS["m"]) if s.get("name") == sheet), None)
+        if rid is None:
+            raise KeyError(f"sheet '{sheet}' not found")
         rels = ET.fromstring(z.read("xl/_rels/workbook.xml.rels"))
-        target = next(r.get("Target") for r in rels if r.get("Id") == rid)
+        target = next((r.get("Target") for r in rels if r.get("Id") == rid), None)
+        if target is None:
+            raise KeyError(f"relationship '{rid}' for sheet '{sheet}' not found")
         shared = []
         if "xl/sharedStrings.xml" in z.namelist():
             for si in ET.fromstring(z.read("xl/sharedStrings.xml")).iter("{%s}si" % NS["m"]):
@@ -46,7 +51,7 @@ def read_xlsx_cell(path: Path, ref: str) -> str:
                 v = c.find("m:v", NS)
                 text = v.text if v is not None else ""
                 return shared[int(text)] if c.get("t") == "s" else (text or "")
-    raise KeyError(ref)
+    raise KeyError(f"cell '{ref}' not found")
 
 
 def _located_text(project: Path, rec: dict) -> str:
@@ -68,17 +73,27 @@ def _num(x) -> bool:
 
 def validate_doc(doc: dict, project: Path, verify_raw: bool = False) -> list[str]:
     probs: list[str] = []
+    if not isinstance(doc, dict):
+        return ["document: must be a JSON object with 'results' and 'tables' lists"]
     if not isinstance(doc.get("results"), list) or not isinstance(doc.get("tables", []), list):
         return ["document: needs 'results' and 'tables' lists"]
-    if not str(doc.get("data_file", "")).endswith(".deid.csv"):
+    data_file = doc.get("data_file", "")
+    if not (isinstance(data_file, str) and data_file.startswith("04_data/") and data_file.endswith(".deid.csv")):
         probs.append("document: data_file must be a de-identified 04_data/*.deid.csv file")
     seen: set[str] = set()
     root = project.resolve()
     for n, rec in enumerate(doc["results"], start=1):
-        rid = rec.get("id") or f"#{n}"
+        if not isinstance(rec, dict):
+            probs.append(f"#{n}: result must be an object")
+            continue
+        rid = rec.get("id") if isinstance(rec.get("id"), str) and rec.get("id") else f"#{n}"
         missing = [f for f in REQUIRED if rec.get(f) in (None, "")]
         if missing:
             probs.append(f"{rid}: missing {', '.join(missing)}")
+            continue
+        wrong = [f for f in STRING_FIELDS if not isinstance(rec[f], str)]
+        if wrong:
+            probs.append(f"{rid}: {', '.join(wrong)} must be text")
             continue
         if not re.fullmatch(r"A\d+", rec["analysis_id"]):
             probs.append(f"{rid}: analysis_id '{rec['analysis_id']}' must be A<n>")
@@ -101,14 +116,14 @@ def validate_doc(doc: dict, project: Path, verify_raw: bool = False) -> list[str
             probs.append(f"{rid}: p must be between 0 and 1")
         src = Path(rec["source_file"])
         target = (project / src).resolve()
-        if src.is_absolute() or ".." in src.parts or not str(target).startswith(str(root)) or not target.is_file():
+        if src.anchor or ".." in src.parts or not target.is_relative_to(root) or not target.is_file():
             probs.append(f"{rid}: source_file '{rec['source_file']}' must be an existing file inside the project")
             continue
         if verify_raw:
             try:
                 text = _located_text(project, rec)
-            except (KeyError, ValueError, OSError, StopIteration, zipfile.BadZipFile) as e:
-                probs.append(f"{rid}: raw cannot be located ({e})")
+            except (KeyError, ValueError, OSError, IndexError, StopIteration, ET.ParseError, zipfile.BadZipFile) as e:
+                probs.append(f"{rid}: raw cannot be located ({str(e) or type(e).__name__})")
                 continue
             if str(rec["raw"]) not in text:
                 probs.append(f"{rid}: raw text not found at {rec['locator']}")
