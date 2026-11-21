@@ -180,7 +180,7 @@ values in `07_present/**/*.json`. Checks:
 | sample size | `≈`, `~`, `khoảng`, `about` before a participant count, or a decimal participant count | block |
 | date ranges | two ranges with the same start and different ends, or the same end and different starts | block |
 | abstract vs results | a number in an abstract (`*abstract*.md`) that appears in no results file and not in the ledger | warn |
-| percentages sum | a table with a `Tổng`/`Total` row whose percentage column does not sum to it within 0.5 | warn |
+| percentages sum | a table with a `Tổng`/`Total`/`Tổng cộng` row at 100% whose percentage column does not sum to 100 within 0.5 (an overall-rate row such as `Chung` is not a total) | warn |
 | terms | a variant from `project.yaml → terms` (preferred: [variants]) or the built-in list (HbA1c/HbA1C, đái tháo đường/tiểu đường) | warn |
 
 Escape: `<!-- cons-ok: <reason> -->` on the line. Placeholders are rendered first, so ledger numbers
