@@ -14,7 +14,7 @@ non-result (cut-off, age limit) carries `<!-- not-a-result: <reason> -->`.
 ## 2. Preconditions
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" check . G3` exits 0 and `ledgers/results-ledger.json` has
 results. Otherwise stop: say which files changed since the lock, or that G3 was
-never locked; use the Skill tool with `statistical-analysis`; write no Results text. A `WAIVE G3:` line also passes: say in the hand-off that the ledger is unlocked. Set `STATUS.md` row `6 Writing` to `doing`.
+never locked; use the Skill tool with `statistical-analysis`, run `analysis_plan.py check`, report its findings; write no Results text. A `WAIVE G3:` line also passes: say in the hand-off that the ledger is unlocked. Set `STATUS.md` row `6 Writing` to `doing`.
 
 ## 3. Structure
 Follow the Results items of the reporting guideline in `project.yaml → reporting_guideline` (item list:
@@ -43,8 +43,7 @@ Build each table from `05_analysis/output/tables/<T…>.csv`, every number as a 
 
 ## 7. Claims
 Add a row to `ledgers/claims.json` for every substantive sentence: `kind: observed`, `results: [R-…]`,
-`refs: []`, `status: unverified` (the scripts check it against the ledger, not literature). Format in
-the workflow.
+`refs: []`, `status: unverified` (checked against the ledger, not literature). Format in the workflow.
 
 ## 8. Checks before hand-back
 From the project folder, scripts in `${CLAUDE_PLUGIN_ROOT}/scripts/`, in order; fix every block:
@@ -52,7 +51,7 @@ From the project folder, scripts in `${CLAUDE_PLUGIN_ROOT}/scripts/`, in order; 
 2. `check_numbers.py . <file>.rendered.md`.
 3. `analysis_plan.py check . --text <file>.md` (the placeholder version).
 4. `build_docx.py <file>.rendered.md out/<ch3-results|results>.docx --project .`
-Report each script's last line and the .docx path.
+Report each script's last line.
 
 ## 9. Hand-off
 Figures go to `research-figures`, the thesis to `thesis`, the manuscript to `manuscript`; not available
