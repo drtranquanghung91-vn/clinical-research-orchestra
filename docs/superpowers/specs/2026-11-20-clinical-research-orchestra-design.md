@@ -288,6 +288,7 @@ Optional dependencies (`python-docx`, `python-pptx`, `PyMuPDF`, `playwright`) pr
 | `E-CONS` | consistency | 85% vs 86.3%; "≈26" where formula gives 26.65 → 27; mismatched end dates |
 | `E-RG` | reporting guideline | required item absent |
 | `E-STAT` | statistics | test not in SAP; causal language from observational design |
+| `E-LIT` | literature review structure | review written paper by paper (review_lint.py) |
 | `E-PHI` | patient identifiers | any identifier in a deliverable |
 | `E-PRINT` | print | image below 150 dpi at print size; fonts not embedded; no bleed when requested |
 | `S01…` | AI-prose patterns | blocking only above threshold |
