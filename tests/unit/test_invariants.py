@@ -15,14 +15,18 @@ P3 = "Đoạn thứ ba không đổi, n = 120."
 BEFORE = "\n\n".join([P1, P2, P3]) + "\n"
 
 
-def run(before, after, *extra):
+def run(before, after, *extra, raw=False):
     with tempfile.TemporaryDirectory() as d:
         b, a, o = Path(d, "b.md"), Path(d, "a.md"), Path(d, "o.md")
-        b.write_text(before, encoding="utf-8", newline="")
-        a.write_text(after, encoding="utf-8", newline="")
+        b.write_bytes(before if isinstance(before, bytes) else before.encode("utf-8"))
+        a.write_bytes(after if isinstance(after, bytes) else after.encode("utf-8"))
         p = subprocess.run([sys.executable, str(SCRIPT), str(b), str(a), "--merge", str(o), *extra],
-                           capture_output=True, text=True, encoding="utf-8")
-        return p, (o.read_text(encoding="utf-8") if o.exists() else None)
+                           capture_output=True)
+        p.stdout = p.stdout.decode("utf-8", "replace")
+        p.stderr = p.stderr.decode("utf-8", "replace")
+        if not o.exists():
+            return p, None
+        return p, (o.read_bytes() if raw else o.read_bytes().decode("utf-8"))
 
 
 class TestInvariants(unittest.TestCase):
@@ -92,6 +96,54 @@ class TestInvariants(unittest.TestCase):
 
     def test_names_and_keys_not_numbers(self):
         self.assertEqual(invariants.compare("COVID-19 [@a2020x].\n", "Đại dịch COVID-19 [@a2020x].\n"), [])
+
+    def test_crlf_merge_keeps_untouched_bytes(self):
+        before = BEFORE.replace("\n", "\r\n")
+        after = before.replace("OR 1,42 (KTC 95%: 1,05–1,91)", "OR 1,4").replace("không đổi", "giữ nguyên")
+        p, out = run(before, after, raw=True)
+        self.assertEqual(p.returncode, 1)
+        self.assertEqual(out, before.replace("không đổi", "giữ nguyên").encode("utf-8"))
+
+    def test_crlf_structure_change_copies_before(self):
+        before = BEFORE.replace("\n", "\r\n")
+        p, out = run(before, before + "\r\nĐoạn mới.\r\n", raw=True)
+        self.assertEqual(out, before.encode("utf-8"))
+
+    def test_non_utf8_exit_2(self):
+        p, _ = run(BEFORE, b"T\xe1 l\xff 1,4\n")
+        self.assertEqual(p.returncode, 2)
+        self.assertNotIn("Traceback", p.stderr)
+
+    def test_import_reconfigures_stdout_replace(self):
+        code = ("import sys, io; sys.stdout = io.TextIOWrapper(io.BytesIO(), encoding='ascii');"
+                "sys.path.insert(0, %r); import invariants; print('\\u2192')" % str(ORCH_SCRIPTS))
+        p = subprocess.run([sys.executable, "-c", code], capture_output=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+
+    def test_hedge_reflowed_lines_and_spaces(self):
+        self.assertEqual(invariants.compare("Kết quả có thể do nhiễu.\n", "Kết quả có\nthể do nhiễu.\n"), [])
+        self.assertEqual(invariants.compare("Chưa đủ bằng chứng.\n", "Chưa đủ  bằng\nchứng.\n"), [])
+
+    def test_hedge_nfc(self):
+        import unicodedata
+        nfd = unicodedata.normalize("NFD", "Kết quả có thể do nhiễu.\n")
+        self.assertEqual(invariants.compare("Kết quả có thể do nhiễu.\n", nfd), [])
+
+    def test_may_month_not_hedge(self):
+        self.assertEqual(invariants.compare("In May 2020 we enrolled.\n", "We enrolled in 2020.\n"), [])
+        self.assertTrue(invariants.compare("Effects may vary.\n", "Effects vary.\n"))
+
+    def test_lang_selects_hedge_list(self):
+        self.assertEqual(invariants.compare("Effects may vary.\n", "Effects vary.\n", "vi"), [])
+        self.assertEqual(invariants.compare("Có thể đúng.\n", "Đúng.\n", "en"), [])
+        self.assertTrue(invariants.compare("Có thể đúng.\n", "Đúng.\n", "vi"))
+        self.assertTrue(invariants.compare("Có thể đúng.\n", "Đúng.\n"))
+
+    def test_narrative_citation(self):
+        f = invariants.compare("@smith2020 found it.\n", "Smith found it.\n")
+        self.assertIn("citation [@smith2020] dropped", f[0]["problems"])
+        self.assertEqual(invariants.compare("@a2020 and [@b2019].\n", "[@b2019] and @a2020.\n"), [])
+        self.assertEqual(invariants.compare("Mail me@example.com.\n", "Mail me@example.com now.\n"), [])
 
     def test_usage_error(self):
         p = subprocess.run([sys.executable, str(SCRIPT), "nope1.md", "nope2.md"], capture_output=True, text=True)
