@@ -10,6 +10,9 @@ Data come only from 04_data/*.deid.csv (load_data refuses anything else). Every 
 Recorder.add, which writes one log line per result; that line is the record's `raw` text and its
 `locator` is "line <k>", so results_ledger.py --verify-raw can find it.
 
+Every compare_* and fit_* function takes a keyword-only `label` prefix: when given (e.g. a subgroup,
+label="nữ"), each label it records starts with "<label>: "; without it the labels are unchanged.
+
 Labelled defaults (judgement-defaults.md) are in DEFAULTS. Choices the brief leaves open, and the
 standard option taken:
   - quartiles: pandas linear interpolation (R type 7); SPSS uses type 6, so Q1/Q3 can differ slightly;
@@ -131,6 +134,15 @@ def _fmt1(x) -> str:
     """One decimal, half up (numfmt); a negative value that rounds to zero prints as 0.0."""
     t = _fmt(x, 1)
     return "0.0" if t == "-0.0" else t
+
+
+def _prefixed(label, text: str) -> str:
+    """`<label>: <text>` when a label prefix is given (e.g. a subgroup), else text unchanged."""
+    if label is None:
+        return text
+    if not isinstance(label, str) or not label.strip():
+        raise ValueError(f"label must be non-empty text, got {label!r}")
+    return f"{label.strip()}: {text}"
 
 
 def _columns(df, exprs) -> list:
@@ -378,13 +390,15 @@ def _sorted_levels(values) -> list:
     return sorted(values, key=_level_key)
 
 
-def compare_two(df, outcome, group, rec, analysis_id, status="prespecified", table=None, order=None) -> dict:
+def compare_two(df, outcome, group, rec, analysis_id, status="prespecified", table=None, order=None, *,
+                label=None) -> dict:
     """Compare a numeric outcome between 2 groups: Welch t-test (mean difference, Welch CI) when both
     groups use_mean, else Mann-Whitney U (p only, kind p).
 
     The difference is first minus second group of `order` (a tuple of the two group values); by default
     the groups are in numeric-aware ascending order (0 before 1, 9 before 10). The label states it as
     "<first> − <second>"."""
+    _prefixed(label, "")
     d = df[[outcome, group]].dropna()
     present = _sorted_levels(d[group].unique())
     if len(present) != 2:
@@ -413,8 +427,8 @@ def compare_two(df, outcome, group, rec, analysis_id, status="prespecified", tab
         ci = (md - tc * se, md + tc * se)
         rec.log(f"{analysis_id} {tag} ({_level(g0)} − {_level(g1)}): {test}; reason: {reason}; "
                 f"Welch df={_num_str(dfw)}")
-        rid = rec.add(analysis_id, status, f"{outcome} mean difference {_level(g0)} − {_level(g1)} by {group}, "
-                      f"Welch t-test", md, "md", ci=ci, p=p, n=n0 + n1, table=table)
+        rid = rec.add(analysis_id, status, _prefixed(label, f"{outcome} mean difference {_level(g0)} − {_level(g1)} "
+                                                     f"by {group}, Welch t-test"), md, "md", ci=ci, p=p, n=n0 + n1, table=table)
         return {"test": test, "reason": reason, "p": p, "md": md, "ci": ci, "df": dfw, "order": (g0, g1),
                 "ids": [rid]}
     test = MW
@@ -424,16 +438,17 @@ def compare_two(df, outcome, group, rec, analysis_id, status="prespecified", tab
               "two-sided, scipy method auto")
     p = float(stats.mannwhitneyu(x0, x1, alternative="two-sided")[1])
     rec.log(f"{analysis_id} {tag} ({_level(g0)} vs {_level(g1)}): {test}; reason: {reason}")
-    rid = rec.add(analysis_id, status, f"{tag} ({_level(g0)} vs {_level(g1)}) p, {test}", p, "p", p=p,
+    rid = rec.add(analysis_id, status, _prefixed(label, f"{tag} ({_level(g0)} vs {_level(g1)}) p, {test}"), p, "p", p=p,
                   n=n0 + n1, table=table)
     return {"test": test, "reason": reason, "p": p, "order": (g0, g1), "ids": [rid]}
 
 
-def compare_k(df, outcome, group, rec, analysis_id, status="prespecified", table=None) -> dict:
+def compare_k(df, outcome, group, rec, analysis_id, status="prespecified", table=None, *, label=None) -> dict:
     """Compare a numeric outcome across 3 or more groups. When every group use_mean: Levene test (classic,
     centred on the mean); Levene p >= 0.05 gives one-way ANOVA (scipy f_oneway), else Welch ANOVA
     (statsmodels anova_oneway, use_var="unequal"). Otherwise Kruskal-Wallis (scipy, tie-corrected).
     Records p (kind p)."""
+    _prefixed(label, "")
     d = df[[outcome, group]].dropna()
     levels = _sorted_levels(d[group].unique())
     if len(levels) < 3:
@@ -463,7 +478,7 @@ def compare_k(df, outcome, group, rec, analysis_id, status="prespecified", table
                   "tie-corrected")
         p = float(stats.kruskal(*xs)[1])
     rec.log(f"{analysis_id} {tag}: {test}; reason: {reason}")
-    rid = rec.add(analysis_id, status, f"{tag} p, {test}", p, "p", p=p, n=n, table=table)
+    rid = rec.add(analysis_id, status, _prefixed(label, f"{tag} p, {test}"), p, "p", p=p, n=n, table=table)
     return {"test": test, "reason": reason, "p": p, "levene_p": lev_p, "ids": [rid]}
 
 
@@ -491,11 +506,12 @@ def _chi2_permutation_p(g_codes, y_codes, shape, expected, stat, permutations, s
 
 
 def compare_props(df, outcome, group, rec, analysis_id, status="prespecified", table=None, *,
-                  permutations=PERMUTATIONS, seed=PERM_SEED) -> dict:
+                  permutations=PERMUTATIONS, seed=PERM_SEED, label=None) -> dict:
     """Compare a categorical outcome across groups (rows = groups). 2x2 table: Fisher exact (two-sided) when
     any expected count < 5 or a group has n < 20. Larger table with any expected count < 5: Monte Carlo
     exact test (permutation distribution of the Pearson chi-square, `permutations` resamples, numpy seed
     `seed`, both logged). Otherwise Pearson chi-square without continuity correction. Records p (kind p)."""
+    _prefixed(label, "")
     d = df[[outcome, group]].dropna()
     tab = pd.crosstab(d[group], d[outcome])
     if tab.shape[0] < 2 or tab.shape[1] < 2:
@@ -535,7 +551,8 @@ def compare_props(df, outcome, group, rec, analysis_id, status="prespecified", t
                   + (f", every group n >= {EXACT_MIN_GROUP_N}" if obs.shape == (2, 2) else "")
                   + f"; Pearson, no continuity correction; chi2={chi2:.4f}, df={dof}")
     rec.log(f"{analysis_id} {tag}: {test}; reason: {reason}")
-    rid = rec.add(analysis_id, status, f"{tag} p, {test}", p, "p", p=p, n=int(obs.sum()), table=table)
+    rid = rec.add(analysis_id, status, _prefixed(label, f"{tag} p, {test}"), p, "p", p=p, n=int(obs.sum()),
+                  table=table)
     return {"test": test, "reason": reason, "p": p, "ids": [rid]}
 
 
@@ -616,7 +633,7 @@ def _model_problems(m, caught, family) -> list:
     return probs
 
 
-def _fit_ratio_terms(m, rec, analysis_id, status, table, kind, name, formula, n, conf=None):
+def _fit_ratio_terms(m, rec, analysis_id, status, table, kind, name, formula, n, conf=None, prefix=None):
     """Record exp(coef) of every non-intercept term; returns ({term: (est, lo, hi, p)}, ids)."""
     ci = m.conf_int() if conf is None else conf
     est, ids = {}, []
@@ -626,7 +643,8 @@ def _fit_ratio_terms(m, rec, analysis_id, status, table, kind, name, formula, n,
         e, lo, hi, p = (float(np.exp(m.params[term])), float(np.exp(ci.loc[term, 0])),
                         float(np.exp(ci.loc[term, 1])), float(m.pvalues[term]))
         est[term] = (e, lo, hi, p)
-        ids.append(rec.add(analysis_id, status, f"{name} {term}, {formula}", e, kind, ci=(lo, hi), p=p, n=n,
+        ids.append(rec.add(analysis_id, status, _prefixed(prefix, f"{name} {term}, {formula}"), e, kind, ci=(lo, hi),
+                           p=p, n=n,
                            table=table))
     return est, ids
 
@@ -651,7 +669,7 @@ def _fit_caught(fit):
     return res, caught
 
 
-def fit_logistic(df, outcome, terms, rec, analysis_id, status="prespecified", table=None) -> dict:
+def fit_logistic(df, outcome, terms, rec, analysis_id, status="prespecified", table=None, *, label=None) -> dict:
     """Logistic regression (statsmodels Logit, ML): OR with Wald 95% CI and p for each non-intercept term
     (kind or), AUC (kind auc), Hosmer-Lemeshow p (10 groups), EPV = min(events, non-events) / parameters.
 
@@ -659,6 +677,7 @@ def fit_logistic(df, outcome, terms, rec, analysis_id, status="prespecified", ta
     |coef x SD| > 10) records nothing for the model: warnings are logged, then
     `MODEL FAILED A<n>: <reason>; consider Firth or exact logistic as a declared deviation`, and the result
     is {"failed": True, "reason", "warnings", "ids": []}."""
+    _prefixed(label, "")
     formula = f"{outcome} ~ {' + '.join(terms)}"
     try:
         m, caught = _fit_caught(lambda: smf.logit(formula, df).fit(disp=0))
@@ -680,7 +699,7 @@ def fit_logistic(df, outcome, terms, rec, analysis_id, status="prespecified", ta
         return _fail(rec, analysis_id, "; ".join(problems), warn, "logistic", epv=epv, n=n, events=events)
     for w in warn:
         rec.log(f"{analysis_id} WARNING: {w}")
-    est, ids = _fit_ratio_terms(m, rec, analysis_id, status, table, "or", "OR", formula, n)
+    est, ids = _fit_ratio_terms(m, rec, analysis_id, status, table, "or", "OR", formula, n, prefix=label)
     phat = np.asarray(m.predict(), dtype=float)
     auc = _rank_auc(y, phat)
     hl, hl_p, groups = _hosmer_lemeshow(y, phat)
@@ -691,17 +710,19 @@ def fit_logistic(df, outcome, terms, rec, analysis_id, status="prespecified", ta
         diag.append(f"Hosmer-Lemeshow p={hl_p:.3f} < 0.05: calibration is poor")
     rec.log(f"{analysis_id} diagnostics: AUC={_num_str(auc)}; Hosmer-Lemeshow "
             + (f"chi2={_num_str(hl)} df={groups - 2} p={_num_str(hl_p)}" if hl_p is not None else "not computed"))
-    ids.append(rec.add(analysis_id, status, f"AUC (apparent), {formula}", auc, "auc", n=n, table=table))
+    ids.append(rec.add(analysis_id, status, _prefixed(label, f"AUC (apparent), {formula}"), auc, "auc", n=n,
+                       table=table))
     for w in diag:
         rec.log(f"{analysis_id} WARNING: {w}")
     return {"failed": False, "reason": None, "or": est, "epv": epv, "auc": auc, "hl_p": hl_p, "n": n,
             "events": events, "warnings": warn + diag, "ids": ids, "model": m}
 
 
-def fit_linear(df, outcome, terms, rec, analysis_id, status="prespecified", table=None) -> dict:
+def fit_linear(df, outcome, terms, rec, analysis_id, status="prespecified", table=None, *, label=None) -> dict:
     """Linear regression (OLS): beta with t-based 95% CI and p (kind beta), R^2 (kind other), Shapiro-Wilk on
     residuals when n < 5000, Breusch-Pagan (LM test) for heteroscedasticity. A rank-deficient design
     (collinear terms), a fit error or a non-finite estimate records nothing and logs MODEL FAILED."""
+    _prefixed(label, "")
     formula = f"{outcome} ~ {' + '.join(terms)}"
     try:
         m, caught = _fit_caught(lambda: smf.ols(formula, df).fit())
@@ -723,7 +744,8 @@ def fit_linear(df, outcome, terms, rec, analysis_id, status="prespecified", tabl
             continue
         b, lo, hi, p = float(m.params[term]), float(ci.loc[term, 0]), float(ci.loc[term, 1]), float(m.pvalues[term])
         est[term] = (b, lo, hi, p)
-        ids.append(rec.add(analysis_id, status, f"beta {term}, {formula}", b, "beta", ci=(lo, hi), p=p, n=n,
+        ids.append(rec.add(analysis_id, status, _prefixed(label, f"beta {term}, {formula}"), b, "beta", ci=(lo, hi),
+                           p=p, n=n,
                            table=table))
     r2 = float(m.rsquared)
     sw = _finite(stats.shapiro(m.resid)[1]) if 3 <= n < 5000 else None
@@ -736,18 +758,20 @@ def fit_linear(df, outcome, terms, rec, analysis_id, status="prespecified", tabl
     rec.log(f"{analysis_id} diagnostics: R2={_num_str(r2)}; residual Shapiro-Wilk p="
             + (_num_str(sw) if sw is not None else "not computed") + "; Breusch-Pagan p="
             + (_num_str(bp) if bp is not None else "not computed"))
-    ids.append(rec.add(analysis_id, status, f"R2, {formula}", r2, "other", n=n, table=table))
+    ids.append(rec.add(analysis_id, status, _prefixed(label, f"R2, {formula}"), r2, "other", n=n, table=table))
     for w in diag:
         rec.log(f"{analysis_id} WARNING: {w}")
     return {"failed": False, "reason": None, "beta": est, "r2": r2, "resid_shapiro_p": sw, "bp_p": bp, "n": n,
             "warnings": warn + diag, "ids": ids, "model": m}
 
 
-def fit_poisson(df, outcome, terms, rec, analysis_id, status="prespecified", table=None, *, exposure=None) -> dict:
+def fit_poisson(df, outcome, terms, rec, analysis_id, status="prespecified", table=None, *, exposure=None,
+                label=None) -> dict:
     """Poisson GLM (log link): IRR with Wald 95% CI and p (kind rr, label "IRR ..."); dispersion = Pearson
     chi2 / residual df, warning when > 2. `exposure` names a person-time column (log offset).
     Non-convergence, a fit error, a non-finite IRR/CI or |coef x SD| > 10 records nothing and logs
     MODEL FAILED."""
+    _prefixed(label, "")
     formula = f"{outcome} ~ {' + '.join(terms)}"
     d = df
     kw = {}
@@ -768,7 +792,7 @@ def fit_poisson(df, outcome, terms, rec, analysis_id, status="prespecified", tab
         return _fail(rec, analysis_id, "; ".join(problems), warn, "poisson", n=n)
     for w in warn:
         rec.log(f"{analysis_id} WARNING: {w}")
-    est, ids = _fit_ratio_terms(m, rec, analysis_id, status, table, "rr", "IRR", formula, n)
+    est, ids = _fit_ratio_terms(m, rec, analysis_id, status, table, "rr", "IRR", formula, n, prefix=label)
     disp = float(m.pearson_chi2 / m.df_resid) if m.df_resid > 0 else float("nan")
     diag = []
     if math.isfinite(disp) and disp > DEFAULTS["overdispersion_max"]:
@@ -781,10 +805,12 @@ def fit_poisson(df, outcome, terms, rec, analysis_id, status="prespecified", tab
             "ids": ids, "model": m}
 
 
-def fit_cox(df, duration, event, terms, rec, analysis_id, status="prespecified", table=None) -> dict:
+def fit_cox(df, duration, event, terms, rec, analysis_id, status="prespecified", table=None, *,
+            label=None) -> dict:
     """Cox proportional hazards (lifelines CoxPHFitter, Efron ties): HR with 95% CI and p (kind hr); PH check
     by Schoenfeld-residual test (rank time transform), minimum p in `ph_min_p`; EPV = events / parameters.
     A convergence error, a non-finite HR/CI or |coef x SD| > 10 records nothing and logs MODEL FAILED."""
+    _prefixed(label, "")
     try:
         from lifelines import CoxPHFitter
         from lifelines.statistics import proportional_hazard_test
@@ -797,7 +823,7 @@ def fit_cox(df, duration, event, terms, rec, analysis_id, status="prespecified",
     cols = list(dict.fromkeys([duration, event] + _columns(df, terms)))
     d = df[cols].dropna()
     rhs = " + ".join(terms)
-    label = f"Surv({duration}, {event}) ~ {rhs}"
+    model_txt = f"Surv({duration}, {event}) ~ {rhs}"
     n = int(len(d))
     events = int(d[event].sum())
     cph = CoxPHFitter()
@@ -806,13 +832,13 @@ def fit_cox(df, duration, event, terms, rec, analysis_id, status="prespecified",
             warnings.simplefilter("always")
             cph.fit(d, duration_col=duration, event_col=event, formula=rhs)
     except (ConvergenceError, np.linalg.LinAlgError) as e:
-        rec.log(f"{analysis_id} Cox regression {label}: reason: time-to-event outcome; n={n}, events={events}")
+        rec.log(f"{analysis_id} Cox regression {model_txt}: reason: time-to-event outcome; n={n}, events={events}")
         return _fail(rec, analysis_id, f"fit error ({type(e).__name__}: {e})", [], "cox", n=n, events=events)
     warn = _sm_warnings(caught, "lifelines")
     s = cph.summary
     k = len(s)
     epv = events / k if k else float("inf")
-    rec.log(f"{analysis_id} Cox regression {label}: reason: time-to-event outcome; n={n}, events={events}, "
+    rec.log(f"{analysis_id} Cox regression {model_txt}: reason: time-to-event outcome; n={n}, events={events}, "
             f"parameters={k}, EPV={epv:.1f}")
     if epv < DEFAULTS["epv_min"]:
         warn.append(f"EPV {epv:.1f} < {DEFAULTS['epv_min']:g}: model is exploratory")
@@ -828,7 +854,7 @@ def fit_cox(df, duration, event, terms, rec, analysis_id, status="prespecified",
         e, lo, hi, p = (float(s.loc[term, "exp(coef)"]), float(s.loc[term, "exp(coef) lower 95%"]),
                         float(s.loc[term, "exp(coef) upper 95%"]), float(s.loc[term, "p"]))
         est[str(term)] = (e, lo, hi, p)
-        ids.append(rec.add(analysis_id, status, f"HR {term}, {label}", e, "hr", ci=(lo, hi), p=p, n=n, table=table))
+        ids.append(rec.add(analysis_id, status, _prefixed(label, f"HR {term}, {model_txt}"), e, "hr", ci=(lo, hi), p=p, n=n, table=table))
     ph = None
     diag = []
     try:

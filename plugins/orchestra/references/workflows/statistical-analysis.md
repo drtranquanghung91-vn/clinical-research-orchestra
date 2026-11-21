@@ -127,7 +127,7 @@ rec.add("A7", "posthoc", "specificity at the Youden cut-off", 100 * r["spec"], "
 for level in sorted(df["sex"].dropna().unique()):
     rec.log(f"A8 subgroup sex = {level}: the next model is fitted in this subgroup only")
     ms = crostats.fit_logistic(df[df["sex"] == level], "readmit", ["hba1c_high", "age", "egfr"], rec, "A8",
-                               status="posthoc", table="T3.3")
+                               status="posthoc", table="T3.3", label=f"sex = {level}")
     if ms["failed"]:
         print(f"A8 model in sex = {level} failed: {ms['reason']} (report it as failed)")
 p_int = crostats.interaction(df, "readmit", "hba1c_high", "sex", ["age", "egfr"], family="logit",
@@ -145,9 +145,9 @@ print(rec.save())
 results; never `rec.add` the same number again. `roc_youden` records only the AUC (it logs the cut-off,
 sensitivity and specificity), so those three get `rec.add` when the report cites them. `crude_effect`
 records nothing, so its estimates get `rec.add`. Every `table=` id used must be written with
-`rec.add_table` (here `records_table`), so each table id in `results.json` has its CSV. A
-`fit_*` model does not put the subgroup in its labels; the log line before it does, and the report's table
-names the subgroup.
+`rec.add_table` (here `records_table`), so each table id in `results.json` has its CSV. A subgroup
+fit passes `label=` (every `compare_*` / `fit_*` takes it), so each recorded label starts with
+"<label>: " (e.g. `sex = nữ: OR hba1c_high, …`) and the subgroups stay distinguishable.
 
 ## Post-hoc and deviating analyses
 

@@ -119,7 +119,7 @@ p-value. See "Common errors".
 | Univariable logistic screening, sorted by p | a loop of `crostats.fit_logistic(df, outcome, [x], rec, "A<n>", status="posthoc")` | **post-hoc only** |
 | ROC + Youden cut-off | `r = crostats.roc_youden(y, score, rec=rec, analysis_id="A<n>", status=..., label="AUC …")` records the AUC and logs cut-off, Se, Sp; `rec.add` the cut-off (kind `other`) and Se/Sp (kind `percent`) only if the report cites them | post-hoc unless registered |
 | Sensitivity analysis over cut-offs | a loop over cut-offs with `crude_effect` + `rec.add` | post-hoc unless registered |
-| Subgroup effect | the model (e.g. `fit_logistic`) fitted in each subgroup level with the register's status, plus `p = crostats.interaction(df, outcome, exposure, modifier, covariates, family, rec=rec, analysis_id="A<n>", status=...)`, which records the p itself; `nan` = model failed | post-hoc unless registered |
+| Subgroup effect | the model (e.g. `fit_logistic`) fitted in each subgroup level with the register's status and `label="<subgroup>"` (prefixes its labels), plus `p = crostats.interaction(df, outcome, exposure, modifier, covariates, family, rec=rec, analysis_id="A<n>", status=...)`, which records the p itself; `nan` = model failed | post-hoc unless registered |
 
 With `rec=rec, analysis_id=...`, `roc_youden` (AUC) and `interaction` (p) record their own results: never
 `rec.add` them again. `crude_effect` records nothing, so the script records its estimates with `rec.add`.

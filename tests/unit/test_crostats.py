@@ -370,3 +370,63 @@ class TestCrostatsFollowUp2(unittest.TestCase):
         self.assertEqual(self.rec.results[0]["value"], 0.25)
         log = self._saved_log()
         self.assertEqual(sum("score direction inverted: AUC < 0.5; consider 1 − score" in ln for ln in log), 1)
+
+
+@unittest.skipUnless(HAVE, "pandas, numpy, scipy and statsmodels are required")
+class TestCrostatsLabelPrefix(unittest.TestCase):
+    """label= prefixes every recorded label of one call ("<label>: ..."); the default is unchanged."""
+
+    def setUp(self):
+        import crostats
+        import numpy as np
+        import pandas as pd
+        self.cs = crostats
+        self.tmp = tempfile.TemporaryDirectory()
+        self.p = Path(self.tmp.name)
+        (self.p / "04_data").mkdir()
+        self.data = self.p / "04_data" / "c.deid.csv"
+        self.data.write_text("x\n1\n", encoding="utf-8")
+        rng = np.random.default_rng(41)
+        n = 400
+        d = pd.DataFrame({"age": rng.normal(60, 10, n), "hba1c": rng.normal(8, 1.5, n),
+                          "sex": rng.choice(["nam", "nữ"], n), "g3": rng.choice(["a", "b", "c"], n),
+                          "t": rng.exponential(10, n)})
+        d["readmit"] = (rng.random(n) < 1 / (1 + np.exp(-(-6 + 0.05 * d.age + 0.3 * d.hba1c)))).astype(int)
+        d["cnt"] = rng.poisson(np.exp(0.1 * (d.hba1c - 8)))
+        d["los"] = rng.exponential(5, n)
+        d["ev"] = (rng.random(n) < 0.6).astype(int)
+        self.df = d
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _pair(self, call):
+        plain = self.cs.Recorder(self.p, self.data)
+        tagged = self.cs.Recorder(self.p, self.data)
+        call(plain, {})
+        call(tagged, {"label": "nữ"})
+        self.assertGreater(len(plain.results), 0)
+        self.assertEqual([r["label"] for r in tagged.results], ["nữ: " + r["label"] for r in plain.results])
+        self.assertEqual([r["value"] for r in tagged.results], [r["value"] for r in plain.results])
+        return plain, tagged
+
+    def test_subgroup_logistic_labels(self):
+        sub = self.df[self.df["sex"] == "nữ"]
+        plain, tagged = self._pair(lambda rec, kw: self.cs.fit_logistic(
+            sub, "readmit", ["age", "hba1c"], rec, "A8", status="posthoc", **kw))
+        self.assertEqual(plain.results[1]["label"], "OR hba1c, readmit ~ age + hba1c")
+        self.assertEqual(tagged.results[1]["label"], "nữ: OR hba1c, readmit ~ age + hba1c")
+        self.assertTrue(all(r["label"].startswith("nữ: ") for r in tagged.results))
+
+    def test_other_fits_and_comparisons(self):
+        df = self.df
+        self._pair(lambda rec, kw: self.cs.fit_linear(df, "los", ["age"], rec, "A1", **kw))
+        self._pair(lambda rec, kw: self.cs.fit_poisson(df, "cnt", ["hba1c"], rec, "A1", **kw))
+        self._pair(lambda rec, kw: self.cs.compare_two(df, "age", "sex", rec, "A1", **kw))
+        self._pair(lambda rec, kw: self.cs.compare_two(df, "los", "sex", rec, "A1", **kw))
+        self._pair(lambda rec, kw: self.cs.compare_k(df, "age", "g3", rec, "A1", **kw))
+        self._pair(lambda rec, kw: self.cs.compare_props(df, "readmit", "sex", rec, "A1", **kw))
+
+    @unittest.skipUnless(importlib.util.find_spec("lifelines"), "lifelines not installed")
+    def test_cox_labels(self):
+        self._pair(lambda rec, kw: self.cs.fit_cox(self.df, "t", "ev", ["age"], rec, "A1", **kw))
