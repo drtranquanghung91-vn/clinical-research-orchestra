@@ -15,7 +15,9 @@ apply one.
 | Illustrative clinical thresholds | RR ≤ 0.90 or ≥ 1.10 | Reading confidence intervals against clinical thresholds | Illustration only; clinicians must set it per outcome |
 | Normality check | Shapiro–Wilk when n < 50; \|skewness\| < 1 when n ≥ 50 | Statistical analysis | Visual checks and context may override |
 | Summary statistic | mean (SD) if normal and n ≥ 30, else median (IQR) | Statistical analysis | Convention from `stat-analysis-vi` |
-| Exact tests | Fisher/exact when any expected cell < 5 or n < 20 per group | Statistical analysis | Cochran's rule of thumb |
+| Exact tests | 2×2 table: Fisher exact when any expected count < 5 or any group has n < 20; r×c table with any expected count < 5: Monte Carlo permutation test of the chi-square (10 000 permutations, seed 20261121) | Statistical analysis (`crostats.compare_props`) | Cochran's rule of thumb; the group-size cut-off and the permutation count are conventions |
+| Separation flag | \|β × SD(x)\| > 10 or a non-finite CI → model reported as failed (`MODEL FAILED A<n>`); Firth or exact logistic only as a declared deviation | Statistical analysis (`crostats.fit_*`) | A practical screen for separation and sparse data; the cut-off is not from a standard |
+| Collinearity flag | \|Spearman ρ\| > 0.70 between two covariates → flagged in the report; dropping one is a declared deviation | Statistical analysis | Rule of thumb from `stat-analysis-vi` |
 | Outliers | flagged when outside quartiles ± IQR × 1.5; never removed automatically | Data preparation | Tukey's convention |
 | Events per variable | EPV < 10 → model reported as exploratory with a caveat | Statistical analysis | Peduzzi; newer work suggests context-specific limits |
 | Overdispersion | Pearson χ²/df > 2 → negative binomial | Statistical analysis | Rule of thumb from `stat-analysis-vi` |
