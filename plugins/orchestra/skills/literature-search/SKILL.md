@@ -24,29 +24,35 @@ Inputs: `01_question/question.md` (PICO/PECO). Detail for every step is in the w
 1. Search plan, targeted or exploratory, in `02_evidence/search-strategy.md`
    (`${CLAUDE_PLUGIN_ROOT}/references/literature/search-strategy.md`).
 2. Run `search_lit.py search`; also ClinicalTrials.gov filtered by the study country (the
-   counter-check for a population gap). Add chosen records with `search_lit.py add <project> <pmid-or-doi>...`; a source the author holds
-   with neither goes in only via `add-manual ... --seen-in <document>` (ask for the document).
+   counter-check for a population gap). Add chosen records with
+   `search_lit.py add <project> <pmid-or-doi>...`; a source with neither goes in only via `add-manual`,
+   by evidence-policy §Identifiers (never an untracked "not verified" entry).
 3. `verify_refs.py <project> --write`.
 4. Evidence table with a risk-of-bias column. 4b: source credibility (retractions in batches,
-   predatory journals, COI, duplicate publications of one trial). 4c: appraise key studies with the
-   Skill tool `critical-appraisal`.
+   predatory journals, COI, duplicate publications of one trial). 4c: appraise key studies only
+   (those carrying a main claim or a gap) with the Skill tool `critical-appraisal`; the others get
+   design and risk-of-bias columns.
 5. GRADE or GRADE-CERQual certainty per main outcome, marked preliminary.
 6. Apples versus pears: I² and prediction interval before reading a pooled estimate.
 7. Read confidence intervals by clinical importance, never "no difference" from p > 0.05.
-8. Evidence map and gaps (each gap needs a counter-check). Number references with
-   `cite_render.py`, never by hand.
+8. Evidence map and gaps (each gap needs a counter-check). Cite as `[@id]`, check with
+   `verify_refs.py <project> --cite <file>`, number only with `cite_render.py` (evidence-policy
+   §Citing sources).
 9. Report PRISMA-S fields and the ICMJE AI-use note. For AI or engineering topics add the default
    limitation "IEEE/arXiv not searched" unless they were.
 
 ## 4. "Just do it" rule
 If the user says not to ask, do not ask. Open with an **Assumptions / Giả định** box, put the
-riskiest assumption in the confirmation list, and record the box in `decisions.md`.
+riskiest assumption in the confirmation list, and record the box in `decisions.md`. It never opens a
+gate: gates are the author's act.
 
 ## 5. Output
 Write in `project.yaml → language.output`: `02_evidence/search-strategy.md`,
 `02_evidence/evidence-table.md`, `02_evidence/evidence-map.md`, `02_evidence/gaps.md`,
 `02_evidence/appraisal/<ref-id>.md`. Set `STATUS.md` row 2 to `doing`, then `done` after the
 author approves. Templates: `${CLAUDE_PLUGIN_ROOT}/references/literature/evidence-output-template.md`.
+No gate opens at this stage (G1 = question, G2 = protocol + SAP). Next: use the Skill tool with
+`protocol-design`.
 
 ## 6. Workflow
 `${CLAUDE_PLUGIN_ROOT}/references/workflows/literature-search.md`

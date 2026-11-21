@@ -30,7 +30,8 @@ calling a tool. Query building, the nomenclature check and the search log:
   `project.yaml → language.output`; English terms stay in brackets in Vietnamese text).
 - The user said not to ask ("cứ làm luôn", "just do it"): do not ask. Open the answer with an
   **Assumptions / Giả định** box listing every assumption, put the riskiest in the confirmation list,
-  and record the box in `decisions.md`.
+  and record the box in `decisions.md`. This never opens a gate:
+  `gate.py open` runs only after the author approves in chat (a gate is the author's act).
 
 ## Step 0 – Nomenclature and current definition check
 Before building any query: was the condition or concept renamed, does it have new diagnostic
@@ -66,11 +67,13 @@ Log every query: date, source, query, filters, number of results, number kept.
 - Add chosen records with `search_lit.py add <project> <pmid-or-doi> [...]`: PMIDs go to PubMed (Europe
   PMC when NCBI is unreachable), DOIs to Crossref; a doi.org URL prefix is stripped and a work already in
   the ledger is not added twice. A Vietnamese journal article, thesis or Ministry of Health document
-  with neither identifier is added only when the author holds it:
+  with neither identifier follows `evidence-policy.md` §Identifiers, the only rule for such sources:
   `search_lit.py add-manual <project> --title T --authors "Surname AB; Surname CD" --journal J --year YYYY
-  --seen-in "00_inputs/file.pdf p. 45"`. Ask the author for the document; never fill it in from memory
+  --seen-in "00_inputs/file.pdf p. 45"` for a document the author holds, or
+  `--seen-in "<URL> (accessed YYYY-MM-DD)" --url <URL>` for an official URL a tool returned in this
+  session, once the author confirms it is the document they rely on. Never fill a record in from memory
   or a search snippet. `verify_refs.py` lists these as MANUAL (not machine-verifiable, exit code
-  unaffected); they may be cited, and the limitation is stated.
+  unaffected); they may be cited, never as the only source of a key figure, and the limitation is stated.
 
 ## Step 3 – Screening and selection
 Read titles and abstracts through the metadata call. Keep papers that answer the PICO directly;
@@ -82,10 +85,10 @@ limitations and never present the review as if all results were read.
 
 ## Step 4 – Verification
 Every kept paper has a PMID or DOI through the procedure in `evidence-policy.md` §Verifying
-references, then run `verify_refs.py <project> --write`. A paper that cannot be verified is dropped, or
-kept tagged `[chưa xác minh trên PubMed]` (`[not verified in PubMed]` in English output) when it is a
-domestic journal or a guideline with a URL. A Consensus paper without PMID/DOI is verified in PubMed
-(`[ti]` words + `[au]` + `[dp]`) first.
+references, then run `verify_refs.py <project> --write`. A paper that cannot be verified is dropped; a
+source without PMID or DOI enters only through `add-manual` under `evidence-policy.md` §Identifiers. No
+entry is ever kept outside the ledger with a "not verified" tag. A Consensus paper without PMID/DOI is
+resolved by lookup, in PubMed (`[ti]` words + `[au]` + `[dp]`) or to a DOI (Crossref), or dropped.
 
 ## Step 4b – Source credibility (CARS; *Choosing & Using Sources* ch. 6)
 - (a) Retractions: `(<pmid1>[pmid] OR …) AND (Retracted Publication[pt] OR Retraction of Publication[pt]
@@ -100,17 +103,17 @@ domestic journal or a guideline with a URL. A Consensus paper without PMID/DOI i
 - Journal prestige does not replace appraisal of content.
 
 ## Step 4c – Critical appraisal
-Use the Skill tool with `critical-appraisal` (design tree, tool per real design, forms and summary
-table, GRADE/CERQual). If the skill is not available, tell the user in one sentence ("critical-appraisal
-is needed"), continue with the summary below, and list this in the limitations.
-Tool by real design (not the authors' own label): RCT → RoB 2; non-randomised intervention or
-comparative cohort of treatments → ROBINS-I V2 (2025); exposure (cohort, case-control) → ROBINS-E or
-NOS; cross-sectional → AXIS or JBI; qualitative → CASP or JBI; mixed methods → MMAT; SR/MA → AMSTAR 2;
-diagnostic accuracy → QUADAS-3; prediction model → PROBAST+AI. Abstract only → write "preliminary
-appraisal from abstract"; what the paper does not report is "Unclear". Separate serious flaws from
-minor ones; never add checklist scores into one number. Why: a poorly run RCT can be weaker than a good
-cohort, and a hierarchy alone ranks papers the wrong way round. Per-paper forms go to
-`02_evidence/appraisal/<ref-id>.md`.
+Appraise **key studies only**: those that carry a main claim or a gap. Use the Skill tool with
+`critical-appraisal` (design tree, tool per real design, forms and summary table, GRADE/CERQual). The
+tool follows the real design, not the authors' own label, as listed in
+`${CLAUDE_PLUGIN_ROOT}/references/appraisal-tools/tools-by-design.md` (main tool first, alternatives
+after it). Every other record gets only the design and risk-of-bias columns of the evidence table
+(step 5). If the skill is not available, tell the user in one sentence ("critical-appraisal is
+needed"), fill those two columns with the tools in `tools-by-design.md`, and list the missing appraisal
+in the limitations. Abstract only → write "preliminary appraisal from abstract"; what the paper does not
+report is "Unclear". Separate serious flaws from minor ones; never add checklist scores into one number.
+Why: a poorly run RCT can be weaker than a good cohort, and a hierarchy alone ranks papers the wrong way
+round. Per-paper forms go to `02_evidence/appraisal/<ref-id>.md`.
 
 ## Step 5 – Extraction into the evidence table
 Columns are in the output template: author–year, country, **real design**, n, population,
@@ -121,7 +124,7 @@ full texts actually retrieved; where the abstract gives none, write "not reporte
 never fill in.
 
 ## Step 6 – Evidence map
-A two-way matrix; each cell is a count plus citations [n].
+A two-way matrix; each cell is a count plus citations `[@id]`.
 - Rows: components of the question (interventions, exposures or outcomes).
 - Columns: design **or** region (West, Asia, Vietnam), whichever exposes the gap best; both tables are
   allowed. Design columns by question type: intervention → SR/MA, RCT, cohort, other; prevalence or
@@ -148,14 +151,15 @@ and methodological gaps are usually the most feasible for a thesis.
 
 ## Step 8 – Writing and numbering
 Writing the review as prose belongs to `literature-review`. When the evidence table, map and gaps cite
-papers, write them with `[@id]` keys (same syntax as `verify_refs.py`) and let the script number them:
+papers, write them with `[@id]` keys (`evidence-policy.md` §Citing sources), check them with
+`verify_refs.py <project> --cite <file>`, and let the script number them:
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/cite_render.py" <project> draft.md out.md --start-marker "<review heading>"`,
 with a line `{REFERENCES}` where the numbered list goes. Numbers follow first appearance in the
 **review** text (tables placed before it reuse the same numbers). Never number by hand. Vancouver
 strings come from the ledger records that `search_lit.py add` built from PubMed metadata (up to 6
 authors then "et al.", `iso_abbreviation`, year;volume(issue):pages). A requested length applies to
 the review text, not to tables or appendices. Organise by theme, not paper by paper; each paragraph:
-claim → pooled evidence with numbers and [n] → certainty or conflict → meaning for the user's
+claim → pooled evidence with numbers and `[@id]` → certainty or conflict → meaning for the user's
 question; end with a paragraph leading to the gap.
 
 ### Synthesis checks (Ogden 2019; Nguyễn Văn Tuấn 2018)
@@ -195,10 +199,11 @@ and arXiv not searched" unless they were.
 ## Deliverables, in order
 1. Question and PICO/PECO used. 2. Search methods (step 9). 3. Evidence table (risk-of-bias column)
 plus the appraisal summary table from `critical-appraisal`. 4. Evidence map. 5. Ranked gaps, each with
-evidence and counter-check. 6. Thematic review with Vancouver [n] by appearance (see
-`literature-review`). 7. References, each ending `PMID: …` and/or `doi: …`. 8. Limitations. 9. Next
-steps: `protocol-design` (variable table; confounders to control from the evidence table) and
-`sample-size-sap` (parameters from the evidence table).
+evidence and counter-check. 6. Hand-off to `literature-review` for the prose. 7. References, numbered
+by `cite_render.py`, each ending `PMID: …` and/or `doi: …`. 8. Limitations. 9. Next steps:
+`protocol-design` (variable table; confounders to control from the evidence table) and
+`sample-size-sap` (parameters from the evidence table). No gate opens at this stage (G1 = question,
+G2 = protocol + SAP). Next: use the Skill tool with `protocol-design`.
 
 ## Saving, chat and export
 - In chat: cite as `[n]`, name PubMed as the source with a DOI link; if Consensus was used, copy its
@@ -212,7 +217,7 @@ steps: `protocol-design` (variable table; confounders to control from the eviden
 | Error | Fix |
 |---|---|
 | A paper from memory in the reference list "because it surely exists" | Find it through PubMed; if not found, do not cite |
-| Consensus paper cited without PMID/DOI | Verify through PubMed first (`[ti]` + `[au]` + `[dp]`) |
+| Consensus paper cited without PMID/DOI | Resolve it by lookup (PubMed `[ti]` + `[au]` + `[dp]`, or a DOI through Crossref); otherwise drop it |
 | Review written as "Author A (2020) studied… Author B (2021) studied…" | Write by theme, many papers per claim |
 | A number differs from the original abstract | Take numbers only from returned metadata or full text; re-check before export |
 | Gap concluded from one query with few hits | Try synonyms, MeSH, Consensus and ClinicalTrials.gov before concluding |
@@ -222,7 +227,7 @@ steps: `protocol-design` (variable table; confounders to control from the eviden
 | Skipping the newest SR or guideline, citing old papers | Always run the SR/MA and guideline queries, prefer the last 5 years (**default**). No specific guideline → write "no specific guideline found" and use the nearest parent-disease guideline |
 | Filing a paper under "Vietnam" only because `Vietnam[Affiliation]` matched | Read the abstract to confirm where the study was done |
 | Searching only MeSH plus the old disease name | Step 0: check renaming or redefinition, add old and new names with `[tiab]` |
-| A paper in the evidence table without appraisal | Step 4c: `critical-appraisal`, tool by real design, fill the risk-of-bias column |
+| A key study (main claim or gap) without appraisal | Step 4c: `critical-appraisal`, tool by real design; every other row still gets its design and risk-of-bias columns |
 | Citing a retracted paper | Step 4b: check `Retracted Publication[pt]` |
 | Trusting a paper because the journal is respected | Appraise the content; source is not content |
 | Writing "no difference" because p > 0.05 | Read the 95% CI by clinical importance; wide CI → "cannot conclude yet" |

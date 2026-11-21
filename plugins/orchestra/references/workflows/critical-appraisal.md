@@ -45,7 +45,8 @@ English term in brackets.
   a PMID, a DOI, a PDF or an abstract the user gives; or a list of papers from the evidence table.
 - The user's question or PICO, to judge relevance. If missing, ask once: "What decision will this
   paper inform, and for which patients?" If the user said not to ask (cứ làm luôn), do not ask: open
-  with an **Assumptions / Giả định** box.
+  with an **Assumptions / Giả định** box. This never opens a gate:
+  `gate.py open` runs only after the author approves in chat (a gate is the author's act).
 - Getting the content: PubMed metadata for the abstract; full text when a PMC copy exists; the PDF the
   user supplies. **Abstract only → state "preliminary appraisal from abstract (thẩm định sơ bộ từ
   abstract)" at the top**, score only the domains an abstract allows, and write "Unclear, needs full
@@ -184,7 +185,7 @@ the user asks for a Word file, use the `docx` skill.
 | Believing a subgroup result with p < 0.05 among dozens of tests | Compute 1 − (1 − α)^k; treat it as a hypothesis to replicate |
 | Counting two papers from one trial as two studies | Compare registration, n, dose, duration, authors (`source-credibility.md`); merge into one row |
 | Raising a red flag because a PROSPERO/NCT code "looks odd" | Look it up in the registry; PROSPERO has a longer format from 2025 |
-| Taking a comment by a summarising layer (mod/hook) as paper content | Re-read the raw abstract or JSON before recording a data-integrity concern |
+| Taking a comment by a summarising layer as paper content | Re-read the raw abstract or JSON before recording a data-integrity concern |
 
 ## Basis
 Nguyễn Văn Tuấn. Cẩm nang nghiên cứu khoa học: Từ ý tưởng đến công bố. 2018; Ogden J. Thinking

@@ -24,7 +24,7 @@ record's abstract or full text in the ledger.
 ## Writing rules (detail: `${CLAUDE_PLUGIN_ROOT}/references/literature/review-writing.md`)
 - Organise by theme or question, never paper by paper.
 - Compare: where studies agree, where they disagree, and why (design, population, risk of bias, measurement).
-- Claim strength follows certainty: high → "reduces"; low → "may reduce"; very low → "it is uncertain whether".
+- Claim strength follows certainty: high → "reduces"; moderate → "probably reduces"; low → "may reduce"; very low → "it is uncertain whether".
 - Cite with `[@id]`; only ids that exist in the ledger.
 - End on the gap that justifies this study (mode a and b).
 - Write in `project.yaml → language.output`. Vietnamese text follows Vietnamese academic conventions.

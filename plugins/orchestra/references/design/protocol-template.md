@@ -87,5 +87,5 @@ goes through `search_lit.py add` and `verify_refs.py`
 
 1. Chan AW, Boutron I, Hopewell S, et al. SPIRIT 2025 statement. BMJ. 2025;389:e081477.
    doi:10.1136/bmj-2024-081477. PMID: 40294953.
-2. Hopewell S, Chan AW, Collins GS, et al. CONSORT 2025 statement. BMJ. 2025;388:e081123.
-   doi:10.1136/bmj-2024-081123.
+2. Hopewell S, Chan AW, Collins GS, et al. CONSORT 2025 statement. BMJ. 2025;389:e081123.
+   doi:10.1136/bmj-2024-081123. PMID: 40228833.

@@ -37,7 +37,8 @@ size) in plain words at its first use, so they can defend it before a committee 
 - Ask **once**, in one question, for everything still missing; never one question at a time.
 - If the user says not to ask ("cứ làm luôn", "just do it"): do not ask. Open the answer with an
   **Assumptions / Giả định** box listing every assumption made, and put the riskiest one in the list of
-  items for the user to confirm; record the box in `decisions.md`.
+  items for the user to confirm; record the box in `decisions.md`. This never opens a gate:
+  `gate.py open` runs only after the author approves in chat (a gate is the author's act).
 
 ## The seven steps (in order, none skipped)
 
@@ -174,7 +175,8 @@ The script needs no scipy (it falls back to Python's `statistics.NormalDist`, Py
   power 0.6182.
 - When varying the control proportion `p1`, add `--link rr` (keep RR) or `--link arr` (keep ARR) so p₂
   is recomputed; without a link p₂ stays fixed and the script stops with a message if p1 = p2.
-  (`--link d` keeps Cohen d when varying `sd`.)
+  (`--link d` keeps Cohen d when varying `sd`; the table is then constant by construction, so never
+  present it as an SD sensitivity analysis.)
 - ANCOVA as the main analysis: n × (1 − r²) with a sourced r, otherwise keep the t-test n (conservative).
   Matched case-control: `two-props` is only an approximation; state it.
 - AI/ML studies: the validation set counts patients (`prevalence --n-clusters --icc`), prediction models
@@ -204,17 +206,18 @@ paragraph below.
    cơ sở).
 7. **Main statistical test** + alternative test + reason.
 8. **SAP** (when asked for, or when the user is writing a protocol) per `sap-template.md`.
-9. **References**: Vancouver, numbered; bibliographic details (year, volume, pages) taken from PubMed
-   metadata for papers from every source, OpenEvidence and Consensus included; each item has a PMID or
-   DOI, entered through `search_lit.py add` and checked by `verify_refs.py`.
+9. **References**: cite as `[@id]` (`evidence-policy.md` §Citing sources); bibliographic details (year,
+   volume, pages) come from the ledger records that `search_lit.py add` built from PubMed metadata, for
+   papers from every source, OpenEvidence and Consensus included; check with
+   `verify_refs.py <project> --cite <file>`; numbers come only from `cite_render.py`.
 
 **Where it goes**: in a project, write items 1–7 and 9 to `03_protocol/sample-size.md` and item 8 to
 `03_protocol/sap.md`, in `project.yaml → language.output` (chat follows the user; when the output is
 Vietnamese, keep the English statistical term in brackets at its first use). Fill section 2.3.2 of
 `03_protocol/protocol.md` from the justification paragraph. Without a project folder, answer in chat and
 ask in one line at the end whether to save it (saving needs a project: `research-project-setup`). No
-remarks about "the limitations of AI". End in the order of evidence-policy §Citing sources when several
-tools are combined (the single confirmation question → the sources line → any Consensus notice, in chat
+remarks about "the limitations of AI". End in the order of evidence-policy §Citing sources (the
+single confirmation question → the sources line → any Consensus notice, in chat
 only).
 
 ## Gate G2 and hand-off

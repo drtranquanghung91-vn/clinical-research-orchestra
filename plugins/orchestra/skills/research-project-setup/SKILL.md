@@ -12,7 +12,7 @@ Every orchestra skill reads and writes one project folder. `<project>` below mea
    (thesis-ckii, thesis-masters, thesis-phd, de-tai-co-so, manuscript, review, systematic-review,
    case-report, poster-only); study design; output language (vi/en); folder location.
    If the user says "cứ làm luôn"/"just do it", choose sensible defaults and write them as an
-   **Assumptions / Giả định** box, then record it in `decisions.md`.
+   **Assumptions / Giả định** box, then record it in `decisions.md`. This never opens a gate.
 2. Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/init_project.py" <dest> --title "<title>" --type <type> --design <design> --output-lang <vi|en> --chat-lang <vi|en>`.
    Use `python3` if `python` is not found. `--chat-lang` is the language the user is writing in.
    Put the title in double quotes and escape any `\"`, `$` or backtick in it.

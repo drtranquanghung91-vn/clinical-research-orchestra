@@ -56,7 +56,7 @@ Thuốc D có thể làm giảm đau ở người lớn mắc bệnh X, nhưng c
 | Certainty | English | Tiếng Việt |
 |---|---|---|
 | High | reduces, increases, is associated with | làm giảm, làm tăng, có liên quan đến |
-| Moderate | probably reduces, likely | nhiều khả năng làm giảm, thường |
+| Moderate | probably reduces / is likely to reduce | có lẽ / nhiều khả năng làm giảm |
 | Low | may reduce, suggests | có thể làm giảm, gợi ý |
 | Very low | it is uncertain whether | chưa rõ liệu |
 

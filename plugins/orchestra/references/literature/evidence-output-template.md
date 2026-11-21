@@ -42,7 +42,7 @@ English:
 
 **Gap {n}: {one-sentence statement}**
 - Type: {population / evidence / conflicting / methodological / outcome / implementation / outdated}
-- Evidence: {empty cell in the map; SR [n] concludes "..."; conflicting results [a] vs [b]}
+- Evidence: {empty cell in the map; SR [@id] concludes "..."; conflicting results [a] vs [b]}
 - Counter-check: {query run aimed at this gap, source, number of results, conclusion}
 - Suggested research question (PICO/PECO): {...}
 - Feasibility for the user: {high / medium / low + reason}
@@ -51,7 +51,7 @@ Vietnamese:
 
 **Gap {n}: {phát biểu một câu}**
 - Loại: {population / evidence / conflicting / methodological / outcome / implementation / outdated}
-- Bằng chứng: {ô trống trong map; SR [n] kết luận "..."; kết quả trái chiều [a] vs [b]}
+- Bằng chứng: {ô trống trong map; SR [@id] kết luận "..."; kết quả trái chiều [a] vs [b]}
 - Kiểm tra phản chứng: {truy vấn đã chạy nhắm gap này, nguồn, số kết quả, kết luận}
 - Câu hỏi nghiên cứu gợi ý (PICO/PECO): {...}
 - Mức khả thi cho người dùng: {cao / trung bình / thấp + lý do}

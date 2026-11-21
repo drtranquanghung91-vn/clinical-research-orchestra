@@ -37,7 +37,8 @@ need: the variables table becomes the CRF and data dictionary; the hand-off bloc
   tests can be done.
 - If the user says not to ask ("cứ làm luôn", "just do it"): do not ask. Open the answer with an
   **Assumptions / Giả định** box listing every assumption made, put the riskiest one in the
-  confirmation list (§Output, Part C), and record the box in `decisions.md`.
+  confirmation list (§Output, Part C), and record the box in `decisions.md`. This never opens a gate:
+  `gate.py open` runs only after the author approves in chat (a gate is the author's act).
 
 ## Gate G1
 
@@ -246,8 +247,10 @@ it. Section 2.3.2 Sample size stays empty with the note "calculated at the next 
    confounders to adjust for, parameters still to find → `sample-size-sap`.
 4. **Items for the user to confirm**: at most 3 main items (**default**); each may hold a few related
    points.
-5. **References**: Vancouver, with PMID or DOI; NCT numbers and Ministry of Health documents cited as in
-   `evidence-policy.md`.
+5. **References**: cite as `[@id]` from `ledgers/references.json` (`evidence-policy.md` §Citing
+   sources), check with `verify_refs.py <project> --cite 03_protocol/protocol.md`; the numbered Vancouver
+   list comes only from `cite_render.py` (a `.numbered.md` view, or the assembled thesis in one pass).
+   NCT numbers and Ministry of Health documents enter the ledger as in `evidence-policy.md`.
 
 **Where it goes**: in a project, write `03_protocol/protocol.md` and `03_protocol/variables.md` in
 `project.yaml → language.output` (chat follows the user) and set `STATUS.md` row 3 to `doing`. Without a

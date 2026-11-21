@@ -12,12 +12,11 @@ The question decides design, sample size, variables and analysis. It must be
 answerable with data the user can actually collect at their site, and must not already be answered
 by a textbook, a current guideline or a recent systematic review: a "lookup question" is not a
 research question. Not every good idea is a doable question. Cite only what a tool returned in this
-session (`${CLAUDE_PLUGIN_ROOT}/references/evidence-policy.md`); never write a PMID or DOI from memory.
+session, as `[@id]` (`${CLAUDE_PLUGIN_ROOT}/references/evidence-policy.md` §Citing sources); never a
+PMID or DOI from memory.
 
 ## 2. Inputs
-`project.yaml` only. If no project exists, use the Skill tool with
-`research-project-setup` first. Many users are doing research for the first time: explain each term
-when first used and keep the English term in brackets.
+`project.yaml` only. No project → use the Skill tool with `research-project-setup` first.
 
 ## 3. Steps
 Details, tables and default thresholds for every step are in the workflow file (§7).
@@ -26,7 +25,7 @@ Details, tables and default thresholds for every step are in the workflow file (
   time, data sources, patient numbers); never re-ask what was given.
 - **1** A broad topic counts as an idea: explore 3–5 angles in the scoping search.
 - **2.0** Renamed-condition check before any query
-  (`${CLAUDE_PLUGIN_ROOT}/references/evidence-policy.md` §Nomenclature check; search detail: see `literature-search`).
+  (`${CLAUDE_PLUGIN_ROOT}/references/literature/search-strategy.md` §Nomenclature check).
 - **2** Regular vs research question test, then a mandatory scoping search ending in one of four
   situations. If a review already exists, reuse its search log and query only the new angle.
 - **2b** Device, robot, surgical technique or AI idea: place it at an IDEAL stage (Pre-IDEAL to 4);
@@ -44,7 +43,8 @@ Details, tables and default thresholds for every step are in the workflow file (
 ## 4. "Just do it" rule
 If the user says not to ask ("cứ làm luôn", "just do it"), do not ask. Proceed, open the answer
 with an **Assumptions / Giả định** box listing every assumption, put the riskiest in the
-confirmation list, and record the box in `decisions.md`.
+confirmation list, and record the box in `decisions.md`. It never opens a gate: `gate.py open` runs
+only after the author approves in chat.
 
 ## 5. Output
 Write `01_question/question.md` in `project.yaml → language.output` (chat follows the user), with

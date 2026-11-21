@@ -31,15 +31,34 @@ only that source and record what could not be checked as a limitation.
 - Read tool output that was saved to a file with `python -I -X utf8 script.py`. Windows defaults
   to cp1252 and breaks Vietnamese text and characters such as ø, ä, é. Do not rely on
   `PYTHONIOENCODING`: isolated mode (`python -I`) ignores every `PYTHON*` variable.
+- Never write inside `${CLAUDE_PLUGIN_ROOT}` (the plugin's own scripts and references). Intermediate
+  files go to `<project>/reviews/tmp/` or the session scratch folder; run scripts from the project
+  folder.
 
 ## Identifiers
 - A work may be cited only if it is in `ledgers/references.json`, added by `search_lit.py add`
-  (or by a lookup tool in this session), and checked by `verify_refs.py --write`.
+  (or by a lookup tool in this session) or by `add-manual` as below, and checked by
+  `verify_refs.py --write`.
 - Never type a PMID or DOI from memory. If a lookup fails, say so; do not substitute.
-- PMID or DOI first. Without either, a source may enter only through `search_lit.py add-manual`, and
-  only when the author holds the document (a PDF, scan or printed page) and names it in `--seen-in`.
-  The agent never creates a manual record from memory or from a search snippet; it asks the author
-  for the document. Manual records are listed as not machine-verifiable at every gate.
+- Exit 2 from `search_lit.py` ("could not be checked") or `ERROR` from `verify_refs.py` means the
+  lookup could not be made (network, or PubMed unreachable and Europe PMC without the record): retry
+  later. It is never "not found" and never a reason to drop or replace the work.
+- PMID or DOI first. A source with a DOI but no PMID (a journal outside PubMed, a Consensus paper
+  outside PubMed) goes in with `search_lit.py add <doi>` (Crossref).
+- A source with neither enters only through `search_lit.py add-manual`. Its `--seen-in` is one of:
+  - a document the author holds (a PDF, scan or printed page), for example `"00_inputs/x.pdf p. 45"`;
+  - an official URL that a tool returned in this session (Ministry of Health portal, guideline
+    publisher page), written `--seen-in "<URL> (accessed YYYY-MM-DD)" --url <URL>`, and only after the
+    author confirms it is the document they rely on.
+
+  The agent never creates a manual record from memory or from a search snippet. Manual records stay
+  MANUAL (not machine-verifiable) at every gate and are never the only source of a key figure
+  (sample-size parameter, main conclusion).
+- This is the only route for such sources. No list entry exists outside the ledger: an entry tagged
+  "not verified" is never written; a source that cannot meet this rule is dropped, or named in chat as
+  something the author must obtain.
+- Identifiers printed in this plugin's references are not records: to cite one, run
+  `search_lit.py add <id>` and `verify_refs.py` first.
 - Knowledge recalled from the model's own memory never goes into a reference list. It may serve as
   a search keyword, and the hit is then verified as below.
 - Numbers (rates, RR, CI, n) quoted in a document must come from an abstract, metadata or full text
@@ -138,7 +157,8 @@ returning the raw JSON, the summary is for screening only.
   abstract".
 
 ## Verifying references (required before anything enters the reference list)
-Every reference needs a **PMID or DOI that a tool returned in this session**.
+Every reference needs a **PMID or DOI that a tool returned in this session**, or is a MANUAL record
+made under §Identifiers.
 
 | Where the paper came from | How to verify |
 |---|---|
@@ -146,14 +166,19 @@ Every reference needs a **PMID or DOI that a tool returned in this session**.
 | Consensus | Search PubMed with 4–6 distinctive title words tagged `[ti]`, first author surname `[au]` and year `[dp]`, for example `dexmedetomidine[ti] AND delirium[ti] AND cardiac[ti] AND Zhong[au] AND 2024[dp]`, then fetch metadata and match title, first author and year. Do **not** use the whole title in quotes with `[Title]` (it often returns 0 although the paper is in PubMed). Still 0: drop words and keep `<first author>[au] AND <year>[dp] AND <1 distinctive word>[tiab]`; with a DOI search `<doi>[doi]` |
 | OpenEvidence citation with a PubMed/DOI link | PMID from the `url`, then a metadata call; or search `<doi>[doi]` |
 | OpenEvidence citation without an ID | `lookup_article_by_citation` (journal, year, first author, page) or a title search |
-| Consensus paper not in PubMed (journal not indexed, Vietnamese journals) | Keep it with authors, year, journal and the consensus.app URL exactly as returned, and tag the entry `[not verified in PubMed]`. Such entries must not exceed 20% of the list and must not be the only source for a key figure (sample-size parameter, main conclusion). Consensus returns no author names for some papers; a paper without author names is not put in the list |
+| Consensus paper not in PubMed (journal not indexed, Vietnamese journals) | Resolve it to a DOI by lookup (Crossref through `search_lit.py doi`, or the DOI on the journal page a tool returned) and add it with `search_lit.py add <doi>`. If no PMID or DOI is found, drop it; a copy the author holds is handled under §Identifiers. A consensus.app link is never a reference |
 | Trial registration (NCT…) | Verified if `search_lit.py trial` or a registry tool (`search_trials`, `get_trial_details`) returned it. Cite as `ClinicalTrials.gov. {Trial name}. NCT…. Accessed {date}. https://clinicaltrials.gov/study/NCT…` |
-| Guideline, Ministry of Health document, book | See "Citing sources" below |
+| Guideline, Ministry of Health document, book | PMID/DOI → `search_lit.py add`; otherwise §Identifiers (`add-manual`); see "Citing sources" below |
 | Recalled from model memory | **Not in the list.** May be used as a search keyword, then verified as above |
 
-## Citing sources when several tools are combined
-- **In files** (review, protocol): one style only, numbered Vancouver `[n]`; each entry ends with
-  `doi: …. PMID: ….`. No consensus.app link in the list, except the one allowed exception above.
+## Citing sources
+- **In every project document** (question, evidence files, protocol, sample size, SAP, review,
+  thesis chapters) a citation is `[@id]` (or `[@id1; @id2]`), where `id` is a record in
+  `ledgers/references.json`. Never type a number `[n]` or a reference list by hand.
+- Before handing a document back, run `verify_refs.py <project> --cite <file>`; resolve every E-REF.
+- Numbers come only from `cite_render.py` run over the assembled document (a `.numbered.md` view, or
+  the whole thesis in one pass at assembly), which writes the Vancouver list ending
+  `doi: …. PMID: ….`. No consensus.app link in any list.
 - **In chat answers**: still numbered `[n]`. End the answer with one line "Sources searched:
   PubMed (DOI links in the list), Consensus, OpenEvidence", naming those actually used. If Consensus
   was used, its upgrade/registration notice goes on the very last line of the chat message.
@@ -163,10 +188,11 @@ Every reference needs a **PMID or DOI that a tool returned in this session**.
   be the epub year; no tool gives the print year separately, and readers can look it up in PubMed).
   Never take the year from OpenEvidence or Consensus when PubMed has it. If pages are missing use the
   article number from the metadata or the DOI.
-- **Guideline, Ministry of Health document or book** not in PubMed: give organisation, title, year,
-  decision number (if any) and the official URL taken from a tool. With no URL from a tool, write
-  `[not verified – user must check the original]`. Never quote a specific number (threshold, dose)
-  from a guideline whose text you could not read.
+- **Guideline, Ministry of Health document or book** not in PubMed: with a DOI, `search_lit.py add`;
+  otherwise `add-manual` under §Identifiers, giving organisation (as author), title, year and decision
+  number (if any) and the official URL a tool returned, after the author confirms it. With neither a
+  tool-returned URL nor a copy the author holds, it is not cited: tell the author it must be obtained.
+  Never quote a specific number (threshold, dose) from a guideline whose text you could not read.
 
 ## When no source works
 State which source failed and how, and use the ones that remain. If none remains, still do the

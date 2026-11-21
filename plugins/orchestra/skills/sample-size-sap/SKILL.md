@@ -17,7 +17,7 @@ in plain words.
 ## 2. Inputs
 `03_protocol/protocol.md` (from `protocol-design`) and `02_evidence/*`. No question yet → use the Skill
 tool with `research-question`. Ask once for everything missing; if told not to ask, open with an
-**Assumptions / Giả định** box.
+**Assumptions / Giả định** box (this never opens a gate).
 
 ## 3. Seven steps, in order
 1. Question as PICO/PECO and design.
@@ -48,15 +48,16 @@ when n is fixed. Step 6 also runs `power` for the key secondary outcome under hi
 - Qualitative: information power and saturation (Malterud 2016; Hennink & Kaiser 2022); no formula.
 - Pilot or feasibility trial: sized by precision; no efficacy power.
 - ANCOVA: n × (1 − r²). Matched case-control: `two-props` only approximates; say so.
-- AI/ML: the validation set counts patients, `--n-clusters --icc` for clustering; prediction models
-  follow Riley 2020 (pmsampsize); training sets use learning curves.
+- AI/ML: the validation set counts patients, `prevalence --n-clusters --icc` for clustering;
+  prediction models follow Riley 2020 (pmsampsize); training sets use learning curves.
 - Infeasible: n above about 3 × feasible recruitment (a default) → change outcome, design or follow-up;
   ask the author.
 
 ## 6. Output
 `03_protocol/sample-size.md` (summary, parameter table, n, sensitivity table, justification, a "how to
 explain this to the committee" paragraph, main test) and `03_protocol/sap.md`, in
-`project.yaml → language.output`. No project: answer in chat and offer to save. Then ask the author to
+`project.yaml → language.output`, citing as `[@id]` (`${CLAUDE_PLUGIN_ROOT}/references/evidence-policy.md`
+§Citing sources). No project: answer in chat and offer to save. Then ask the author to
 approve; after approval run
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" open <project> G2 --by "<author>"` and set `STATUS.md`
 row 3 to `done`.

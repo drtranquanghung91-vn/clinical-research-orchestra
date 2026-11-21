@@ -22,7 +22,7 @@ Answer them in this order, for the user's own decision:
 - Check source credibility first (retraction, journal, registration, duplicate publication): `${CLAUDE_PLUGIN_ROOT}/references/appraisal-tools/source-credibility.md`.
 
 ## 3. Input
-One reference id from `ledgers/references.json` (the call from `literature-search` step 4c), or a PDF, PMID or DOI the user gives. Use full text when available. With an abstract only, write "preliminary appraisal from abstract" at the top and mark unassessable domains "Unclear, needs full text". Trials: compare the registered outcome with the reported one. Ask once what decision the paper informs; if the user says not to ask, open with an **Assumptions / Giả định** box.
+One reference id from `ledgers/references.json` (the call from `literature-search` step 4c), or a PDF, PMID or DOI the user gives. Use full text when available. With an abstract only, write "preliminary appraisal from abstract" at the top and mark unassessable domains "Unclear, needs full text". Trials: compare the registered outcome with the reported one. Ask once what decision the paper informs; if the user says not to ask, open with an **Assumptions / Giả định** box (this never opens a gate).
 
 ## 4. Steps
 1. Question: PICO/PECO (SPIDER if qualitative), the paper's beside the user's.

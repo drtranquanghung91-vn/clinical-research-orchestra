@@ -31,7 +31,8 @@ Needed, six items:
 - If the user gave items 1–3, assume the rest (label each one "assumption" / "giả định") and continue.
 - If the user said not to ask ("không cần hỏi", "cứ làm luôn", "just do it"): do not ask. Open the
   answer with an **Assumptions / Giả định** box listing every assumption, put the riskiest one in
-  the "needs your confirmation" list, and record the box in `decisions.md`.
+  the "needs your confirmation" list, and record the box in `decisions.md`. This never opens a gate:
+  `gate.py open` runs only after the author approves in chat (a gate is the author's act).
 
 ## Step 1 – Broad topic: explore angles
 - An idea that is only a broad topic ("đái tháo đường ở người cao tuổi", diabetes in older people)
@@ -44,36 +45,13 @@ Needed, six items:
   measurement or analysis problem early avoids an unanswerable question (Tuấn 2018).
 
 ## Step 2.0 – Renamed-condition check (before any query)
-Follow `${CLAUDE_PLUGIN_ROOT}/references/evidence-policy.md` §Nomenclature check; the full search
-strategy is handled by `literature-search`. For the scoping search:
-1. Search Consensus and PubMed for the last 2 years (**default**):
-   `{condition} AND (renamed OR "new name" OR nomenclature OR "formerly known as")`, and read the
-   latest guideline or consensus statement.
-2. New name or new diagnostic criteria → the P block holds the MeSH term + old name `[tiab]` + new
-   name `[tiab]` + new abbreviation. MeSH is often updated late; papers using the new name may carry
-   a different MeSH term. Use old and new names in every query below and record the change in the
-   search log.
-3. Check: run `<PMID of a paper that uses the new name>[pmid] AND (P block)`; 0 results → the P block
-   is still incomplete.
-4. Verified example: PCOS → PMOS (*polyendocrine metabolic ovarian syndrome*, 2026): add
-   `"polyendocrine metabolic ovarian syndrome"[tiab] OR PMOS[tiab]`. The 2026 PLoS Med
-   meta-analysis (PMID 42776991) is indexed under
-   MeSH "Metabolic Syndrome" and did not match the standard PCOS query; without this check the
-   scoping search could wrongly conclude that no research exists. Measure what is missed with
-   `(new name) AND (I block) NOT (old P block)`: the GLP-1 RA in PMOS test case (Nov 2026) returned
-   4 papers that the standard PCOS query missed. Record that number in the search log.
-5. Other frequent renamings (check the same way; the list is never complete): NAFLD → MASLD; changed
-   diagnostic criteria (new DSM, KDIGO or ADA versions). The aim is the checking habit, not a list.
-6. **Check intervention and exposure terms too, not only the condition.** Ambiguous or changing
-   terms → list all variants and exclude stray meanings with `NOT`. Verified example (Nov 2026):
-   "robotic" + cardiology also returns robotic percutaneous coronary intervention (CorPath, R-One)
-   and rehabilitation robots; 10 of the first 30 ClinicalTrials.gov trials were off topic. Add
-   `NOT (percutaneous coronary[tiab] OR PCI[tiab] OR rehabilitation[tiab])` and read titles before
-   counting. "Totally endoscopic" may or may not use a robot: separate the two when synthesising.
-   AI: `"artificial intelligence" OR "machine learning" OR "deep learning" OR "computer vision" OR "neural network"`.
-7. **AI, engineering or device topics**: much of the work is published only in IEEE Xplore, arXiv or
-   engineering conferences (MICCAI) and not in PubMed. Search them if a tool is available; otherwise
-   record the gap as a limitation.
+Run steps 1–7 of `${CLAUDE_PLUGIN_ROOT}/references/literature/search-strategy.md` §Nomenclature check
+(the policy rule is `${CLAUDE_PLUGIN_ROOT}/references/evidence-policy.md` §Nomenclature check; the full
+search strategy belongs to `literature-search`). For the scoping search:
+- Use a window of the last 2 years (**default**) for the renaming query, and use old and new names in
+  every scoping query below; record the change in the search log.
+- Without this check the scoping search can wrongly conclude that no research exists: the 2026 PMOS
+  meta-analysis did not match the standard PCOS query (search-strategy.md step 4).
 
 ## Step 2 – Regular vs research question; scoping search
 

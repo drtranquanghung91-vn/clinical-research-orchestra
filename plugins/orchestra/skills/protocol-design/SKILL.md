@@ -21,7 +21,7 @@ No sample size (use `sample-size-sap`); no ethics file or CRF (`ethics-and-crf`,
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" check <project> G1`: if closed, say so and stop unless
 the author waives G1. No clear question → `research-question` first. Ask once for site, period,
 patients per month, randomisation, records, budget; if told not to ask, open with an **Assumptions /
-Giả định** box.
+Giả định** box (this never opens or waives a gate; only the author's approval in chat does).
 
 ## 4. Steps
 Detail for every step is in the workflow file (§7).
@@ -47,7 +47,8 @@ Detail for every step is in the workflow file (§7).
 
 ## 5. Output
 Part A design decision, Part B draft Chapter 2 by the Vietnamese frame (each table once; sample size
-left empty), Part C sample-size hand-off, at most 3 items to confirm, references. Write
+left empty), Part C sample-size hand-off, at most 3 items to confirm, references cited as `[@id]`
+(`${CLAUDE_PLUGIN_ROOT}/references/evidence-policy.md` §Citing sources). Write
 `03_protocol/protocol.md` and `03_protocol/variables.md` in `project.yaml → language.output`; set
 `STATUS.md` row 3 to `doing`. No project: answer in chat and offer to save. Word: the `docx` skill if
 installed.

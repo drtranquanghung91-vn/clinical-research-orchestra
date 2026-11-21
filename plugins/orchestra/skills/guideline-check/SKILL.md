@@ -13,8 +13,8 @@ Requested by Amelia Le: keep the guidelines a study relies on current.
   `${CLAUDE_PLUGIN_ROOT}/references/evidence-policy.md`; record issuing body, year, version, DOI or
   official URL, and the date you checked.
 - **Reporting guidelines** chosen from `project.yaml → design` using
-  `${CLAUDE_PLUGIN_ROOT}/references/reporting-guidelines/index.md`; citations come from
-  `guidelines.json` (already verified).
+  `${CLAUDE_PLUGIN_ROOT}/references/reporting-guidelines/index.md`. Their verified records (PMID, DOI)
+  are in `guidelines.json`; a project that cites one adds it to its own ledger (step 5).
 
 ## Steps
 1. Read `project.yaml`, `01_question/question.md`, `03_protocol/protocol.md` if present.
@@ -23,6 +23,10 @@ Requested by Amelia Le: keep the guidelines a study relies on current.
 3. Flag outdated guidelines anywhere in the project (`grep` the project for the guideline name and year).
 4. Write `02_evidence/guidelines.md` in `language.output`: table `Guideline | Kind | Version used |
    Current version | Checked on | Action`.
-5. Add clinical-guideline papers to the ledger with `search_lit.py add` and verify them.
+5. Add every guideline the project cites to the ledger, reporting guidelines included:
+   `search_lit.py add <project> <pmid>` with the PMID copied from
+   `${CLAUDE_PLUGIN_ROOT}/references/reporting-guidelines/guidelines.json` (never from memory), then
+   `verify_refs.py <project> --write`. A guideline with neither PMID nor DOI follows evidence-policy
+   §Identifiers. Cite them as `[@id]` (`${CLAUDE_PLUGIN_ROOT}/references/evidence-policy.md` §Citing sources).
 6. If a reporting-guideline item mapping is uncertain (for example SPIRIT 2013 → 2025 numbering),
    say so in the table instead of guessing.
