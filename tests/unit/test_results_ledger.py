@@ -95,7 +95,8 @@ class TestResultsLedger(unittest.TestCase):
             z.writestr("xl/worksheets/sheet1.xml", '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
                        '<sheetData><row r="7"><c r="B7" t="s"><v>0</v></c></row></sheetData></worksheet>')
         self.assertEqual(results_ledger.read_xlsx_cell(x, "Out!B7"), "Exp(B) 1.840")
-        self.doc(result(source_file="05_analysis/output/spss.xlsx", locator="Out!B7", raw="Exp(B) 1.840"))
+        self.doc(result(source_file="05_analysis/output/spss.xlsx", locator="Out!B7", raw="Exp(B) 1.840",
+                        ci=None, p=None))
         r = self.run_cli("import", str(self.p), "--verify-raw")
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
@@ -167,3 +168,75 @@ class TestResultsLedger(unittest.TestCase):
         d["data_file"] = "00_inputs/raw.deid.csv"
         probs = results_ledger.validate_doc(d, self.p)
         self.assertTrue(any("data_file" in x for x in probs))
+
+    def _log(self, text):
+        (self.p / "05_analysis" / "output" / "log.txt").write_text("header\n" + text + "\n", encoding="utf-8")
+
+    def test_verify_raw_invented_ci_fails(self):
+        d = self.doc(result(ci=[1.5, 2.79]))
+        probs = results_ledger.validate_doc(d, self.p, verify_raw=True)
+        self.assertTrue(any("ci lo 1.5" in x for x in probs), probs)
+        self.assertFalse(any("ci hi" in x for x in probs), probs)
+
+    def test_verify_raw_invented_p_fails(self):
+        probs = results_ledger.validate_doc(self.doc(result(p=0.04)), self.p, verify_raw=True)
+        self.assertTrue(any("p 0.04" in x for x in probs), probs)
+
+    def test_verify_raw_spss_leading_dot_p(self):
+        self._log("Exp(B) 1.840 95% CI 1.210 2.790 Sig. .032")
+        rec = result(p=0.032, raw="Exp(B) 1.840 95% CI 1.210 2.790 Sig. .032")
+        self.assertEqual(results_ledger.validate_doc(self.doc(rec), self.p, verify_raw=True), [])
+        rec = result(p=0.023, raw="Exp(B) 1.840 95% CI 1.210 2.790 Sig. .032")
+        self.assertTrue(any("p 0.023" in x for x in results_ledger.validate_doc(self.doc(rec), self.p, verify_raw=True)))
+
+    def test_verify_raw_spss_tiny_p(self):
+        self._log("OR 1.84 (95% CI 1.21-2.79) Sig. <.001")
+        rec = result(p=0.0004, raw="OR 1.84 (95% CI 1.21-2.79) Sig. <.001")
+        self.assertEqual(results_ledger.validate_doc(self.doc(rec), self.p, verify_raw=True), [])
+
+    def test_verify_raw_comma_joined_ci(self):
+        self._log("R-A1-001 OR: value=1.84 ci=1.2134,2.7861 p=0.004")
+        rec = result(ci=[1.2134, 2.7861], raw="R-A1-001 OR: value=1.84 ci=1.2134,2.7861 p=0.004")
+        self.assertEqual(results_ledger.validate_doc(self.doc(rec), self.p, verify_raw=True), [])
+        self._log("R-A1-001 OR: value=1.84 ci=-2.5,-2.1018 p=0.004")
+        rec = result(kind="beta", value=1.84, ci=[-2.5, -2.1018], raw="R-A1-001 OR: value=1.84 ci=-2.5,-2.1018 p=0.004")
+        self.assertEqual(results_ledger.validate_doc(self.doc(rec), self.p, verify_raw=True), [])
+
+    def test_verify_raw_negative_ci(self):
+        self._log("MD -0.30 (95% CI -0.55 to -0.05)")
+        rec = result(kind="md", value=-0.3, ci=[-0.55, -0.05], p=None,
+                     raw="MD -0.30 (95% CI -0.55 to -0.05)")
+        self.assertEqual(results_ledger.validate_doc(self.doc(rec), self.p, verify_raw=True), [])
+
+    def test_count_must_be_non_negative_int(self):
+        for bad in (-1, 2.5, True, "3"):
+            probs = results_ledger.validate_doc(self.doc(result(count=bad)), self.p)
+            self.assertTrue(any("count" in x for x in probs), bad)
+        self.assertEqual(results_ledger.validate_doc(self.doc(result(count=0)), self.p), [])
+        self.assertEqual(results_ledger.validate_doc(self.doc(result(count=134)), self.p), [])
+
+    def test_relabel_blocked_unless_accepted(self):
+        self.doc(result())
+        self.assertEqual(self.run_cli("import", str(self.p)).returncode, 0)
+        led = self.p / "ledgers" / "results-ledger.json"
+        before = led.read_text(encoding="utf-8")
+        self.doc(result(label="crude OR", kind="rr"), result(id="R-A1-002"))
+        r = self.run_cli("import", str(self.p))
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("R-A1-001", r.stderr)
+        self.assertIn("label", r.stderr)
+        self.assertIn("kind", r.stderr)
+        self.assertEqual(led.read_text(encoding="utf-8"), before)
+        r = self.run_cli("import", str(self.p), "--accept-relabel")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(len(json.loads(led.read_text(encoding="utf-8"))["results"]), 2)
+
+    def test_removed_id_blocked_new_id_fine(self):
+        self.doc(result())
+        self.run_cli("import", str(self.p))
+        self.doc(result(id="R-A1-002"))
+        r = self.run_cli("import", str(self.p))
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("R-A1-001: removed", r.stderr)
+        self.doc(result(), result(id="R-A1-002"))
+        self.assertEqual(self.run_cli("import", str(self.p)).returncode, 0)

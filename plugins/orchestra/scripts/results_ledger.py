@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """Import an analysis's results.json into the project's results ledger.
 
-  python results_ledger.py import <project> [--from FILE] [--verify-raw]
+  python results_ledger.py import <project> [--from FILE] [--verify-raw] [--accept-relabel]
 
 FILE defaults to <project>/05_analysis/output/results.json. --verify-raw checks that each record's `raw`
 text is found at its `locator` in `source_file` ("line N" for text/CSV, "Sheet!A1" for .xlsx) and that
-its `value` appears in `raw` at the printed precision. The ledger is written only when every record is valid.
-Exit codes: 0 = imported; 1 = invalid records (listed, nothing written); 2 = usage or I/O error.
+its `value`, each `ci` bound and its `p` appear in `raw` at the printed precision (SPSS-style ".032" and
+"<.001" are read). Optional `count` must be a non-negative integer (rendered by {{R-...count}}).
+The ledger is written only when every record is valid. When a ledger already exists, a changed `label` or
+`kind` for an id, or a removed id, is listed on stderr and refused (exit 1) unless --accept-relabel is
+given; new ids are always fine.
+Exit codes: 0 = imported; 1 = invalid records or refused relabel (listed, nothing written); 2 = usage or
+I/O error.
 """
 from __future__ import annotations
 
@@ -16,6 +21,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
+from decimal import Decimal
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -71,6 +77,24 @@ def _num(x) -> bool:
     return isinstance(x, (int, float)) and not isinstance(x, bool)
 
 
+class RelabelError(Exception):
+    pass
+
+
+def _in_raw(x, raw: str, min_dec: int, is_p: bool = False) -> bool:
+    """True when some number in `raw` equals x rounded at that number's own decimals (>= min_dec)."""
+    # "ci=0.52,1.09" (comma-joined, as crostats logs it) is also read with the comma as a separator
+    split = re.sub(r"(\d\.\d+),(?=-?[.\d])", r"\1 ", raw)
+    for _, v, d in numfmt.parse_tokens(raw, "any") + (numfmt.parse_tokens(split, "any") if split != raw else []):
+        if d < min_dec:
+            continue
+        if numfmt.matches(v, d, [x]):
+            return True
+        if is_p and x < 0.0005 and d == 3 and v in (0, Decimal("0.001")):
+            return True  # "<.001" or ".000" for a tiny p
+    return False
+
+
 def validate_doc(doc: dict, project: Path, verify_raw: bool = False) -> list[str]:
     probs: list[str] = []
     if not isinstance(doc, dict):
@@ -114,6 +138,9 @@ def validate_doc(doc: dict, project: Path, verify_raw: bool = False) -> list[str
         p = rec.get("p")
         if p is not None and not (_num(p) and 0 <= p <= 1):
             probs.append(f"{rid}: p must be between 0 and 1")
+        cnt = rec.get("count")
+        if cnt is not None and not (isinstance(cnt, int) and not isinstance(cnt, bool) and cnt >= 0):
+            probs.append(f"{rid}: count must be a non-negative integer")
         src = Path(rec["source_file"])
         target = (project / src).resolve()
         if src.anchor or ".." in src.parts or not target.is_relative_to(root) or not target.is_file():
@@ -127,18 +154,47 @@ def validate_doc(doc: dict, project: Path, verify_raw: bool = False) -> list[str
                 continue
             if str(rec["raw"]) not in text:
                 probs.append(f"{rid}: raw text not found at {rec['locator']}")
-            elif _num(rec["value"]) and not any(
-                    numfmt.matches(v, d, [rec["value"]]) for _, v, d in numfmt.parse_tokens(str(rec["raw"]), "any")):
-                probs.append(f"{rid}: value {rec['value']} does not appear in raw")
+            else:
+                raw, prec = str(rec["raw"]), numfmt._precision(rec["kind"])
+                if _num(rec["value"]) and not _in_raw(rec["value"], raw, 0, rec["kind"] == "p"):
+                    probs.append(f"{rid}: value {rec['value']} does not appear in raw")
+                if isinstance(ci, list) and len(ci) == 2 and all(map(_num, ci)):
+                    for name, b in zip(("lo", "hi"), ci):
+                        if not _in_raw(b, raw, min(prec, 1)):
+                            probs.append(f"{rid}: ci {name} {b} does not appear in raw")
+                if _num(p) and not _in_raw(p, raw, 1, True):
+                    probs.append(f"{rid}: p {p} does not appear in raw")
     return probs
 
 
-def import_results(project: Path, src: Path | None = None, verify_raw: bool = False) -> tuple[int, list[str]]:
+def relabel_changes(old, new_results: list) -> list[str]:
+    """Label/kind changes and removed ids between an existing ledger and the incoming results."""
+    olds = old.get("results", []) if isinstance(old, dict) else []
+    old_by = {r["id"]: r for r in olds if isinstance(r, dict) and isinstance(r.get("id"), str)}
+    new_by = {r["id"]: r for r in new_results}
+    out = []
+    for rid, o in old_by.items():
+        if rid not in new_by:
+            out.append(f"{rid}: removed from the incoming results")
+            continue
+        for f in ("label", "kind"):
+            if o.get(f) != new_by[rid].get(f):
+                out.append(f"{rid}: {f} changed from {o.get(f)!r} to {new_by[rid].get(f)!r}")
+    return out
+
+
+def import_results(project: Path, src: Path | None = None, verify_raw: bool = False,
+                   accept_relabel: bool = False) -> tuple[int, list[str]]:
     src = src or project / "05_analysis" / "output" / "results.json"
     doc = json.loads(src.read_text(encoding="utf-8"))
     probs = validate_doc(doc, project, verify_raw)
     if probs:
         return 0, probs
+    existing = project / "ledgers" / "results-ledger.json"
+    if existing.is_file() and not accept_relabel:
+        changes = relabel_changes(json.loads(existing.read_text(encoding="utf-8-sig")), doc["results"])
+        if changes:
+            raise RelabelError("\n".join(changes))
     records = [dict(r, data_sha256=doc.get("data_sha256", ""), locked=False) for r in doc["results"]]
     out = project / "ledgers" / "results-ledger.json"
     out.write_text(json.dumps({"results": records}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -155,6 +211,7 @@ def main(argv=None) -> int:
     ap.add_argument("project")
     ap.add_argument("--from", dest="src")
     ap.add_argument("--verify-raw", action="store_true")
+    ap.add_argument("--accept-relabel", action="store_true")
     a = ap.parse_args(argv)
     project = Path(a.project)
     if not (project / "ledgers").is_dir():
@@ -162,7 +219,12 @@ def main(argv=None) -> int:
         return 2
     src = Path(a.src) if a.src else None
     try:
-        n, probs = import_results(project, src, a.verify_raw)
+        n, probs = import_results(project, src, a.verify_raw, a.accept_relabel)
+    except RelabelError as e:
+        print(str(e), file=sys.stderr)
+        print("results_ledger: label/kind changed or ids removed vs the existing ledger; ledger not written "
+              "(re-run with --accept-relabel to accept)", file=sys.stderr)
+        return 1
     except (OSError, ValueError) as e:
         print(f"results_ledger: {type(e).__name__}: {e}", file=sys.stderr)
         return 2

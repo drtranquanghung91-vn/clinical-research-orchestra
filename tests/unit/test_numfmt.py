@@ -55,3 +55,28 @@ class TestNumfmt(unittest.TestCase):
     def test_p_kind_value_uses_fmt_p(self):
         self.assertEqual(numfmt.render({"kind": "p", "value": 0.0004}, "value", "en"), "< 0.001")
         self.assertEqual(numfmt.render({"kind": "p", "value": 0.0381}, "value", "en"), "0.038")
+
+    def test_leading_dot_and_comma_decimals_in_any(self):
+        toks = numfmt.parse_tokens("p = .032 and p = ,032", "any")
+        self.assertEqual([(t, v, d) for t, v, d in toks], [(".032", Decimal("0.032"), 3), (",032", Decimal("0.032"), 3)])
+
+    def test_negative_ranges_use_words(self):
+        self.assertEqual(numfmt.fmt_range(-1.2, -0.5, 2, "en"), "-1.20 to -0.50")
+        self.assertEqual(numfmt.fmt_range(-0.18, 1.42, 2, "vi"), "-0,18 đến 1,42")
+        self.assertEqual(numfmt.fmt_range(0.18, 1.42, 2, "vi"), "0,18–1,42")
+        rec = {"kind": "md", "value": -0.3, "ci": [-0.55, -0.05]}
+        self.assertEqual(numfmt.render(rec, "full", "en"), "-0.30 (95% CI -0.55 to -0.05)")
+
+    def test_no_negative_zero(self):
+        self.assertEqual(numfmt.fmt(-0.001, 2), "0.00")
+        self.assertEqual(numfmt.fmt(-0.004, 2, "vi"), "0,00")
+        self.assertEqual(numfmt.fmt_range(-0.001, 1.0, 2), "0.00–1.00")
+
+    def test_count_part(self):
+        self.assertEqual(numfmt.render({"kind": "percent", "value": 12.5, "count": 1070}, "count", "en"), "1070")
+        with self.assertRaises(KeyError):
+            numfmt.render({"kind": "percent", "value": 12.5}, "count", "en")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -119,6 +119,18 @@ class TestRender(unittest.TestCase):
         self.assertEqual((self.p / "ch3.rendered.md").read_text(encoding="utf-8"),
                          "| OR | p |\n|---|---|\n| 1,84 | 0,004 |\n")
 
+    def test_count_part(self):
+        by_id = {r["id"]: r for r in LEDGER["results"]}
+        out, probs = render_results.render_text("{{R-A0-001.count}} of them; {{R-A1-001.count}}", by_id, "en")
+        self.assertEqual(out.split(";")[0], "134 of them")
+        self.assertEqual(len(probs), 1)
+        self.assertIn("no 'count'", probs[0])
+
+    def test_negative_ci_renders_with_words(self):
+        by_id = {"R-A2-001": {"id": "R-A2-001", "kind": "md", "value": -0.3, "ci": [-0.55, 0.05]}}
+        out, probs = render_results.render_text("{{R-A2-001.ci}}", by_id, "vi")
+        self.assertEqual((out, probs), ("-0,55 đến 0,05", []))
+
 
 if __name__ == "__main__":
     unittest.main()
