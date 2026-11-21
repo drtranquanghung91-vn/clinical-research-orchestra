@@ -219,7 +219,7 @@ primary result is null: OR for HbA1c 0.99, 95% CI 0.74 to 1.34, p = 0.972).
   Which part of the fix changed the path is not isolated: run 2 simply chose `statistical-analysis` instead of `results-writing`.
 
 ### spss-import
-- Fixture `fixtures/spss-import/`: the cohort project plus `00_inputs/spss-output.txt` (15 lines, SPSS style, logistic regression
+- Fixture `fixtures/spss-import/`: the cohort project plus `00_inputs/spss-output.txt` (16 lines, incl. a leading-dot `Sig. = .032`, SPSS style, logistic regression
   readmit ~ hba1c + age computed from the fixture data: hba1c Exp(B) .995, CI .739 to 1.338, Sig. .972; age 1.003, .974 to
   1.033, .846; omnibus chi-square 0.040, Sig. .980). No results.json.
 - RED (19 turns, USD 0.40): read the project and the SPSS file, wrote `05_analysis/results.md` (table and interpretation),

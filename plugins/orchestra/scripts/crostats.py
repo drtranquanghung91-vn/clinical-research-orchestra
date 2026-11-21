@@ -71,7 +71,8 @@ def _round_half_up(x, decimals: int) -> Decimal:
 
 def _fmt(x, decimals: int) -> str:
     """x with `decimals` decimals, rounded half up (numfmt.fmt, English)."""
-    return format(_round_half_up(x, decimals), "f")
+    s = format(_round_half_up(x, decimals), "f")
+    return s[1:] if s.startswith("-") and not s.strip("-0.") else s  # no negative zero
 
 
 def _fmt_p(p) -> str:

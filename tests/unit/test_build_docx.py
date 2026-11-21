@@ -82,7 +82,7 @@ class TestBuildDocx(unittest.TestCase):
         self.assertIn("p* và ", doc)
 
     def test_escaped_pipe_in_cell(self):
-        md = "| A | B |\n|---|---|\n| a\|b | c |\n"
+        md = "| A | B |\n|---|---|\n| a\\|b | c |\n"
         doc = self.doc_xml(build_docx.build(md, build_docx.settings_from_project(None)))
         self.assertIn(">a|b<", doc)
         self.assertEqual(doc.count("<w:tc>"), 4)
