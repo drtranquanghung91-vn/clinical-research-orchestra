@@ -42,7 +42,7 @@ The spec is a JSON file, for example `07_present/defense/deck.json`. Paths in it
   rendering. Default: the project's `language.output` when `--project` is given, else `en`.
 - `size_cm` `[width, height]`: slide size in centimetres, for a one-slide poster. Default 16:9
   (33.87 × 19.05 cm). Margins, font sizes and line widths scale with the width (1.0 at 13.333 in),
-  so a 90 cm poster gets body text of about 53 pt. It overrides the size of a `template`.
+  so a 90 cm poster gets body text of about 53 pt. It overrides the size of a `template`. Each side is at most 142 cm (PowerPoint's limit); more exits 2.
 - Leave out `template` for a clean deck drawn from `theme`. `layouts` maps slide kinds to the
   template's layouts, by name or, when two masters share a name, by part (`"slideLayout13"`). A slide
   may set `"layout"` to override.
@@ -57,7 +57,8 @@ With `--project DIR`, every string in the spec is rendered before building: `{{R
 `{{R-A1-001.ci}}`, `.p`, `.n`, `.count`, `.full`, formatted from `DIR/ledgers/results-ledger.json`
 with the project's reporting precision and, for `vi`, the decimal comma (`1,84`). An unknown id or a
 part the record lacks exits 2, names where it occurs on stderr and lists the known ids; no file is
-written. Without `--project`, strings are left as they are.
+written. Without `--project`, strings are left as they are and a warning on stderr lists any `{{R-…}}`
+placeholders still in the spec (exit code unchanged).
 
 ## Slide types
 
@@ -93,7 +94,10 @@ reads its `chart` object (format in `figures-spec.md`).
 - `forest`: native XY scatter: an estimate series (square markers, first row at the top), one two-point
   line per confidence interval, a dashed vertical line at `null`. With `"log": true` the x-axis is
   logarithmic base 10 (`c:logBase`). Row labels are a native text column at left and
-  "est (lo–hi)" a text column at right, both aligned to the plot area.
+  "est (lo–hi)" a text column at right, both aligned to the plot area. The right column prints the
+  figure's own text (`chart.rows[i].text`, else `values[i].text`), so the slide shows the ledger's
+  precision and units; only when neither exists is the estimate re-formatted with 2 decimals.
+- The `km` plot area is fixed so each at-risk column is centred under its time on the axis.
 
 When `credit` is not set on a chart slide, the figure's `source` (from the data file) is used.
 All charts stay editable in PowerPoint (right-click, Edit Data).
@@ -104,7 +108,10 @@ All charts stay editable in PowerPoint (right-click, Edit Data).
 `int` (intervention arm), `ctl` (control arm), `primary` (filled, white text) or `muted`. `shape` may
 be `circle`. A node's `text` is a string (newlines start new lines) or a list of lines; the first
 line is bold. Connector sides: 0 top, 1 left, 2 bottom, 3 right; the default runs from the right
-side of `from` to the left side of `to`.
+side of `from` to the left side of `to`. Edges that come from a figure `data.json` carry no usable
+sides (figures.py numbers them differently), so the sides are inferred from the node geometry: a
+target to the right or left of the source is joined side to side (elbow when the rows differ),
+otherwise bottom to top (target below) or top to bottom. Sides written in the spec are kept.
 
 ## Checks (`check_pptx.py`)
 

@@ -55,11 +55,14 @@ def est_overflow(shape) -> float:
     return total / h_pt
 
 
-def render(path: Path, rdir: Path) -> str:
+def render(path: Path, rdir: Path, size_emu=None) -> str:
+    """size_emu = (slide width, slide height): PNGs are exported 1920 px wide at the slide's aspect ratio."""
     rdir.mkdir(parents=True, exist_ok=True)
+    px_w = 1920
+    px_h = round(px_w * size_emu[1] / size_emu[0]) if size_emu and size_emu[0] else 1080
     if sys.platform == "win32":
         ps = (f"$a=New-Object -ComObject PowerPoint.Application;$p=$a.Presentations.Open('{path.resolve()}',$true,$false,$false);"
-              f"foreach($s in $p.Slides){{$s.Export('{rdir.resolve()}\\slide-'+$s.SlideIndex.ToString('00')+'.png','PNG',1920,1080)}};$p.Close();$a.Quit()")
+              f"foreach($s in $p.Slides){{$s.Export('{rdir.resolve()}\\slide-'+$s.SlideIndex.ToString('00')+'.png','PNG',{px_w},{px_h})}};$p.Close();$a.Quit()")
         r = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True)
         if r.returncode == 0 and any(rdir.glob("*.png")):
             return f"rendered with PowerPoint to {rdir}"
@@ -131,7 +134,7 @@ def main(argv=None) -> int:
     for s, kind, what in issues:
         print(f"- slide {s}: {kind} {what}")
     if a.render:
-        print(render(Path(a.pptx), Path(a.render)))
+        print(render(Path(a.pptx), Path(a.render), (W, H)))
     serious = [x for x in issues if x[1] in ("off-slide", "may-overflow", "tiny-text")]
     return 1 if serious else 0
 

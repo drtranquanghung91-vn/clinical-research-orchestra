@@ -170,6 +170,22 @@ class TestCheck(unittest.TestCase):
         self.assertEqual(r.returncode, 2)
 
 
+@unittest.skipUnless(HAVE, "python-pptx not installed")
+class TestRenderAspect(unittest.TestCase):
+    def test_png_export_uses_slide_aspect(self):
+        from unittest import mock
+        calls = []
+
+        def fake_run(args, **kw):
+            calls.append(" ".join(map(str, args)))
+            return mock.Mock(returncode=1, stdout="", stderr="")
+        with tempfile.TemporaryDirectory() as t, mock.patch.object(check_pptx.sys, "platform", "win32"), \
+                mock.patch.object(check_pptx.subprocess, "run", fake_run), \
+                mock.patch.object(check_pptx.shutil, "which", lambda *_: None):
+            check_pptx.render(Path(t) / "a.pptx", Path(t) / "r", (Cm(90), Cm(120)))
+        self.assertTrue(any("1920,2560" in c for c in calls), calls)
+
+
 class TestMissingDependency(unittest.TestCase):
     def test_hint_and_exit_2(self):
         code = ("import sys, runpy; sys.modules['pptx'] = None; sys.argv = [%r, 'a.pptx']; "

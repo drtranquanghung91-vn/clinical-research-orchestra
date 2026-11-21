@@ -26,6 +26,7 @@ import argparse
 import copy
 import json
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -93,6 +94,9 @@ class Builder:
             if (not isinstance(size, (list, tuple)) or len(size) != 2
                     or not all(isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0 for v in size)):
                 raise SpecError('"size_cm" must be [width, height] in centimetres')
+            if max(size) > 142:
+                raise SpecError('"size_cm" is at most 142 cm per side (the PowerPoint limit is 142.24 cm); '
+                                f"got {size[0]} x {size[1]}")
             self.prs.slide_width, self.prs.slide_height = Cm(size[0]), Cm(size[1])
             self.k = size[0] / 2.54 / BASE_W_IN
         self.W, self.H = self.prs.slide_width, self.prs.slide_height
@@ -414,7 +418,9 @@ class Builder:
         if data is not None and data.get("kind") != "diagram":
             raise SpecError(f"slide {idx}: data file {s['data']} is a {data.get('kind')!r} chart, not a diagram")
         nodes = s.get("nodes") or (data or {}).get("nodes", [])
+        from_data = not s.get("edges")
         edges = s.get("edges") or (data or {}).get("edges", [])
+        geom = {n["id"]: n for n in nodes}
         shapes = {}
         styles = {"default": ("#FFFFFF", "primary", "ink"), "int": ("#FBEAE8", "intervention", "ink"),
                   "ctl": ("#EEF1F5", "control", "ink"), "primary": ("primary", "primary", "#FFFFFF"),
@@ -445,9 +451,13 @@ class Builder:
             if e["from"] not in shapes or e["to"] not in shapes:
                 raise SpecError(f"slide {idx}: edge {e['from']} -> {e['to']} names an unknown node")
             a, b = shapes[e["from"]], shapes[e["to"]]
-            con = self.cur.shapes.add_connector(MSO_CONNECTOR.ELBOW if e.get("elbow") else MSO_CONNECTOR.STRAIGHT, 0, 0, 0, 0)
-            con.begin_connect(a, e.get("from_side", 3))
-            con.end_connect(b, e.get("to_side", 1))
+            if from_data:  # figures.py edges: its side numbers differ from ours, so use the geometry
+                fs, ts, elbow = infer_sides(geom[e["from"]], geom[e["to"]])
+            else:
+                fs, ts, elbow = e.get("from_side", 3), e.get("to_side", 1), e.get("elbow")
+            con = self.cur.shapes.add_connector(MSO_CONNECTOR.ELBOW if elbow else MSO_CONNECTOR.STRAIGHT, 0, 0, 0, 0)
+            con.begin_connect(a, fs)
+            con.end_connect(b, ts)
             con.line.color.rgb = self.color("primary")
             con.line.width = self.lw(2)
             ln = con.line._get_or_add_ln()
@@ -469,6 +479,8 @@ class Builder:
         out = dict(ch)
         if d.get("source"):
             out["_source"] = d["source"]
+        if isinstance(d.get("values"), list):
+            out["_values"] = d["values"]
         return out
 
     def style_chart(self, chart, legend=False):
@@ -604,6 +616,11 @@ class Builder:
         gf = self.cur.shapes.add_chart(XL_CHART_TYPE.XY_SCATTER_LINES_NO_MARKERS, x, y, w, h - tbl_h - gap, cd)
         chart = gf.chart
         self.style_chart(chart, legend=len(series) > 1)
+        px0, pw = 0.20, 0.76  # inner plot area, fractions of the frame width: the at-risk columns line up with it
+        if tbl_h and len(times) > 1 and xmax:  # leave room right of the plot for half of the last column
+            g = (times[-1] - times[-2]) / xmax
+            pw = min(pw, (1 - px0 - 0.01) / (1 + g / 2))
+        self.plot_layout(chart, px0, 0.04, pw, 0.72)
         for i, (ser, spec_ser) in enumerate(zip(chart.plots[0].series, series)):
             ser.format.line.color.rgb = self.color(spec_ser.get("color", GROUP_COLORS[i % len(GROUP_COLORS)]))
             ser.format.line.width = self.lw(2.25)
@@ -626,13 +643,27 @@ class Builder:
         if tbl_h:
             cols = [LABELS[self.lang]["at_risk"]] + [self.num(t) for t in times]
             body = [[r["name"]] + [str(v) for v in r["n"]] for r in rows]
-            widths = [3] + [1] * len(times)
-            self.table(x, y + h - tbl_h, w, cols, body, widths, name="Number at risk", row_h=0.4)
+            widths = self.at_risk_widths(times, xmax, w, px0, pw)
+            self.table(x, y + h - tbl_h, int(sum(widths)), cols, body, widths, name="Number at risk", row_h=0.4)
         return gf
 
     @staticmethod
-    def num(v) -> str:
-        return str(int(v)) if float(v) == int(v) else str(v)
+    def at_risk_widths(times, xmax, w, px0, pw):
+        """Column widths (EMU, summing to the table width) that centre each time column on its x position
+        in the plot area; the label column takes what is left of the first column (at least 10 % of w)."""
+        if len(times) < 2 or not xmax:
+            return [3] + [1] * len(times)
+        c = [w * (px0 + pw * t / xmax) for t in times]
+        mid = [(a + b) / 2 for a, b in zip(c, c[1:])]
+        left = max(c[0] - (mid[0] - c[0]), 0.10 * w)
+        right = min(c[-1] + (c[-1] - mid[-1]), float(w))
+        edges = [left] + mid + [right]
+        cols = [max(1.0, b - a) for a, b in zip(edges, edges[1:])]
+        return [left] + cols
+
+    def num(self, v) -> str:
+        s = str(int(v)) if float(v) == int(v) else str(v)
+        return s.replace(".", ",") if self.lang == "vi" else s
 
     def chart_forest(self, ch, x, y, w, h, idx):
         rows = ch.get("rows")
@@ -700,15 +731,24 @@ class Builder:
         label_pt = min(self.tp("small") + 2, row_h / 12700 * 0.6 / self.k)
         longest = max(len(r["label"]) for r in rows)
         label_pt = min(label_pt, (label_w - self.I(0.1)) / 12700 / self.k / (0.5 * max(1, longest)))
+        # The estimate column prints what the figure prints: the row's own text, else values[i].text
+        # (figures.py writes it there, in the ledger's precision), else a plain re-format.
+        vals = ch.get("_values") or []
+        texts = []
+        for i, r in enumerate(rows):
+            t = r.get("text")
+            if not t and len(vals) == len(rows) and isinstance(vals[i], dict):
+                t = vals[i].get("text")
+            texts.append(t or (f"{numfmt.fmt(r['est'], dec, self.lang)} "
+                               f"({numfmt.fmt_range(r['lo'], r['hi'], dec, self.lang)})"))
+        text_pt = min(label_pt, (text_w - self.I(0.1)) / 12700 / self.k / (0.5 * max(1, max(len(t) for t in texts))))
         for i, r in enumerate(rows):
             cy = y + int(h * py0 + row_h * i)
             self.textbox(x, cy, label_w - self.I(0.1), int(row_h), r["label"], label_pt, "ink",
                          anchor=MSO_ANCHOR.MIDDLE, name=f"Forest label {i + 1}").text_frame.word_wrap = False
-            text = r.get("text") or (f"{numfmt.fmt(r['est'], dec, self.lang)} "
-                                     f"({numfmt.fmt_range(r['lo'], r['hi'], dec, self.lang)})")
-            tpt = min(label_pt, (text_w - self.I(0.1)) / 12700 / self.k / (0.5 * max(1, len(text))))
-            self.textbox(x + label_w + chart_w + self.I(0.1), cy, text_w - self.I(0.1), int(row_h), text, tpt, "ink",
-                         anchor=MSO_ANCHOR.MIDDLE, name=f"Forest estimate {i + 1}").text_frame.word_wrap = False
+            self.textbox(x + label_w + chart_w + self.I(0.1), cy, text_w - self.I(0.1), int(row_h), texts[i],
+                         text_pt, "ink", anchor=MSO_ANCHOR.MIDDLE,
+                         name=f"Forest estimate {i + 1}").text_frame.word_wrap = False
         return gf
 
     def s_references(self, s, idx):
@@ -752,6 +792,24 @@ class Builder:
         out.parent.mkdir(parents=True, exist_ok=True)
         self.prs.save(str(out))
         return len(slides)
+
+
+def infer_sides(a: dict, b: dict) -> tuple[int, int, bool]:
+    """Connector sites (0 top, 1 left, 2 bottom, 3 right) from node geometry, for edges that carry none.
+
+    A target clear of the source horizontally is joined side to side (elbow when the rows differ);
+    otherwise bottom to top (target below) or top to bottom (target above)."""
+    eps = 1e-6
+    if b["x"] >= a["x"] + a["w"] - eps:
+        sites = (3, 1)
+    elif b["x"] + b["w"] <= a["x"] + eps:
+        sites = (1, 3)
+    elif b["y"] >= a["y"]:
+        return 2, 0, False
+    else:
+        return 0, 2, False
+    same_row = abs((a["y"] + a["h"] / 2) - (b["y"] + b["h"] / 2)) < 1e-3
+    return sites[0], sites[1], not same_row
 
 
 def merge(a: dict, b: dict) -> dict:
@@ -808,6 +866,11 @@ def main(argv=None) -> int:
                     print(f"pptx_from_spec: {where}: {msg}", file=sys.stderr)
                 print("pptx_from_spec: known ids: " + (", ".join(sorted(by_id)) or "(none)"), file=sys.stderr)
                 return 2
+        else:
+            left = sorted(set(re.findall(r"\{\{R-[^{}]*\}\}", json.dumps(spec, ensure_ascii=False))))
+            if left:
+                print(f"pptx_from_spec: warning: {len(left)} placeholder(s) left as typed because --project "
+                      f"was not given: {', '.join(left)}", file=sys.stderr)
         n = Builder(spec, spec_path.parent, lang or "en").build(Path(a.out))
     except SpecError as e:
         print(f"pptx_from_spec: {e}", file=sys.stderr)

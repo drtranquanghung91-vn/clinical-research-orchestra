@@ -301,5 +301,149 @@ class TestMissingDependency(unittest.TestCase):
         self.assertIn("python -m pip install python-pptx", r.stderr)
 
 
+# ---- fix round 1 -----------------------------------------------------------------------------
+
+# shaped like figures.py build_flow output: vertical main stack, one side exclusion box
+FLOW_T4 = {"id": "F4", "type": "flow", "source": "S", "values": [], "chart": {"kind": "diagram", "nodes": [
+    {"id": "n1", "text": "Eligible\nn = 1070", "x": 0.08, "y": 0.0, "w": 0.46, "h": 0.2},
+    {"id": "n2", "text": "Included\nn = 900", "x": 0.08, "y": 0.4, "w": 0.46, "h": 0.2},
+    {"id": "n3", "text": "Analysed\nn = 880", "x": 0.08, "y": 0.8, "w": 0.46, "h": 0.2},
+    {"id": "x1", "text": "Excluded\nn = 170", "x": 0.66, "y": 0.2, "w": 0.32, "h": 0.2}],
+    "edges": [{"from": "n1", "to": "n2"}, {"from": "n2", "to": "n3"},
+              {"from": "n1", "to": "x1", "from_side": 2, "to_side": 1}]}}
+
+
+def connector_sites(slide):
+    ids = {s.shape_id: s.name for s in slide.shapes}
+    out = {}
+    for s in slide.shapes:
+        el = s._element
+        st = el.xpath(".//a:stCxn")
+        en = el.xpath(".//a:endCxn")
+        if st and en:
+            out[(ids[int(st[0].get("id"))], ids[int(en[0].get("id"))])] = (int(st[0].get("idx")), int(en[0].get("idx")))
+    return out
+
+
+@unittest.skipUnless(HAVE, "python-pptx not installed")
+class TestFixRound1(unittest.TestCase):
+    def setUp(self):
+        self._t = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._t.name)
+
+    def tearDown(self):
+        self._t.cleanup()
+
+    def build(self, spec, files=None, extra=()):
+        for name, obj in (files or {}).items():
+            write(self.tmp, name, obj)
+        write(self.tmp, "deck.json", spec)
+        out = self.tmp / "o.pptx"
+        rc = pfs.main([str(self.tmp / "deck.json"), str(out), *extra])
+        return rc, out
+
+    def test_flow_edge_sides_inferred_from_geometry(self):
+        rc, out = self.build({"slides": [{"type": "diagram", "title": "Flow", "data": "F4.data.json"}]},
+                             {"F4.data.json": FLOW_T4})
+        self.assertEqual(rc, 0)
+        sites = connector_sites(Presentation(str(out)).slides[0])
+        self.assertEqual(sites[("Node n1", "Node n2")], (2, 0))  # bottom -> top
+        self.assertEqual(sites[("Node n2", "Node n3")], (2, 0))
+        self.assertEqual(sites[("Node n1", "Node x1")], (3, 1))  # data.json from_side/to_side ignored: right -> left
+
+    def test_spec_authored_sides_kept(self):
+        spec = {"slides": [{"type": "diagram", "title": "D", "nodes": [
+            {"id": "a", "x": 0, "y": 0, "w": 0.3, "h": 0.2, "text": "A"},
+            {"id": "b", "x": 0, "y": 0.6, "w": 0.3, "h": 0.2, "text": "B"}],
+            "edges": [{"from": "a", "to": "b", "from_side": 2, "to_side": 0}, {"from": "b", "to": "a"}]}]}
+        rc, out = self.build(spec)
+        self.assertEqual(rc, 0)
+        sites = connector_sites(Presentation(str(out)).slides[0])
+        self.assertEqual(sites[("Node a", "Node b")], (2, 0))
+        self.assertEqual(sites[("Node b", "Node a")], (3, 1))  # grand-rounds default unchanged
+
+    def test_forest_uses_printed_text_from_values(self):
+        d = {"id": "F1", "type": "forest", "source": "S",
+             "values": [{"label": "A", "est": 19.57, "lo": 15.01, "hi": 25.12, "text": "19,6% (15,0–25,1)"},
+                        {"label": "B", "est": 10.0, "lo": 8.0, "hi": 12.0, "text": "10,0% (8,0–12,0)"}],
+             "chart": {"kind": "forest", "log": False, "null": 0, "rows": [
+                 {"label": "A", "est": 19.57, "lo": 15.01, "hi": 25.12},
+                 {"label": "B", "est": 10.0, "lo": 8.0, "hi": 12.0}]}}
+        rc, out = self.build({"lang": "vi", "slides": [{"type": "chart", "chart": "forest", "title": "F",
+                                                         "data": "F1.data.json"}]}, {"F1.data.json": d})
+        self.assertEqual(rc, 0)
+        t = texts(Presentation(str(out)).slides[0])
+        self.assertIn("19,6% (15,0–25,1)", t)
+        self.assertIn("10,0% (8,0–12,0)", t)
+        self.assertFalse(any("19,57" in x for x in t))
+
+    def test_forest_row_text_beats_values_and_fallback_formats(self):
+        d = json.loads(json.dumps(FOREST))
+        d["values"] = [{"text": "WRONG"}] * 3
+        d["chart"]["rows"][0]["text"] = "1,10 (0,74–1,62) *"
+        rc, out = self.build({"lang": "vi", "slides": [{"type": "chart", "chart": "forest", "title": "F",
+                                                         "data": "F1.data.json"}]}, {"F1.data.json": d})
+        self.assertIn("1,10 (0,74–1,62) *", texts(Presentation(str(out)).slides[0]))
+        rc, out = self.build({"lang": "vi", "slides": [{"type": "chart", "chart": "forest", "title": "F",
+                                                         "data": "F1.data.json"}]},
+                             {"F1.data.json": json.loads(json.dumps(FOREST))})
+        self.assertIn("1,84 (1,21–2,79)", texts(Presentation(str(out)).slides[0]))
+
+    def test_forest_estimate_text_same_size(self):
+        d = json.loads(json.dumps(FOREST))
+        d["chart"]["rows"][1]["text"] = "1,84 (1,21 đến 2,79) và một đoạn rất dài"
+        rc, out = self.build({"slides": [{"type": "chart", "chart": "forest", "title": "F",
+                                          "data": "F1.data.json"}]}, {"F1.data.json": d})
+        slide = Presentation(str(out)).slides[0]
+        sizes = {sh.text_frame.paragraphs[0].runs[0].font.size for sh in slide.shapes
+                 if sh.name.startswith("Forest estimate")}
+        self.assertEqual(len(sizes), 1)
+
+    def test_km_at_risk_columns_align_with_time_axis(self):
+        d = {"id": "F2", "type": "km", "chart": {"kind": "km", "series": [
+            {"name": "A", "points": [[0, 1.0], [100, 0.5]]}],
+            "at_risk": {"times": [0, 20, 40, 60, 80, 100], "rows": [{"name": "A", "n": [9, 8, 7, 6, 5, 4]}]}}}
+        rc, out = self.build({"slides": [{"type": "chart", "chart": "km", "title": "K", "data": "F2.data.json"}]},
+                             {"F2.data.json": d})
+        self.assertEqual(rc, 0)
+        slide = Presentation(str(out)).slides[0]
+        gf = next(s for s in slide.shapes if getattr(s, "has_chart", False) and s.has_chart)
+        px = float(gf.chart._chartSpace.xpath(".//c:manualLayout/c:x/@val")[0])
+        pw = float(gf.chart._chartSpace.xpath(".//c:manualLayout/c:w/@val")[0])
+        tbl_shape = next(s for s in slide.shapes if getattr(s, "has_table", False) and s.has_table)
+        widths = [c.width for c in tbl_shape.table.columns]
+        centres = [tbl_shape.left + sum(widths[:j]) + widths[j] / 2 for j in range(1, len(widths))]
+        for j, t in enumerate([0, 20, 40, 60, 80, 100]):
+            expect = gf.left + gf.width * (px + pw * t / 100)
+            self.assertAlmostEqual(centres[j], expect, delta=gf.width * 0.01)
+
+    def test_km_header_vi_decimal_comma(self):
+        d = {"id": "F2", "type": "km", "chart": {"kind": "km", "series": [
+            {"name": "A", "points": [[0, 1.0], [45, 0.5]]}],
+            "at_risk": {"times": [0, 22.5, 45], "rows": [{"name": "A", "n": [9, 8, 7]}]}}}
+        rc, out = self.build({"lang": "vi", "slides": [{"type": "chart", "chart": "km", "title": "K",
+                                                         "data": "F2.data.json"}]}, {"F2.data.json": d})
+        tbl = next(s for s in Presentation(str(out)).slides[0].shapes if getattr(s, "has_table", False) and s.has_table)
+        self.assertEqual([c.text for c in tbl.table.rows[0].cells][1:], ["0", "22,5", "45"])
+
+    def test_warns_on_placeholders_without_project(self):
+        write(self.tmp, "deck.json", {"slides": [{"type": "bullets", "title": "OR {{R-A1-001}}",
+                                                   "bullets": ["{{R-A1-002.ci}}"]}]})
+        r = subprocess.run([sys.executable, str(SCRIPT), str(self.tmp / "deck.json"), str(self.tmp / "o.pptx")],
+                           capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("{{R-A1-001}}", r.stderr)
+        self.assertIn("{{R-A1-002.ci}}", r.stderr)
+        self.assertIn("--project", r.stderr)
+
+    def test_size_cm_too_large_exit_2(self):
+        write(self.tmp, "deck.json", {"size_cm": [150, 100], "slides": [{"type": "title", "title": "T"}]})
+        r = subprocess.run([sys.executable, str(SCRIPT), str(self.tmp / "deck.json"), str(self.tmp / "o.pptx")],
+                           capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("142", r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
