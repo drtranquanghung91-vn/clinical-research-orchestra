@@ -221,7 +221,7 @@ evidence_sources: [openevidence, pubmed, europepmc, crossref]
  "verified_by": "verify_refs.py 2026-11-20", "used_in": ["06_writing/thesis/ch1.md#p4"]}
 ```
 
-Rule: a record is created only from a tool lookup in the session. A model-remembered reference is never a record.
+Rule: a record is created only from a tool lookup in the session, or with `search_lit.py add-manual` for a source that has no PMID or DOI, when the author holds the document or confirms an official URL a tool returned (recorded in `seen_in`; status MANUAL, never machine-verified). A model-remembered reference is never a record.
 
 `results-ledger.json`, one record per number:
 
