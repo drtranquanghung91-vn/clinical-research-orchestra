@@ -62,8 +62,8 @@ DEFAULT_THEME = {
     "type_pt": {"title": 32, "body": 20, "small": 14, "footer": 11},
 }
 LABELS = {
-    "vi": {"at_risk": "Số người còn nguy cơ"},
-    "en": {"at_risk": "Number at risk"},
+    "vi": {"at_risk": "Số người còn nguy cơ", "event_free": "Xác suất chưa có biến cố"},
+    "en": {"at_risk": "Number at risk", "event_free": "Event-free probability"},
 }
 GROUP_COLORS = ["primary", "intervention", "control", "#2E7D5B", "#B8860B", "#7B4EA3"]
 BASE_W_IN = 13.333
@@ -427,7 +427,9 @@ class Builder:
                   "muted": ("#F4F5F7", "line", "muted")}
         for n in nodes:
             fill, line, ink = styles.get(n.get("style", "default"), styles["default"])
-            kind = MSO_SHAPE.OVAL if n.get("shape") == "circle" else MSO_SHAPE.ROUNDED_RECTANGLE
+            rounded = n.get("rounded", s.get("rounded", False))  # square corners unless the spec opts in
+            kind = (MSO_SHAPE.OVAL if n.get("shape") == "circle"
+                    else MSO_SHAPE.ROUNDED_RECTANGLE if rounded else MSO_SHAPE.RECTANGLE)
             shp = self.cur.shapes.add_shape(kind, x + int(w * n["x"]), y + int(h * n["y"]), int(w * n["w"]), int(h * n["h"]))
             shp.name = f"Node {n['id']}"
             shp.fill.solid()
@@ -493,14 +495,14 @@ class Builder:
         chart.font.size = Pt(self.tp("small") * self.k)
         chart.font.name = self.theme["fonts"]["body"]
 
-    def axis_title(self, axis, text):
+    def axis_title(self, axis, text, size=None):
         if not text:
             return
         axis.has_title = True
         tf = axis.axis_title.text_frame
         tf.text = str(text)
         for r in tf.paragraphs[0].runs:
-            r.font.size = Pt(self.tp("small") * self.k)
+            r.font.size = Pt((size or self.tp("small")) * self.k)
             r.font.bold = False
             r.font.name = self.theme["fonts"]["body"]
 
@@ -537,7 +539,7 @@ class Builder:
         credit_h = self.I(0.35) if credit else 0
         alt = s.get("alt") or s.get("title", "")
         if kind == "km":
-            gf = self.chart_km(s, data, x, y, w, h - credit_h, idx)
+            gf = self.chart_km(s, data, x, y, w, h - credit_h - (self.I(0.05) if credit else 0), idx)
         elif kind == "forest":
             gf = self.chart_forest(data, x, y, w, h - credit_h, idx)
         else:
@@ -611,16 +613,19 @@ class Builder:
         ar = ch.get("at_risk")
         rows = (ar or {}).get("rows") or []
         times = (ar or {}).get("times") or []
-        tbl_h = self.I(0.4) * (len(rows) + 1) if rows and times else 0
-        gap = self.I(0.1) if tbl_h else 0
+        row_h = 0.28  # inches; at-risk table rows
+        tbl_h = self.I(row_h) * (len(rows) + 1) if rows and times else 0
+        gap = self.I(0.08) if tbl_h else 0
         gf = self.cur.shapes.add_chart(XL_CHART_TYPE.XY_SCATTER_LINES_NO_MARKERS, x, y, w, h - tbl_h - gap, cd)
         chart = gf.chart
-        self.style_chart(chart, legend=len(series) > 1)
-        px0, pw = 0.20, 0.76  # inner plot area, fractions of the frame width: the at-risk columns line up with it
+        legend = len(series) > 1
+        self.style_chart(chart, legend=legend)
+        px0, pw = 0.24, 0.74  # inner plot area, fractions of the frame width: the at-risk columns line up with it
         if tbl_h and len(times) > 1 and xmax:  # leave room right of the plot for half of the last column
             g = (times[-1] - times[-2]) / xmax
             pw = min(pw, (1 - px0 - 0.01) / (1 + g / 2))
-        self.plot_layout(chart, px0, 0.04, pw, 0.72)
+        py0 = 0.13 if legend else 0.04  # the legend sits in the strip above the plot, off the curves
+        self.plot_layout(chart, px0, py0, pw, 0.97 - py0 - 0.25)
         for i, (ser, spec_ser) in enumerate(zip(chart.plots[0].series, series)):
             ser.format.line.color.rgb = self.color(spec_ser.get("color", GROUP_COLORS[i % len(GROUP_COLORS)]))
             ser.format.line.width = self.lw(2.25)
@@ -638,14 +643,40 @@ class Builder:
             step = times[1] - times[0]
             if step > 0 and all(abs((b - a) - step) < 1e-9 for a, b in zip(times, times[1:])):
                 ca.major_unit = step  # ticks line up with the at-risk columns
-        self.axis_title(ca, ch.get("x_label"))
-        self.axis_title(va, ch.get("y_label"))
+        self.axis_title(ca, s.get("x_label") or ch.get("x_label"))
+        self.axis_title(va, s.get("y_label") or ch.get("y_label") or LABELS[self.lang]["event_free"], self.tp("small") - 2)
         if tbl_h:
             cols = [LABELS[self.lang]["at_risk"]] + [self.num(t) for t in times]
             body = [[r["name"]] + [str(v) for v in r["n"]] for r in rows]
             widths = self.at_risk_widths(times, xmax, w, px0, pw)
-            self.table(x, y + h - tbl_h, int(sum(widths)), cols, body, widths, name="Number at risk", row_h=0.4)
+            self.at_risk_table(x, y + h - tbl_h, int(sum(widths)), cols, body, widths, row_h)
         return gf
+
+    def at_risk_table(self, x, y, w, cols, body, widths, row_h):
+        """Compact native table: one line per row, no fill, time columns centred under their ticks."""
+        shp = self.cur.shapes.add_table(len(body) + 1, len(cols), x, y, w, self.I(row_h) * (len(body) + 1))
+        shp.name = "Number at risk"
+        tbl = shp.table
+        tbl.first_row = False
+        tbl.horz_banding = False
+        for j in range(len(cols)):
+            tbl.columns[j].width = int(w * widths[j] / sum(widths))
+        for i in range(len(body) + 1):
+            tbl.rows[i].height = self.I(row_h)
+            for j in range(len(cols)):
+                text = str(cols[j] if i == 0 else body[i - 1][j])
+                cell = tbl.cell(i, j)
+                cell.text = text
+                cell.fill.background()
+                cell.margin_top = cell.margin_bottom = self.I(0.02)
+                cell.margin_left = cell.margin_right = self.I(0.04)
+                cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+                for p in cell.text_frame.paragraphs:
+                    p.alignment = PP_ALIGN.LEFT if j == 0 else PP_ALIGN.CENTER
+                    for r in p.runs:
+                        # the header label is the longest text in the narrow first column: 11 pt keeps it on one line
+                        self.font(r, 11 if (i == 0 and j == 0) else 12, i == 0, "muted" if i == 0 else "ink")
+        return shp
 
     @staticmethod
     def at_risk_widths(times, xmax, w, px0, pw):

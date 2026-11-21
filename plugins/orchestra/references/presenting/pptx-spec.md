@@ -97,7 +97,10 @@ reads its `chart` object (format in `figures-spec.md`).
   "est (lo–hi)" a text column at right, both aligned to the plot area. The right column prints the
   figure's own text (`chart.rows[i].text`, else `values[i].text`), so the slide shows the ledger's
   precision and units; only when neither exists is the estimate re-formatted with 2 decimals.
-- The `km` plot area is fixed so each at-risk column is centred under its time on the axis.
+- The `km` plot area is fixed (legend in a strip above it) so each at-risk column is centred under its
+  time on the axis: the label column plus half of the first time column ends at the axis origin. The
+  table is compact (0.28 in rows, 12 pt, no fill) and sits between the chart and the source note.
+  `x_label` / `y_label` on the slide override the data file's axis titles.
 
 When `credit` is not set on a chart slide, the figure's `source` (from the data file) is used.
 All charts stay editable in PowerPoint (right-click, Edit Data).
@@ -106,7 +109,7 @@ All charts stay editable in PowerPoint (right-click, Edit Data).
 
 `x, y, w, h` are fractions (0–1) of the content area below the title. `style` is `default`,
 `int` (intervention arm), `ctl` (control arm), `primary` (filled, white text) or `muted`. `shape` may
-be `circle`. A node's `text` is a string (newlines start new lines) or a list of lines; the first
+be `circle`. Boxes are square-cornered; `"rounded": true` (on the slide or on a node) opts in. A node's `text` is a string (newlines start new lines) or a list of lines; the first
 line is bold. Connector sides: 0 top, 1 left, 2 bottom, 3 right; the default runs from the right
 side of `from` to the left side of `to`. Edges that come from a figure `data.json` carry no usable
 sides (figures.py numbers them differently), so the sides are inferred from the node geometry: a

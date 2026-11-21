@@ -417,6 +417,52 @@ class TestFixRound1(unittest.TestCase):
             expect = gf.left + gf.width * (px + pw * t / 100)
             self.assertAlmostEqual(centres[j], expect, delta=gf.width * 0.01)
 
+    def test_km_layout_table_below_chart_note_below_table(self):
+        rc, out = self.build({"slides": [{"type": "chart", "chart": "km", "title": "K",
+                                          "data": "F2.data.json"}]}, {"F2.data.json": KM})
+        self.assertEqual(rc, 0)
+        slide = Presentation(str(out)).slides[0]
+        gf = next(s for s in slide.shapes if getattr(s, "has_chart", False) and s.has_chart)
+        tb = next(s for s in slide.shapes if getattr(s, "has_table", False) and s.has_table)
+        note = next(s for s in slide.shapes if s.name == "Credit")
+        self.assertGreaterEqual(tb.top, gf.top + gf.height)
+        self.assertGreaterEqual(note.top, tb.top + tb.height)
+        self.assertLessEqual(note.top + note.height, slide.part.package.presentation_part.presentation.slide_height)
+        # compact: every row 0.28 in, one font size, no fill
+        for r in tb.table.rows:
+            self.assertEqual(r.height, int(914400 * 0.28))
+        self.assertEqual(tb.table.cell(1, 1)._tc.xpath(".//a:tcPr/a:noFill") != [], True)
+        # legend is above the plot, not over the curves: the plot area starts below the top strip
+        py = float(gf.chart._chartSpace.xpath(".//c:manualLayout/c:y/@val")[0])
+        self.assertGreaterEqual(py, 0.1)
+
+    def test_km_label_column_reaches_plot_origin(self):
+        d = {"id": "F2", "type": "km", "chart": {"kind": "km", "series": [
+            {"name": "A", "points": [[0, 1.0], [100, 0.5]]}],
+            "at_risk": {"times": [0, 20, 40, 60, 80, 100], "rows": [{"name": "A", "n": [9, 8, 7, 6, 5, 4]}]}}}
+        rc, out = self.build({"slides": [{"type": "chart", "chart": "km", "title": "K", "data": "F2.data.json"}]},
+                             {"F2.data.json": d})
+        slide = Presentation(str(out)).slides[0]
+        gf = next(s for s in slide.shapes if getattr(s, "has_chart", False) and s.has_chart)
+        px = float(gf.chart._chartSpace.xpath(".//c:manualLayout/c:x/@val")[0])
+        tb = next(s for s in slide.shapes if getattr(s, "has_table", False) and s.has_table)
+        cols = [c.width for c in tb.table.columns]
+        # label column + half of the "0" column ends exactly at the axis origin
+        self.assertAlmostEqual(tb.left + cols[0] + cols[1] / 2, gf.left + gf.width * px, delta=gf.width * 0.005)
+
+    def test_diagram_boxes_square_unless_rounded(self):
+        from pptx.enum.shapes import MSO_SHAPE
+        rc, out = self.build({"slides": [{"type": "diagram", "title": "Flow", "data": "F4.data.json"}]},
+                             {"F4.data.json": FLOW_T4})
+        slide = Presentation(str(out)).slides[0]
+        kinds = {s.auto_shape_type for s in slide.shapes if s.name.startswith("Node ")}
+        self.assertEqual(kinds, {MSO_SHAPE.RECTANGLE})
+        rc, out = self.build({"slides": [{"type": "diagram", "title": "Flow", "data": "F4.data.json",
+                                          "rounded": True}]}, {"F4.data.json": FLOW_T4})
+        slide = Presentation(str(out)).slides[0]
+        kinds = {s.auto_shape_type for s in slide.shapes if s.name.startswith("Node ")}
+        self.assertEqual(kinds, {MSO_SHAPE.ROUNDED_RECTANGLE})
+
     def test_km_header_vi_decimal_comma(self):
         d = {"id": "F2", "type": "km", "chart": {"kind": "km", "series": [
             {"name": "A", "points": [[0, 1.0], [45, 0.5]]}],
