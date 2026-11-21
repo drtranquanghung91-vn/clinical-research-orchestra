@@ -591,6 +591,31 @@ def _estimate_problems(params, bse, sds, ratio=True) -> list:
     return probs
 
 
+def _model_problems(m, caught, family) -> list:
+    """Failure signs of a fitted statsmodels model, shared by fit_logistic, fit_linear, fit_poisson and
+    interaction. logit: PerfectSeparationWarning, non-convergence; poisson: non-convergence; linear:
+    rank-deficient design. Then _estimate_problems (ratio rule and |coef x SD| > 10 for logit/poisson,
+    non-finite coefficient or SE for linear)."""
+    probs = []
+    if family == "logit":
+        if any("PerfectSeparation" in w.category.__name__ for w in caught):
+            probs.append("perfect separation (statsmodels PerfectSeparationWarning)")
+        if not m.mle_retvals.get("converged", True):
+            probs.append("model did not converge")
+    elif family == "poisson":
+        if not getattr(m, "converged", True):
+            probs.append("model did not converge")
+    if family == "linear":
+        X = np.asarray(m.model.exog, dtype=float)
+        rank = int(np.linalg.matrix_rank(X))
+        if rank < X.shape[1]:
+            probs.append(f"collinear terms (design matrix rank {rank} < {X.shape[1]} columns)")
+        probs += _estimate_problems(m.params, m.bse, {}, ratio=False)
+    else:
+        probs += _estimate_problems(m.params, m.bse, _design_sds(m.model.exog_names, m.model.exog))
+    return probs
+
+
 def _fit_ratio_terms(m, rec, analysis_id, status, table, kind, name, formula, n, conf=None):
     """Record exp(coef) of every non-intercept term; returns ({term: (est, lo, hi, p)}, ids)."""
     ci = m.conf_int() if conf is None else conf
@@ -650,12 +675,7 @@ def fit_logistic(df, outcome, terms, rec, analysis_id, status="prespecified", ta
             f"non-events={n - events}, parameters={k}, EPV={epv:.1f}")
     if epv < DEFAULTS["epv_min"]:
         warn.append(f"EPV {epv:.1f} < {DEFAULTS['epv_min']:g}: model is exploratory")
-    problems = []
-    if any("PerfectSeparation" in w.category.__name__ for w in caught):
-        problems.append("perfect separation (statsmodels PerfectSeparationWarning)")
-    if not m.mle_retvals.get("converged", True):
-        problems.append("model did not converge")
-    problems += _estimate_problems(m.params, m.bse, _design_sds(m.model.exog_names, m.model.exog))
+    problems = _model_problems(m, caught, "logit")
     if problems:
         return _fail(rec, analysis_id, "; ".join(problems), warn, "logistic", epv=epv, n=n, events=events)
     for w in warn:
@@ -691,12 +711,7 @@ def fit_linear(df, outcome, terms, rec, analysis_id, status="prespecified", tabl
     n = int(m.nobs)
     warn = _sm_warnings(caught)
     rec.log(f"{analysis_id} linear regression (OLS) {formula}: reason: continuous outcome; n={n}")
-    X = np.asarray(m.model.exog, dtype=float)
-    rank = int(np.linalg.matrix_rank(X))
-    problems = []
-    if rank < X.shape[1]:
-        problems.append(f"collinear terms (design matrix rank {rank} < {X.shape[1]} columns)")
-    problems += _estimate_problems(m.params, m.bse, {}, ratio=False)
+    problems = _model_problems(m, caught, "linear")
     if problems:
         return _fail(rec, analysis_id, "; ".join(problems), warn, "linear", n=n)
     for w in warn:
@@ -748,10 +763,7 @@ def fit_poisson(df, outcome, terms, rec, analysis_id, status="prespecified", tab
     n = int(m.nobs)
     warn = _sm_warnings(caught)
     rec.log(f"{head}: reason: count outcome; n={n}")
-    problems = []
-    if not getattr(m, "converged", True):
-        problems.append("model did not converge")
-    problems += _estimate_problems(m.params, m.bse, _design_sds(m.model.exog_names, m.model.exog))
+    problems = _model_problems(m, caught, "poisson")
     if problems:
         return _fail(rec, analysis_id, "; ".join(problems), warn, "poisson", n=n)
     for w in warn:
@@ -833,9 +845,19 @@ def fit_cox(df, duration, event, terms, rec, analysis_id, status="prespecified",
             "epv": epv, "n": n, "events": events, "warnings": warn + diag, "ids": ids, "model": cph}
 
 
-def roc_youden(y, score) -> dict:
+def _need_id(rec, analysis_id, fn):
+    if rec is not None and not (isinstance(analysis_id, str) and re.fullmatch(r"A\d+", analysis_id)):
+        raise ValueError(f"{fn}: analysis_id A<n> is required when rec is given")
+
+
+def roc_youden(y, score, *, rec=None, analysis_id=None, status="prespecified", label=None) -> dict:
     """ROC AUC (rank formula, average ranks) and the Youden-optimal cut-off over the unique scores, with
-    score >= cutoff read as positive; ties in J go to the lower cut-off."""
+    score >= cutoff read as positive; ties in J go to the lower cut-off.
+
+    With `rec` (and `analysis_id`): logs n, cut-off, sensitivity, specificity and J, records the AUC (kind
+    auc, label `label` or "AUC (ROC)", n = pairs used), and when AUC < 0.5 logs "score direction inverted:
+    AUC < 0.5; consider 1 − score" (the score is never flipped silently). Returns also `warnings`, `ids`."""
+    _need_id(rec, analysis_id, "roc_youden")
     y = np.asarray(y, dtype=float)
     s = np.asarray(score, dtype=float)
     keep = np.isfinite(y) & np.isfinite(s)
@@ -852,33 +874,80 @@ def roc_youden(y, score) -> dict:
         j = sens + spec - 1
         if best is None or j > best["j"] + 1e-12:
             best = {"cutoff": float(c), "sens": sens, "spec": spec, "j": j}
-    return {"auc": auc, **best}
+    warn = ["score direction inverted: AUC < 0.5; consider 1 − score"] if auc < 0.5 else []
+    ids = []
+    if rec is not None:
+        n = int(len(y))
+        rec.log(f"{analysis_id} ROC {label or 'AUC (ROC)'}: n={n}, positives={int(n1)}, negatives={int(n0)}; "
+                f"AUC by the rank formula; Youden cutoff={_num_str(best['cutoff'])} (score >= cutoff positive), "
+                f"sens={_num_str(best['sens'])}, spec={_num_str(best['spec'])}, J={_num_str(best['j'])}")
+        for w in warn:
+            rec.log(f"{analysis_id} WARNING: {w}")
+        ids.append(rec.add(analysis_id, status, label or "AUC (ROC)", auc, "auc", n=n))
+    return {"auc": auc, **best, "warnings": warn, "ids": ids}
 
 
 _FAMILIES = {
-    "logit": lambda f, d: smf.logit(f, d).fit(disp=0),
-    "linear": lambda f, d: smf.ols(f, d).fit(),
-    "ols": lambda f, d: smf.ols(f, d).fit(),
-    "poisson": lambda f, d: smf.glm(f, d, family=sm.families.Poisson()).fit(),
+    "logit": ("logit", "logistic", lambda f, d: smf.logit(f, d).fit(disp=0)),
+    "linear": ("linear", "linear", lambda f, d: smf.ols(f, d).fit()),
+    "ols": ("linear", "linear", lambda f, d: smf.ols(f, d).fit()),
+    "poisson": ("poisson", "poisson", lambda f, d: smf.glm(f, d, family=sm.families.Poisson()).fit()),
 }
 
 
-def interaction(df, outcome, exposure, modifier, covariates, family="logit") -> float:
+def interaction(df, outcome, exposure, modifier, covariates, family="logit", *, rec=None, analysis_id=None,
+                status="prespecified", label=None) -> float:
     """Likelihood-ratio p for exposure x modifier: reduced `outcome ~ exposure + modifier + covariates` vs full
     (`+ exposure:modifier`), same family (logit, linear/ols, poisson), same complete cases;
-    LR = 2 (llf_full - llf_reduced), df = difference in number of parameters."""
+    LR = 2 (llf_full - llf_reduced), df = difference in number of parameters.
+
+    Both models get the guards of fit_logistic / fit_linear / fit_poisson (_model_problems: separation,
+    non-convergence, |coef x SD| > 10, non-finite estimates, collinearity, fit errors). On failure it returns
+    float("nan"); with `rec` it logs the warnings and `MODEL FAILED A<n>: interaction <exposure>×<modifier>:
+    <reason>; <advice>` and records nothing. On success with `rec` (and `analysis_id`) it logs the test and
+    df and records the p (kind p, label `label` or "p-interaction <exposure>×<modifier>", n = rows used)."""
     if family not in _FAMILIES:
         raise ValueError(f"family must be one of {sorted(_FAMILIES)}")
+    _need_id(rec, analysis_id, "interaction")
+    kind, advice, fit = _FAMILIES[family]
+    name = f"{exposure}×{modifier}"
     rhs = [exposure, modifier] + list(covariates)
     d = df.dropna(subset=_columns(df, [outcome] + rhs))
-    fit = _FAMILIES[family]
-    red = fit(f"{outcome} ~ {' + '.join(rhs)}", d)
-    full = fit(f"{outcome} ~ {' + '.join(rhs + [f'{exposure}:{modifier}'])}", d)
+    n = int(len(d))
+    f_red = f"{outcome} ~ {' + '.join(rhs)}"
+    f_full = f"{outcome} ~ {' + '.join(rhs + [f'{exposure}:{modifier}'])}"
+    warn, problems, models = [], [], {}
+    for which, formula in (("reduced", f_red), ("full", f_full)):
+        try:
+            m, caught = _fit_caught(lambda: fit(formula, d))
+        except _FIT_ERRORS as e:
+            problems.append(f"{which} model: fit error ({type(e).__name__}: {e})")
+            continue
+        warn += [f"{which} model: {w}" for w in _sm_warnings(caught)]
+        probs = _model_problems(m, caught, kind)
+        if probs:
+            problems.append(f"{which} model: " + "; ".join(probs))
+        models[which] = m
+    if problems:
+        if rec is not None:
+            rec.log(f"{analysis_id} interaction {name} ({family}): likelihood-ratio test, {f_red} vs {f_full}; n={n}")
+            for w in warn:
+                rec.log(f"{analysis_id} WARNING: {w}")
+            rec.log(f"MODEL FAILED {analysis_id}: interaction {name}: {'; '.join(problems)}; {ADVICE[advice]}")
+        return float("nan")
+    red, full = models["reduced"], models["full"]
     ddf = len(full.params) - len(red.params)
     if ddf <= 0:
         raise ValueError("the interaction term adds no parameter")
     lr = max(0.0, 2 * (float(full.llf) - float(red.llf)))
-    return float(stats.chi2.sf(lr, ddf))
+    p = float(stats.chi2.sf(lr, ddf))
+    if rec is not None:
+        rec.log(f"{analysis_id} interaction {name} ({family}): likelihood-ratio test, {f_red} vs {f_full}; "
+                f"n={n}, LR={_num_str(lr)}, df={ddf}; reason: effect modification tested on the same complete cases")
+        for w in warn:
+            rec.log(f"{analysis_id} WARNING: {w}")
+        rec.add(analysis_id, status, label or f"p-interaction {name}", p, "p", n=n)
+    return p
 
 
 # ---------------------------------------------------------------- Table 1

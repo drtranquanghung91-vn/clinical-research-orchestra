@@ -287,3 +287,86 @@ class TestCrostatsVendored(unittest.TestCase):
                 self.assertEqual(crostats._fmt(x, d), numfmt.fmt(x, d), (x, d))
         for p in (0.0, 0.0004, 0.000999, 0.001, 0.0015, 0.0495, 0.05, 0.9999, 1.0):
             self.assertEqual(crostats._fmt_p(p), numfmt.fmt_p(p), p)
+
+
+@unittest.skipUnless(HAVE, "pandas, numpy, scipy and statsmodels are required")
+class TestCrostatsFollowUp2(unittest.TestCase):
+    """interaction and roc_youden record through the Recorder and report model failure."""
+
+    def setUp(self):
+        import crostats
+        import numpy as np
+        import pandas as pd
+        self.cs, self.np, self.pd = crostats, np, pd
+        self.tmp = tempfile.TemporaryDirectory()
+        self.p = Path(self.tmp.name)
+        (self.p / "04_data").mkdir()
+        self.data = self.p / "04_data" / "c.deid.csv"
+        self.data.write_text("x\n1\n", encoding="utf-8")
+        self.rec = crostats.Recorder(self.p, self.data)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _saved_log(self):
+        self.rec.save()
+        return (self.p / "05_analysis" / "output" / "log.txt").read_text(encoding="utf-8").splitlines()
+
+    def test_interaction_quasi_separation_in_a_subgroup_fails(self):
+        import math
+        rng = self.np.random.default_rng(31)
+        n = 400
+        e = rng.integers(0, 2, n)
+        m = rng.integers(0, 2, n)
+        y = (rng.random(n) < 0.35).astype(int)
+        y[(e == 1) & (m == 1)] = 1  # outcome constant in one exposure x modifier cell
+        d = self.pd.DataFrame({"y": y, "e": e, "m": m})
+        p = self.cs.interaction(d, "y", "e", "m", [], "logit", rec=self.rec, analysis_id="A4")
+        self.assertTrue(math.isnan(p))
+        self.assertEqual(self.rec.results, [])
+        failed = [ln for ln in self._saved_log() if ln.startswith("MODEL FAILED A4: interaction e×m: ")]
+        self.assertEqual(len(failed), 1)
+        self.assertIn("coefficient for e:m", failed[0])
+        self.assertTrue(failed[0].endswith("; consider Firth or exact logistic as a declared deviation"))
+        self.assertTrue(math.isnan(self.cs.interaction(d, "y", "e", "m", [], "logit")))
+
+    def test_interaction_records_one_p(self):
+        import scipy.stats as st
+        import statsmodels.formula.api as smf
+        rng = self.np.random.default_rng(32)
+        n = 300
+        d = self.pd.DataFrame({"x": rng.normal(0, 1, n), "z": rng.normal(0, 1, n), "c": rng.normal(0, 1, n)})
+        d["y"] = (rng.random(n) < 1 / (1 + self.np.exp(-(0.5 * d.x + 0.3 * d.z + 0.4 * d.x * d.z)))).astype(int)
+        d.loc[[0, 1], "c"] = self.np.nan
+        cc = d.dropna()
+        red = smf.logit("y ~ x + z + c", cc).fit(disp=0)
+        full = smf.logit("y ~ x + z + c + x:z", cc).fit(disp=0)
+        ref = float(st.chi2.sf(2 * (full.llf - red.llf), 1))
+        p = self.cs.interaction(d, "y", "x", "z", ["c"], "logit", rec=self.rec, analysis_id="A5", status="posthoc")
+        self.assertAlmostEqual(p, ref, places=12)
+        self.assertEqual(p, self.cs.interaction(d, "y", "x", "z", ["c"], "logit"))
+        self.assertEqual(len(self.rec.results), 1)
+        r = self.rec.results[0]
+        self.assertEqual((r["id"], r["kind"], r["status"], r["n"], r["label"]),
+                         ("R-A5-001", "p", "posthoc", 298, "p-interaction x×z"))
+        self.assertAlmostEqual(r["value"], ref, places=12)
+        log = self._saved_log()
+        self.assertTrue(any(ln.startswith("A5 interaction x×z") and "df=1" in ln for ln in log))
+
+    def test_roc_records_auc(self):
+        r = self.cs.roc_youden([0, 0, 1, 1], [0.1, 0.4, 0.35, 0.8], rec=self.rec, analysis_id="A6")
+        self.assertAlmostEqual(r["auc"], 0.75)
+        self.assertEqual(len(self.rec.results), 1)
+        rr = self.rec.results[0]
+        self.assertEqual((rr["kind"], rr["value"], rr["n"]), ("auc", 0.75, 4))
+        log = self._saved_log()
+        self.assertTrue(any("cutoff=0.35" in ln and "sens=1" in ln and "spec=0.5" in ln and "J=0.5" in ln
+                            for ln in log))
+        self.assertFalse(any("score direction inverted" in ln for ln in log))
+
+    def test_roc_inverted_marker_logs_direction(self):
+        r = self.cs.roc_youden([0, 0, 1, 1], [0.9, 0.6, 0.65, 0.2], rec=self.rec, analysis_id="A6")  # 1 - score
+        self.assertAlmostEqual(r["auc"], 0.25)
+        self.assertEqual(self.rec.results[0]["value"], 0.25)
+        log = self._saved_log()
+        self.assertEqual(sum("score direction inverted: AUC < 0.5; consider 1 − score" in ln for ln in log), 1)
