@@ -1,0 +1,36 @@
+{
+  "engine": "python (synthetic fixture)",
+  "data_file": "04_data/cohort.deid.csv",
+  "data_sha256": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593",
+  "run_at": "2026-11-21",
+  "results": [
+    {
+      "id": "R-A0-001",
+      "analysis_id": "A0",
+      "status": "prespecified",
+      "label": "Số bệnh nhân",
+      "value": 300,
+      "kind": "n",
+      "source_file": "05_analysis/output/analysis.log",
+      "locator": "line 1",
+      "raw": "A0 n = 300"
+    },
+    {
+      "id": "R-A1-001",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "OR của HbA1c với tái nhập viện, hiệu chỉnh tuổi và giới",
+      "value": 0.99,
+      "kind": "or",
+      "source_file": "05_analysis/output/analysis.log",
+      "locator": "line 2",
+      "raw": "A1 OR hba1c = 0.99 (95% CI 0.74 to 1.34), p = 0.972; model: readmit ~ hba1c + age + sex",
+      "ci": [
+        0.74,
+        1.34
+      ],
+      "p": 0.972
+    }
+  ],
+  "tables": []
+}

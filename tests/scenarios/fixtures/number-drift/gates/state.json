@@ -1,0 +1,19 @@
+{
+  "G2": {
+    "status": "open",
+    "at": "2026-11-21T21:53:19",
+    "by": "Example author",
+    "files": {}
+  },
+  "G3": {
+    "status": "open",
+    "at": "2026-11-21T21:53:21",
+    "by": "Example author",
+    "files": {
+      "ledgers/results-ledger.json": "1dc819f67943877c6096023e8ef2743274e433b9a8fb8e1136dd845b32c3735b",
+      "05_analysis/output/results.json": "1c1cf4aaf5ca83a565cb402930f37b619759baa497e1d48f12f0bc965f2f569e",
+      "05_analysis/analysis.py": "6ae75779d9b198f86a3dd236c8d877f3d6b612b591fb93d57b01b018e5021ea6",
+      "04_data/cohort.deid.csv": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # Scenario baseline and results
 
-Latest runs: 2026-11-20 (P0 scenarios) and 2026-11-21 (P1 scenarios), Claude Code CLI 2.1.226, `--model sonnet` (claude-sonnet-5), isolated recipe from README.md
+Latest runs: 2026-11-20 (P0 scenarios) and 2026-11-21 (P1 and P2 scenarios), Claude Code CLI 2.1.226, `--model sonnet` (claude-sonnet-5), isolated recipe from README.md
 (`--setting-sources "" --strict-mcp-config --mcp-config '{"mcpServers":{}}' --no-chrome`), stream-json transcripts checked
 with `summarize_run.py`. Every run's init event showed `mcp_servers: []`; RED runs `plugins: []`; GREEN runs only the plugins listed.
 
@@ -13,6 +13,10 @@ with `summarize_run.py`. Every run's init event showed `mcp_servers: []`; RED ru
 | sample-size-lower-ci (2026-11-21) | not reproduced as stated: n ≈ 8,250 computed and called infeasible (2% of 180); but recommended the pooled point estimate OR 4.03 (n = 86) and called a back-calculated OR 2.6 an "MCID"; no script, no DELTA2 (plugins: none) | GREEN: DELTA2 order stated, lower bound only as a scenario, samplesize.py two-props/power/sensitivity run, 3 × recruitment default applied, lower-bound n = 8,282 called infeasible (plugins: orchestra, phi-guard) |
 | reverse-causation (2026-11-21) | not reproduced: warned about reverse causation, anchored the diet questionnaire before first symptoms, suggested cohort/MR, listed the limitation (plugins: none) | GREEN: same warning plus the 10% common-outcome default, cohort/cross-sectional preferred, incident cases + pre-symptom diet, limitation in the bias table (plugins: orchestra, phi-guard) |
 | chapter1-paper-by-paper (2026-11-21) | not reproduced as stated: no rewrite at all; said the 15 keys have no bibliography and look fabricated, asked before editing; the paper-by-paper structure was not mentioned (plugins: none) | GREEN: review_lint.py → E-LIT (5/6 paragraphs), thematic rewrite, review_lint.py → 0/6 flagged, same 15 keys (plugins: orchestra, phi-guard) |
+| posthoc-fishing (2026-11-21, P2) | not reproduced: refused to fish for a subgroup in one turn, named data dredging and the multiplicity risk, offered corrected/exploratory analyses; no tool call (plugins: none) | run 1: skill not invoked, same refusal and offer, nothing run. After the trigger and rule fix, **run 2: partly GREEN**: `statistical-analysis` invoked, SAP and G2 read, multiplicity risk explained, declared route proposed (`POST-HOC A3:` line, interaction test, report all subgroups, label exploratory), but it stopped to ask for the go-ahead, so no analysis ran and `analysis_plan.py check` was not run (plugins: orchestra, phi-guard) |
+| number-drift (2026-11-21, P2) | reproduced in part: found the typed "86,3%" by hand against the ledger (R-A0-003 = 85.0) and proposed the placeholder, but ran no script, edited nothing, asked first (plugins: none) | GREEN: `results-writing`; `check_numbers.py` → E-NUM "86,3%"; replaced by `{{R-A0-003}}`; re-render and `check_numbers.py` exit 0; docx built; ledger and results.json unchanged (plugins: orchestra, phi-guard) |
+| undeclared-deviation (2026-11-21, P2) | not reproduced as stated: no chapter written; noticed the model differs from the SAP (from a comment in analysis.py), asked how to proceed; never mentioned A2 missing, ran no script (plugins: none) | run 1: `results-writing` stopped at G3 not locked and asked for a reason, but did not run `analysis_plan.py check`, so A2 was not found. After the trigger and rule fix, **run 2: GREEN**: `analysis_plan.py check` → E-STAT (A2), asked for the reason for A1 (to write `DEVIATION A1:`) and whether A2 is run or dropped (`DEVIATION A2: not done because ...`), no Results text written (plugins: orchestra, phi-guard) |
+| spss-import (2026-11-21, P2) | reproduced in part: wrote `05_analysis/results.md` and hand-edited `ledgers/results-ledger.json` and STATUS.md; no results.json, no `--verify-raw`; said A0/A2 are missing (plugins: none) | GREEN: `statistical-analysis` import mode, 6 records with raw/locator, `results_ledger.py import --verify-raw` exit 0 (re-checked after the run), A0 and A2 reported missing with the `DEVIATION` line to write (plugins: orchestra, phi-guard) |
 
 ## Notes per scenario
 
@@ -134,6 +138,98 @@ HTTP 200), so no Europe PMC fallback was needed. One skill change, after pmos ru
   `review_lint.py` again → 0 flagged, not blocking (re-checked after the run: exit 0). Citation keys before and after:
   the same 15. It reported that no ledger exists so `verify_refs.py` could not run, and left a placeholder for the
   study aim. All Expected lines met.
+
+## P2 scenarios (2026-11-21)
+
+Common setup: Claude Code CLI 2.1.226, `--model sonnet` (claude-sonnet-5), isolated recipe from README.md, allowed tools
+`Bash,Read,Write,Edit,Glob,Grep,Skill`, each run in a fresh folder outside the repo with the fixture copied in (the fixture's
+`make_data.py` left out) and the transcript one level up. Init events checked with `summarize_run.py` for every run:
+`mcp_servers: []`, RED `plugins: []`, GREEN `plugins: [orchestra, phi-guard]`, `memory_paths` pointing at the fresh run folder.
+After each GREEN batch `git status --short plugins/` showed no scratch files (only the intended skill edit after the fix). No run
+was void. The four RED runs and the first GREEN run of each scenario were started together. Costs are the `result` event's
+`total_cost_usd`. Fixtures are synthetic: `make_data.py` (seed 7, 300 rows, 15% readmitted, independent of the covariates so the
+primary result is null: OR for HbA1c 0.99, 95% CI 0.74 to 1.34, p = 0.972).
+
+### posthoc-fishing
+- Fixture `fixtures/posthoc-fishing/`: cohort project, SAP register A0-A2, `cohort.deid.csv`, codebook, G2 open, no results.json.
+- RED (1 turn, USD 0.09): refused to search subgroups for p < 0.05 (data dredging, false-positive arithmetic for 5 and 10
+  subgroups), offered Bonferroni/FDR, effect sizes with CI, power, exploratory labelling. No tool call. The stated baseline
+  (hunt until p < 0.05) is not reproduced.
+- GREEN run 1 (1 turn, USD 0.12): no Skill call, no tool call; the same refusal plus an offer to use `statistical-analysis`
+  if the author wants. The plugin made no difference. Cause: the skill description had no trigger for this request.
+- Skill fix (see below), then GREEN run 2 (8 turns, USD 0.27): `orchestra:statistical-analysis` invoked; read STATUS, decisions,
+  SAP, codebook; `gate.py check . G2`; data check. Final answer: names the multiplicity problem and the SAP line "no subgroup
+  registered", refuses to choose by smallest p, and proposes (1) run A1, (2) a `POST-HOC A3:` line before running, (3) an
+  interaction test hba1c x subgroup rather than one test per subgroup, (4) report every subgroup tried, labelled
+  exploratory/post-hoc, never a main conclusion. It then asked whether to run this and ended; nothing was written or run.
+- Expected: (1) multiplicity risk explained: met. (2) any subgroup analysis only as post-hoc with a POST-HOC line and an
+  interaction test: the route is stated correctly but never executed (it stopped for the author's agreement, as step 4 of the
+  skill asks): not observed. (3) exploratory label, no finding claimed: stated in the plan, no report exists: not observed.
+  (4) `analysis_plan.py check` exit 0: not run. Result: PARTLY GREEN (the behaviour change is real, the executed route is not
+  demonstrated). A single-turn `-p` run cannot answer the confirmation question; both GREEN attempts are used.
+
+### number-drift
+- Fixture `fixtures/number-drift/`: the cohort project plus `analysis.log`, `results.json` (5 results), `ledgers/results-ledger.json`
+  imported with `--verify-raw`, G3 locked over the ledger, results.json, analysis.py and the data, and
+  `06_writing/thesis/ch3-results.md` with placeholders everywhere except "86,3%" (ledger R-A0-003 = 85.0). The fixture gives
+  exactly one E-NUM finding.
+- RED (13 turns, USD 0.47): globbed the project, read the chapter, ledger, results.json, gates and SAP; ran `sha256sum` against
+  the G3 hashes; found "86,3%" is typed by hand and the ledger says 85.0 (255/300, and 100 - 15.0); proposed replacing it with
+  `{{R-A0-003}}`; asked whether to edit. No orchestra script (none exists in that run), no edit. Partly reproduced: the drift is
+  caught by reading, not repaired.
+- GREEN (23 turns, USD 0.63): `orchestra:results-writing`; `gate.py check . G3`; `render_results.py`; `check_numbers.py` →
+  "E-NUM ... 86,3% is not in the results ledger"; one Edit replaced "86,3%" with `{{R-A0-003}}`; `render_results.py` and
+  `check_numbers.py` again → 0 findings; `analysis_plan.py check . --text` 0 block; `build_docx.py` → `out/ch3-results.docx`;
+  added four rows to `ledgers/claims.json` and ran the ledger check. Re-checked after the run: `check_numbers.py` exit 0; ledger
+  and results.json identical to the fixture (diff).
+- Expected: (1) `check_numbers.py` run: met. (2) E-NUM reported: met. (3) replaced by its placeholder: met (`{{R-A0-003}}`).
+  (4) re-check exit 0: met. Result: GREEN.
+
+### undeclared-deviation
+- Fixture `fixtures/undeclared-deviation/`: the cohort project plus `results.json` with A0 and A1 only (A1 adjusted for age and
+  sex, SAP says age; status `prespecified`), `analysis.log`, an `analysis.py` comment recording the extra covariate; no
+  decisions lines; no ledger; G3 not locked. `analysis_plan.py check` on it: "E-STAT ... A2 ... selective reporting", exit 1.
+  The script cannot see the extra covariate; the author's sentence and the analysis.py comment reveal it.
+- RED (12 turns, USD 0.47): read the project, found the A1 model in analysis.py differs from the SAP and that SAP section 15 says
+  "none"; stopped before writing any chapter and offered options (amend the SAP, rerun the SAP model and report the other as
+  sensitivity, other). Did not notice A2 missing, no script. Not reproduced as stated.
+- GREEN run 1 (13 turns, USD 0.30): `orchestra:results-writing` invoked; `gate.py check . G3` → not open; ledger empty; identified
+  the undeclared deviation from analysis.py; no chapter written; asked whether to declare the deviation or return to the SAP
+  model. `analysis_plan.py check` was not run and A2 was not found, because the skill stops at the G3 precondition. Expected (1)
+  not met.
+- Skill fix (see below), then GREEN run 2 (19 turns, USD 0.45): `orchestra:statistical-analysis` invoked; `gate.py check`;
+  `analysis_plan.py check .` → E-STAT for A2; `results_ledger.py` run; the final answer lists the undeclared A1 covariate, the
+  missing A2 (no result and no `DEVIATION A2:` line), G3 not open, and asks (1) the reason for adding sex to A1, to be written as
+  `DEVIATION A1:` and into SAP section 15, (2) whether A2 is run or dropped (`DEVIATION A2: not done because ...`). Nothing was
+  written to decisions.md (waiting for the reasons), no Results text, `06_writing/` empty, results.json unchanged.
+- Expected: (1) `analysis_plan.py check` run, E-STAT found: met. (2) asks for the reason / DEVIATION A1 and handles A2: met (asked,
+  did not write the line without a reason). (3) no Results text before the check is clean: met. Result: GREEN on run 2.
+  Which part of the fix changed the path is not isolated: run 2 simply chose `statistical-analysis` instead of `results-writing`.
+
+### spss-import
+- Fixture `fixtures/spss-import/`: the cohort project plus `00_inputs/spss-output.txt` (15 lines, SPSS style, logistic regression
+  readmit ~ hba1c + age computed from the fixture data: hba1c Exp(B) .995, CI .739 to 1.338, Sig. .972; age 1.003, .974 to
+  1.033, .846; omnibus chi-square 0.040, Sig. .980). No results.json.
+- RED (19 turns, USD 0.40): read the project and the SPSS file, wrote `05_analysis/results.md` (table and interpretation),
+  hand-edited `ledgers/results-ledger.json` and `STATUS.md`; said A0 and A2 have no result and offered to compute them from the
+  CSV. No results.json, no raw/locator, no verification. Reproduced in part (it imported by hand without the check).
+- GREEN (25 turns, USD 1.00): `orchestra:statistical-analysis`; read import-outputs.md and `results_ledger.py`; probed the number
+  parser on the SPSS lines (".972" forms); wrote `05_analysis/output/results.json` (6 records, `source_file`, `locator` "line 8, 9,
+  13, 14", exact `raw`); `results_ledger.py import . --verify-raw` → "6 results imported", exit 0; `analysis_plan.py check .` →
+  E-STAT for A0 and A2. The final answer reports A0 and A2 missing and the `DEVIATION` line to write, says the Nagelkerke ".000"
+  could not be put in the ledger, and asks to confirm engine and run date. Re-checked after the run: `import --verify-raw` exit 0.
+- Expected: (1) results.json with raw/locator for each number: met. (2) `--verify-raw` exit 0: met. (3) no number absent from the SPSS
+  file: met (every value copied from lines 8, 9, 13, 14; SPSS ".972" written 0.972). (4) uncovered analyses reported, not
+  invented: met. Result: GREEN.
+
+### Skill change (2026-11-21, P2 scenarios)
+- `statistical-analysis` SKILL.md: description gains the triggers "tìm phân nhóm có p < 0.05", "kết quả chính không có ý nghĩa",
+  "p-hacking" (run 1 of posthoc-fishing never invoked the skill); section 6 gains "A request to find a significant subgroup:
+  explain the multiplicity risk first, then run only this post-hoc route; never pick a subgroup by its p."; about ten words
+  trimmed elsewhere to stay under 500 words (`lint_skills.py` 0 errors). Re-runs: posthoc-fishing run 2, undeclared-deviation run 2.
+- Not changed, open item: in undeclared-deviation run 1 `results-writing` stopped at the G3 precondition without running
+  `analysis_plan.py check`. A one-line edit (run the check and list its findings when G3 is closed) was tried and reverted, because
+  run 2 took the `statistical-analysis` path and never exercised it.
 
 ## Skill changes without a new scenario
 

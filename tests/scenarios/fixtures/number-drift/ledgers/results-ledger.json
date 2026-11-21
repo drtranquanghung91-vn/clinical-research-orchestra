@@ -1,0 +1,79 @@
+{
+  "results": [
+    {
+      "id": "R-A0-001",
+      "analysis_id": "A0",
+      "status": "prespecified",
+      "label": "Số bệnh nhân",
+      "value": 300,
+      "kind": "n",
+      "source_file": "05_analysis/output/analysis.log",
+      "locator": "line 1",
+      "raw": "A0 n = 300",
+      "data_sha256": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593",
+      "locked": false
+    },
+    {
+      "id": "R-A0-002",
+      "analysis_id": "A0",
+      "status": "prespecified",
+      "label": "Tỷ lệ tái nhập viện 30 ngày",
+      "value": 15.0,
+      "kind": "percent",
+      "source_file": "05_analysis/output/analysis.log",
+      "locator": "line 2",
+      "raw": "A0 readmit = 45 (15.0 %)",
+      "data_sha256": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593",
+      "locked": false
+    },
+    {
+      "id": "R-A0-003",
+      "analysis_id": "A0",
+      "status": "prespecified",
+      "label": "Tỷ lệ không tái nhập viện 30 ngày",
+      "value": 85.0,
+      "kind": "percent",
+      "source_file": "05_analysis/output/analysis.log",
+      "locator": "line 3",
+      "raw": "A0 no readmit = 255 (85.0 %)",
+      "data_sha256": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593",
+      "locked": false
+    },
+    {
+      "id": "R-A1-001",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "OR của HbA1c với tái nhập viện, hiệu chỉnh tuổi",
+      "value": 0.99,
+      "kind": "or",
+      "source_file": "05_analysis/output/analysis.log",
+      "locator": "line 4",
+      "raw": "A1 OR hba1c = 0.99 (95% CI 0.74 to 1.34), p = 0.972",
+      "ci": [
+        0.74,
+        1.34
+      ],
+      "p": 0.972,
+      "data_sha256": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593",
+      "locked": false
+    },
+    {
+      "id": "R-A2-001",
+      "analysis_id": "A2",
+      "status": "prespecified",
+      "label": "OR tái nhập viện, nam so với nữ",
+      "value": 1.71,
+      "kind": "or",
+      "source_file": "05_analysis/output/analysis.log",
+      "locator": "line 5",
+      "raw": "A2 OR male vs female = 1.71 (95% CI 0.89 to 3.28), p = 0.105",
+      "ci": [
+        0.89,
+        3.28
+      ],
+      "p": 0.105,
+      "data_sha256": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593",
+      "locked": false
+    }
+  ]
+}
