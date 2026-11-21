@@ -3,7 +3,7 @@
 
   python render_results.py <project> <file.md> [--lang en|vi]
 
-Parts: {{R-A1-001}} value, .ci, .p, .n, .full. Language defaults to project.yaml language.output.
+Parts: {{R-A1-001}} value, .ci, .p, .n, .count (non-negative integer, 0 decimals), .full. Language defaults to project.yaml language.output.
 Writes <stem>.rendered.md beside the input. Exit 0 = written; 1 = unknown id or missing part (E-NUM
 findings listed, nothing written); 2 = usage or I/O error.
 """
@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from crolib import numfmt, projectcfg  # noqa: E402
 
-PLACEHOLDER = re.compile(r"\{\{(R-A\d+-\d{3})(?:\.(value|ci|p|n|full))?\}\}")
+PLACEHOLDER = re.compile(r"\{\{(R-A\d+-\d{3})(?:\.(value|ci|p|n|count|full))?\}\}")
 MALFORMED = re.compile(r"\{\{[^{}]*R-[^{}]*\}\}", re.IGNORECASE)
 
 

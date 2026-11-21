@@ -14,7 +14,7 @@ EN_DASH = "–"
 _TOKEN = {
     "en": re.compile(r"(?<![\w.])-?\d+(?:\.\d+)?%?(?!\w)"),
     "vi": re.compile(r"(?<![\w,])-?\d+(?:,\d+)?%?(?!\w)"),
-    "any": re.compile(r"(?<![\w.,])-?\d+(?:[.,]\d+)?%?(?!\w)"),
+    "any": re.compile(r"(?<![\w.,])-?(?:\d+(?:[.,]\d+)?|[.,]\d+)%?(?!\w)"),
 }
 
 
@@ -24,6 +24,8 @@ def round_half_up(x: float, decimals: int) -> Decimal:
 
 def fmt(x: float, decimals: int, lang: str = "en") -> str:
     s = format(round_half_up(x, decimals), "f")
+    if s.startswith("-") and not s.strip("-0."):
+        s = s[1:]  # never print negative zero
     return s.replace(".", ",") if lang == "vi" else s
 
 
@@ -32,7 +34,10 @@ def fmt_p(p: float, lang: str = "en") -> str:
 
 
 def fmt_range(lo: float, hi: float, decimals: int, lang: str = "en") -> str:
-    return f"{fmt(lo, decimals, lang)}{EN_DASH}{fmt(hi, decimals, lang)}"
+    a, b = fmt(lo, decimals, lang), fmt(hi, decimals, lang)
+    if a.startswith("-") or b.startswith("-"):  # an en dash next to a minus sign is unreadable
+        return f"{a}{' đến ' if lang == 'vi' else ' to '}{b}"
+    return f"{a}{EN_DASH}{b}"
 
 
 def _precision(kind: str) -> int:
@@ -59,6 +64,10 @@ def render(rec: dict, part: str, lang: str) -> str:
         if rec.get("n") is None:
             raise KeyError("n")
         return fmt(rec["n"], 0, lang)
+    if part == "count":
+        if rec.get("count") is None:
+            raise KeyError("count")
+        return fmt(rec["count"], 0, lang)
     if part == "full":
         v = render(rec, "value", lang)
         if rec.get("ci"):
