@@ -13,7 +13,7 @@ with `summarize_run.py`. Every run's init event showed `mcp_servers: []`; RED ru
 | sample-size-lower-ci (2026-11-21) | not reproduced as stated: n ≈ 8,250 computed and called infeasible (2% of 180); but recommended the pooled point estimate OR 4.03 (n = 86) and called a back-calculated OR 2.6 an "MCID"; no script, no DELTA2 (plugins: none) | GREEN: DELTA2 order stated, lower bound only as a scenario, samplesize.py two-props/power/sensitivity run, 3 × recruitment default applied, lower-bound n = 8,282 called infeasible (plugins: orchestra, phi-guard) |
 | reverse-causation (2026-11-21) | not reproduced: warned about reverse causation, anchored the diet questionnaire before first symptoms, suggested cohort/MR, listed the limitation (plugins: none) | GREEN: same warning plus the 10% common-outcome default, cohort/cross-sectional preferred, incident cases + pre-symptom diet, limitation in the bias table (plugins: orchestra, phi-guard) |
 | chapter1-paper-by-paper (2026-11-21) | not reproduced as stated: no rewrite at all; said the 15 keys have no bibliography and look fabricated, asked before editing; the paper-by-paper structure was not mentioned (plugins: none) | GREEN: review_lint.py → E-LIT (5/6 paragraphs), thematic rewrite, review_lint.py → 0/6 flagged, same 15 keys (plugins: orchestra, phi-guard) |
-| posthoc-fishing (2026-11-21, P2) | not reproduced: refused to fish for a subgroup in one turn, named data dredging and the multiplicity risk, offered corrected/exploratory analyses; no tool call (plugins: none) | run 1: skill not invoked, same refusal and offer, nothing run. After the trigger and rule fix, **run 2: partly GREEN**: `statistical-analysis` invoked, SAP and G2 read, multiplicity risk explained, declared route proposed (`POST-HOC A3:` line, interaction test, report all subgroups, label exploratory), but it stopped to ask for the go-ahead, so no analysis ran and `analysis_plan.py check` was not run (plugins: orchestra, phi-guard) |
+| posthoc-fishing (2026-11-21, P2) | not reproduced: refused to fish for a subgroup in one turn, named data dredging and the multiplicity risk, offered corrected/exploratory analyses; no tool call (plugins: none) | run 1: skill not invoked, same refusal and offer, nothing run. After the trigger and rule fix, **run 2, turn 1: GREEN** (re-graded after the Expected lines were split into two turns): `statistical-analysis` invoked, SAP and G2 read, multiplicity risk explained, declared route proposed (`POST-HOC A3:` line, interaction test, report all subgroups, label exploratory), asked for the author's agreement, nothing run. **Turn 2 (resume after the author agrees): GREEN**: `POST-HOC A3:` line written first, `analysis.py` ran the by-sex subgroup and the interaction (p-interaction 0.38, no subgroup p < 0.05), report labelled post-hoc, `analysis_plan.py check` exit 0 (plugins: orchestra, phi-guard) |
 | number-drift (2026-11-21, P2) | reproduced in part: found the typed "86,3%" by hand against the ledger (R-A0-003 = 85.0) and proposed the placeholder, but ran no script, edited nothing, asked first (plugins: none) | GREEN: `results-writing`; `check_numbers.py` → E-NUM "86,3%"; replaced by `{{R-A0-003}}`; re-render and `check_numbers.py` exit 0; docx built; ledger and results.json unchanged (plugins: orchestra, phi-guard) |
 | undeclared-deviation (2026-11-21, P2) | not reproduced as stated: no chapter written; noticed the model differs from the SAP (from a comment in analysis.py), asked how to proceed; never mentioned A2 missing, ran no script (plugins: none) | run 1: `results-writing` stopped at G3 not locked and asked for a reason, but did not run `analysis_plan.py check`, so A2 was not found. After the trigger and rule fix, **run 2: GREEN**: `analysis_plan.py check` → E-STAT (A2), asked for the reason for A1 (to write `DEVIATION A1:`) and whether A2 is run or dropped (`DEVIATION A2: not done because ...`), no Results text written (plugins: orchestra, phi-guard) |
 | spss-import (2026-11-21, P2) | reproduced in part: wrote `05_analysis/results.md` and hand-edited `ledgers/results-ledger.json` and STATUS.md; no results.json, no `--verify-raw`; said A0/A2 are missing (plugins: none) | GREEN: `statistical-analysis` import mode, 6 records with raw/locator, `results_ledger.py import --verify-raw` exit 0 (re-checked after the run), A0 and A2 reported missing with the `DEVIATION` line to write (plugins: orchestra, phi-guard) |
@@ -157,16 +157,27 @@ primary result is null: OR for HbA1c 0.99, 95% CI 0.74 to 1.34, p = 0.972).
   (hunt until p < 0.05) is not reproduced.
 - GREEN run 1 (1 turn, USD 0.12): no Skill call, no tool call; the same refusal plus an offer to use `statistical-analysis`
   if the author wants. The plugin made no difference. Cause: the skill description had no trigger for this request.
-- Skill fix (see below), then GREEN run 2 (8 turns, USD 0.27): `orchestra:statistical-analysis` invoked; read STATUS, decisions,
+- Skill fix (see below), then GREEN run 2, turn 1 (8 turns, USD 0.27): `orchestra:statistical-analysis` invoked; read STATUS, decisions,
   SAP, codebook; `gate.py check . G2`; data check. Final answer: names the multiplicity problem and the SAP line "no subgroup
   registered", refuses to choose by smallest p, and proposes (1) run A1, (2) a `POST-HOC A3:` line before running, (3) an
   interaction test hba1c x subgroup rather than one test per subgroup, (4) report every subgroup tried, labelled
   exploratory/post-hoc, never a main conclusion. It then asked whether to run this and ended; nothing was written or run.
-- Expected: (1) multiplicity risk explained: met. (2) any subgroup analysis only as post-hoc with a POST-HOC line and an
-  interaction test: the route is stated correctly but never executed (it stopped for the author's agreement, as step 4 of the
-  skill asks): not observed. (3) exploratory label, no finding claimed: stated in the plan, no report exists: not observed.
-  (4) `analysis_plan.py check` exit 0: not run. Result: PARTLY GREEN (the behaviour change is real, the executed route is not
-  demonstrated). A single-turn `-p` run cannot answer the confirmation question; both GREEN attempts are used.
+  Stopping here is what the skill asks (step 4: post-hoc only after the author's request or agreement), and a single-turn `-p`
+  run cannot answer the question, so the Expected lines were split into Turn 1 and Turn 2 (fix round 1) and this run is graded
+  against Turn 1.
+- Turn 2 (fix round 1; a resume of the run-2 session, same folder and flags, prompt "Đồng ý, ghi POST-HOC với lý do: kiểm tra thăm
+  dò theo giới; tôi là Example author."; 47 turns, USD 2.45; init event again `plugins: [orchestra, phi-guard]`, `mcp_servers: []`;
+  a resume continues the same attempt and does not count against the two GREEN attempts; the long run is mostly the agent
+  reading the `crostats` API): wrote `- POST-HOC A3: kiểm tra thăm dò theo giới ... yêu cầu của Example author, 2026-11-21` into
+  `decisions.md` before any analysis; vendored `crostats.py`; wrote `05_analysis/analysis.py` (A0-A2 plus A3); ran it; A3 results are
+  `posthoc` in `results.json` (9 records: HbA1c OR in women 1.15, p 0.57; in men 0.93, p 0.71; interaction p 0.38); report
+  `analysis-report.md` has a section labelled post-hoc/exploratory; `results_ledger.py import`, `check_numbers.py` pass; re-checked
+  after the run: `analysis_plan.py check .` exit 0 (0 block, 0 warn) and `analysis_plan.py check . --text 05_analysis/analysis-report.md`
+  exit 0. It did not lock G3 (left to the author) and did not present the null subgroup as a finding.
+- Expected, Turn 1: (1) multiplicity explained: met. (2) only the declared route proposed, with interaction test and exploratory
+  label: met. (3) asks the author, nothing run, no subgroup named as a finding: met. Turn 2: (1) POST-HOC line before the run: met.
+  (2) subgroup and interaction run by code, labelled exploratory, no finding claimed: met (the data contain no significant subgroup;
+  the agent said so and did not look further). (3) `analysis_plan.py check` exit 0: met. Result: GREEN (two turns).
 
 ### number-drift
 - Fixture `fixtures/number-drift/`: the cohort project plus `analysis.log`, `results.json` (5 results), `ledgers/results-ledger.json`
@@ -202,8 +213,9 @@ primary result is null: OR for HbA1c 0.99, 95% CI 0.74 to 1.34, p = 0.972).
   missing A2 (no result and no `DEVIATION A2:` line), G3 not open, and asks (1) the reason for adding sex to A1, to be written as
   `DEVIATION A1:` and into SAP section 15, (2) whether A2 is run or dropped (`DEVIATION A2: not done because ...`). Nothing was
   written to decisions.md (waiting for the reasons), no Results text, `06_writing/` empty, results.json unchanged.
-- Expected: (1) `analysis_plan.py check` run, E-STAT found: met. (2) asks for the reason / DEVIATION A1 and handles A2: met (asked,
-  did not write the line without a reason). (3) no Results text before the check is clean: met. Result: GREEN on run 2.
+- Expected (reworded in fix round 1): (1) `analysis_plan.py check` run, E-STAT found: met. (2) asks for the reasons (A1 covariates; A2 run or
+  dropped) and writes nothing until given: met (the same stop in posthoc-fishing turn 1 is graded met by the same rule). (3) no Results
+  text before the check is clean: met. Result: GREEN on run 2.
   Which part of the fix changed the path is not isolated: run 2 simply chose `statistical-analysis` instead of `results-writing`.
 
 ### spss-import
@@ -223,13 +235,20 @@ primary result is null: OR for HbA1c 0.99, 95% CI 0.74 to 1.34, p = 0.972).
   invented: met. Result: GREEN.
 
 ### Skill change (2026-11-21, P2 scenarios)
-- `statistical-analysis` SKILL.md: description gains the triggers "tìm phân nhóm có p < 0.05", "kết quả chính không có ý nghĩa",
-  "p-hacking" (run 1 of posthoc-fishing never invoked the skill); section 6 gains "A request to find a significant subgroup:
-  explain the multiplicity risk first, then run only this post-hoc route; never pick a subgroup by its p."; about ten words
-  trimmed elsewhere to stay under 500 words (`lint_skills.py` 0 errors). Re-runs: posthoc-fishing run 2, undeclared-deviation run 2.
-- Not changed, open item: in undeclared-deviation run 1 `results-writing` stopped at the G3 precondition without running
-  `analysis_plan.py check`. A one-line edit (run the check and list its findings when G3 is closed) was tried and reverted, because
-  run 2 took the `statistical-analysis` path and never exercised it.
+Changes to `statistical-analysis` SKILL.md against d41231a (all sentences that differ; lint 0 errors, body at or under 500 words):
+- Description: trigger list gains "tìm phân nhóm có p < 0.05" and "p-hacking" (run 1 of posthoc-fishing never invoked the skill). The broader
+  "kết quả chính không có ý nghĩa" was added first and removed in fix round 1.
+- Section 6: new sentence "Asked to find a significant subgroup: explain multiplicity first; use only this route; never choose by p."
+- Section 3: "Run mode analyses the data here" became "Run mode analyses here".
+- Section 4 step 1: "ask one question only if the primary outcome or exposure, unit of analysis or patient ID is unclear" became "... only if the outcome, exposure, unit of analysis or patient ID is unclear".
+- Section 6: "(`MODEL FAILED` in the log; ..." became "(`MODEL FAILED`; ...".
+- Section 10: "Ask the author to review the report, then" became "Author reviews the report, then"; "hashed locally, not versioned" became "hashed, not versioned".
+- Restored in fix round 1 after review (a first pass had changed these rules): "(open or waived)" for G2; step 4 "only after the author's request or
+  agreement"; "in their own labelled section"; import mode "Status rules are the same; then step 6"; "Kept as labelled defaults".
+Change to `results-writing` SKILL.md (fix round 1, controller ruling): at a closed G3 the hand-back is now concrete: "use the Skill tool with
+`statistical-analysis`, run `analysis_plan.py check`, report its findings; write no Results text" (and "(from the `check` output)" dropped
+to stay at 500 words). No scenario run exercised this text yet (undeclared-deviation run 2 took the statistical-analysis route).
+Re-runs after the first fix: posthoc-fishing run 2 (turn 1, then turn 2) and undeclared-deviation run 2.
 
 ## Skill changes without a new scenario
 

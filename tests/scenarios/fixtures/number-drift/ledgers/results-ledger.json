@@ -10,7 +10,7 @@
       "source_file": "05_analysis/output/analysis.log",
       "locator": "line 1",
       "raw": "A0 n = 300",
-      "data_sha256": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593",
+      "data_sha256": "7f38eb0344d9be4e60a8e6ca25181053a704aa0e50f0776bf9cb453fcbeb7683",
       "locked": false
     },
     {
@@ -23,7 +23,7 @@
       "source_file": "05_analysis/output/analysis.log",
       "locator": "line 2",
       "raw": "A0 readmit = 45 (15.0 %)",
-      "data_sha256": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593",
+      "data_sha256": "7f38eb0344d9be4e60a8e6ca25181053a704aa0e50f0776bf9cb453fcbeb7683",
       "locked": false
     },
     {
@@ -36,7 +36,7 @@
       "source_file": "05_analysis/output/analysis.log",
       "locator": "line 3",
       "raw": "A0 no readmit = 255 (85.0 %)",
-      "data_sha256": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593",
+      "data_sha256": "7f38eb0344d9be4e60a8e6ca25181053a704aa0e50f0776bf9cb453fcbeb7683",
       "locked": false
     },
     {
@@ -54,7 +54,7 @@
         1.34
       ],
       "p": 0.972,
-      "data_sha256": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593",
+      "data_sha256": "7f38eb0344d9be4e60a8e6ca25181053a704aa0e50f0776bf9cb453fcbeb7683",
       "locked": false
     },
     {
@@ -72,7 +72,7 @@
         3.28
       ],
       "p": 0.105,
-      "data_sha256": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593",
+      "data_sha256": "7f38eb0344d9be4e60a8e6ca25181053a704aa0e50f0776bf9cb453fcbeb7683",
       "locked": false
     }
   ]

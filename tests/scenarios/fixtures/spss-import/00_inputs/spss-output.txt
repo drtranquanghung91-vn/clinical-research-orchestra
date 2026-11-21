@@ -1,0 +1,15 @@
+LOGISTIC REGRESSION VARIABLES readmit
+  /METHOD=ENTER hba1c age
+  /CRITERIA=PIN(.05) POUT(.10) ITERATE(20) CUT(.5).
+
+Variables in the Equation
+                  B    S.E.    Wald  df    Sig.   Exp(B)    Lower    Upper
+                                                          95% C.I. for EXP(B)
+Step 1a  hba1c      -.005    .151    .001   1    .972     .995     .739    1.338
+         age         .003    .015    .037   1    .846    1.003     .974    1.033
+         Constant  -1.879   1.517   1.535   1    .215     .153
+a. Variable(s) entered on step 1: hba1c, age.
+
+Case Processing Summary: N = 300, readmit = 1 in 45 cases (15.0%)
+Omnibus test of model coefficients: Chi-square = 0.040, df = 2, Sig. = .980
+Nagelkerke R Square = .000

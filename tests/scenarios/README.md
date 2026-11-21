@@ -37,6 +37,10 @@ What each isolation flag does (Claude Code 2.1.226):
 - Still present and cannot be removed: Claude Code's built-in tools and built-in skills (deep-research, code-review,
   loop, ...), and the login of the real account. The model is called as the logged-in user.
 
+A scenario that needs the author's answer (a confirmation the skill must ask for) has a second turn: from the same run folder,
+rerun the GREEN command with `--resume <session_id>` (the id is in the init event) and the answer as the prompt, writing to
+`../run-turn2.jsonl`. A resume continues the same attempt; it does not count against the two GREEN attempts.
+
 Check the run (do this every time, the run is only valid if the init event is clean):
 
     python "$REPO/tests/scenarios/summarize_run.py" ../run.jsonl

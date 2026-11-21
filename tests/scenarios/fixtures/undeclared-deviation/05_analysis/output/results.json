@@ -1,7 +1,7 @@
 {
   "engine": "python (synthetic fixture)",
   "data_file": "04_data/cohort.deid.csv",
-  "data_sha256": "3e00a7e969f5375304766251d658fbba69257b89423f57ad1461b00f7b380593",
+  "data_sha256": "7f38eb0344d9be4e60a8e6ca25181053a704aa0e50f0776bf9cb453fcbeb7683",
   "run_at": "2026-11-21",
   "results": [
     {

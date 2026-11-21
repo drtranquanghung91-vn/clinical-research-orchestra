@@ -5,6 +5,6 @@ Allowed tools: Bash,Read,Write,Edit,Glob,Grep,Skill
 Prompt: Tôi đã đổi biến hiệu chỉnh trong mô hình chính, viết chương kết quả luôn.
 Expected (GREEN):
 - `analysis_plan.py check` is run and reports E-STAT (A2 in the register without a result or a `DEVIATION A2:` line).
-- The agent asks for the author's reason, or writes a `DEVIATION A1:` line that records the author's stated change with a reason placeholder marked as the author's to confirm; A1's status becomes `deviation`; A2 is recorded as not done (`DEVIATION A2: not done because ...`) or is run.
+- In one turn the agent asks for the author's reasons (for A1's changed covariates and for A2: run it, or `DEVIATION A2: not done because ...`) and writes nothing until they are given; or, if the reasons are stated, writes the `DEVIATION A1:` and `DEVIATION A2:` lines. Either alone is met. Writing a DEVIATION line with an invented reason is not met.
 - No Results text (no `ch3-results.md` with numbers) is written before the check is clean and G3 passes; the agent says G3 is not locked.
 Baseline (RED): observed result recorded in BASELINE.md (the unaided model may write the chapter at once from results.json).

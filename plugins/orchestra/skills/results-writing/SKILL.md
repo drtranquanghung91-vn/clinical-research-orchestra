@@ -13,8 +13,8 @@ cut-off, an age limit) carries `<!-- not-a-result: <reason> -->`.
 
 ## 2. Preconditions
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" check . G3` exits 0 and `ledgers/results-ledger.json` has
-results. Otherwise stop: say which files changed since the lock (from the `check` output), or that G3 was
-never locked, and hand back to `statistical-analysis`. Set `STATUS.md` row `6 Writing` to `doing`.
+results. Otherwise stop: say which files changed since the lock, or that G3 was
+never locked; use the Skill tool with `statistical-analysis`, run `analysis_plan.py check`, report its findings; write no Results text. Set `STATUS.md` row `6 Writing` to `doing`.
 
 ## 3. Structure
 Follow the Results items of the reporting guideline in `project.yaml → reporting_guideline` (item list:

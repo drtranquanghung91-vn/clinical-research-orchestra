@@ -14,6 +14,6 @@ for i in range(N):
     hba1c = round(min(13.0, max(5.0, random.gauss(7.4, 1.2))), 1)
     rows.append([f"P{i + 1:03d}", age, sex, hba1c, 1 if i in readmit else 0])
 with open(sys.argv[1], "w", newline="", encoding="utf-8") as fh:
-    w = csv.writer(fh)
+    w = csv.writer(fh, lineterminator="\n")
     w.writerow(["id", "age", "sex", "hba1c", "readmit"])
     w.writerows(rows)
