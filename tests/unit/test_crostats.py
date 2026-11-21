@@ -212,6 +212,7 @@ class TestCrostatsFixRound1(unittest.TestCase):
         self.assertIn("9 − 10", self.rec.results[-1]["label"])
 
     def test_table1_test_follows_displayed_summary(self):
+        from crolib import numfmt
         rng = self.np.random.default_rng(21)
         xa, xb = rng.normal(0, 1, 300), rng.normal(10, 1, 50)
         d = self.pd.DataFrame({"x": self.np.r_[xa, xb], "g": ["a"] * 300 + ["b"] * 50})
@@ -220,17 +221,69 @@ class TestCrostatsFixRound1(unittest.TestCase):
         row = t[t["Characteristic"].str.startswith("x,")].iloc[0]
         self.assertEqual(row["Characteristic"], "x, mean ± SD")
         self.assertEqual(row["Test"], "Welch t-test")
-        self.assertEqual(row["p"], self.cs.numfmt.fmt_p(float(self.st.ttest_ind(xa, xb, equal_var=False).pvalue)))
+        self.assertEqual(row["p"], numfmt.fmt_p(float(self.st.ttest_ind(xa, xb, equal_var=False).pvalue)))
 
     def test_table1_three_groups(self):
+        from crolib import numfmt
         d, xs = self._k_groups(11, lambda rng, i: rng.normal(10 + i, 2, 60))
         rng = self.np.random.default_rng(14)
         d["sex"] = rng.choice(["F", "M"], len(d))
         t = self.cs.table1(d, ["y", "sex"], "g", self.rec, "T3.1", "T")
         num = t[t["Characteristic"] == "y, mean ± SD"].iloc[0]
         self.assertEqual(num["Test"], "One-way ANOVA")
-        self.assertEqual(num["p"], self.cs.numfmt.fmt_p(float(self.st.f_oneway(*xs).pvalue)))
+        self.assertEqual(num["p"], numfmt.fmt_p(float(self.st.f_oneway(*xs).pvalue)))
         cat = t[t["Characteristic"] == "sex, n (%)"].iloc[0]
         self.assertEqual(cat["Test"], "Chi-square")
         ref = self.st.chi2_contingency(self.pd.crosstab(d["g"], d["sex"]).to_numpy(), correction=False)[1]
-        self.assertEqual(cat["p"], self.cs.numfmt.fmt_p(float(ref)))
+        self.assertEqual(cat["p"], numfmt.fmt_p(float(ref)))
+
+
+@unittest.skipUnless(HAVE, "pandas, numpy, scipy and statsmodels are required")
+class TestCrostatsVendored(unittest.TestCase):
+    """Projects copy crostats.py alone into 05_analysis/; it must not import sibling modules."""
+
+    def test_single_file_copy_runs_alone(self):
+        import shutil
+        import subprocess
+        import sys
+        import numpy as np
+        import pandas as pd
+        import crostats
+        import results_ledger
+        with tempfile.TemporaryDirectory() as t:
+            tmp = Path(t)
+            shutil.copy(Path(crostats.__file__), tmp / "crostats.py")
+            (tmp / "04_data").mkdir()
+            rng = np.random.default_rng(7)
+            pd.DataFrame({"y": np.r_[rng.normal(10, 2, 40), rng.normal(12, 2, 40)],
+                          "g": [0] * 40 + [1] * 40}).to_csv(tmp / "04_data" / "x.deid.csv", index=False)
+            code = (
+                "import sys\n"
+                f"sys.path.insert(0, {str(tmp)!r})\n"
+                "import crostats\n"
+                "assert not any(m == 'crolib' or m.startswith('crolib.') for m in sys.modules), 'crolib imported'\n"
+                "df = crostats.load_data('04_data/x.deid.csv')\n"
+                "rec = crostats.Recorder('.', '04_data/x.deid.csv')\n"
+                "rec.add('A1', 'prespecified', 'participants analysed', len(df), 'n')\n"
+                "r = crostats.compare_two(df, 'y', 'g', rec, 'A1')\n"
+                "rec.save()\n"
+                "print(r['test'])\n")
+            run = subprocess.run([sys.executable, "-I", "-c", code], cwd=tmp, capture_output=True, text=True,
+                                 timeout=300)
+            self.assertEqual(run.returncode, 0, run.stderr)
+            self.assertEqual(run.stdout.strip(), "Welch t-test")
+            doc = json.loads((tmp / "05_analysis" / "output" / "results.json").read_text(encoding="utf-8"))
+            self.assertEqual([r["id"] for r in doc["results"]], ["R-A1-001", "R-A1-002"])
+            self.assertEqual(doc["results"][0]["value"], 80)
+            self.assertEqual(results_ledger.validate_doc(doc, tmp, verify_raw=True), [])
+
+    def test_inlined_formatting_matches_numfmt(self):
+        import crostats
+        from crolib import numfmt
+        self.assertEqual(crostats.KINDS, numfmt.KINDS)
+        self.assertEqual(crostats.EN_DASH, numfmt.EN_DASH)
+        for x in (0.05, 0.25, 0.35, 1.45, 2.675, -0.04, -0.05, 12.345, 99.95, 1e-7, 123456.789):
+            for d in (0, 1, 2, 3):
+                self.assertEqual(crostats._fmt(x, d), numfmt.fmt(x, d), (x, d))
+        for p in (0.0, 0.0004, 0.000999, 0.001, 0.0015, 0.0495, 0.05, 0.9999, 1.0):
+            self.assertEqual(crostats._fmt_p(p), numfmt.fmt_p(p), p)

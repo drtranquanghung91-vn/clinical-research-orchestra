@@ -3,8 +3,9 @@
 Dependencies: pandas, numpy, scipy, statsmodels (python -m pip install pandas scipy statsmodels openpyxl);
 lifelines only for fit_cox, imported lazily (python -m pip install lifelines).
 
-Imported by the project's 05_analysis/analysis.py; never reads 00_inputs. Data come only from
-04_data/*.deid.csv (load_data refuses anything else). Every test choice is written to
+Imported by the project's 05_analysis/analysis.py; never reads 00_inputs. Self-contained: a project
+vendors this one file into 05_analysis/ (no import of crolib or any other plugin module).
+Data come only from 04_data/*.deid.csv (load_data refuses anything else). Every test choice is written to
 05_analysis/output/log.txt with its reason (Recorder.log) and every estimate is recorded with
 Recorder.add, which writes one log line per result; that line is the record's `raw` text and its
 `locator` is "line <k>", so results_ledger.py --verify-raw can find it.
@@ -36,7 +37,6 @@ import json
 import math
 import platform
 import re
-import sys
 import warnings
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
@@ -55,8 +55,26 @@ except ImportError as e:  # pragma: no cover - exercised only without the depend
     raise ImportError("crostats needs pandas, numpy, scipy and statsmodels: "
                       "python -m pip install pandas scipy statsmodels openpyxl") from e
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from crolib import numfmt  # noqa: E402
+# Number formatting identical to crolib/numfmt.py, inlined so that a project can vendor this single file
+# (tests/unit/test_crostats.py checks that the two agree).
+KINDS = frozenset({"n", "percent", "mean", "sd", "median", "iqr", "md", "or", "rr", "hr", "rd", "beta", "auc",
+                   "p", "other"})
+EN_DASH = "–"
+
+
+def _round_half_up(x, decimals: int) -> Decimal:
+    return Decimal(str(x)).quantize(Decimal(1).scaleb(-decimals), rounding=ROUND_HALF_UP)
+
+
+def _fmt(x, decimals: int) -> str:
+    """x with `decimals` decimals, rounded half up (numfmt.fmt, English)."""
+    return format(_round_half_up(x, decimals), "f")
+
+
+def _fmt_p(p) -> str:
+    """p with 3 decimals or "< 0.001" (numfmt.fmt_p, English)."""
+    return "< " + _fmt(0.001, 3) if p < 0.001 else _fmt(p, 3)
+
 
 DEFAULTS = {"shapiro_max_n": 50, "mean_min_n": 30, "exact_min_expected": 5, "epv_min": 10,
             "outlier_iqr_k": 1.5, "overdispersion_max": 2.0}
@@ -111,7 +129,7 @@ def _level(v) -> str:
 
 def _fmt1(x) -> str:
     """One decimal, half up (numfmt); a negative value that rounds to zero prints as 0.0."""
-    t = numfmt.fmt(x, 1)
+    t = _fmt(x, 1)
     return "0.0" if t == "-0.0" else t
 
 
@@ -192,8 +210,8 @@ class Recorder:
             raise ValueError(f"status '{status}' not in {STATUSES}")
         if not (isinstance(analysis_id, str) and re.fullmatch(r"A\d+", analysis_id)):
             raise ValueError(f"analysis_id '{analysis_id}' must be A<n>")
-        if kind not in numfmt.KINDS:
-            raise ValueError(f"kind '{kind}' not in {sorted(numfmt.KINDS)}")
+        if kind not in KINDS:
+            raise ValueError(f"kind '{kind}' not in {sorted(KINDS)}")
         if table is not None and not re.fullmatch(r"T\d+\.\d+", str(table)):
             raise ValueError(f"table id '{table}' must be T<chapter>.<n>")
         label = " ".join(str(label).split())
@@ -900,7 +918,7 @@ def table1(df, variables, by, rec, table_id, title, analysis_id="A0", show_p=Tru
         except ValueError as e:
             rec.log(f"{analysis_id} {var}: p not computed ({e})")
             return ["", ""]
-        return [numfmt.fmt_p(r["p"]), r["test"]]
+        return [_fmt_p(r["p"]), r["test"]]
 
     for var in variables:
         s = sub[var]
@@ -929,7 +947,7 @@ def table1(df, variables, by, rec, table_id, title, analysis_id="A0", show_p=Tru
                     cells.append(_fmt1(dd["mean"]) + (f" ± {_fmt1(sd)}" if sd is not None else ""))
                     rec.add(analysis_id, st, lab, dd["mean"], "mean", n=dd["n"], sd=sd, table=table_id)
                 else:
-                    cells.append(f"{_fmt1(dd['median'])} ({_fmt1(dd['q1'])}{numfmt.EN_DASH}{_fmt1(dd['q3'])})")
+                    cells.append(f"{_fmt1(dd['median'])} ({_fmt1(dd['q1'])}{EN_DASH}{_fmt1(dd['q3'])})")
                     rec.add(analysis_id, st, lab, dd["median"], "median", n=dd["n"], iqr=(dd["q1"], dd["q3"]),
                             table=table_id)
             name_cell = f"{var}, mean ± SD" if use_mean else f"{var}, median (Q1–Q3)"
