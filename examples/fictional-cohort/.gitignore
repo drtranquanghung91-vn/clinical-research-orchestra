@@ -1,0 +1,9 @@
+# Patient data never goes into git.
+# Raw inputs (original data files, protocols with names, PDFs from the hospital).
+00_inputs/
+# Pseudonym keys link P0001... back to real people: keep them on this machine only.
+*.key.csv
+# Only de-identified data files are versioned.
+04_data/*
+!04_data/*.deid.csv
+!04_data/.gitkeep
