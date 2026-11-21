@@ -43,6 +43,8 @@ def render(rec: dict, part: str, lang: str) -> str:
     kind = rec.get("kind") or "other"
     d = _precision(kind)
     if part == "value":
+        if kind == "p":
+            return fmt_p(rec["value"], lang)
         s = fmt(rec["value"], d, lang)
         return s + "%" if kind == "percent" else s
     if part == "ci":

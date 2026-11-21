@@ -51,3 +51,7 @@ class TestNumfmt(unittest.TestCase):
     def test_candidates(self):
         rec = {"value": 1.0, "ci": [0.5, 2.0], "p": 0.2, "n": 10, "sd": None, "iqr": None, "count": None}
         self.assertEqual(sorted(numfmt.candidates(rec)), [0.2, 0.5, 1.0, 2.0, 10])
+
+    def test_p_kind_value_uses_fmt_p(self):
+        self.assertEqual(numfmt.render({"kind": "p", "value": 0.0004}, "value", "en"), "< 0.001")
+        self.assertEqual(numfmt.render({"kind": "p", "value": 0.0381}, "value", "en"), "0.038")
