@@ -35,6 +35,7 @@ for _s in (sys.stdout, sys.stderr):
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from crolib import projectcfg  # noqa: E402
+import figures  # noqa: E402
 import render_results  # noqa: E402
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "poster"
@@ -277,6 +278,9 @@ def _validate(spec: dict) -> None:
     for key in ("authors", "affiliation", "key_message", "contact", "font", "logo", "hero"):
         if key in spec and spec[key] is not None and not isinstance(spec[key], str):
             raise PosterError(f'"{key}" must be a string')
+    font = spec.get("font")
+    if font and not re.fullmatch(r"(?:[^\W_]|[ ,\"'\-])+", font):
+        raise PosterError('"font" may only contain letters, digits, spaces, commas, quotes and hyphens')
     refs = spec.get("references")
     if refs is not None and (not isinstance(refs, list) or not all(isinstance(r, str) for r in refs)):
         raise PosterError('"references" must be a list of strings')
@@ -341,14 +345,38 @@ class Assets:
         self.fig_dir = project / "07_present" / "figures"
         self.warnings: set[str] = set()
 
+    def _check_poster_fresh(self, fid: str, poster_file: Path) -> None:
+        """Warn when F<n>.poster.* predates F<n>.data.json or was drawn from other numbers."""
+        data_path = self.fig_dir / f"{fid}.data.json"
+        if not data_path.is_file():
+            return
+        stale = False
+        try:
+            stale = poster_file.stat().st_mtime < data_path.stat().st_mtime
+            data = json.loads(data_path.read_text(encoding="utf-8"))
+            recorded = ((data.get("render") or {}).get("poster") or {}).get("data_digest")
+            if recorded and recorded != figures.content_digest(data):
+                stale = True
+        except (OSError, ValueError, AttributeError):
+            return
+        if stale:
+            self.warnings.add(f"figure {fid}: {poster_file.name} is older than {fid}.data.json or was drawn from "
+                              f"other numbers; rerun figures.py --profile poster")
+
     def figure(self, fid: str) -> dict:
+        if not FIG_ID.fullmatch(fid):
+            raise PosterError(f"figure id {fid!r} must look like F1, F2, ...")
         svg, png = self.fig_dir / f"{fid}.svg", self.fig_dir / f"{fid}.png"
         psvg, ppng = self.fig_dir / f"{fid}.poster.svg", self.fig_dir / f"{fid}.poster.png"
+        profile = "document"
         if psvg.is_file() or ppng.is_file():  # the poster profile (figures.py --profile poster) wins
             svg, png = psvg, ppng
+            profile = "poster"
+            self._check_poster_fresh(fid, psvg if psvg.is_file() else ppng)
         if not svg.is_file() and not png.is_file():
             raise PosterError(f"figure {fid}: neither {svg.name} nor {png.name} found in 07_present/figures (run figures.py)")
-        info = {"id": fid, "svg": svg if svg.is_file() else None, "png": png if png.is_file() else None, "aspect": None}
+        info = {"id": fid, "svg": svg if svg.is_file() else None, "png": png if png.is_file() else None, "aspect": None,
+                "profile": profile}
         if info["png"]:
             info["aspect"] = _png_aspect(png)
         if info["aspect"] is None and info["svg"]:
@@ -373,14 +401,18 @@ def _png_aspect(path: Path):
 
 
 # ------------------------------------------------------------------ sections to HTML
+FIG_ID = re.compile(r"F\d+")
+
+
 def figure_ref(sec: dict) -> dict | None:
     f = sec.get("figure")
     if not f:
         return None
-    if isinstance(f, str):
-        return {"id": f}
-    if isinstance(f, dict) and isinstance(f.get("id"), str):
-        return f
+    ref = {"id": f} if isinstance(f, str) else f if isinstance(f, dict) and isinstance(f.get("id"), str) else None
+    if ref is not None:
+        if not FIG_ID.fullmatch(ref["id"]):
+            raise PosterError(f"figure id {ref['id']!r} must look like F1, F2, ... (the figures.py ids)")
+        return ref
     raise PosterError(f"section {sec.get('heading', '?')!r}: 'figure' must be an id or an object with an id")
 
 
@@ -418,7 +450,8 @@ def figure_html(fref: dict, assets: Assets, out_dir: Path, width_cm=None) -> str
         body = f'<img src="{raster}" alt="{esc(alt)}">'
     cap = f"<figcaption>{inline_html(caption)}</figcaption>" if caption else ""
     style = f' style="width:{num(width_cm)}cm;max-width:100%"' if width_cm else ""
-    return f'<figure class="fig" data-fig="{esc(fref["id"])}"{style}>{body}{cap}</figure>'
+    return (f'<figure class="fig" data-fig="{esc(fref["id"])}" data-fig-profile="{info["profile"]}"{style}>'
+            f'{body}{cap}</figure>')
 
 
 def lab_html(rows: list[dict], lang: str) -> str:
@@ -647,6 +680,10 @@ def build_html(layout: str, spec: dict, assets: Assets, out_dir: Path) -> str:
     }
     if spec.get("logo"):
         logo = (assets.project / spec["logo"]).resolve()
+        try:
+            logo.relative_to(assets.project.resolve())
+        except ValueError:
+            raise PosterError(f"logo must be a file inside the project folder: {spec['logo']}") from None
         if not logo.is_file():
             raise PosterError(f"logo not found: {spec['logo']}")
         rep["LOGO"] = f'<img class="logo" src="{rel_url(logo, out_dir)}" alt="{esc(spec.get("logo_alt", "Logo"))}">'
@@ -1063,6 +1100,17 @@ def write_pptx(items: list[dict], spec: dict, out: Path) -> None:
 
 
 # ------------------------------------------------------------------ driver
+def _write_build_record(path: Path, project: Path, spec_path: Path) -> None:
+    """<layout>.build.json names the spec this build used, so poster_preflight needs no --spec."""
+    sp = spec_path if spec_path.is_absolute() or spec_path.exists() else project / spec_path
+    sp = sp.resolve()
+    try:
+        name = sp.relative_to(project.resolve()).as_posix()
+    except ValueError:
+        name = str(sp)
+    path.write_text(json.dumps({"spec": name}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
+
+
 def build(project, spec_path=None, layouts=None, browser=None, pptx=True, pptx_required=False,
           out=print, err=None) -> int:
     """Build the poster files. `browser` is a path to Chrome/Edge or None for no browser (HTML and PPTX are
@@ -1114,6 +1162,7 @@ def build(project, spec_path=None, layouts=None, browser=None, pptx=True, pptx_r
         html_path = base.with_name(layout + ".html")
         html_path.write_text(htmls[layout], encoding="utf-8", newline="\n")
         out(f"poster_build: wrote {html_path}")
+        _write_build_record(base.with_name(layout + ".build.json"), project, spec_path)
         if browser:
             try:
                 for p in run_browser(browser, html_path, base, geometry(layout, spec, assets)):
