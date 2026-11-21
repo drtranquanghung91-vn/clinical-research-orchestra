@@ -226,6 +226,14 @@ class TestFilesAndJson(Base):
         self.assertEqual(self.blocks(self.run_audit(files=[a])), [])
 
 
+class TestResultIdMasking(Base):
+    def test_result_ids_not_read_as_numbers(self):
+        self.w("07_present/defense/deck.json", json.dumps(
+            {"slides": [{"title": "Tỷ lệ đáp ứng R-A12-062 và R-A12-063.part"}]}, ensure_ascii=False))
+        self.w("06_writing/thesis/ch3.md", "Tỷ lệ đáp ứng R-A12-064 và R-A0-061.\n")
+        self.assertEqual(self.blocks(), [])
+
+
 class TestRealTextFalsePositives(Base):
     def test_ci_bounds_never_compared(self):
         self.w("06_writing/thesis/a.md", "OR thô 1,09 (KTC 95%: 0,74–1,61) ở nhóm A.\n")

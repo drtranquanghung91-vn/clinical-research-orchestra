@@ -20,7 +20,6 @@ Exit codes: 0 = clean (warnings allowed); 1 = E-NUM block findings (listed); 2 =
 from __future__ import annotations
 
 import argparse
-import ast
 import json
 import re
 import sys

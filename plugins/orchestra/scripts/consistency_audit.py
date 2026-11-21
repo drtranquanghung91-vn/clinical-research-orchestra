@@ -57,7 +57,8 @@ HEADING = re.compile(r"^\s{0,3}#{1,6}\s")
 REF_HEADING = re.compile(r"^\s{0,3}#{1,6}\s*(tài liệu tham khảo|references?|bibliography|danh mục tài liệu)", re.I)
 LIST_MARK = re.compile(r"\s*(?:[-*+]\s+)?\d+[.)]\s")
 MASKS = [re.compile(p, re.S) for p in (
-    r"\{\{[^{}]*\}\}", r"<!--.*?-->", r"https?://\S+", r"`[^`]*`", r"\[[^\]]*\]")]
+    r"\{\{[^{}]*\}\}", r"<!--.*?-->", r"https?://\S+", r"`[^`]*`", r"\[[^\]]*\]",
+    r"\bR-[A-Za-z0-9]+-\d+(?:\.\w+)?")]
 CUT = re.compile(r"[;!?|()\[\]{}]|[.,](?=\s|$)")
 WORD = re.compile(r"\w+(?:[.,]\d+)*")
 NEXT_WORD = re.compile(r"\s*([^\W\d_]+)")
