@@ -69,8 +69,9 @@ From the project folder, scripts in `${CLAUDE_PLUGIN_ROOT}/scripts/`, all exit 0
 
 ## 10. Hand-off
 Ask the author to review the report, then
-`gate.py lock <project> G3 --by "<author>" --files ledgers/results-ledger.json 05_analysis/output/results.json 05_analysis/analysis.py 05_analysis/crostats.py 05_analysis/crolib/numfmt.py 04_data/<file>.deid.csv`;
-this skill never locks G3 itself. Write in `project.yaml → language.output`.
+`gate.py lock <project> G3 --by "<author>" --files ledgers/results-ledger.json 05_analysis/output/results.json 05_analysis/analysis.py 05_analysis/crostats.py 04_data/<file>.deid.csv`
+(import mode: the `00_inputs/` export files instead of the two `.py` files; hashed locally, not
+versioned); this skill never locks G3 itself. Write in `project.yaml → language.output`.
 
 ## 11. Workflow
 `${CLAUDE_PLUGIN_ROOT}/references/workflows/statistical-analysis.md`

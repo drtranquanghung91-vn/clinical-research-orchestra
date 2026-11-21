@@ -38,11 +38,9 @@ every document, and are never promoted to primary or reported without their labe
    (`stat-tests.md` §10). Everything else: infer and list the assumption in the report's test-choice
    section.
 2. **Vendor the library.** If absent, copy `${CLAUDE_PLUGIN_ROOT}/scripts/crostats.py` to
-   `05_analysis/crostats.py` and `${CLAUDE_PLUGIN_ROOT}/scripts/crolib/numfmt.py` to
-   `05_analysis/crolib/numfmt.py` (crostats imports it), each with the first line
+   `05_analysis/crostats.py` (a single self-contained file) with the first line
    `# copied from clinical-research-orchestra <version> on <date>; do not edit` (version from
-   `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`). `data-preparation` may have copied `crostats.py`
-   already; check for both files.
+   `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`), unless `data-preparation` already copied it.
 3. **Write `05_analysis/analysis.py`** (skeleton below): one block per register row in ID order, each
    headed `# A<n> <objective>`, with the register's method and covariates exactly. Seeded (`crostats` seeds
    its permutations); no network; reads only the `.deid.csv`. Methods `crostats` lacks are written with
@@ -74,7 +72,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))  # vendored 05_analysis/crostats.py and crolib/
+sys.path.insert(0, str(HERE))  # the vendored 05_analysis/crostats.py
 try:
     import crostats
 except ImportError as e:
@@ -162,7 +160,10 @@ EPV < 10 (default) does not fail a model: report the adjusted estimates as explo
 ## Hand-off
 
 Show the author the rendered report. After review, the author locks G3:
-`python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" lock . G3 --by "<author>" --files ledgers/results-ledger.json 05_analysis/output/results.json 05_analysis/analysis.py 05_analysis/crostats.py 05_analysis/crolib/numfmt.py 04_data/<file>.deid.csv`
-(import mode: list the export files in `00_inputs/` instead of `analysis.py` and the library). This skill
-never locks G3 itself. Set `STATUS.md` row 5 to `done` once the author accepts the report; the next step
+`python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" lock . G3 --by "<author>" --files ledgers/results-ledger.json 05_analysis/output/results.json 05_analysis/analysis.py 05_analysis/crostats.py 04_data/<file>.deid.csv`
+
+Import mode locks the files actually used:
+`python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" lock . G3 --by "<author>" --files ledgers/results-ledger.json 05_analysis/output/results.json 00_inputs/<export file> … 04_data/<file>.deid.csv`
+(one entry per export file the records cite). The `00_inputs/` exports are hashed locally by `gate.py` but
+not versioned (git ignores `00_inputs/`). This skill never locks G3 itself. Set `STATUS.md` row 5 to `done` once the author accepts the report; the next step
 is `/orchestra:results` (`results-writing`).
