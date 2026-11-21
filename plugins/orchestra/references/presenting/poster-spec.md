@@ -60,7 +60,7 @@ the spec (vi uses the decimal comma); an unknown id exits 2 and nothing is writt
 - `title`, `sections` required. `key_message` is one sentence (see the key-message test in `poster-rules.md`).
 - A section has `heading` and any of: `body` (Markdown subset: `#` headings, paragraphs, `**bold**`, `*italic*`, `-`/`1.` lists,
   pipe tables), `figure` (`"F1"` or `{id, caption, alt}`; the files come from `07_present/figures/<id>.svg|png`, so run
-  `figures.py` first; `F<n>.poster.svg|png`, from `figures.py --profile poster`, is used when it exists), `lab_table`, `checklist`, `column` (1-based, to force a column when the automatic balance is off).
+  `figures.py` first; `F<n>.poster.svg|png`, from `figures.py --profile poster`, is used when it exists), `lab_table`, `checklist`, `column` (1-based, to force a column when the automatic balance is off), `figure_width_cm` (a number from 2 to 200: draw the section's figure at that width, centred-left; wider than the column = drawn at the column width, with a warning; ignored for the hero figure of the figure-led layout).
 - `lab_table` rows: `{"test", "value", "unit", "flag": "high|low|normal"}`; a `high` row shows an up arrow, `low` a down arrow,
   both coloured. Lab values go in a table, never in a sentence.
 - `checklist` items: a string (unchecked) or `{"text", "checked"}`; they print as ☐ and ☑. Criteria go in a checklist.
