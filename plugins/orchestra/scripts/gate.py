@@ -9,6 +9,10 @@ starting with "WAIVE G<n>:".
   python gate.py lock  <project> G3 --by "Author name" --files ledgers/results-ledger.json 05_analysis/output/km.txt
   python gate.py check <project> G3
 
+check prints (first token kept): "G3: open — results locked by <by> on <date>; <n> locked files unchanged"
+(open = the author approved; it does NOT mean the files are free to change), "G3: not open — not locked yet",
+or "G3: closed" plus the reasons (a locked file changed or is missing).
+
 Exit codes: open/lock 0 = recorded; check 0 = open (or waived), 1 = closed (reasons listed);
 2 = usage error, missing project folder or file, unreadable state (open/lock). Errors go to stderr.
 """
@@ -94,6 +98,26 @@ def check_gate(project: Path, gate: str) -> tuple[bool, list[str]]:
     return (not why), why
 
 
+def check_line(project: Path, gate: str, ok: bool, why: list[str]) -> str:
+    """Text printed by `check`. "G3: open" means the author approved; it never means "unlocked"."""
+    try:
+        entry = _load(project).get(gate)
+    except ValueError:
+        return f"{gate}: closed" + "".join(f"\n  - {w}" for w in why)
+    is_open = bool(entry) and entry.get("status") == "open"
+    if not ok:
+        if not is_open and not _waived(project, gate):
+            return f"{gate}: not open — " + ("not locked yet" if gate == "G3" else "not approved yet")
+        return f"{gate}: closed" + "".join(f"\n  - {w}" for w in why)
+    if not is_open:
+        return f"{gate}: open — waived in decisions.md"
+    n = len(entry.get("files", {}))
+    when = str(entry.get("at", ""))[:10]
+    what = "results locked" if gate == "G3" else "approved"
+    tail = f"; {n} locked files unchanged" if n else ""
+    return f"{gate}: open — {what} by {entry.get('by', '?')} on {when}{tail}"
+
+
 def main(argv=None) -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -127,7 +151,7 @@ def main(argv=None) -> int:
         print(f"{a.gate} open by {a.by}")
         return 0
     ok, why = check_gate(Path(a.project), a.gate)
-    print(f"{a.gate}: {'open' if ok else 'closed'}" + "".join(f"\n  - {w}" for w in why))
+    print(check_line(Path(a.project), a.gate, ok, why))
     return 0 if ok else 1
 
 

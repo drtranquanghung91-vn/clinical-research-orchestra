@@ -56,8 +56,8 @@ agent.
 | `python plugins/orchestra/scripts/crolib/ledgers.py check examples/fictional-cohort` | 0 | `ledgers: 0 problems` |
 | `python plugins/orchestra/scripts/verify_refs.py examples/fictional-cohort --cite examples/fictional-cohort/06_writing/thesis/ch1-literature-review.md` | 0 | 6 references, all VERIFIED, 0 citation findings |
 | `python plugins/orchestra/scripts/review_lint.py examples/fictional-cohort/06_writing/thesis/ch1-literature-review.md` | 0 | 0/20 paragraphs written paper by paper |
-| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G1` | 0 | G1: open |
-| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G2` | 0 | G2: open |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G1` | 0 | G1: open — approved by … |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G2` | 0 | G2: open — approved by … |
 | `python plugins/phi-guard/scripts/phi_scan.py --file examples/fictional-cohort/01_question/question.md examples/fictional-cohort/03_protocol/protocol.md` | 0 | warnings only: "full date" on the study-period dates (01/01/2021, 31/12/2022, 31/12/2023); no strong identifier |
 
 Sample size recomputed with the script, same n as `03_protocol/sample-size.md`:
@@ -162,7 +162,7 @@ exploratory.
 | `python plugins/orchestra/scripts/crolib/ledgers.py check examples/fictional-cohort` | 0 | `ledgers: 0 problems` |
 | `python plugins/orchestra/scripts/analysis_plan.py check examples/fictional-cohort --text examples/fictional-cohort/06_writing/thesis/ch3-results.md` | 0 | 0 block, 0 warn |
 | `python plugins/orchestra/scripts/results_ledger.py import examples/fictional-cohort --verify-raw` | 0 | 127 results imported; the locked ledger's SHA-256 is unchanged |
-| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3` | 0 | G3: open (locked hashes match) |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3` | 0 | G3: open — results locked by … ; n locked files unchanged |
 | `python plugins/orchestra/scripts/check_numbers.py examples/fictional-cohort examples/fictional-cohort/06_writing/thesis/ch3-results.rendered.md` | 0 | 0 findings |
 | `python plugins/phi-guard/scripts/phi_scan.py --file examples/fictional-cohort/04_data/codebook.md examples/fictional-cohort/06_writing/thesis/ch3-results.rendered.md` | 0 | no finding |
 
