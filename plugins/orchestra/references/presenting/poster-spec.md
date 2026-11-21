@@ -82,11 +82,15 @@ headings 50 pt, captions 26 pt, references 24 pt; `body_pt` overrides the body s
 
 ## Figures at poster size
 
-A figure scales as one piece: its type ends up at `font_size x placed width / width_cm`. `figures.py` lays rows and labels out in
-cm for 9-10 pt type at 16 cm, and clips its text columns when the type is raised relative to the width, so draw poster figures
-with `"style": {"width_cm": 16, "font_size": 10}` and place them wide: about 16 pt in an editorial column (26 cm), 22 pt in a
-pathway step (36 cm), 35 pt in the figure-led hero (58 cm). Do not put a dense forest plot in a narrow column; prefer the pathway
-or figure-led layout for it. SVG is inlined, so it stays vector in the PDF; the PNG sizes the check for effective dpi
+A figure scales as one piece: its printed type is `font_pt x placed width / drawn width`. Draw poster figures with
+`figures.py --profile poster` (see figures-spec.md): the type is the figure's `font_pt` (default 24) at its
+`poster_width_cm` (default 30), written to `F<n>.poster.*`, and `poster_build.py` prefers those files. Place the figure at
+that width (scale 1:1) so the type prints at `font_pt`; do not scale a document-profile figure (9 pt at 16 cm) up or into
+a column, because a 9 pt figure placed 23 cm wide prints at only 13 pt. Set `poster_width_cm` per figure to match its
+place: about 23 cm in an editorial column, about 31 cm in a pathway step, about 48 cm in the figure-led hero. Do not put a
+dense forest plot in a narrow column; prefer the pathway or figure-led layout for it. `poster_preflight.py` warns when a
+figure's printed text falls below 24 pt x min(width / 90, height / 120), and `poster_build.py` warns when a poster figure
+is older than its `data.json`. SVG is inlined, so it stays vector in the PDF; the PNG sizes the check for effective dpi
 (`data-raster`).
 
 ## IVLBCL rules (from the poster session)

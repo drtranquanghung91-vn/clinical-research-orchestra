@@ -12,6 +12,12 @@
   `F<n>.poster.{svg,pdf,png}` only; `data.json` stays one per figure (from the document run). Place the figure at its
   own width on the poster (scale 1:1) so the printed type equals `font_pt`; scaling a document-profile figure up is
   what made text clip or collide.
+- `data.json` records how each profile was drawn: `"render": {"document": {"width_cm": 16, "font_pt": 9}, "poster":
+  {"width_cm": 30, "font_pt": 24, "data_digest": "..."}}` (width_cm = the drawn width, which grows if the text needs it).
+  The poster run adds `render.poster` to an existing `data.json` (it never creates one). `poster_preflight.py` prints the
+  size a figure's text ends up at on paper: `font_pt` x placed width / drawn width. `poster_build.py` warns when
+  `F<n>.poster.*` is older than `F<n>.data.json` or was drawn from other numbers: rerun `figures.py --profile poster`.
+- A KM `at_risk` time outside 0 to `max_time` exits 2.
 - `slide` is not offered: slides use native charts built from `data.json`.
 
 ## Layout
