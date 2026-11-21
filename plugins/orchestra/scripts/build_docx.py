@@ -27,7 +27,11 @@ DEFAULTS = {"font": "Times New Roman", "size_pt": 13.0, "line_spacing": 1.5, "ma
 CAPTION = re.compile(r"^(Bảng|Table)\s+\d+(\.\d+)*\.?\s")
 NOTE = re.compile(r"^(Nguồn|Ghi chú|Note|Notes|Source)\s*:", re.I)
 COMMENT = re.compile(r"<!--.*?-->")
-INLINE = re.compile(r"(\*\*[^*]+\*\*|\*[^*]+\*)")
+# Emphasis needs a non-space right inside both markers and no letter, digit or asterisk right outside them,
+# so statistical asterisks ("Mean* 5", "5*3", "*p<0,05; **p<0,01") stay literal; "\*" is an escaped asterisk.
+INLINE = re.compile(r"(?<![\w*])(\*\*(?=[^\s*])[^*]+(?<=\S)\*\*|\*(?=[^\s*])[^*]+(?<=\S)\*)(?![\w*])")
+CTRL = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
+ESC_STAR, ESC_PIPE = "\ue000", "\ue001"
 
 
 def settings_from_project(project: Path | None) -> dict:
@@ -51,14 +55,16 @@ def settings_from_project(project: Path | None) -> dict:
 
 def _runs(text: str, bold_all: bool = False) -> str:
     out = []
-    for part in INLINE.split(text):
+    for idx, part in enumerate(INLINE.split(text.replace("\\*", ESC_STAR))):
         if not part:
             continue
-        bold = bold_all or (part.startswith("**") and part.endswith("**"))
-        italic = not bold and part.startswith("*") and part.endswith("*") and len(part) > 1
-        body = part.strip("*") if (bold and not bold_all) or italic else part
+        emph = idx % 2 == 1
+        bold = bold_all or (emph and part.startswith("**"))
+        italic = emph and not bold and part.startswith("*")
+        body = part.strip("*") if emph else part
         props = ("<w:b/>" if bold else "") + ("<w:i/>" if italic else "")
-        out.append(f'<w:r><w:rPr>{props}</w:rPr><w:t xml:space="preserve">{html.escape(body)}</w:t></w:r>')
+        out.append(f'<w:r><w:rPr>{props}</w:rPr><w:t xml:space="preserve">'
+                   f'{html.escape(body.replace(ESC_STAR, "*"))}</w:t></w:r>')
     return "".join(out)
 
 
@@ -68,7 +74,8 @@ def _p(text: str, style: str | None = None, indent: bool = False) -> str:
 
 
 def _table(rows: list[str]) -> str:
-    cells = [[c.strip() for c in r.strip().strip("|").split("|")] for r in rows]
+    cells = [[c.strip().replace(ESC_PIPE, "|") for c in r.strip().replace("\\|", ESC_PIPE).strip("|").split("|")]
+             for r in rows]
     cells = [r for r in cells if not all(re.fullmatch(r":?-{3,}:?", c) for c in r)]
     ncol = max(len(r) for r in cells)
     width = 9000 // ncol
@@ -85,7 +92,7 @@ def _table(rows: list[str]) -> str:
 
 
 def _body(md_text: str) -> str:
-    lines = [COMMENT.sub("", ln).rstrip() for ln in md_text.splitlines()]
+    lines = [COMMENT.sub("", ln).rstrip() for ln in CTRL.sub("", md_text).splitlines()]
     out, i, after_table = [], 0, False
     while i < len(lines):
         ln = lines[i]

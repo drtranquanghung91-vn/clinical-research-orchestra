@@ -60,6 +60,33 @@ class TestBuildDocx(unittest.TestCase):
             self.assertIn('w:ascii="Arial"', styles)
             self.assertIn('w:val="24"', styles)
 
+    def test_control_characters_stripped(self):
+        md = "Dòng a\x0bb và \x01c\n\n| H | V |\n|---|---|\n| x | 1\x0b2\x01 |\n"
+        doc = self.doc_xml(build_docx.build(md, build_docx.settings_from_project(None)))
+        xml.dom.minidom.parseString(doc)
+        self.assertIn("Dòng ab và c", doc)
+        self.assertIn(">12<", doc)
+
+    def test_statistical_asterisks_literal(self):
+        s = build_docx.settings_from_project(None)
+        for text in ("Mean* 5, SD* 3", "5*3 = 15 and 2*4", "*p<0,05; **p<0,01"):
+            doc = self.doc_xml(build_docx.build(text, s))
+            self.assertIn(text.replace("<", "&lt;"), doc)
+            self.assertNotIn("<w:i/>", doc)
+            self.assertNotIn("<w:b/>", doc)
+        doc = self.doc_xml(build_docx.build("a **bold** and *italic* x", s))
+        self.assertIn("<w:b/>", doc)
+        self.assertIn("<w:i/>", doc)
+        self.assertNotIn("*", doc.split("<w:body>")[1])
+        doc = self.doc_xml(build_docx.build(r"p\* và *a*", s))
+        self.assertIn("p* và ", doc)
+
+    def test_escaped_pipe_in_cell(self):
+        md = "| A | B |\n|---|---|\n| a\|b | c |\n"
+        doc = self.doc_xml(build_docx.build(md, build_docx.settings_from_project(None)))
+        self.assertIn(">a|b<", doc)
+        self.assertEqual(doc.count("<w:tc>"), 4)
+
     def test_cli(self):
         with tempfile.TemporaryDirectory() as d:
             src, out = Path(d, "a.md"), Path(d, "a.docx")
