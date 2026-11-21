@@ -19,9 +19,9 @@ explain differences (population, setting, definitions).
 Headings 1.1, 1.1.1; tables `Bảng 1.1`; figures `Hình 1.1`; captions above tables and below figures
 (follow the institution's template if it differs). Number references with `cite_render.py`, never by hand.
 
-## Length (default, institution may override)
-As a labelled default only: master's or chuyên khoa I-II about 20–30 pages; doctoral (NCS) about 30–45
-pages. Many institutions fix their own limit; the faculty template wins.
+## Length
+Follow the training institution's regulation on chapter length. If none is given, ask the author and
+record the decision in `decisions.md`.
 
 ## Citation style
 Vietnamese and English references both follow `project.yaml → citation_style`; Vietnamese authors keep

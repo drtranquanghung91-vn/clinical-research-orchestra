@@ -33,7 +33,12 @@ record's abstract or full text in the ledger.
 1. `python "${CLAUDE_PLUGIN_ROOT}/scripts/review_lint.py" <file>`: must not block (E-LIT). Rewrite
    flagged paragraphs thematically and re-run.
 2. `python "${CLAUDE_PLUGIN_ROOT}/scripts/verify_refs.py" <project> --cite <file>`: no E-REF findings.
-3. For a thesis or any output that needs numbered references, run `python "${CLAUDE_PLUGIN_ROOT}/scripts/cite_render.py" <project> <file> <out.md>` (add `--start-marker` when tables precede the review); never number references by hand.
+3. For a thesis or any output that needs numbered references, put a line that is exactly `{REFERENCES}`
+   where the list goes, then run `python "${CLAUDE_PLUGIN_ROOT}/scripts/cite_render.py" <project>
+   06_writing/thesis/ch1-literature-review.md 06_writing/thesis/ch1-literature-review.numbered.md`
+   (add `--start-marker "<heading text>"` when tables precede the review). A whole thesis is numbered
+   in one pass across chapters: render the assembled thesis, not Chapter 1 alone. Never number
+   references by hand.
 4. Add a claims row for each substantive claim to `ledgers/claims.json` (`kind: background`, status from
    reading level).
 5. Report to the author what was checked and anything that could not be verified.
