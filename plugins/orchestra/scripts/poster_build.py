@@ -450,7 +450,7 @@ def figure_html(fref: dict, assets: Assets, out_dir: Path, width_cm=None) -> str
         body = f'<img src="{raster}" alt="{esc(alt)}">'
     cap = f"<figcaption>{inline_html(caption)}</figcaption>" if caption else ""
     style = f' style="width:{num(width_cm)}cm;max-width:100%"' if width_cm else ""
-    return (f'<figure class="fig" data-fig="{esc(fref["id"])}" data-fig-profile="{info["profile"]}"{style}>'
+    return (f'<figure class="fig" data-fig="{esc(fref["id"])}"{style} data-fig-profile="{info["profile"]}">'
             f'{body}{cap}</figure>')
 
 

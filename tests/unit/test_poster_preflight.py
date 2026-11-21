@@ -293,6 +293,93 @@ class TestFigureWidth(Base):
             self.assertIn("figure_width_cm must be a number from 2 to 200", errs[0])
 
 
+class TestFigureText(Base):
+    """Printed text size of a figure = recorded font_pt x placed width / drawn width (F<n>.data.json render)."""
+
+    def setUp(self):
+        super().setUp()
+        self.spec(size_cm=[90, 120])
+        self.pdf = pdf_bytes(906, 1206)
+
+    def data(self, render):
+        (self.root / "07_present" / "figures" / "F1.data.json").write_text(
+            json.dumps({"id": "F1", "render": render}), encoding="utf-8")
+
+    def fig_dom(self, profile, placed, svg=False):
+        if svg:
+            el = (f'<svg class="fig-svg" data-raster="../figures/F1.png" data-placed-w-cm="{placed}" '
+                  f'data-natural-w="900"></svg>')
+        else:
+            el = (f'<img src="../figures/F1.png" alt="x" data-natural-w="9000" data-placed-w-cm="{placed}">')
+        return ('<!DOCTYPE html><html><body data-preflight="done"><div class="sheet">'
+                f'<figure class="fig" data-fig="F1" data-fig-profile="{profile}">{el}</figure></div></body></html>')
+
+    def check(self, profile, placed, svg=False):
+        self.put(self.pdf, self.fig_dom(profile, placed, svg))
+        return self.go()
+
+    def test_document_figure_scaled_into_column_warns(self):
+        self.data({"document": {"width_cm": 16, "font_pt": 9}, "poster": {"width_cm": 30, "font_pt": 24}})
+        for svg in (True, False):
+            rc, out, err = self.check("document", 23, svg)  # 9 x 23 / 16 = 12.9 pt
+            self.assertEqual(rc, 0)
+            self.assertEqual(len(err), 1, err)
+            self.assertRegex(err[0], r"E-PRINT warn editorial\.dom\.html:\d+: figure F1 .*12\.9 pt.*below 24\.0 pt")
+            self.assertTrue(out[0].endswith("0 block, 1 warn"))
+
+    def test_poster_figure_at_its_own_width_is_clean(self):
+        self.data({"document": {"width_cm": 16, "font_pt": 9}, "poster": {"width_cm": 30, "font_pt": 24}})
+        self.assertEqual(self.check("poster", 30)[2], [])
+        self.assertEqual(self.check("poster", 30, svg=True)[2], [])
+
+    def test_poster_figure_shrunk_warns(self):
+        self.data({"poster": {"width_cm": 30, "font_pt": 24}})
+        err = self.check("poster", 23)[2]  # 18.4 pt
+        self.assertEqual(len(err), 1, err)
+        self.assertIn("18.4 pt", err[0])
+
+    def test_threshold_scales_with_poster_size(self):
+        self.data({"poster": {"width_cm": 30, "font_pt": 24}})
+        self.spec(size_cm=[45, 60])
+        self.pdf = pdf_bytes(456, 606)
+        self.assertEqual(self.check("poster", 15)[2], [])  # 12 pt = 24 x 0.5
+
+    def test_missing_record_is_not_checked(self):
+        self.data({"document": {"width_cm": 16, "font_pt": 9}})
+        err = self.check("poster", 30)[2]
+        self.assertEqual(len(err), 1, err)
+        self.assertIn("not checked by script", err[0])
+        self.assertIn("F1", err[0])
+
+    def test_no_data_json_is_left_alone(self):
+        self.assertEqual(self.check("document", 23)[2], [])
+
+
+class TestSpecFromBuild(Base):
+    def test_preflight_uses_the_spec_poster_build_used(self):
+        other = self.root / "alt.json"
+        d = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))
+        d["size_cm"] = [60, 80]
+        other.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+        self.assertIn(tpb.pb.build(self.root, spec_path=other, layouts=["editorial"], browser=None, pptx=False,
+                                   out=lambda m: None, err=lambda m: None), (0, 2))
+        self.put(pdf_bytes(606, 806), dom(), "editorial")
+        out, err = [], []
+        rc = pp.run(self.root, ["editorial"], out=out.append, err=err.append)  # no spec argument
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(out, ["poster_preflight: editorial: 0 block, 0 warn"])
+
+    def test_explicit_spec_wins_over_the_record(self):
+        other = self.root / "alt.json"
+        d = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))
+        d["size_cm"] = [60, 80]
+        other.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+        (self.poster / "editorial.build.json").write_text('{"spec": "alt.json"}', encoding="utf-8")
+        self.put(pdf_bytes(906, 1206), dom(), "editorial")
+        self.assertEqual(pp.run(self.root, ["editorial"], "07_present/poster/poster.json",
+                                out=lambda m: None, err=lambda m: None), 0)  # poster.json is 90 x 120: the page matches
+
+
 class TestCli(Base):
     def test_default_layouts_skip_unbuilt_ones(self):
         self.spec(size_cm=[90, 120], layouts=["editorial", "figure-led"])

@@ -5,7 +5,8 @@ overflowing boxes, alt text and small text.
   python poster_preflight.py PROJECT [--layout editorial|pathway|figure-led ...] [--spec poster.json]
 
 Reads 07_present/poster/<layout>.pdf and <layout>.dom.html written by poster_build.py, and the poster size and
-bleed from the spec (default 07_present/poster/poster.json). Findings go to stderr, one per line:
+bleed from the spec (--spec, else the one poster_build recorded in <layout>.build.json, else
+07_present/poster/poster.json). Findings go to stderr, one per line:
   E-PRINT block|warn <file>:<line>: <message>
 A check that cannot run (missing PDF or DOM dump, a PDF the parser cannot read, a DOM dump without the
 preflight markers) is a warn line "not checked by script (<reason>)", never a pass.
@@ -14,10 +15,13 @@ Exit 0 = no block; 1 = at least one block; 2 = bad usage or spec.
 Effective dpi = natural pixels / placed width in inches (< 100 block, < 150 warn). Small text: a warning below
 24 pt x min(width_cm / 90, height_cm / 120) (the scale poster_build uses). SVG and PDF figures (inline svg or
 <img src=*.svg|*.pdf>) are vector: no dpi finding; they are listed in a "vector figures (no dpi)" stdout line.
+Figure text: for every figure drawn by figures.py, printed pt = font_pt x placed width / drawn width (the render
+record of its profile in F<n>.data.json); a warn below the same threshold.
 """
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import re
 import sys
@@ -136,6 +140,9 @@ class Dom(HTMLParser):
         self.stack: list[tuple[str, int | None]] = []
         self.images: list[dict] = []
         self.boxes: list[dict] = []
+        self.figs: list[dict] = []  # first img / svg of every <figure data-fig>
+        self._fig = None
+        self._fig_done = False
         self.done = False
         self._head: list[int] = []  # index of the heading being read, per open h1/h2
         self._text: list[str] = []
@@ -145,6 +152,13 @@ class Dom(HTMLParser):
         if tag == "body" and a.get("data-preflight") == "done":
             self.done = True
         box_i = None
+        if tag == "figure" and a.get("data-fig"):
+            self._fig = (a["data-fig"], a.get("data-fig-profile", "document"))
+            self._fig_done = False
+        if self._fig and not self._fig_done and (tag == "img" or tag == "svg"):
+            self.figs.append({"id": self._fig[0], "profile": self._fig[1], "attrs": a, "line": self.getpos()[0],
+                              "tag": tag})
+            self._fig_done = True
         classes = a.get("class", "").split()
         if "box" in classes:
             self.boxes.append({"attrs": a, "headings": [], "line": self.getpos()[0]})
@@ -169,6 +183,8 @@ class Dom(HTMLParser):
             self._text.append(data)
 
     def handle_endtag(self, tag):
+        if tag == "figure":
+            self._fig = None
         if tag in ("h1", "h2") and self._head:
             self._head.pop()
             txt = " ".join("".join(self._text).split())
@@ -314,6 +330,29 @@ def check_layout(layout: str, poster_dir: Path, size_cm, bleed_mm: float) -> Rep
 
     k = min(size_cm[0] / 90.0, size_cm[1] / 120.0)  # the same scale as poster_build
     thr = FONT_PT_90 * k
+    fig_dir = poster_dir.parent / "figures"
+    for fg in dom.figs:  # printed text size = recorded font_pt x placed width / drawn width
+        data_path = fig_dir / f"{fg['id']}.data.json"
+        if not data_path.is_file():
+            continue  # not drawn by figures.py: nothing recorded to check
+        placed = _fnum(fg["attrs"].get("data-placed-w-cm"))
+        try:
+            rec = json.loads(data_path.read_text(encoding="utf-8"))["render"][fg["profile"]]
+            font_pt, drawn = float(rec["font_pt"]), float(rec["width_cm"])
+        except (OSError, ValueError, KeyError, TypeError):
+            rep.add("warn", dom_name, fg["line"],
+                    f"figure {fg['id']}: not checked by script (no {fg['profile']} render size in "
+                    f"{data_path.name}; rerun figures.py" + (" --profile poster)" if fg["profile"] == "poster" else ")"))
+            continue
+        if not placed or placed <= 0 or drawn <= 0:
+            rep.add("warn", dom_name, fg["line"], f"figure {fg['id']}: not checked by script (placed width unknown)")
+            continue
+        printed = font_pt * placed / drawn
+        if printed < thr - 0.05:
+            rep.add("warn", dom_name, fg["line"],
+                    f"figure {fg['id']} text prints at {printed:.1f} pt ({font_pt:g} pt drawn at {drawn:g} cm, placed "
+                    f"{placed:g} cm), below {thr:.1f} pt; draw it with figures.py --profile poster at the width it "
+                    f"is placed")
     for b in dom.boxes:
         a = b["attrs"]
         if a.get("data-overflow") == "1":
@@ -331,6 +370,14 @@ def check_layout(layout: str, poster_dir: Path, size_cm, bleed_mm: float) -> Rep
 def run(project, layouts=None, spec_path=None, out=print, err=None) -> int:
     err = err or (lambda m: print(m, file=sys.stderr))
     project = Path(project)
+    if not spec_path:  # the spec poster_build recorded for the first built layout, else the default
+        for lay in (layouts or LAYOUTS):
+            try:
+                rec = json.loads((project / POSTER_DIR / f"{lay}.build.json").read_text(encoding="utf-8"))
+                spec_path = project / rec["spec"] if not Path(rec["spec"]).is_absolute() else rec["spec"]
+                break
+            except (OSError, ValueError, KeyError, TypeError):
+                continue
     spec_path = Path(spec_path) if spec_path else project / poster_build.SPEC_REL
     if not spec_path.is_absolute() and not spec_path.exists() and (project / spec_path).exists():
         spec_path = project / spec_path
