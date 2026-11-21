@@ -18,11 +18,22 @@ Defaults here (IQR × 1.5 for outliers) are defaults the author may override, no
 Each rule is a sentence another person can re-apply to the raw file. Reversible means the original
 value can be recovered from `00_inputs/`.
 
-## Audit script skeleton (`05_analysis/audit.py`)
+## Vendored library and audit script skeleton
+
+Projects carry their own copy of the library so scripts rerun without the plugin. If
+`05_analysis/crostats.py` is absent, copy `${CLAUDE_PLUGIN_ROOT}/scripts/crostats.py` there and make
+its first line (version from `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`):
+
+```
+# copied from clinical-research-orchestra <version> on <date>; do not edit
+```
+
+`05_analysis/audit.py`:
 
 ```python
-import os, sys
-sys.path.insert(0, os.path.join(os.environ["CLAUDE_PLUGIN_ROOT"], "scripts"))
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import crostats
 
 df = crostats.load_data("04_data/study.deid.csv")  # refuses anything but *.deid.csv
@@ -33,8 +44,7 @@ for col, miss in a["missing"].items():
     print(f"{col} | {miss} | {a['outliers'].get(col, '')}")
 ```
 
-Run it from the project folder. If `CLAUDE_PLUGIN_ROOT` is not set in the shell, put the plugin's
-`scripts` folder path there directly.
+Run it from the project folder.
 
 ## Missing data
 
