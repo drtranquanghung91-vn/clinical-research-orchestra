@@ -1,0 +1,22 @@
+title: "Yếu tố liên quan đến tái nhập viện 30 ngày ở bệnh nhân đái tháo đường típ 2"
+type: thesis-masters
+design: cohort
+reporting_guideline: STROBE
+language:
+  chat: vi
+  output: vi
+institution:
+  name: ""
+  template: ""
+citation_style: vn-thesis
+target:
+  journal: ""
+  conference: ""
+  word_limit: null
+  poster_size_cm: [90, 120]
+evidence_sources: [openevidence, pubmed, europepmc, crossref]
+docx:
+  font: "Times New Roman"
+  size_pt: 13
+  line_spacing: 1.5
+  margins_cm: [2, 2, 3, 2]
