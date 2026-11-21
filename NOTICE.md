@@ -12,3 +12,4 @@ This repository is MIT-licensed (see LICENSE). It includes or adapts the followi
 | `samplesize.py` | Amelia Le, version 3 | contributed under MIT | unchanged |
 | Statistical-analysis workflow (`statistical-analysis`, `crostats.py` test choices and reporting defaults) | `stat-analysis-vi` skill by Trần Quang Hưng (repository owner) | MIT | ported to English, adapted (SAP register, post-hoc rules) |
 | `build_docx.py` | Amelia Le, `md2docx.py` (v3, 20 Nov 2026) | contributed under MIT | approach adapted (WordprocessingML written directly; Markdown subset, numbered tables) |
+| `pptx_from_spec.py`, `check_pptx.py` | grand-rounds 0.2.0 (Trần Quang Hưng) | MIT | adapted: placeholders, km/forest charts, poster size |
