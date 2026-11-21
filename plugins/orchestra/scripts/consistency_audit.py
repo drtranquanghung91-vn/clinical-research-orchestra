@@ -31,7 +31,7 @@ import json
 import re
 import sys
 import unicodedata
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -57,7 +57,8 @@ HEADING = re.compile(r"^\s{0,3}#{1,6}\s")
 REF_HEADING = re.compile(r"^\s{0,3}#{1,6}\s*(tài liệu tham khảo|references?|bibliography|danh mục tài liệu)", re.I)
 LIST_MARK = re.compile(r"\s*(?:[-*+]\s+)?\d+[.)]\s")
 MASKS = [re.compile(p, re.S) for p in (
-    r"\{\{[^{}]*\}\}", r"<!--.*?-->", r"https?://\S+", r"`[^`]*`", r"\[[^\]]*\]")]
+    r"\{\{[^{}]*\}\}", r"<!--.*?-->", r"https?://\S+", r"`[^`]*`", r"\[[^\]]*\]",
+    r"\bR-[A-Za-z0-9]+-\d+(?:\.\w+)?")]
 CUT = re.compile(r"[;!?|()\[\]{}]|[.,](?=\s|$)")
 WORD = re.compile(r"\w+(?:[.,]\d+)*")
 NEXT_WORD = re.compile(r"\s*([^\W\d_]+)")
@@ -495,6 +496,16 @@ def _ledger_numbers(by_id: dict, lang: str) -> set:
     return vals
 
 
+def _matches_rounded(val, dec: int, others: set) -> bool:
+    """True when some (value, decimals) in `others`, printed with at least as many decimals, equals `val`
+    once rounded (half up) to the abstract's `dec` decimals: 85 matches 85.0 and 85,04."""
+    q = Decimal(1).scaleb(-dec)
+    for ov, od in others:
+        if od > dec and Decimal(ov).quantize(q, rounding=ROUND_HALF_UP) == Decimal(val):
+            return True
+    return False
+
+
 def _check_abstract(docs: list[Doc], infos_by_doc: list[list[Info]], by_id: dict, lang: str, out: list) -> None:
     per_doc = [{(v, d) for info in infos for _, v, d, _ in info.tokens} for infos in infos_by_doc]
     ledger = _ledger_numbers(by_id, lang)
@@ -512,7 +523,9 @@ def _check_abstract(docs: list[Doc], infos_by_doc: list[list[Info]], by_id: dict
             for tok, val, dec, _ in info.tokens:
                 if _trivial(tok, val, dec) or (val, dec) in ((Decimal(95), 0), (Decimal("0.05"), 2)):
                     continue
-                if (val, dec) in others or (val, dec) in reported:
+                if (val, dec) in reported:
+                    continue
+                if (val, dec) in others or _matches_rounded(val, dec, others):
                     continue
                 reported.add((val, dec))
                 out.append(("warn", info.loc,

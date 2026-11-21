@@ -125,3 +125,38 @@ class TestGate(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestGateCheckLines(unittest.TestCase):
+    def run_cli(self, *argv):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = gate.main(list(argv))
+        return code, out.getvalue()
+
+    def test_never_opened_line(self):
+        with tempfile.TemporaryDirectory() as t:
+            code, out = self.run_cli("check", str(project(t)), "G3")
+            self.assertEqual(code, 1)
+            self.assertTrue(out.startswith("G3: not open"), out)
+            self.assertIn("not locked yet", out)
+
+    def test_open_locked_line_is_explicit(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            gate.open_gate(p, "G3", by="Dr A", files=["ledgers/results-ledger.json"])
+            code, out = self.run_cli("check", str(p), "G3")
+            self.assertEqual(code, 0)
+            self.assertTrue(out.startswith("G3: open"), out)
+            self.assertIn("results locked by Dr A on ", out)
+            self.assertIn("1 locked files unchanged", out)
+
+    def test_changed_file_keeps_closed_lines(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            gate.open_gate(p, "G3", by="A", files=["ledgers/results-ledger.json"])
+            (p / "ledgers" / "results-ledger.json").write_text("{}", encoding="utf-8")
+            code, out = self.run_cli("check", str(p), "G3")
+            self.assertEqual(code, 1)
+            self.assertTrue(out.startswith("G3: closed"), out)
+            self.assertIn("changed after G3 was locked", out)

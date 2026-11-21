@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import struct
 import subprocess
@@ -281,6 +282,78 @@ class TestHtml(unittest.TestCase):
         self.assertAlmostEqual(info["aspect"], 2.0)
         run(self.root, layouts=["editorial"])
         self.assertIn("F1.poster.png", self.html("editorial"))
+
+    def _poster_fig(self, older=False, digest=None):
+        figs = self.root / "07_present" / "figures"
+        make_png(figs / "F1.poster.png", 300, 600)
+        data = {"id": "F1", "values": [1], "chart": {"k": 1},
+                "render": {"poster": {"width_cm": 30, "font_pt": 24}}}
+        if digest is not None:
+            data["render"]["poster"]["data_digest"] = digest
+        (figs / "F1.data.json").write_text(json.dumps(data), encoding="utf-8")
+        if older:
+            t = (figs / "F1.data.json").stat().st_mtime
+            os.utime(figs / "F1.poster.png", (t - 100, t - 100))
+
+    def test_stale_poster_figure_warns(self):
+        self._poster_fig(older=True)
+        rc, _, errs = run(self.root, layouts=["editorial"])
+        w = [e for e in errs if "F1" in e and "figures.py --profile poster" in e]
+        self.assertEqual(len(w), 1, errs)
+        self.assertTrue((self.poster / "editorial.html").is_file())  # a warning, not a failure (rc is 2 only: no browser)
+
+    def test_stale_poster_figure_digest_mismatch_warns(self):
+        self._poster_fig(digest="0" * 64)
+        rc, _, errs = run(self.root, layouts=["editorial"])
+        self.assertTrue([e for e in errs if "figures.py --profile poster" in e], errs)
+
+    def test_fresh_poster_figure_is_silent(self):
+        import figures
+        self._poster_fig()
+        figs = self.root / "07_present" / "figures"
+        d = json.loads((figs / "F1.data.json").read_text(encoding="utf-8"))
+        d["render"]["poster"]["data_digest"] = figures.content_digest(d)
+        (figs / "F1.data.json").write_text(json.dumps(d), encoding="utf-8")
+        t = (figs / "F1.data.json").stat().st_mtime
+        os.utime(figs / "F1.poster.png", (t + 5, t + 5))
+        rc, _, errs = run(self.root, layouts=["editorial"])
+        self.assertEqual([e for e in errs if "figures.py" in e], [], errs)
+
+    def test_spec_path_recorded_for_preflight(self):
+        other = self.root / "alt.json"
+        other.write_text((self.poster / "poster.json").read_text(encoding="utf-8"), encoding="utf-8")
+        rc, _, errs = run(self.root, spec_path=other, layouts=["editorial"])
+        self.assertFalse([e for e in errs if "invalid" in e or "not found" in e], errs)  # rc 2 here = no browser only
+        rec = json.loads((self.poster / "editorial.build.json").read_text(encoding="utf-8"))
+        self.assertEqual(rec["spec"], "alt.json")
+
+    def test_figure_logo_font_validation_exit_2(self):
+        bad = [("font", "Arial; } body{display:none}"), ("logo", "../outside.png"),
+               ("logo", str(Path(self.tmp.name) / "abs.png"))]
+        for key, val in bad:
+            spec = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))
+            spec[key] = val
+            (self.poster / "poster.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+            (Path(self.tmp.name) / "outside.png").write_bytes(b"x")
+            (Path(self.tmp.name) / "abs.png").write_bytes(b"x")
+            rc, _, errs = run(self.root)
+            self.assertEqual(rc, 2, (key, val))
+            self.assertTrue(errs and "poster_build:" in errs[0], (key, val, errs))
+        spec = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))
+        spec.pop("logo")
+        spec["font"] = 'Source Sans 3, "Noto Sans", sans-serif'
+        spec["sections"][1]["figure"] = {"id": "F1/../../x", "caption": "c"}
+        (self.poster / "poster.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+        rc, _, errs = run(self.root)
+        self.assertEqual(rc, 2)
+        self.assertIn("figure id", errs[0])
+
+    def test_figures_carry_id_and_profile_attributes(self):
+        run(self.root, layouts=["editorial"])
+        self.assertIn('data-fig-profile="document"', self.html("editorial"))
+        self._poster_fig()
+        run(self.root, layouts=["editorial"])
+        self.assertIn('data-fig-profile="poster"', self.html("editorial"))
 
     def test_template_tokens_in_user_text_stay_literal(self):
         spec = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))

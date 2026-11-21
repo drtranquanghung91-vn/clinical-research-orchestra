@@ -353,6 +353,45 @@ class TestFigureLayout(unittest.TestCase):
         self.assertTrue((self.p / "07_present" / "figures" / "F1.svg").exists())
         self.assertTrue((self.p / "07_present" / "figures" / "F1.data.json").exists())
 
+    def write_spec(self, spec):
+        (self.p / "07_present" / "figures" / "figures.json").write_text(json.dumps(spec), encoding="utf-8")
+
+    def run_cli(self, *extra):
+        return subprocess.run([sys.executable, str(SCRIPT), str(self.p), *extra], capture_output=True,
+                              text=True, encoding="utf-8")
+
+    def data(self, fid):
+        return json.loads((self.p / "07_present" / "figures" / f"{fid}.data.json").read_text(encoding="utf-8"))
+
+    def test_render_profiles_recorded_in_data_json(self):
+        self.write_spec(SPEC)
+        self.assertEqual(self.run_cli("--dpi", "50").returncode, 0)
+        before = self.data("F3")
+        doc = before["render"]["document"]
+        self.assertEqual(doc["font_pt"], 9)
+        self.assertGreaterEqual(doc["width_cm"], 16)
+        self.assertNotIn("poster", before["render"])
+        r = self.run_cli("--profile", "poster", "--dpi", "50")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        after = self.data("F3")
+        self.assertEqual(after["render"]["poster"]["font_pt"], 24)
+        self.assertGreaterEqual(after["render"]["poster"]["width_cm"], 30)
+        self.assertEqual(after["render"]["document"], doc)
+        for k in ("values", "chart", "source"):
+            self.assertEqual(after[k], before[k])
+        fig = self.p / "07_present" / "figures"
+        self.assertGreaterEqual((fig / "F3.poster.svg").stat().st_mtime, (fig / "F3.data.json").stat().st_mtime)
+
+    def test_km_at_risk_time_out_of_range_exit_2(self):
+        for bad in ([0, 6, 18], [-1, 6, 12]):
+            spec = json.loads(json.dumps(SPEC))
+            spec["figures"][1]["at_risk"] = bad
+            self.write_spec(spec)
+            r = self.run_cli("--only", "F2", "--dpi", "50")
+            self.assertEqual(r.returncode, 2, bad)
+            self.assertIn("F2", r.stderr)
+            self.assertIn("at_risk", r.stderr)
+
     def test_slide_profile_refused(self):
         (self.p / "07_present" / "figures" / "figures.json").write_text(json.dumps(SPEC), encoding="utf-8")
         r = subprocess.run([sys.executable, str(SCRIPT), str(self.p), "--profile", "slide"],

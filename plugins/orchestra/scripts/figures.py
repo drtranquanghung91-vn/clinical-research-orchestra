@@ -552,6 +552,10 @@ def build_km(ctx: Ctx, fig: dict, project: Path, lang: str, **_):
         times = [_clean_t(round(max_time * i / 4, 1)) for i in range(5)]
     if not (isinstance(times, list) and times and all(isinstance(t, (int, float)) for t in times)):
         raise FigureError(f"{fid}: 'at_risk' must be a list of times")
+    bad_t = [t for t in times if t < 0 or t > max_time]
+    if bad_t:
+        raise FigureError(f"{fid}: 'at_risk' times must lie between 0 and max_time ({max_time}); "
+                          f"got {', '.join(str(t) for t in bad_t)}")
     series, rows, vals = [], [], []
     for g, obs in groups.items():
         pts = km_curve(obs, max_time)
@@ -739,6 +743,25 @@ def main(argv=None) -> int:
         return 2
 
 
+def content_digest(data: dict) -> str:
+    """SHA-256 of the numbers a figure draws (values + chart); poster_build compares it to spot a stale poster figure."""
+    blob = json.dumps({"values": data.get("values"), "chart": data.get("chart")}, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+def _record_poster_render(path: Path, render: dict) -> None:
+    """Add render.poster (printed font_pt, drawn width_cm, digest of the drawn numbers) to an existing data.json."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return  # no document run yet: nothing to annotate (data.json stays one per figure)
+    if not isinstance(data, dict):
+        return
+    rec = dict(render, data_digest=content_digest(data))
+    data.setdefault("render", {})["poster"] = rec
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def _run(project: Path, args, plt, matplotlib) -> int:
     spec_path = project / SPEC_REL
     if not project.is_dir():
@@ -786,7 +809,12 @@ def _run(project: Path, args, plt, matplotlib) -> int:
                 raise FigureError(f"{fid}: cannot read the results ledger: {e}") from e
         ctx = _ctx_for(plt, ctx_style, lang, args.dpi, fig, args.profile)
         f, source, data = BUILDERS[fig["type"]](ctx, fig, by_id=by_id, lang=lang, project=project)
+        render = {"width_cm": round(float(f.get_figwidth()) * 2.54, 2), "font_pt": ctx.size}
+        for k in ("width_cm", "font_pt"):
+            if render[k] == int(render[k]):
+                render[k] = int(render[k])
         if args.profile == "poster":
+            _record_poster_render(outdir / f"{fid}.data.json", render)  # before the files, so they stay newer
             _save(ctx, f, outdir, fid, ".poster")
             print(f"{fid} {fig['type']} → {OUT_REL}/{fid}.poster.{{svg,pdf,png}}")
             continue
@@ -796,6 +824,7 @@ def _run(project: Path, args, plt, matplotlib) -> int:
             if k in data:
                 out[k] = data[k]
         out["chart"] = data["chart"]
+        out["render"] = {"document": render}
         (outdir / f"{fid}.data.json").write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(f"{fid} {fig['type']} → {OUT_REL}/{fid}.{{svg,pdf,png}}")
     return 0

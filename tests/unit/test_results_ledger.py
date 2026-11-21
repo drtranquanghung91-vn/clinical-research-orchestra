@@ -248,3 +248,46 @@ class TestResultsLedger(unittest.TestCase):
         self.assertIn("R-A1-001: removed", r.stderr)
         self.doc(result(), result(id="R-A1-002"))
         self.assertEqual(self.run_cli("import", str(self.p)).returncode, 0)
+
+    def test_writes_lf_only(self):
+        self.doc(result())
+        self.assertEqual(self.run_cli("import", str(self.p)).returncode, 0)
+        raw = (self.p / "ledgers" / "results-ledger.json").read_bytes()
+        self.assertNotIn(b"\r", raw)
+
+    def lock_g3(self):
+        import gate
+        gate.open_gate(self.p, "G3", by="A", files=["ledgers/results-ledger.json"])
+
+    def test_g3_locked_refuses_changed_ledger(self):
+        self.doc(result())
+        self.run_cli("import", str(self.p))
+        self.lock_g3()
+        led = self.p / "ledgers" / "results-ledger.json"
+        before = led.read_bytes()
+        self.doc(result(value=1.9), result(id="R-A1-002"))
+        r = self.run_cli("import", str(self.p), "--accept-relabel")
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("G3 is locked; the ledger is unchanged", r.stderr)
+        self.assertEqual(led.read_bytes(), before)
+
+    def test_g3_locked_identical_reimport_is_noop(self):
+        self.doc(result())
+        self.run_cli("import", str(self.p))
+        self.lock_g3()
+        led = self.p / "ledgers" / "results-ledger.json"
+        before = led.read_bytes()
+        r = self.run_cli("import", str(self.p))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("ledger unchanged", r.stdout)
+        self.assertEqual(led.read_bytes(), before)
+
+    def test_crlf_ledger_with_same_content_left_alone(self):
+        self.doc(result())
+        self.run_cli("import", str(self.p))
+        led = self.p / "ledgers" / "results-ledger.json"
+        crlf = led.read_bytes().replace(b"\n", b"\r\n")
+        led.write_bytes(crlf)
+        r = self.run_cli("import", str(self.p))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(led.read_bytes(), crlf)
