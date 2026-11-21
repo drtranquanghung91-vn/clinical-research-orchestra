@@ -112,11 +112,12 @@ rendered), `checklist` items, `lab_table` rows with arrows), `references` (keys 
    `<layout>.pdf` and a preview `<layout>.png` (about 2000 px on the long side) and dumps the rendered DOM
    to `<layout>.dom.html`. The template's script writes, for every image, its natural size and placed
    size, and flags every box whose content overflows.
-3. Writes `<layout>.pptx` (one slide at the poster size) through `pptx_from_spec.py` with native tables
-   and the figure images. No browser found → PDF/PNG skipped with exit 2 and a message; PPTX still built.
+3. Writes `<layout>.pptx` (one slide at the poster size) with python-pptx from a canvas spec
+   (`<layout>.spec.json`: positioned text boxes, native tables, figure images); figures use the
+   poster profile `F<n>.poster.*` when it exists. No browser found → PDF/PNG skipped with exit 2 and a message; PPTX still built.
 
 Layouts: **editorial** (three text-led columns), **pathway** (numbered steps along the reading path, key
-message band), **figure-led** (one dominant figure with the key message, text around it). No decorative
+message band), **figure-led** (one dominant figure, the largest element on the poster and filling its box, with the key message beside it and text around it). No decorative
 cards, gradients or rounded boxes by default (IVLBCL rules); lab values as tables with arrows; criteria as
 check lists.
 
