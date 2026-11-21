@@ -61,7 +61,8 @@ every document, and are never promoted to primary or reported without their labe
 
 ## `analysis.py` skeleton
 
-Column names, groups and IDs are examples; take them from the register and the codebook.
+Column names, groups and IDs are examples; take them from the register and the codebook. Analysis output is
+UTF-8: the script reconfigures stdout and stderr so Vietnamese labels print on a Windows console.
 
 ```python
 """Analysis for this project: every analysis in the SAP register (03_protocol/sap.md), in ID order.
@@ -71,6 +72,12 @@ Run from the project folder: python 05_analysis/analysis.py
 import math
 import sys
 from pathlib import Path
+
+for _stream in (sys.stdout, sys.stderr):  # analysis output is UTF-8 (Windows consoles default to cp1252)
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))  # the vendored 05_analysis/crostats.py

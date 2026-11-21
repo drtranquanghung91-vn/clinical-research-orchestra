@@ -33,6 +33,11 @@ its first line (version from `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`)
 ```python
 import sys
 from pathlib import Path
+for _stream in (sys.stdout, sys.stderr):  # analysis output is UTF-8 (Windows consoles default to cp1252)
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import crostats
 
@@ -44,7 +49,8 @@ for col, miss in a["missing"].items():
     print(f"{col} | {miss} | {a['outliers'].get(col, '')}")
 ```
 
-Run it from the project folder.
+Run it from the project folder. Its output is UTF-8 (stdout and stderr are reconfigured so Vietnamese
+column names print on a Windows console).
 
 ## Missing data
 
