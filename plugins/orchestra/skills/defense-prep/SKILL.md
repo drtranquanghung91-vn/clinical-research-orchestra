@@ -32,7 +32,7 @@ the author gave an institution template, set `template` in the spec.
 
 ## 5. Step 3: build and check
 - If the Skill tool lists `grand-rounds:medical-deck`, hand it the plan.
-- Otherwise: `pptx_from_spec.py 07_present/defense/deck.json 07_present/defense/deck.pptx --project .`,
+- Otherwise, scripts in `${CLAUDE_PLUGIN_ROOT}/scripts/`: `pptx_from_spec.py 07_present/defense/deck.json 07_present/defense/deck.pptx --project .`,
   then `check_pptx.py 07_present/defense/deck.pptx` and `lint_prose.py --slides 07_present/defense/deck.pptx`.
 Fix every serious finding; report each script's last line. Missing python-pptx: install hint, stop.
 
