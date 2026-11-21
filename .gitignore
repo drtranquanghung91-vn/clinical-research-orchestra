@@ -7,3 +7,9 @@ out/
 *.key.csv
 !plugins/orchestra/templates/project/out/
 !plugins/orchestra/templates/project/out/.gitkeep
+# Scratch files written into a plugin's scripts folder are never committed
+plugins/*/scripts/*
+!plugins/*/scripts/*.py
+!plugins/*/scripts/crolib/
+plugins/*/scripts/crolib/*
+!plugins/*/scripts/crolib/*.py

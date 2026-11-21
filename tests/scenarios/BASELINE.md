@@ -141,6 +141,26 @@ HTTP 200), so no Europe PMC fallback was needed. One skill change, after pmos ru
 - `phi-guard:deidentify-data` (fix wave 2): reports `patient_key` and `reasons`, and on "could not find a header row" asks the user for the row and re-runs with `--header-row N`. Covered by `test_headerless_file_writes_nothing_and_exits_2` and `test_header_row_option_forces_row`; a scenario needs a real-looking patient file, which the repo does not ship, so none was added.
 - `phi-guard:deidentify-data` (fix wave 3): reports the new drop reasons ("non-patient name", "unlisted ID-like header") and the `<stem>.key-episodes.csv` key file. Covered by the wave-3 tests in `test_deidentify.py`; no scenario for the same reason as above.
 - phi-guard hook (fix wave 2): matcher adds `PowerShell` (same outbound-only branch as Bash). Covered by `test_powershell_outbound_commands`; the phi scenarios above do not use PowerShell.
+- P1 skills with no scenario of their own (AGENTS.md "scenario or a note"). Each was exercised instead in the
+  end-to-end run in `examples/fictional-cohort/` (README stage table), and its output files were checked there;
+  a dedicated scenario is planned for P2:
+  - `research-question`: stage 2 (six intake facts → `01_question/question.md`, 3 references added with
+    `search_lit.py add` and VERIFIED; the G1 gate was opened by the author outside the agent).
+  - `critical-appraisal`: stage 3 (literature-search step 4c, all five records) and stage 4
+    (`/orchestra:appraise` on hu2026 and robbins2021, rewritten with ROBINS-E as the main tool;
+    `02_evidence/appraisal/*.md`, ledger `design`/`rob` fields set).
+  - `guideline-check`: stage 4 (`02_evidence/guidelines.md`: STROBE kept, ADA Standards of Care 2026 §16
+    added to the ledger and VERIFIED).
+- Final-review fix wave (2026-11-21), no new scenario runs: the "just do it" rules of research-question,
+  literature-search, protocol-design, sample-size-sap, critical-appraisal and research-project-setup now say
+  that they never open a gate, and literature-search ends with "No gate opens at this stage … Next:
+  `protocol-design`" (the E2E defect in `examples/fictional-cohort/decisions.md`); evidence-policy
+  §Identifiers is the single rule for sources without PMID/DOI and §Citing sources (`[@id]` →
+  `verify_refs.py --cite` → `cite_render.py`) is linked from research-question, protocol-design,
+  sample-size-sap and guideline-check; literature-search step 4c appraises key studies only and points to
+  `tools-by-design.md`. These are rule-text changes checked by reading and by `tools/lint_skills.py`; the
+  script changes behind them (group authors, network failure → exit 2, review_lint citation-key openers)
+  are covered by unit tests in `tests/unit/`.
 
 ## Script check
 

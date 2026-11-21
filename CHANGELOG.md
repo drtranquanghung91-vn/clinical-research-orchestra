@@ -12,6 +12,11 @@
 - Scenarios: pmos-nomenclature, sample-size-lower-ci, reverse-causation, chapter1-paper-by-paper
   (RED/GREEN, results in tests/scenarios/BASELINE.md).
 - Example: examples/fictional-cohort (simulated).
+- Final-review fixes: group (collective) authors kept on all lookup paths and warned about by
+  cite_render when missing; "PubMed unreachable + Europe PMC miss" is an error (exit 2), never
+  "not found"; review_lint catches "Smith [@id] found…" and "Nguyen et al, 2020…" openers;
+  evidence-policy has one rule for sources without PMID/DOI (`add-manual`, no "not verified" entries)
+  and a §Citing sources rule (`[@id]` in every project document); "just do it" never opens a gate.
 
 ## 0.1.0 (2026-11-20)
 - P0 foundation: marketplace, `orchestra` and `phi-guard` plugins, project skeleton, ledgers,
