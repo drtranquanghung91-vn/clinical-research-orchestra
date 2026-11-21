@@ -168,7 +168,9 @@ exploratory.
 
 `out/ch3-results.docx` contains "Bảng 3.1". Re-running `05_analysis/analysis.py` on a copy gives the
 same `results.json` apart from `run_at` and the same `log.txt`, and `render_results.py` gives the same
-rendered chapter. `05_analysis/crostats.py` is the plugin's `crostats.py` plus its one-line header.
+rendered chapter. `05_analysis/crostats.py` is the plugin's `crostats.py` as it was at the run (before the final P2 fix
+wave added `order=`) plus its one-line header. G2 and G3 were locked before the fix wave made
+`03_protocol/sap.md` part of both locks, so this example's locks do not list it.
 
 ### P2 edits made by hand
 

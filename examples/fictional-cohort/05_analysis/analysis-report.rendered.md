@@ -24,8 +24,8 @@
 Theo `04_data/cleaning-log.md` (audit chạy ở giai đoạn 4 Data, `05_analysis/audit.py`):
 1070 dòng, 0 dòng trùng lặp, 0 giá trị bất khả thi hoặc lỗi mã hóa — không có quy tắc làm
 sạch nào được áp dụng lên tệp dữ liệu. Thiếu dữ liệu chỉ ở `dm_duration_years` (thời gian mắc ĐTĐ):
-27 <!-- derived: R-A0-001.n - R-A1-003.n --> người bệnh (2,5%
-<!-- derived: (R-A0-001.n - R-A1-003.n) / R-A0-001.n * 100 -->); mọi biến khác không thiếu.
+27 <!-- derived: R-A0-001.n - R-A1-003.n --> người bệnh
+(2,5% <!-- derived: (R-A0-001.n - R-A1-003.n) / R-A0-001.n * 100 -->); mọi biến khác không thiếu.
 
 Outlier theo quy ước Tukey (IQR × 1,5, chỉ gắn cờ, không loại bỏ): 7 <!-- not-a-result: 04_data/cleaning-log.md, audit age --> giá trị ở `age`, 6 <!-- not-a-result: 04_data/cleaning-log.md, audit hba1c --> ở `hba1c`, 29 <!-- not-a-result: 04_data/cleaning-log.md, audit los_days --> ở `los_days`, và 224 <!-- not-a-result: 04_data/cleaning-log.md, audit time_to_readmit_days --> ở
 `time_to_readmit_days`. Số lượng lớn ở biến thời gian-đến-tái nhập viện là đặc điểm cấu trúc của một
@@ -244,8 +244,8 @@ Dữ liệu đầy đủ: `05_analysis/output/tables/T3.8.csv`.
 
 ## 7. Hạn chế về phương pháp
 
-- **Dữ liệu thiếu:** 27 <!-- derived: R-A0-001.n - R-A1-003.n --> người bệnh (2,5%
-  <!-- derived: (R-A0-001.n - R-A1-003.n) / R-A0-001.n * 100 -->) thiếu thời gian mắc ĐTĐ bị loại khỏi
+- **Dữ liệu thiếu:** 27 <!-- derived: R-A0-001.n - R-A1-003.n --> người bệnh
+  (2,5% <!-- derived: (R-A0-001.n - R-A1-003.n) / R-A0-001.n * 100 -->) thiếu thời gian mắc ĐTĐ bị loại khỏi
   các mô hình hiệu chỉnh (A1–A4 hiệu chỉnh) theo quy tắc phân tích ca đầy đủ đã chốt (`sap.md` mục 11:
   thiếu ≤5% ở biến hiệu chỉnh → ca đầy đủ, không impute). Đây là quyết định của tác giả, không phải
   giả định của bước phân tích này; không so sánh độ nhạy với imputation vì dưới ngưỡng áp dụng
