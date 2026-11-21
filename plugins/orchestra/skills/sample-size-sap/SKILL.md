@@ -59,7 +59,7 @@ explain this to the committee" paragraph, main test) and `03_protocol/sap.md` (e
 `project.yaml → language.output`, citing as `[@id]` (`${CLAUDE_PLUGIN_ROOT}/references/evidence-policy.md`
 §Citing sources). No project: answer in chat and offer to save. Then ask the author to
 approve; after approval run
-`python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" open <project> G2 --by "<author>"` and set `STATUS.md`
+`python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" open <project> G2 --by "<author>" --files 03_protocol/sap.md` and set `STATUS.md`
 row 3 to `done`.
 
 ## 7. Workflow

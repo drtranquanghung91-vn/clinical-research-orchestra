@@ -263,7 +263,7 @@ installed; a built-in Markdown → Word exporter is planned for a later release.
 Next: use the Skill tool with `sample-size-sap`, which fills section 2.3.2 and writes
 `03_protocol/sample-size.md` and `03_protocol/sap.md`. Gate G2 (protocol and SAP) is opened by the
 author after both are approved: `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" open <project> G2 --by
-"<author>"`; then set `STATUS.md` row 3 to `done`.
+"<author>" --files 03_protocol/sap.md`; then set `STATUS.md` row 3 to `done`.
 
 ## Common errors
 

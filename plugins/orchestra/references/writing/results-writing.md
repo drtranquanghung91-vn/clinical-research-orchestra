@@ -5,9 +5,12 @@ Used by `results-writing` for thesis Chapter 3 and manuscript Results. Vietnames
 `${CLAUDE_PLUGIN_ROOT}/references/workflows/results-writing.md`.
 
 Every number below is a placeholder from `ledgers/results-ledger.json`: `{{R-A1-001}}` (value),
-`{{R-A1-001.ci}}`, `{{R-A1-001.p}}`, `{{R-A1-001.n}}`, `{{R-A1-001.full}}`. `render_results.py` formats
-them by `kind` (OR/MD 2 decimals, percent and mean 1 decimal, p 3 decimals or `< 0.001`, decimal comma in
-Vietnamese, CI with an en dash). What `.full` gives:
+`{{R-A1-001.ci}}`, `{{R-A1-001.p}}`, `{{R-A1-001.n}}`, `{{R-A1-001.count}}`, `{{R-A1-001.full}}`.
+`render_results.py` formats them by `kind` (OR/MD 2 decimals, percent and mean 1 decimal, p 3 decimals or
+`< 0.001`, `.count` an integer with 0 decimals and no thousands separator, decimal comma in Vietnamese, CI
+with an en dash). A range with a negative bound uses " to " (English) or " đến " (Vietnamese) instead of
+the en dash (`-1.20 to -0.50`; `-0,18 đến 1,42`) so the minus sign is not read as a dash; write the same
+way in prose. What `.full` gives:
 
 | kind | `.full` (en) | `.full` (vi) |
 |---|---|---|
@@ -15,6 +18,7 @@ Vietnamese, CI with an en dash). What `.full` gives:
 | mean with SD | `61.4 ± 10.2` | `61,4 ± 10,2` |
 | median with IQR | `7.0 (5.0–11.0)` | `7,0 (5,0–11,0)` |
 | percent with count | `63 (31.5%)` | `63 (31,5%)` |
+| percent with count and CI | the CI form, not the count: take the count from `.count` | same |
 
 ## 1. Paragraph pattern
 
@@ -29,11 +33,15 @@ Estimate-first sentence templates:
 | Proportion by group | Readmission occurred in {{R-A1-002.full}} patients in group A and {{R-A1-003.full}} in group B. | Tỷ lệ tái nhập viện là {{R-A1-002}} ở nhóm A và {{R-A1-003}} ở nhóm B. |
 | Ratio measure | X was associated with higher odds of Y (adjusted OR {{R-A1-001}}, 95% CI {{R-A1-001.ci}}; p = {{R-A1-001.p}}). | X liên quan với tỷ số chênh Y cao hơn (OR hiệu chỉnh {{R-A1-001}}; KTC 95%: {{R-A1-001.ci}}; p = {{R-A1-001.p}}). |
 | Mean difference | The mean Y was {{R-A2-001}} units higher in group A (95% CI {{R-A2-001.ci}}; p = {{R-A2-001.p}}). | Y trung bình ở nhóm A cao hơn {{R-A2-001}} đơn vị (KTC 95%: {{R-A2-001.ci}}; p = {{R-A2-001.p}}). |
-| Derived difference | … an absolute difference of 11.2 <!-- derived: R-A1-002 − R-A1-003 --> percentage points. | … chênh lệch 11,2 <!-- derived: R-A1-002 − R-A1-003 --> điểm phần trăm. |
+| Derived difference | … an absolute difference of 11.2 <!-- derived: R-A1-002 - R-A1-003 --> percentage points. | … chênh lệch 11,2 <!-- derived: R-A1-002 - R-A1-003 --> điểm phần trăm. |
 
 In Vietnamese, OR is "tỷ số chênh" (define it in the table's `Ghi chú:`); never write "odds" in Vietnamese
-text. Put a `derived` or `not-a-result` marker right after the number (before any unit word), or
-`check_numbers.py` cannot see it.
+text. Prefer a placeholder to a `derived` comment (counts: `.count`; CI bounds are in `.ci`). A `derived`
+comment must name its ledger ids (`R-A1-002 - R-A1-003`, parts `.value|.n|.count|.p|.lo|.hi`); a pure
+formula is evaluated and must equal the printed number at its decimals, and a comment with no id blocks.
+Put a `derived` or `not-a-result` marker right after the number (before any unit word), or
+`check_numbers.py` cannot see it. Integers 1900–2100 are read as years and not checked: write a cohort
+size in that range through a placeholder.
 
 ## 2. Wording by confidence interval
 
@@ -59,7 +67,9 @@ tích thăm dò (hậu kiểm)"). Every paragraph that uses a `posthoc` result s
   tạo giả thuyết."
 
 Subgroups: the effect in each subgroup plus the p for interaction, never a separate significance claim per
-subgroup. A deviation states what changed (from its `DEVIATION A<n>:` line).
+subgroup. A deviation states what changed (from its `DEVIATION A<n>:` line), and every paragraph or table
+that uses a `deviation` result says so ("deviating from the analysis plan", "thay đổi so với kế hoạch
+phân tích"); it is never reported as the primary result without that label.
 
 ## 4. What not to do
 
@@ -96,7 +106,7 @@ What the checks and the reviewer find:
 After:
 
 ```markdown
-Of the {{R-A0-001}} patients analysed, readmission within one year occurred in {{R-A1-002.full}} of those with HbA1c ≥ 8% <!-- not-a-result: exposure cut-off --> and in {{R-A1-003.full}} of those with lower HbA1c, an absolute difference of 11.2 <!-- derived: R-A1-002 − R-A1-003 --> percentage points. After adjustment for age and sex, HbA1c ≥ 8% <!-- not-a-result: exposure cut-off --> was associated with higher odds of readmission (adjusted OR {{R-A1-001}}, 95% CI {{R-A1-001.ci}}; p = {{R-A1-001.p}}).
+Of the {{R-A0-001}} patients analysed, readmission within one year occurred in {{R-A1-002.full}} of those with HbA1c ≥ 8% <!-- not-a-result: exposure cut-off --> and in {{R-A1-003.full}} of those with lower HbA1c, an absolute difference of 11.2 <!-- derived: R-A1-002 - R-A1-003 --> percentage points. After adjustment for age and sex, HbA1c ≥ 8% <!-- not-a-result: exposure cut-off --> was associated with higher odds of readmission (adjusted OR {{R-A1-001}}, 95% CI {{R-A1-001.ci}}; p = {{R-A1-001.p}}).
 
 The mean index length of stay was {{R-A2-001}} days longer in the higher-HbA1c group (95% CI {{R-A2-001.ci}}; p = {{R-A2-001.p}}); the interval is compatible with a slightly shorter to a moderately longer stay.
 

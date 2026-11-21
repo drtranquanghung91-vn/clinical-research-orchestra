@@ -13,3 +13,4 @@ a. Variable(s) entered on step 1: hba1c, age.
 Case Processing Summary: N = 300, readmit = 1 in 45 cases (15.0%)
 Omnibus test of model coefficients: Chi-square = 0.040, df = 2, Sig. = .980
 Nagelkerke R Square = .000
+Hosmer and Lemeshow Test: Chi-square = 11.482, df = 8, Sig. = .032
