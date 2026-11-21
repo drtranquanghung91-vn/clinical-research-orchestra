@@ -86,6 +86,49 @@ class TestAnalysisPlan(unittest.TestCase):
         self.assertEqual(blocks, [f"{t}:1"])
         self.assertEqual(warns, [f"{t}:5"])
 
+    def _msgs(self, texts=()):
+        return " | ".join(f"{sev} {loc} {m}" for sev, loc, m in analysis_plan.check(self.p, list(texts)))
+
+    def base(self):
+        self.results(res("R-A0-001", "A0"), res("R-A1-001", "A1"), res("R-A2-001", "A2"))
+
+    def test_malformed_posthoc_and_deviation_lines_block(self):
+        (self.p / "decisions.md").write_text(
+            "POST-HOC A7: subgroup, requested by X\nDEVIATION A2: not done, no date here\n", encoding="utf-8")
+        self.results(res("R-A0-001", "A0"), res("R-A1-001", "A1"))
+        out = self._msgs()
+        self.assertIn("malformed POST-HOC line", out)
+        self.assertIn("malformed DEVIATION line", out)
+        self.assertIn("decisions.md:1", out)
+
+    def test_posthoc_on_register_id_blocks(self):
+        (self.p / "decisions.md").write_text("POST-HOC A2: late, requested by X, 2026-11-21\n", encoding="utf-8")
+        self.base()
+        self.assertIn("A2 is prespecified in the register; use DEVIATION", self._msgs())
+
+    def test_deviation_result_needs_label_in_text(self):
+        (self.p / "decisions.md").write_text("DEVIATION A2: changed model, 2026-11-21\n", encoding="utf-8")
+        self.results(res("R-A0-001", "A0"), res("R-A1-001", "A1"), res("R-A2-001", "A2", "deviation"))
+        t = self.p / "d.md"
+        t.write_text("LOS {{R-A2-001}}.\n\nThis is a deviation from the SAP: {{R-A2-001}}.\n\nSai lệch: {{R-A2-001}}\n", encoding="utf-8")
+        found = analysis_plan.check(self.p, [t])
+        self.assertEqual([loc for s, loc, _ in found if s == "block"], [f"{t}:1"])
+
+    def test_derived_comment_ids_count_as_used(self):
+        (self.p / "decisions.md").write_text("POST-HOC A7: x, requested by Y, 2026-11-21\n", encoding="utf-8")
+        self.results(res("R-A0-001", "A0"), res("R-A1-001", "A1"), res("R-A2-001", "A2"), res("R-A7-001", "A7", "posthoc"))
+        t = self.p / "d.md"
+        t.write_text("Diff 3.2 <!-- derived: R-A7-001.value - 1, note -->.\n", encoding="utf-8")
+        found = analysis_plan.check(self.p, [t])
+        self.assertEqual([loc for s, loc, _ in found if s == "block"], [f"{t}:1"])
+
+    def test_all_cause_is_not_causal(self):
+        self.base()
+        t = self.p / "d.md"
+        t.write_text("All-cause mortality was 5%. all-cause deaths.\n\nSmoking causes death.\n", encoding="utf-8")
+        warns = [loc for s, loc, _ in analysis_plan.check(self.p, [t]) if s == "warn"]
+        self.assertEqual(warns, [f"{t}:3"])
+
     def test_cli_exit_codes(self):
         self.results(res("R-A1-001", "A1"))
         r = subprocess.run([sys.executable, str(SCRIPT), "check", str(self.p)], capture_output=True, text=True)

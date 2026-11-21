@@ -211,6 +211,41 @@ class TestCrostatsFixRound1(unittest.TestCase):
         self.assertAlmostEqual(r3["md"], r["md"], places=12)
         self.assertIn("9 − 10", self.rec.results[-1]["label"])
 
+    def test_group_order_logged_for_text_groups_and_order_sets_reference(self):
+        rng = self.np.random.default_rng(31)
+        lv = ["<7", "7-9", ">9"]
+        d = self.pd.DataFrame({"y": rng.normal(10, 2, 150), "g": [lv[i % 3] for i in range(150)]})
+        self.cs.compare_k(d, "y", "g", self.rec, "A1")
+        self.assertTrue(any(l.startswith("GROUP ORDER g:") and "text sort" in l for l in self.rec.lines),
+                        self.rec.lines)
+        n0 = len(self.rec.lines)
+        r = self.cs.compare_k(d, "y", "g", self.rec, "A1", order=["<7", "7-9", ">9"])
+        self.assertFalse(any(l.startswith("GROUP ORDER") for l in self.rec.lines[n0:]))
+        self.assertIn("(<7, 7-9, >9)", self.rec.results[-1]["label"])
+        with self.assertRaises(ValueError):
+            self.cs.compare_k(d, "y", "g", self.rec, "A1", order=["<7", "7-9"])
+
+    def test_table1_order_sets_column_order_and_numeric_groups_do_not_log(self):
+        rng = self.np.random.default_rng(32)
+        d = self.pd.DataFrame({"x": rng.normal(0, 1, 120), "g": ["b", "a"] * 60})
+        t = self.cs.table1(d, ["x"], "g", self.rec, "T3.1", "T", order=["b", "a"])
+        self.assertTrue(t.columns[2].startswith("b ("), list(t.columns))
+        d2 = d.assign(g=[1, 2] * 60)
+        n0 = len(self.rec.lines)
+        self.cs.table1(d2, ["x"], "g", self.rec, "T3.2", "T")
+        self.assertFalse(any(l.startswith("GROUP ORDER") for l in self.rec.lines[n0:]))
+
+    def test_table1_negative_iqr_uses_to(self):
+        rng = self.np.random.default_rng(33)
+        x = self.np.r_[rng.exponential(1, 100) - 3, rng.exponential(1, 100) - 3]
+        d = self.pd.DataFrame({"x": x, "g": ["a"] * 100 + ["b"] * 100})
+        t = self.cs.table1(d, ["x"], "g", self.rec, "T3.1", "T")
+        cell = t[t["Characteristic"].str.startswith("x,")].iloc[0, 1]
+        self.assertIn(" to ", cell)
+        self.assertNotIn("–", cell)
+        self.assertEqual(self.cs._range_text(-0.001, 1.2), "0.0–1.2")
+        self.assertEqual(self.cs._range_text(0.5, 1.2), "0.5–1.2")
+
     def test_table1_test_follows_displayed_summary(self):
         from crolib import numfmt
         rng = self.np.random.default_rng(21)

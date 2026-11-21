@@ -390,6 +390,32 @@ def _sorted_levels(values) -> list:
     return sorted(values, key=_level_key)
 
 
+def _ordered_levels(values, order, rec, group) -> list:
+    """Levels of `group` in the order given by `order` (first = reference). Without `order`: numeric-aware sort,
+    and a GROUP ORDER line is logged when the levels are non-numeric text (the reference is then the text sort)."""
+    present = _sorted_levels(values)
+    if order is None:
+        if rec is not None and any(_level_key(v)[0] == 1 for v in present):
+            rec.log(f"GROUP ORDER {group}: {', '.join(_level(v) for v in present)} "
+                    "(text sort; pass order= to set the reference)")
+        return present
+    order = list(order)
+    missing = [v for v in present if not any(v == o for o in order)]
+    if missing or len(set(map(_level, order))) != len(order):
+        raise ValueError(f"order {order!r} must list every group of {group} once: {[_level(v) for v in present]}")
+    return [o for o in order if any(o == v for v in present)]
+
+
+def _range_text(lo, hi, decimals=1) -> str:
+    """'lo–hi' with an en dash; ' to ' when a bound is negative (shared contract: -1.2 to -0.5)."""
+    def one(x):
+        t = _fmt(x, decimals)
+        return t[1:] if t.startswith("-") and set(t[1:]) <= set("0.") else t
+
+    a, b = one(lo), one(hi)
+    return f"{a} to {b}" if a.startswith("-") or b.startswith("-") else f"{a}{EN_DASH}{b}"
+
+
 def compare_two(df, outcome, group, rec, analysis_id, status="prespecified", table=None, order=None, *,
                 label=None) -> dict:
     """Compare a numeric outcome between 2 groups: Welch t-test (mean difference, Welch CI) when both
@@ -404,7 +430,7 @@ def compare_two(df, outcome, group, rec, analysis_id, status="prespecified", tab
     if len(present) != 2:
         raise ValueError(f"{group} must have exactly 2 groups with {outcome} values, has {len(present)}")
     if order is None:
-        g0, g1 = present
+        g0, g1 = _ordered_levels(present, None, rec, group)
     else:
         if len(order) != 2 or any(not (d[group] == g).any() for g in order) or order[0] == order[1]:
             raise ValueError(f"order {tuple(order)!r} must name the 2 groups of {group}: {present}")
@@ -443,14 +469,15 @@ def compare_two(df, outcome, group, rec, analysis_id, status="prespecified", tab
     return {"test": test, "reason": reason, "p": p, "order": (g0, g1), "ids": [rid]}
 
 
-def compare_k(df, outcome, group, rec, analysis_id, status="prespecified", table=None, *, label=None) -> dict:
+def compare_k(df, outcome, group, rec, analysis_id, status="prespecified", table=None, order=None, *,
+              label=None) -> dict:
     """Compare a numeric outcome across 3 or more groups. When every group use_mean: Levene test (classic,
     centred on the mean); Levene p >= 0.05 gives one-way ANOVA (scipy f_oneway), else Welch ANOVA
     (statsmodels anova_oneway, use_var="unequal"). Otherwise Kruskal-Wallis (scipy, tie-corrected).
     Records p (kind p)."""
     _prefixed(label, "")
     d = df[[outcome, group]].dropna()
-    levels = _sorted_levels(d[group].unique())
+    levels = _ordered_levels(d[group].unique(), order, rec, group)
     if len(levels) < 3:
         raise ValueError(f"{group} must have at least 3 groups with {outcome} values, has {len(levels)}")
     xs = [d.loc[d[group] == g, outcome].astype(float).to_numpy() for g in levels]
@@ -505,7 +532,7 @@ def _chi2_permutation_p(g_codes, y_codes, shape, expected, stat, permutations, s
     return (hits + 1) / (permutations + 1)
 
 
-def compare_props(df, outcome, group, rec, analysis_id, status="prespecified", table=None, *,
+def compare_props(df, outcome, group, rec, analysis_id, status="prespecified", table=None, order=None, *,
                   permutations=PERMUTATIONS, seed=PERM_SEED, label=None) -> dict:
     """Compare a categorical outcome across groups (rows = groups). 2x2 table: Fisher exact (two-sided) when
     any expected count < 5 or a group has n < 20. Larger table with any expected count < 5: Monte Carlo
@@ -516,7 +543,7 @@ def compare_props(df, outcome, group, rec, analysis_id, status="prespecified", t
     tab = pd.crosstab(d[group], d[outcome])
     if tab.shape[0] < 2 or tab.shape[1] < 2:
         raise ValueError(f"{outcome} by {group}: needs at least 2 groups and 2 outcome levels")
-    tab = tab.loc[_sorted_levels(tab.index), _sorted_levels(tab.columns)]
+    tab = tab.loc[_ordered_levels(tab.index, order, rec, group), _sorted_levels(tab.columns)]
     obs = tab.to_numpy()
     expected = stats.contingency.expected_freq(obs)
     emin = float(expected.min())
@@ -977,7 +1004,7 @@ def interaction(df, outcome, exposure, modifier, covariates, family="logit", *, 
 
 
 # ---------------------------------------------------------------- Table 1
-def table1(df, variables, by, rec, table_id, title, analysis_id="A0", show_p=True) -> "pd.DataFrame":
+def table1(df, variables, by, rec, table_id, title, analysis_id="A0", show_p=True, order=None) -> "pd.DataFrame":
     """Descriptive table by group. A numeric column with more than 2 distinct values is continuous, anything
     else categorical (n (%) of non-missing per level).
 
@@ -986,10 +1013,11 @@ def table1(df, variables, by, rec, table_id, title, analysis_id="A0", show_p=Tru
     parametrically (Welch t-test for 2 groups, one-way or Welch ANOVA for more, compare_two / compare_k),
     a median row non-parametrically (Mann–Whitney U / Kruskal–Wallis); both functions use the same
     every-group use_mean rule, so the test always matches the display. Categorical rows use compare_props
-    (2x2 or r x c). Groups are in numeric-aware ascending order. Rows with missing `by` are excluded and
+    (2x2 or r x c). Groups are in `order` (a list of levels, first = reference) or, by default, numeric-aware
+    ascending order (text-coded groups then log a GROUP ORDER line). Rows with missing `by` are excluded and
     counted in the log; all records go under analysis_id."""
     sub = df[df[by].notna()]
-    groups = _sorted_levels(sub[by].unique())
+    groups = _ordered_levels(sub[by].unique(), order, rec, by)
     cols = [("overall", sub)] + [(_level(g), sub[sub[by] == g]) for g in groups]
     header = ["Characteristic"] + [f"{'Overall' if name == 'overall' else name} (n={len(part)})"
                                    for name, part in cols]
@@ -1009,7 +1037,7 @@ def table1(df, variables, by, rec, table_id, title, analysis_id="A0", show_p=Tru
             return ["", ""]
         fn = (compare_two if len(groups) == 2 else compare_k) if numeric else compare_props
         try:
-            r = fn(sub, var, by, rec, analysis_id, st, table=table_id)
+            r = fn(sub, var, by, rec, analysis_id, st, table=table_id, order=tuple(groups) if len(groups) == 2 else groups)
         except ValueError as e:
             rec.log(f"{analysis_id} {var}: p not computed ({e})")
             return ["", ""]
@@ -1042,7 +1070,7 @@ def table1(df, variables, by, rec, table_id, title, analysis_id="A0", show_p=Tru
                     cells.append(_fmt1(dd["mean"]) + (f" ± {_fmt1(sd)}" if sd is not None else ""))
                     rec.add(analysis_id, st, lab, dd["mean"], "mean", n=dd["n"], sd=sd, table=table_id)
                 else:
-                    cells.append(f"{_fmt1(dd['median'])} ({_fmt1(dd['q1'])}{EN_DASH}{_fmt1(dd['q3'])})")
+                    cells.append(f"{_fmt1(dd['median'])} ({_range_text(dd['q1'], dd['q3'])})")
                     rec.add(analysis_id, st, lab, dd["median"], "median", n=dd["n"], iqr=(dd["q1"], dd["q3"]),
                             table=table_id)
             name_cell = f"{var}, mean ± SD" if use_mean else f"{var}, median (Q1–Q3)"

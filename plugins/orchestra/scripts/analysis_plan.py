@@ -21,10 +21,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from crolib import projectcfg  # noqa: E402
 
 HEADING = re.compile(r"(?im)^#{2,3}\s.*(analysis register|đăng ký phân tích).*$")
-DECL = re.compile(r"(?m)^\s*(?:[-*]\s+)?(POST-HOC|DEVIATION) (A\d+):")
+DECL = re.compile(r"(?m)^\s*(?:[-*]\s+)?(POST-HOC|DEVIATION) (A\d+)\b.*$")
+POSTHOC_OK = re.compile(r"POST-HOC A\d+: .+, requested by .+, \d{4}-\d{2}-\d{2}\s*$")
+DEVIATION_OK = re.compile(r"DEVIATION A\d+: .+, \d{4}-\d{2}-\d{2}\s*$")
+DERIVED = re.compile(r"<!--\s*derived:(.*?)-->", re.S)
+RESULT_ID = re.compile(r"R-A\d+-\d{3}")
+DEV_LABEL = re.compile(r"(?i)\bdeviations?\b|changed from (?:the )?(?:SAP|protocol)|differs from|sai lệch|thay đổi so với (?:SAP|đề cương|kế hoạch)")
 PLACEHOLDER = re.compile(r"\{\{(R-A\d+-\d{3})(?:\.\w+)?\}\}")
 LABEL = re.compile(r"(?i)post[- ]hoc|exploratory|thăm dò|hậu kiểm")
-CAUSAL = re.compile(r"(?i)\b(?:causes?|caused|leads? to|led to|prevents?|prevented)\b|gây ra|dẫn đến|làm giảm|làm tăng|phòng ngừa")
+CAUSAL = re.compile(r"(?i)(?<![-\w])(?:causes?|caused|leads? to|led to|prevents?|prevented)(?![-\w])|gây ra|dẫn đến|làm giảm|làm tăng|phòng ngừa")
 OBSERVATIONAL = {"cohort", "case-control", "cross-sectional", "diagnostic-accuracy", "prediction-model"}
 
 
@@ -54,9 +59,18 @@ def parse_register(sap_text: str) -> list[dict]:
     return reg
 
 
-def declared(decisions_text: str) -> dict[str, set[str]]:
+def declared(decisions_text: str, problems: list | None = None) -> dict[str, set[str]]:
     out: dict[str, set[str]] = {"POST-HOC": set(), "DEVIATION": set()}
-    for kind, aid in DECL.findall(decisions_text):
+    for m in DECL.finditer(decisions_text):
+        kind, aid = m.group(1), m.group(2)
+        line = m.group(0).strip().lstrip("-*").strip()
+        if not (POSTHOC_OK if kind == "POST-HOC" else DEVIATION_OK).match(line):
+            if problems is not None:
+                n = decisions_text.count("\n", 0, m.start()) + 1
+                want = ("POST-HOC A<n>: <reason>, requested by <author>, <YYYY-MM-DD>" if kind == "POST-HOC"
+                        else "DEVIATION A<n>: <what and why>, <YYYY-MM-DD>")
+                problems.append(("block", f"decisions.md:{n}", f'malformed {kind} line "{line}" (expected {want})'))
+            continue
         out[kind].add(aid)
     return out
 
@@ -96,8 +110,10 @@ def check(project: Path, text_files: list[Path]) -> list[tuple[str, str, str]]:
     reg_ids = {r["id"] for r in parse_register((project / "03_protocol" / "sap.md").read_text(encoding="utf-8-sig"))}
     results = _load_results(project / "05_analysis" / "output" / "results.json")
     dec_path = project / "decisions.md"
-    dec = declared(dec_path.read_text(encoding="utf-8-sig") if dec_path.is_file() else "")
     found: list[tuple[str, str, str]] = []
+    dec = declared(dec_path.read_text(encoding="utf-8-sig") if dec_path.is_file() else "", found)
+    for aid in sorted(dec["POST-HOC"] & reg_ids):
+        found.append(("block", "decisions.md", f"POST-HOC {aid}: {aid} is prespecified in the register; use DEVIATION"))
     reported = set()
     for n, r in enumerate(results, start=1):
         if not isinstance(r, dict) or not isinstance(r.get("id"), str) or not isinstance(r.get("analysis_id"), str):
@@ -120,9 +136,14 @@ def check(project: Path, text_files: list[Path]) -> list[tuple[str, str, str]]:
         text = Path(f).read_text(encoding="utf-8-sig")
         for start, para in _paragraphs(text):
             ids = PLACEHOLDER.findall(para)
+            for d in DERIVED.findall(para):
+                ids += RESULT_ID.findall(d)
             post = [i for i in ids if status_of.get(i) == "posthoc"]
             if post and not LABEL.search(para):
                 found.append(("block", f"{f}:{start}", f"post-hoc result {post[0]} is not labelled (post-hoc / exploratory / thăm dò / hậu kiểm)"))
+            dev = [i for i in ids if status_of.get(i) == "deviation"]
+            if dev and not DEV_LABEL.search(para):
+                found.append(("block", f"{f}:{start}", f"deviation result {dev[0]} is not labelled (deviation / changed from the SAP / sai lệch / thay đổi so với SAP)"))
             if observational:
                 m = CAUSAL.search(para)
                 if m:
