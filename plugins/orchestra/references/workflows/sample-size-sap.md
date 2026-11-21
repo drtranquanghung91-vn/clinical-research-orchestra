@@ -224,7 +224,7 @@ only).
 
 The SAP must end with the analysis register (section 16 of the template) before G2 is approved.
 Ask the author to approve `03_protocol/protocol.md`, `03_protocol/sample-size.md` and `03_protocol/sap.md`.
-After approval: `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" open <project> G2 --by "<author>"`, then
+After approval: `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" open <project> G2 --by "<author>" --files 03_protocol/sap.md`, then
 set `STATUS.md` row 3 to `done`. Never open the gate on the author's behalf without that approval. Next in
 the chain: the CRF and data dictionary from the variables table in `03_protocol/variables.md`
 (`ethics-and-crf`, phase P4).
