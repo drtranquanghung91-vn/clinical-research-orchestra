@@ -189,6 +189,14 @@ class TestResultsLedger(unittest.TestCase):
         rec = result(p=0.023, raw="Exp(B) 1.840 95% CI 1.210 2.790 Sig. .032")
         self.assertTrue(any("p 0.023" in x for x in results_ledger.validate_doc(self.doc(rec), self.p, verify_raw=True)))
 
+    def test_verify_raw_kind_p_value_needs_decimals(self):
+        raw = "Pearson Chi-Square 4.612 1 .032"
+        self._log(raw)
+        bad = result(kind="p", value=0.77, ci=None, p=None, raw=raw)
+        self.assertTrue(any("value 0.77" in x for x in results_ledger.validate_doc(self.doc(bad), self.p, verify_raw=True)))
+        ok = result(kind="p", value=0.032, ci=None, p=None, raw=raw)
+        self.assertEqual(results_ledger.validate_doc(self.doc(ok), self.p, verify_raw=True), [])
+
     def test_verify_raw_spss_tiny_p(self):
         self._log("OR 1.84 (95% CI 1.21-2.79) Sig. <.001")
         rec = result(p=0.0004, raw="OR 1.84 (95% CI 1.21-2.79) Sig. <.001")

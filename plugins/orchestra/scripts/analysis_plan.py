@@ -22,7 +22,7 @@ from crolib import projectcfg  # noqa: E402
 
 HEADING = re.compile(r"(?im)^#{2,3}\s.*(analysis register|đăng ký phân tích).*$")
 DECL = re.compile(r"(?m)^\s*(?:[-*]\s+)?(POST-HOC|DEVIATION) (A\d+)\b.*$")
-POSTHOC_OK = re.compile(r"POST-HOC A\d+: .+, requested by .+, \d{4}-\d{2}-\d{2}\.?\s*$", re.S)
+POSTHOC_OK = re.compile(r"POST-HOC A\d+: .+, (?:requested by|(?:theo )?yêu cầu của|do) .+, \d{4}-\d{2}-\d{2}\.?\s*$", re.S)
 DEVIATION_OK = re.compile(r"DEVIATION A\d+: .+, \d{4}-\d{2}-\d{2}\.?\s*$", re.S)
 CONTINUATION_STOP = re.compile(r"^\s*(?:#|[-*]\s|\d+\.\s|(?:POST-HOC|DEVIATION) A\d+\b)")
 

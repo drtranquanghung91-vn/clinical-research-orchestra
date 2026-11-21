@@ -45,7 +45,10 @@ PSMALL = re.compile(r"[<≤]\s*0[.,]001")
 
 
 DERIVED_FULL = re.compile(r"(-?\d+(?:[.,]\d+)?)(%?)\s*<!--\s*derived:(.*?)-->", re.DOTALL)
+PARTS = ("value", "n", "count", "p", "lo", "hi")
 RID = re.compile(r"R-A\d+-\d{3}(?:\.(?:value|n|count|p|lo|hi)\b)?")
+ID_PART = re.compile(r"R-A\d+-\d{3}\.([A-Za-z_]\w*)")
+DERIVED_OPEN = re.compile(r"<!--\s*derived:")
 PURE = re.compile(r"[\d\s+\-*/().]*")
 
 
@@ -93,10 +96,20 @@ def check_derived(text: str, ledger_results: list[dict]) -> list[tuple[int, str,
     by_id = {r["id"]: r for r in ledger_results if isinstance(r, dict) and isinstance(r.get("id"), str)}
     out = []
     for n, line in enumerate(text.split("\n"), start=1):
-        for m in DERIVED_FULL.finditer(line.replace("−", "-")):
+        line = line.replace("−", "-")
+        owned = {m.start(3) for m in DERIVED_FULL.finditer(line)}
+        for o in DERIVED_OPEN.finditer(line):
+            if o.end() not in owned:
+                out.append((n, "block", "derived comment must directly follow its number on the same line"))
+        for m in DERIVED_FULL.finditer(line):
             num, tok = m.group(1).replace(",", "."), m.group(1) + m.group(2)
             expr = re.split(r"[,;]", m.group(3), maxsplit=1)[0].strip()
             refs = RID.findall(expr)
+            bad_parts = [p for p in ID_PART.findall(expr) if p not in PARTS]
+            if bad_parts:
+                out.append((n, "block", f"{tok}: derived comment uses part .{bad_parts[0]} "
+                                        f"(allowed: {', '.join('.' + p for p in PARTS)})"))
+                continue
             if not refs:
                 out.append((n, "block", f"{tok}: derived comment names no ledger result"))
                 continue

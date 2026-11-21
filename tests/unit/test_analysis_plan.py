@@ -110,6 +110,13 @@ class TestAnalysisPlan(unittest.TestCase):
                      res("R-A7-001", "A7", "posthoc"))
         self.assertEqual(analysis_plan.check(self.p, []), [])
 
+    def test_vietnamese_requested_by_ok(self):
+        (self.p / "decisions.md").write_text(
+            "POST-HOC A7: phân nhóm theo giới, theo yêu cầu của Example author, 2026-11-21\n", encoding="utf-8")
+        self.results(res("R-A0-001", "A0"), res("R-A1-001", "A1"), res("R-A2-001", "A2"),
+                     res("R-A7-001", "A7", "posthoc"))
+        self.assertEqual(analysis_plan.check(self.p, []), [])
+
     def test_wrapped_declaration_stops_at_blank_line(self):
         (self.p / "decisions.md").write_text(
             "POST-HOC A7: subgroup by sex\n\nrequested by Example author, 2026-11-21\n", encoding="utf-8")

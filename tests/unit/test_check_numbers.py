@@ -96,7 +96,7 @@ class TestCheckNumbers(unittest.TestCase):
         self.assertEqual(check_numbers.check_derived("0.12 <!-- derived: R-A1-020 -->", res2)[0][1], "block")
 
     def test_derived_non_pure_warns_and_unknown_blocks(self):
-        w = check_numbers.check_derived("0.83 <!-- derived: R-A1-001.ci minus margin -->", RESULTS)
+        w = check_numbers.check_derived("0.83 <!-- derived: R-A1-001.hi minus margin -->", RESULTS)
         self.assertEqual([x[:2] for x in w], [(1, "warn")])
         self.assertIn("not evaluated", w[0][2])
         u = check_numbers.check_derived("5.5 <!-- derived: R-A9-999 + 1 -->", RESULTS)
@@ -105,13 +105,23 @@ class TestCheckNumbers(unittest.TestCase):
         self.assertEqual([x[:2] for x in miss], [(1, "block")])
         self.assertEqual(check_numbers.check_derived("5.5 <!-- derived: 2 + 3.5 -->", RESULTS)[0][1], "block")
 
+    def test_derived_unlisted_part_blocks(self):
+        r = check_numbers.check_derived("0.83 <!-- derived: R-A1-001.ci minus margin -->", RESULTS)
+        self.assertEqual([x[:2] for x in r], [(1, "block")])
+        self.assertIn(".ci", r[0][2])
+
+    def test_derived_comment_not_after_number_blocks(self):
+        r = check_numbers.check_derived("Rate 2,5%\n<!-- derived: R-A1-001.hi - 1 -->).", RESULTS)
+        self.assertEqual([x[:2] for x in r], [(2, "block")])
+        self.assertIn("same line", r[0][2])
+
     def test_derived_cli_exit_codes(self):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d)
             (p / "ledgers").mkdir()
             (p / "ledgers" / "results-ledger.json").write_text(json.dumps({"results": RESULTS}), encoding="utf-8")
             f = p / "r.md"
-            f.write_text("0.83 <!-- derived: R-A1-001.ci minus margin -->\n", encoding="utf-8")
+            f.write_text("0.83 <!-- derived: R-A1-001.hi minus margin -->\n", encoding="utf-8")
             r = subprocess.run([sys.executable, str(SCRIPT), str(p), str(f), "--lang", "en"],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout)

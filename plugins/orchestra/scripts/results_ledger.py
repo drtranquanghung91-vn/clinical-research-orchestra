@@ -156,7 +156,9 @@ def validate_doc(doc: dict, project: Path, verify_raw: bool = False) -> list[str
                 probs.append(f"{rid}: raw text not found at {rec['locator']}")
             else:
                 raw, prec = str(rec["raw"]), numfmt._precision(rec["kind"])
-                if _num(rec["value"]) and not _in_raw(rec["value"], raw, 0, rec["kind"] == "p"):
+                v = rec["value"]
+                min_dec = 1 if rec["kind"] == "p" or (_num(v) and float(v) != int(v)) else 0  # "1" never stands for 0.77
+                if _num(v) and not _in_raw(v, raw, min_dec, rec["kind"] == "p"):
                     probs.append(f"{rid}: value {rec['value']} does not appear in raw")
                 if isinstance(ci, list) and len(ci) == 2 and all(map(_num, ci)):
                     for name, b in zip(("lo", "hi"), ci):
