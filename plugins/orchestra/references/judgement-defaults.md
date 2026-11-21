@@ -22,5 +22,5 @@ apply one.
 | Events per variable | EPV < 10 → model reported as exploratory with a caveat | Statistical analysis | Peduzzi; newer work suggests context-specific limits |
 | Overdispersion | Pearson χ²/df > 2 → negative binomial | Statistical analysis | Rule of thumb from `stat-analysis-vi` |
 | Reporting precision | OR/RR/HR/RD/MD/β and CI 2 decimals; p 3 decimals or < 0.001; % 1 decimal; mean/SD/median/IQR 1 decimal; AUC 3 decimals | Results writing | ICMJE/STROBE practice; journals may differ |
-| Number check scope | integers 0–10 and years are not checked by `check_numbers.py` | Results writing | Small counts in prose ("3 nhóm") are usually not results |
+| Number check scope | integers 0–10 and years are not checked by `check_numbers.py`; integers 1900–2100 count as years, so write a cohort size in that range through a placeholder | Results writing | Small counts in prose ("3 nhóm") are usually not results |
 | Thesis .docx layout | A4, Times New Roman 13 pt, line spacing 1.5, margins top 2, bottom 2, left 3, right 2 cm | build_docx.py | Common Vietnamese university rules; the institution's rule wins |

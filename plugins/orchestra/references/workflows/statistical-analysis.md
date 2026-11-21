@@ -42,7 +42,10 @@ every document, and are never promoted to primary or reported without their labe
    `# copied from clinical-research-orchestra <version> on <date>; do not edit` (version from
    `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`), unless `data-preparation` already copied it.
 3. **Write `05_analysis/analysis.py`** (skeleton below): one block per register row in ID order, each
-   headed `# A<n> <objective>`, with the register's method and covariates exactly. Seeded (`crostats` seeds
+   headed `# A<n> <objective>`, with the register's method and covariates exactly. Set the reference level
+   explicitly, equal to the SAP's reference group: `order=[…]` in `crostats` calls (the first level is the
+   reference) and `C(x, Treatment(reference='<SAP reference>'))` in formulas and covariate lists; text
+   levels otherwise sort by code point and patsy takes the alphabetical first as reference. Seeded (`crostats` seeds
    its permutations); no network; reads only the `.deid.csv`. Methods `crostats` lacks are written with
    scipy or statsmodels: `rec.log` the choice and its reason, `rec.add` each number.
 4. **Run** from the project folder: `python 05_analysis/analysis.py`. On `ImportError` print
@@ -50,11 +53,22 @@ every document, and are never promoted to primary or reported without their labe
    and stop; never fall back to computing by hand. Read `05_analysis/output/log.txt` for every test choice,
    warning and `MODEL FAILED` line.
 5. **Checks**: `python "${CLAUDE_PLUGIN_ROOT}/scripts/analysis_plan.py" check .` then
-   `python "${CLAUDE_PLUGIN_ROOT}/scripts/results_ledger.py" import .` (import mode: add `--verify-raw`).
+   `python "${CLAUDE_PLUGIN_ROOT}/scripts/results_ledger.py" import . --verify-raw` (both modes; run mode
+   passes because each `raw` is its log line; leading-dot SPSS p values such as `.032` are accepted; it
+   also checks every `ci` bound and `p` against `raw`).
    Fix every block finding; in run mode never edit `results.json` by hand (fix and rerun the script).
-6. **Report** `05_analysis/analysis-report.md` per the template, numbers as `{{R-…}}`, then run
+   After a re-run, positional ids can shift. If import exits 1 listing relabelled ids (same id, new `label`
+   or `kind`), first update the `{{R-…}}` placeholders in the report and in any chapter that uses them,
+   then re-import with `--accept-relabel`; never accept the relabel before the placeholders are fixed.
+6. **Report** `05_analysis/analysis-report.md` per the template, numbers as `{{R-…}}` (parts `.ci`, `.p`,
+   `.n`, `.count`, `.full`; take the count in an "n (%)" cell from `.count`, 0 decimals; prefer a
+   placeholder to a derived comment). A number computed from results carries
+   `<!-- derived: EXPR[, note] -->` where EXPR names ledger ids (parts `.value|.n|.count|.p|.lo|.hi`) and
+   is a pure formula, which `check_numbers` evaluates at the printed decimals; a comment that names no id
+   blocks. A deviation result is labelled as a deviation in the prose, a post-hoc result as exploratory.
+   Then run
    `python "${CLAUDE_PLUGIN_ROOT}/scripts/render_results.py" . 05_analysis/analysis-report.md`,
-   `python "${CLAUDE_PLUGIN_ROOT}/scripts/check_numbers.py" . 05_analysis/analysis-report.md` and
+   `python "${CLAUDE_PLUGIN_ROOT}/scripts/check_numbers.py" . 05_analysis/analysis-report.rendered.md` and
    `python "${CLAUDE_PLUGIN_ROOT}/scripts/analysis_plan.py" check . --text 05_analysis/analysis-report.md`.
    All exit 0 before hand-back. A Word copy for the supervisor, if asked:
    `python "${CLAUDE_PLUGIN_ROOT}/scripts/build_docx.py" 05_analysis/analysis-report.rendered.md out/analysis-report.docx --project .`
@@ -159,9 +173,12 @@ fit passes `label=` (every `compare_*` / `fit_*` takes it), so each recorded lab
 ## Post-hoc and deviating analyses
 
 - Allowed only after the author asks or agrees. Before running, add one line to `decisions.md`:
-  `POST-HOC A<n>: <reason>, requested by <author>, <date>` or
-  `DEVIATION A<n>: <what changed and why>, <date>` (optionally preceded by `- `). A new post-hoc analysis
+  `POST-HOC A<n>: <reason>, requested by <author>, <YYYY-MM-DD>` (the author's name and an ISO date are
+  required; the agent never declares its own post-hoc analysis) or
+  `DEVIATION A<n>: <what changed and why>, <YYYY-MM-DD>` (optionally preceded by `- `). A new post-hoc analysis
   takes the next unused `A<n>`; a deviation keeps the registered ID.
+- Deviation results are labelled as deviations in every table and sentence of the report, as post-hoc
+  results are labelled exploratory (`analysis_plan check --text` blocks an unlabelled one).
 - Status `posthoc` or `deviation` in every `rec.add` and `crostats` call of that block.
 - Post-hoc unless registered: univariable screening (p < 0.20), backward or other data-driven selection,
   ROC/Youden cut-offs, extra subgroups, sensitivity analyses. They never change the covariates of a
@@ -197,10 +214,12 @@ EPV < 10 (default) does not fail a model: report the adjusted estimates as explo
 ## Hand-off
 
 Show the author the rendered report. After review, the author locks G3:
-`python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" lock . G3 --by "<author>" --files ledgers/results-ledger.json 05_analysis/output/results.json 05_analysis/analysis.py 05_analysis/crostats.py 04_data/<file>.deid.csv`
+`python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" lock . G3 --by "<author>" --files ledgers/results-ledger.json 05_analysis/output/results.json 05_analysis/analysis.py 05_analysis/crostats.py 03_protocol/sap.md 04_data/<file>.deid.csv`
 
 Import mode locks the files actually used:
-`python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" lock . G3 --by "<author>" --files ledgers/results-ledger.json 05_analysis/output/results.json 00_inputs/<export file> … 04_data/<file>.deid.csv`
-(one entry per export file the records cite). The `00_inputs/` exports are hashed locally by `gate.py` but
+`python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" lock . G3 --by "<author>" --files ledgers/results-ledger.json 05_analysis/output/results.json 00_inputs/<export file> … 03_protocol/sap.md 04_data/<file>.deid.csv`
+(one entry per export file the records cite). `03_protocol/sap.md` is locked with the ledger so the
+register cannot change after the results are seen; `decisions.md` is not locked (results-writing appends
+to it). The `00_inputs/` exports are hashed locally by `gate.py` but
 not versioned (git ignores `00_inputs/`). This skill never locks G3 itself. Set `STATUS.md` row 5 to
 `done` once the author accepts the report; the next step is `/orchestra:results` (`results-writing`).

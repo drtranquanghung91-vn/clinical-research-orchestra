@@ -42,8 +42,9 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/results_ledger.py" import . --verify-raw
 python "${CLAUDE_PLUGIN_ROOT}/scripts/analysis_plan.py" check .
 ```
 
-`--verify-raw` fails (exit 1, nothing written) when `raw` is not at `locator` or `value` is not in
-`raw`; fix the record, never the export file.
+`--verify-raw` fails (exit 1, nothing written) when `raw` is not at `locator`, or `value`, a `ci` bound or
+`p` is not in `raw` at its printed precision; fix the record, never the export file. Leading-dot SPSS
+numbers (`.032`, `.004`) are accepted as tokens, so write `p` as `0.032` for a printed `.032`.
 
 ## 3. Worked example (synthetic)
 

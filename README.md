@@ -109,7 +109,8 @@ Vietnamese while the manuscript from the same study is in English.
   sample size comes from `samplesize.py` with a sensitivity table, every parameter sourced or
   labelled as an assumption.
   Results enter text only as `{{R-…}}` placeholders filled from the locked ledger, and
-  `check_numbers.py` blocks any typed number the ledger does not hold. A consistency audit that
+  `check_numbers.py` blocks any typed number the ledger does not hold, at its printed precision (see
+  `judgement-defaults.md`). A consistency audit that
   flags numbers disagreeing between sections arrives in P3.
 - **Patient data protected by default.** `phi-guard` knows Vietnamese identifier formats
   (CCCD/CMND, BHYT, record numbers, labelled names, dates of birth, addresses) as well as

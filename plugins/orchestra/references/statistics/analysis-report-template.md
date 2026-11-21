@@ -7,9 +7,12 @@ author and supervisor; the thesis chapter or manuscript Results section is writt
 
 Rules for the whole report:
 - Every number is a placeholder: `{{R-A1-001}}` (value), `{{R-A1-001.ci}}`, `{{R-A1-001.p}}`,
-  `{{R-A1-001.n}}`, `{{R-A1-001.full}}`. `render_results.py` formats them (precision by `kind`, decimal comma
-  for `vi`, CI with an en dash); `check_numbers.py` blocks any literal result number that is not in the
-  ledger. A number derived from ledger values carries `<!-- derived: <formula from ledger ids> -->`.
+  `{{R-A1-001.n}}`, `{{R-A1-001.count}}` (integer count, 0 decimals; use it for the count in n (%) cells),
+  `{{R-A1-001.full}}`. `render_results.py` formats them (precision by `kind`, decimal comma
+  for `vi`, CI with an en dash, or " to " / " đến " when a bound is negative); `check_numbers.py` blocks any literal result number that is not in the
+  ledger. Prefer a placeholder to a derived comment; a number computed from ledger values carries
+  `<!-- derived: <formula naming ledger ids> -->` (pure formulas are evaluated; a comment naming no id
+  blocks). Run `check_numbers.py` on the rendered file.
 - Tables come from `05_analysis/output/tables/<T…>.csv`; give each a caption line (`Table 3.1. …` /
   `Bảng 3.1. …`) above and notes below.
 - No figures (figures belong to P3). No colour or bold emphasis on p < 0.05.

@@ -9,22 +9,30 @@ For thesis Chapter 3 (Kết quả nghiên cứu) and manuscript Results. Wording
 ## Core rule
 
 No number is typed by hand. Every result is a `{{R-…}}` placeholder from `ledgers/results-ledger.json`
-(`{{R-A1-001}}`, `.ci`, `.p`, `.n`, `.full`). A number computed from results carries
-`<!-- derived: <formula from ledger ids> -->`; a number that is not a result (cut-off, eligibility limit,
-ward code) carries `<!-- not-a-result: <reason> -->`. Both go right after the number. The scripts measure;
-the agent writes.
+(`{{R-A1-001}}`, `.ci`, `.p`, `.n`, `.count`, `.full`; `.count` is the integer count of a percent record,
+0 decimals, for the n in "n (%)" cells). Use a placeholder whenever one exists; a derived comment is the
+last resort. A number computed from results carries `<!-- derived: EXPR[, free note] -->` right after it:
+EXPR is the text up to the first `,` or `;`, and it must name the ledger ids it uses, each with an optional
+part `.value|.n|.count|.p|.lo|.hi` (no part = `.value`; `.lo`/`.hi` are the CI bounds), e.g.
+`<!-- derived: R-A1-002 - R-A1-003, risk difference -->`. A pure formula (ids, numbers, `+ - * / ( )`) is
+evaluated and compared with the number at its printed decimals (a mismatch blocks); other text that names
+ids only warns "derived formula not evaluated"; a comment that names no id blocks. A number that is not a
+result (cut-off, eligibility limit, ward code) carries `<!-- not-a-result: <reason> -->`. Both go right
+after the number. The scripts measure; the agent writes.
 
 ## 1. Preconditions
 
 1. `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" check . G3` exits 0. Exit 1: stop. If it lists changed
    files, tell the author which ones and that the analysis must be re-run or re-imported and G3 locked
    again (`statistical-analysis`); if G3 was never locked, ask the author to review the analysis report
-   and lock it. Never lock or open a gate here.
+   and lock it. Never lock or open a gate here. A `WAIVE G3:` line in `decisions.md` also gives exit 0: the
+   text then comes from an unlocked ledger, and the hand-off (section 8) says so explicitly.
 2. `ledgers/results-ledger.json` has results and `05_analysis/output/results.json` lists the tables.
 3. Read `project.yaml` (`type`, `design`, `reporting_guideline`, `language.output`), the objectives in
    `01_question/`, the register in `03_protocol/sap.md`, `decisions.md` (`POST-HOC`/`DEVIATION` lines) and
    `05_analysis/analysis-report.md`.
-4. Set `STATUS.md` row `6 Writing` to `doing`.
+4. Set `STATUS.md` row `6 Writing` to `doing`. If the G3 check passes because the author locked it and
+   row `5 Analysis` is not `done`, set row 5 to `done` (the author locks G3 outside any skill).
 
 ## 2. Mode and file
 
@@ -63,22 +71,26 @@ For each table in `results.json → tables` that the outline uses:
    `label` (Table 1 rows: `<variable> [<group>]`; subgroup rows start with `<subgroup label>: `, e.g.
    `sex = female: …`) and `kind`.
 3. Write a pipe table with the same layout, every number replaced by its placeholder: n (%) → `.full` of
-   the `percent` record (or `.n` for the group size), mean ± SD → `.full` of the `mean` record, estimate
+   the `percent` record, or `.count` and the value in separate cells (`.full` of a percent record that has
+   a CI gives the CI form, so take the count from `.count`; `.n` is the group size), mean ± SD → `.full` of the `mean` record, estimate
    (CI) → `{{R-…}} ({{R-….ci}})`, p → `.p`. A cell with no record (reference category, "1 (reference)")
-   is text; `1` passes the number check as an integer 0–10.
+   is text; `1` passes the number check as an integer 0–10, and integers 1900–2100 are treated as years and
+   not checked, so write a cohort size in that range (for example 2015 patients) as a placeholder.
 4. Caption line directly above the table: `Bảng 3.n. <title>` / `Table n. <title>`. `Nguồn:`,
    `Ghi chú:`, `Note:` lines directly below, no blank line. Escape `|` in a cell as `\|`, `*` as `\*`.
 5. If a cell number has no record, do not type it: ask whether the analysis must record it
    (`statistical-analysis`), or leave the cell out.
 
-`build_docx.py` turns each Markdown line into one paragraph: write every paragraph on one line.
+`build_docx.py` turns each Markdown line into one paragraph: write every paragraph on one line. A `>` line
+becomes an indented paragraph without the marker, and backticks are removed.
 
 ## 5. Text
 
 One paragraph per analysis: what was compared in whom; estimate and CI, then p; at most one sentence on
 direction and precision. Use the templates and the CI wording table in `results-writing.md`. A
 post-hoc result is labelled in every paragraph that uses it ("exploratory", "post-hoc", "thăm dò",
-"hậu kiểm"). No interpretation, mechanisms or literature: that is the Discussion (thesis Chapter 4).
+"hậu kiểm"); a deviation result is labelled as a deviation in prose and tables ("deviation", "protocol
+change", "thay đổi so với SAP", "sai lệch đề cương"), never reported as the primary result without it. No interpretation, mechanisms or literature: that is the Discussion (thesis Chapter 4).
 
 ## 6. Claims rows
 
@@ -127,7 +139,8 @@ decimal point is not a Vietnamese decimal separator. The "after" text (`--lang e
 ## 8. Hand-off
 
 Report to the author, in the user's language: the last line of each check, the .docx path, any assumption
-made. Ask them to read the rendered file and the .docx. Figures go to `research-figures`, the assembled
+made, and, if G3 was waived (`WAIVE G3:` in `decisions.md`), that the text comes from an unlocked ledger.
+Ask them to read the rendered file and the .docx. Figures go to `research-figures`, the assembled
 thesis to `thesis`, the full paper to `manuscript`; these P3/P4 skills are not available yet, so say so.
 When the author accepts the text, set `STATUS.md` row 6 to `done` for this part.
 

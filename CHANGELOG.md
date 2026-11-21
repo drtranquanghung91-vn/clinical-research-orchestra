@@ -18,6 +18,19 @@
   data file by SHA-256; examples and scenario fixtures are byte-stable (LF only, `-text`).
 - Scenarios: posthoc-fishing (two turns), number-drift, undeclared-deviation, spss-import (RED/GREEN,
   results in tests/scenarios/BASELINE.md).
+- Final review fixes: `results_ledger.py import --verify-raw` also checks every CI bound and p against
+  `raw`, accepts SPSS leading-dot numbers (`.032`) and always runs in `statistical-analysis` (run mode
+  too); a relabel guard on import (changed `label`/`kind` for an id exits 1 until the placeholders are
+  fixed and `--accept-relabel` is passed); new `.count` placeholder part (integer, 0 decimals) for the
+  count in n (%) cells; `<!-- derived: … -->` comments must name ledger ids and pure formulas are
+  evaluated (no id blocks, other text warns); G2 is opened with `--files 03_protocol/sap.md` and G3 also
+  locks `sap.md`, so the analysis register cannot change after the results; stricter lines
+  `POST-HOC A<n>: <reason>, requested by <author>, <YYYY-MM-DD>` and `DEVIATION A<n>: <what and why>,
+  <YYYY-MM-DD>`, with deviation results labelled in prose; explicit group order and reference level
+  (`order=[…]`, `Treatment(reference=…)`); ranges with a negative bound read "to"/"đến"; both skills run
+  `check_numbers.py` on the rendered file; results-writing sets STATUS row 5 to `done` and reports a
+  waived G3 in the hand-off; `build_docx.py` renders `>` quotes as indented paragraphs and strips
+  backticks.
 - Example: examples/fictional-cohort analysed end to end on simulated data (`tools/simulate_cohort.py`,
   seed 20261121): data preparation, analysis register A0–A5 plus one declared post-hoc subgroup, G3
   lock, Chapter 3 and its .docx.

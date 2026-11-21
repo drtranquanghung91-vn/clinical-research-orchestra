@@ -21,7 +21,8 @@ Headings 3.1, 3.1.1. Section numbers follow the chapter, not the analysis IDs.
 - `Nguồn:` and `Ghi chú:` lines **directly below** the table, no blank line between (abbreviations, the
   model and its covariates, the test used). Define OR as "tỷ số chênh" there; never write "odds" in
   Vietnamese text.
-- Every cell number is a placeholder; columns with n (%) use `.full` of a `percent` record, mean ± ĐLC
+- Every cell number is a placeholder; columns with n (%) use `.full` of a `percent` record (or `.count`
+  for the count when the record has a CI), mean ± ĐLC
   use `.full` of a `mean` record.
 - A literal `|` inside a cell is written `\|`, a literal `*` as `\*`.
 
@@ -73,7 +74,7 @@ Bảng 3.2. Tái nhập viện trong 1 năm theo nhóm HbA1c
 Nguồn: số liệu nghiên cứu.
 Ghi chú: OR: tỷ số chênh, hiệu chỉnh theo tuổi và giới (hồi quy logistic); KTC: khoảng tin cậy.
 
-Nhận xét: Tỷ lệ tái nhập viện trong 1 năm là {{R-A1-002}} ở nhóm HbA1c ≥ 8% <!-- not-a-result: ngưỡng phân nhóm --> và {{R-A1-003}} ở nhóm còn lại, chênh lệch 11,2 <!-- derived: R-A1-002 − R-A1-003 --> điểm phần trăm. Sau hiệu chỉnh theo tuổi và giới, HbA1c ≥ 8% <!-- not-a-result: ngưỡng phân nhóm --> liên quan với tỷ số chênh tái nhập viện cao hơn (OR {{R-A1-001}}; KTC 95%: {{R-A1-001.ci}}; p = {{R-A1-001.p}}).
+Nhận xét: Tỷ lệ tái nhập viện trong 1 năm là {{R-A1-002}} ở nhóm HbA1c ≥ 8% <!-- not-a-result: ngưỡng phân nhóm --> và {{R-A1-003}} ở nhóm còn lại, chênh lệch 11,2 <!-- derived: R-A1-002 - R-A1-003 --> điểm phần trăm. Sau hiệu chỉnh theo tuổi và giới, HbA1c ≥ 8% <!-- not-a-result: ngưỡng phân nhóm --> liên quan với tỷ số chênh tái nhập viện cao hơn (OR {{R-A1-001}}; KTC 95%: {{R-A1-001.ci}}; p = {{R-A1-001.p}}).
 
 ## 3.3 Phân tích thăm dò (hậu kiểm)
 
