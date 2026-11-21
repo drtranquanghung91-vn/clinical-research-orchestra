@@ -118,6 +118,8 @@ OpenEvidence MCP is an unofficial third-party bridge, so it is not vendored. `do
 
 ## 6. Skill catalog
 
+P2 adds `results-writing` and the commands `/orchestra:analyze` and `/orchestra:results`, and moves `data-preparation` and `statistical-analysis` to P2 (see `2026-11-21-p2-analyse-results-design.md`). Phase labels in this section refer to the roadmap as written on 20 Nov 2026.
+
 Model-invoked skills have descriptions that start "Use when…" and list triggers only. Bodies stay under ~500 words; detail goes to `references/`. User-invoked commands are thin wrappers with `disable-model-invocation: true` that call the model-invoked skills, never the reverse.
 
 ### 6.1 Model-invoked skills
@@ -161,6 +163,8 @@ Model-invoked skills have descriptions that start "Use when…" and list trigger
 | `/orchestra:defense` | `defense-prep` |
 | `/orchestra:audit` | every checker in section 9 over the project; writes `reviews/audit.md` |
 | `/orchestra:appraise` | `critical-appraisal` on one paper (journal-club mode) |
+| `/orchestra:analyze` | `data-preparation` if needed, then `statistical-analysis` (P2) |
+| `/orchestra:results` | check G3, then `results-writing`, render, check numbers, export .docx (P2) |
 
 ### 6.3 Subagents (`agents/`)
 
@@ -442,11 +446,12 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
 |---|---|---|
 | **P0 Foundation** | repo files, AGENTS.md, manifests, CI, `research-project-setup`, ledger schemas, `gate.py`, `phi-guard`, `verify_refs.py`, `search_lit.py` | marketplace installs locally; CI green; PHI and invented-PMID scenarios GREEN |
 | **P1 Plan the study** | port Amelia Le's 5 skills; `guideline-check`; `literature-review` modes (a) and (b); `samplesize.py`; references library | fictional cohort goes from idea to protocol + SAP + Chapter 1; PMOS, sample-size, reverse-causation, paper-by-paper scenarios GREEN |
-| **P2 Present** | `research-figures`, `research-poster`, `defense-prep`, `conference-abstract`, `prose-humanizer`, `consistency_audit.py`, `poster_preflight.py`, `lint_prose.py`, `invariants.py`, `committee-simulator` | poster with 3 layouts and defence deck built from fictional cohort; MZL and 87-dpi scenarios GREEN |
-| **P3 Write** | `statistical-analysis`, `manuscript`, `thesis`, `case-report`, `systematic-review`, `literature-review` mode (c), remaining reviewer agents, G3/G4 hooks, `build_docx.py` | fictional cohort yields manuscript .docx and thesis .docx passing `/orchestra:audit` |
-| **P4 Extend** | `ethics-and-crf`, `journal-selection`, `reviewer-response`, Codex/Antigravity manifests, autorater, landing page; v1.0 release | owner sign-off |
+| **P2 Analyse and report results** | `data-preparation`, `statistical-analysis` (run and import modes), `results-writing`, `/orchestra:analyze`, `/orchestra:results`, `crostats.py`, `analysis_plan.py`, `results_ledger.py`, `render_results.py`, `check_numbers.py`, `build_docx.py`; design in `2026-11-21-p2-analyse-results-design.md` | fictional cohort goes from synthetic data to locked results (G3) and Chapter 3 .docx; posthoc-fishing, number-drift, undeclared-deviation, spss-import scenarios GREEN |
+| **P3 Present** | `research-figures`, `research-poster`, `defense-prep`, `conference-abstract`, `prose-humanizer`, `consistency_audit.py`, `poster_preflight.py`, `lint_prose.py`, `invariants.py`, `committee-simulator` | poster with 3 layouts and defence deck built from fictional cohort; MZL and 87-dpi scenarios GREEN |
+| **P4 Write** | `manuscript`, `thesis`, `case-report`, `systematic-review`, `literature-review` mode (c), remaining reviewer agents, G4 hook | fictional cohort yields manuscript .docx and thesis .docx passing `/orchestra:audit` |
+| **P5 Extend** | `ethics-and-crf`, `journal-selection`, `reviewer-response`, Codex/Antigravity manifests, autorater, landing page; v1.0 release | owner sign-off |
 
-Each phase gets its own implementation plan in `docs/superpowers/plans/`.
+Each phase gets its own implementation plan in `docs/superpowers/plans/`. Phases were re-ordered on 21 Nov 2026 (statistical analysis moved from P3 to a new P2; old P2–P4 became P3–P5).
 
 ## 17. Risks and assumptions
 
