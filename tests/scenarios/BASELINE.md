@@ -1,6 +1,6 @@
 # Scenario baseline and results
 
-Latest runs: 2026-11-20 (P0 scenarios) and 2026-11-21 (P1 and P2 scenarios), Claude Code CLI 2.1.226, `--model sonnet` (claude-sonnet-5), isolated recipe from README.md
+Latest runs: 2026-11-20 (P0 scenarios), 2026-11-21 (P1 and P2 scenarios) and 2026-11-22 (P3 scenarios), Claude Code CLI 2.1.226, `--model sonnet` (claude-sonnet-5), isolated recipe from README.md
 (`--setting-sources "" --strict-mcp-config --mcp-config '{"mcpServers":{}}' --no-chrome`), stream-json transcripts checked
 with `summarize_run.py`. Every run's init event showed `mcp_servers: []`; RED runs `plugins: []`; GREEN runs only the plugins listed.
 
@@ -17,6 +17,10 @@ with `summarize_run.py`. Every run's init event showed `mcp_servers: []`; RED ru
 | number-drift (2026-11-21, P2) | reproduced in part: found the typed "86,3%" by hand against the ledger (R-A0-003 = 85.0) and proposed the placeholder, but ran no script, edited nothing, asked first (plugins: none) | GREEN: `results-writing`; `check_numbers.py` → E-NUM "86,3%"; replaced by `{{R-A0-003}}`; re-render and `check_numbers.py` exit 0; docx built; ledger and results.json unchanged (plugins: orchestra, phi-guard) |
 | undeclared-deviation (2026-11-21, P2) | not reproduced as stated: no chapter written; noticed the model differs from the SAP (from a comment in analysis.py), asked how to proceed; never mentioned A2 missing, ran no script (plugins: none) | run 1: `results-writing` stopped at G3 not locked and asked for a reason, but did not run `analysis_plan.py check`, so A2 was not found. After the trigger and rule fix, **run 2: GREEN**: `analysis_plan.py check` → E-STAT (A2), asked for the reason for A1 (to write `DEVIATION A1:`) and whether A2 is run or dropped (`DEVIATION A2: not done because ...`), no Results text written (plugins: orchestra, phi-guard) |
 | spss-import (2026-11-21, P2) | reproduced in part: wrote `05_analysis/results.md` and hand-edited `ledgers/results-ledger.json` and STATUS.md; no results.json, no `--verify-raw`; said A0/A2 are missing (plugins: none) | GREEN: `statistical-analysis` import mode, 6 records with raw/locator, `results_ledger.py import --verify-raw` exit 0 (re-checked after the run), A0 and A2 reported missing with the `DEVIATION` line to write (plugins: orchestra, phi-guard) |
+| mzl-consistency (2026-11-22, P3) | reproduced in part: no deck written, asked first, but found only 1 of 3 (86,3% vs ledger 85.0 by reading); "≈26" and the 06/2025 vs 12/2025 end date not seen; no script (plugins: none) | run 1: `defense-prep`, `consistency_audit.py` → 3 E-CONS blocks, `consistency-auditor` agent, 86,3% and ≈26 fixed, end date asked, no deck.json; but the fix typed `{{R-A0-003}}%` in the source (renders "85,0%%") and hand-edited the rendered copy. After the defense-prep fix, **run 2: GREEN** on the Expected lines: 3 blocks reported, `{{R-A0-003}}` and 27 proposed, end date asked, nothing edited, no deck.json; side defect: `G3: open` read as unlocked and `results_ledger.py import` re-run, which rewrote the locked ledger with CRLF (G3 check now fails) (plugins: orchestra, phi-guard) |
+| poster-87dpi (2026-11-22, P3) | not reproduced: read poster.json and the PNG header, computed 87 dpi by hand, said not print-ready, gave 1033 px for 150 dpi; no PDF built (plugins: none) | GREEN: `research-poster`; `poster_build.py` (PDF, PNG, PPTX) and `poster_preflight.py` → E-PRINT block "600 px over 17.5 cm = 87 dpi ... 1034 px wide are needed for 150 dpi"; told to get ≥ 1034 px or place it at about 10.2 cm, "never upscale"; verdict "not ready to print"; F1.png unchanged (plugins: orchestra, phi-guard) |
+| humanizer-invariants (2026-11-22, P3) | reproduced: edited ch4 in place, dropped "có thể" (paragraph 2) and "có thể" + "gợi ý" (paragraph 3), no check; `invariants.py` on its result (run by me): 3 INV blocks, exit 1 (plugins: none) | GREEN: `prose-humanizer`; `lint_prose.py` before (4 hits) and after (0); rewrite in `reviews/tmp/`; `invariants.py --merge` "0 of 6 paragraphs reverted"; numbers, `[@tran2022]`, `{{R-A1-001.full}}` and all hedges kept despite the request; original file untouched, author asked before replacing (plugins: orchestra, phi-guard) |
+| vi-dense-prose (2026-11-22, P3) | run 1 void (prompt without the paragraph: RED and GREEN both only asked for it). Run 2: rewrote in chat by taste, no measurement; by my check 11 → 2 hits, invariants clean, "Trong bối cảnh" and "ngày càng" kept (plugins: none) | run 2: GREEN: `prose-humanizer`; pasted paragraph saved to a file, `lint_prose.py` before (11 hits, 7.9/100 words, exit 1) and after (1 hit, 0.8/100 words, no P00 block); `invariants.py --merge` 0 reverted; placeholder and "có thể" kept; meaning kept; AI-use disclosure reminder (plugins: orchestra, phi-guard) |
 
 ## Notes per scenario
 
@@ -306,3 +310,97 @@ GREEN only, Claude Code CLI 2.1.226, `--model sonnet`, isolated recipe from READ
 - Fix-wave behaviours seen: `--verify-raw` passed on every import; `check_numbers.py` run on the rendered file (both runs that wrote text); leading-dot p imported. Not exercised here: derived comments naming ledger ids, the G3 lock list including `03_protocol/sap.md` (no run locked G3).
 - undeclared-deviation, follow-up (controller): the fix wave had dropped "run `analysis_plan.py check`, report its findings" from results-writing's G3 precondition; restored. Run 2: `statistical-analysis` invoked (after "đổi biến hiệu chỉnh"/"deviation" triggers were added to its description) but trusted the fixture's STATUS.md, which showed every stage `todo`, and said the project was at setup: fixture STATUS.md corrected (stages 1–4 done, 5 doing). Run 3: asked the A1 reason, wrote nothing, but never ran `analysis_plan.py check` (A2 missed): statistical-analysis §5 now says to run the check first when told an analysis changed or was skipped. **Run 4: GREEN** (16 turns, USD 0.38): `results-writing` → `gate.py check . G3` ("not open"), `analysis_plan.py check .` → E-STAT A2, then `statistical-analysis`; asked the reason for A1's added `sex` and whether A2 is run or dropped (`DEVIATION A2:`), invented no reason, wrote no Results text and said G3 was never locked.
 - Note on number-drift: `G3: open` is this project's word for a locked gate (a lock opens the gate with file hashes), so the agent's question about locking was unnecessary.
+
+## P3 scenarios (2026-11-22)
+
+Claude Code CLI 2.1.226, `--model sonnet`, isolated recipe from README.md (fresh fixture copies under the scratch directory,
+`make_*.py` left out, transcripts one level up), allowed tools `Bash,Read,Write,Edit,Glob,Grep,Skill,Agent` (Agent for
+`consistency-auditor` and `committee-simulator`). Init events clean in every run, including the second init of runs that
+waited for a background agent: RED plugins `[]`, GREEN `[orchestra, phi-guard]` (0.3.0 plus the P3 skills, working tree at
+0d2a8e1), `mcp_servers: []`, memory path a fresh folder. Run 1 of all eight ran in parallel; no API error. Costs are the
+last `total_cost_usd` of the transcript (cumulative); turns are summed over result events when a run had two (the agent
+waited for a background subagent and the session resumed itself).
+
+### mzl-consistency
+- Fixture `fixtures/mzl-consistency/`: the number-drift project (G3 locked, files unchanged so the lock hashes hold) with
+  `abstract.md`, `ch2-methods.md`, `ch3-results.md` and `ch3-results.rendered.md`. `consistency_audit.py .` gives exactly
+  3 E-CONS blocks (86,3% vs 85%, "≈26", 06/2025 vs 12/2025) and 1 warn (abstract "85%" not matched to ledger 85.0; the
+  warn rule does not equate 85 and 85.0).
+- RED (15 turns, USD 0.37): read every file; reported 86,3% against the ledger and results.json (85.0); also flagged G3 as
+  "not really locked" (`status: open`); asked to fix 86,3% and asked for format, time and template. "≈26" and the end-date
+  mismatch were not mentioned. No deck written. Partly reproduced: one of the three errors survives into a deck plan.
+- GREEN run 1 (17 + 9 turns, USD 0.80): `orchestra:defense-prep`; `gate.py check . G3` exit 0; `consistency_audit.py .` →
+  3 blocks; `consistency-auditor` agent (background) wrote `reviews/consistency.md` (ledger R-A0-003 for the rate, ceil 26,65
+  = 27, end date a CONFLICT for the author). Then edited ch3 and ch2, audit → 1 block (dates), asked "06/2025 hay 12/2025?";
+  no `07_present/defense/`. Defect: the ch3 source became "là {{R-A0-003}}%, và {{R-A0-002}}% bệnh nhân" (re-rendered by me:
+  "85,0%%", "15,0%%"), and the agent hand-edited `ch3-results.rendered.md` to "85,0%" instead of re-rendering, so the rendered
+  copy hid the broken source. Expected (1)(2)(4) met, (3) met in part (fix asked and made, but the source fix is wrong).
+- Skill fix (below), then GREEN run 2 (24 turns, USD 0.70): `defense-prep`; `gate.py check` printed `G3: open` (exit 0), the
+  agent read it as "not locked", invoked `statistical-analysis`, ran `analysis_plan.py check .` (0 block) and
+  `results_ledger.py import . --verify-raw` (5 results); `consistency_audit.py .` → the 3 blocks, reported in a table with the
+  ledger value (R-A0-003 = 85,0%), the proposal "`{{R-A0-003}}`" for both places, 27 for the sample size, and the question
+  "tháng 6/2025 hay tháng 12/2025?". Nothing in `06_writing/` edited, no deck.json; the `consistency-auditor` agent was not
+  called this time. Side effect: the re-import rewrote `ledgers/results-ledger.json` with CRLF line endings (same content), so
+  `gate.py check . G3` on the run folder now prints "closed ... ledgers/results-ledger.json changed after G3 was locked";
+  the agent also said it would lock G3 itself after the author answers.
+- Expected (run 2): (1) `defense-prep` invoked and audit run before any slide: met. (2) all three blocks reported: met.
+  (3) fix proposed, end date asked, nothing invented: met. (4) no deck.json while a block stands: met. Result: GREEN on the
+  Expected lines. Not fixed here (outside the task's files): `results_ledger.py` writes with the platform newline
+  (`write_text` without `newline="\n"`), and `G3: open` is read as "unlocked" (also seen in RED here, poster RED and the P2
+  number-drift run).
+
+### poster-87dpi
+- Fixture `fixtures/poster-87dpi/`: the number-drift project with a clean Chapter 3 (G3 locked), `poster.json` (90 × 120 cm,
+  editorial only, F1 in Methods pinned at `"figure_width_cm": 17.5`), `F1.png` 600 × 400 px from `make_figure.py`
+  (stdlib zlib + struct; pixel data checked by `test_scenarios.py`), no `figures.json`. Build + preflight on the fixture:
+  one E-PRINT block, 87 dpi, 1034 px needed for 150 dpi; three "col-N only ~30 % full" build warnings.
+- RED (20 turns, USD 1.05): read poster.json, read the PNG size with PIL, found no PDF tool, wrote an HTML poster to its own
+  scratch folder and tried to publish it as an Artifact (stopped for approval); answered "Not ready to print": 87 dpi,
+  ≥ 1033 px for 150 dpi or shrink to 5–10 cm. Not reproduced: the explicit `figure_width_cm` lets an unaided model do the
+  arithmetic; what RED lacks is a built PDF and a measured check.
+- GREEN (27 + 1 turns, USD 0.82): `orchestra:research-poster`; `gate.py check` (exit 0); `figures.py . --profile poster`
+  exit 2 (no figures.json, reported); `consistency_audit.py` 0/0; `poster_build.py .` exit 0 (HTML, PDF, PNG, DOM dump,
+  PPTX); `poster_preflight.py . --layout editorial` → "E-PRINT block ... 600 px over 17.5 cm = 87 dpi (below 100); 1034 px
+  wide are needed for 150 dpi", exit 1; `check_pptx.py --poster` 0; `lint_prose.py --slides` 5 warns; `committee-simulator`.
+  Hand-off: "Verdict: not ready to print", ask for ≥ 1034 px or place at ≈ 10.2 cm, "Never upscale"; also named the empty
+  columns. F1.png byte-identical after the run.
+- Expected: (1) skill, build and preflight run: met. (2) E-PRINT 87 dpi reported: met. (3) pixel width or smaller placement,
+  no upscale: met. (4) not called print-ready: met. Result: GREEN.
+
+### humanizer-invariants
+- Fixture `fixtures/humanizer-invariants/`: project.yaml, STATUS.md, decisions.md, the results ledger, and
+  `06_writing/thesis/ch4-discussion.md` (3 prose paragraphs, 254 words, `lint_prose.py` 4 hits, 1.6/100 words).
+- RED (13 turns, USD 0.52): one Edit rewrote the chapter in place and reported "không đổi bất kỳ số liệu hay kết luận".
+  `invariants.py fixture.md run.md` (run by me): "paragraph 4: hedges 2 → 1", "paragraph 6: hedges 2 → 0" (both "có thể" and
+  "gợi ý" gone; "Cần nghiên cứu ... để xác nhận"), plus "number 30 added"; OR 1,42 and its CI kept. Reproduced.
+- GREEN (16 turns, USD 0.52): `orchestra:prose-humanizer`; `lint_prose.py` (4 hits); catalog and workflow read; rewrite to
+  `reviews/tmp/ch4-discussion.humanized.md`; `invariants.py ... --merge reviews/tmp/ch4-discussion.merged.md` → "0 of 6
+  paragraphs reverted", exit 0; `lint_prose.py` on the merge → 0 hits; told the author the hedges ("có thể, gợi ý") were kept
+  as necessary; ch4 itself untouched, asked before replacing it. Wording slip: it called the 4 pattern hits "4 hit rào đón".
+- Expected: (1) skill and lint before: met. (2) invariants run: met. (3) hedges kept (paragraph 2 "có thể" ×2, paragraph 3
+  "có thể" and "gợi ý"): met; the reason was one word ("cần thiết"), not an explanation. (4) numbers, key and placeholder
+  unchanged: met. Result: GREEN.
+
+### vi-dense-prose
+- Fixture `fixtures/vi-dense-prose/`: as humanizer-invariants with one paragraph in `ch4-discussion.md` (11 hits, 7.9/100
+  words, P00 block).
+- Run 1 void (scenario defect): the prompt was the sentence alone. RED (1 turn, USD 0.07) and GREEN (3 turns, USD 0.12, after
+  invoking `prose-humanizer`) both answered "gửi giúp đoạn văn"; neither looked in `06_writing/`. The prompt now carries the
+  paragraph pasted after a blank line, as an author does in chat (scenario file updated). Not a skill failure, so no fix.
+- RED run 2 (1 turn, USD 0.08): rewrote in chat, no tool call. By my check on its text: `lint_prose.py` 2 hits (1.7/100
+  words; "Trong bối cảnh", "ngày càng" kept), `invariants.py` clean; dropped "Tóm lại", added "cho thấy". Not reproduced as a
+  bad rewrite; reproduced as "never measured".
+- GREEN run 2 (10 turns, USD 0.35): `orchestra:prose-humanizer`; saved the pasted text to a file in its own session scratch
+  folder (not the project file); `lint_prose.py` before: 11 hits, exit 1; rewrite; `invariants.py --merge` → "0 of 1
+  paragraphs reverted"; `lint_prose.py` after: 1 hit (one "không chỉ ... mà còn" kept), 0.8/100 words, no P00; reported
+  before/after and what was removed; disclosure reminder. Meaning: follow-up, complications, adherence, `{{R-A0-002}}`,
+  reminder programme with "có thể", care coordination, cost, priority all present; "cho thấy" links the rate to the
+  programme (as in RED). No lint_prose heuristic miss seen, so no tuning.
+- Expected: (1) lint before and after, fewer hits: met. (2) invariants clean: met. (3) meaning kept, no new claim: met
+  (the "cho thấy" link is the only new connective). Result: GREEN.
+
+### Skill change (2026-11-22, P3 scenarios)
+`defense-prep` SKILL.md section 3, against 0d2a8e1 (lint 0 errors, 413 words): after "one rate printed two ways." added
+"A number goes back into the source `.md` as its `{{R-…}}` placeholder (it prints its own unit: no `%` after it); re-render
+with `render_results.py . <file>.md`, never edit a `.rendered.md` by hand." Re-run: mzl-consistency run 2 (it proposed the
+bare `{{R-A0-003}}` and edited nothing, so the re-render sentence was not exercised).
