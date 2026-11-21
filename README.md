@@ -11,13 +11,16 @@
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-0F5E7A"></a>
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-C8372D">
   <img alt="Languages" src="https://img.shields.io/badge/languages-English%20%7C%20Vietnamese-56677F">
-  <img alt="Status" src="https://img.shields.io/badge/status-0.1.0%20foundation-B7791F">
+  <img alt="Status" src="https://img.shields.io/badge/status-0.2.0%20plan%20the%20study-B7791F">
   <a href="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
-> **Status: early.** Version 0.1.0 ships the foundation (project folder, ledgers, gates,
-> reference verification and patient-data protection). The research skills arrive phase by
-> phase; see [Roadmap](#roadmap). Do not rely on it for real studies yet.
+> **Status: early.** Version 0.2.0 adds the P1 "plan the study" skills (research question,
+> literature search, critical appraisal, guideline check, literature review, protocol design,
+> sample size and SAP) on top of the 0.1.0 foundation (project folder, ledgers, gates, reference
+> verification and patient-data protection). Analysis, writing and presentation skills arrive
+> phase by phase; see [Roadmap](#roadmap). A simulated project run through every P1 skill is in
+> [`examples/fictional-cohort/`](examples/fictional-cohort/). Do not rely on it for real studies yet.
 
 ---
 
@@ -73,13 +76,13 @@ Two plugins ship from this marketplace:
 |---|---|---|---|
 | 0 | `research-project-setup`, `/orchestra:start`, `/orchestra:status` | project folder, ledgers, gates, next step | 0.1.0 |
 | 0 | `deidentify-data` (phi-guard) | de-identified data file and a separate key file | 0.1.0 |
-| 1 | `research-question` | PICO/PECO, FINER check, objectives, hypotheses, title options | P1 |
-| 2 | `literature-search` | nomenclature check, search strategy, verified references, evidence table and map, gaps | P1 |
-| 2 | `critical-appraisal`, `/orchestra:appraise` | appraisal by the study's real design, with the matching tool | P1 |
-| 2 | `guideline-check` | current clinical and reporting guidelines, each with version and date | P1 |
-| 2 | `literature-review`, `/orchestra:review` | thesis Chapter 1 or manuscript background, synthesised by question | P1 |
-| 3 | `protocol-design` | design with trade-offs, eligibility, variables table, bias and confounding | P1 |
-| 3 | `sample-size-sap` | sample size with a sensitivity table (`samplesize.py`) and a statistical analysis plan | P1 |
+| 1 | `research-question` | PICO/PECO, FINER check, objectives, hypotheses, title options | 0.2.0 |
+| 2 | `literature-search` | nomenclature check, search strategy, verified references, evidence table and map, gaps | 0.2.0 |
+| 2 | `critical-appraisal`, `/orchestra:appraise` | appraisal by the study's real design, with the matching tool | 0.2.0 |
+| 2 | `guideline-check` | current clinical and reporting guidelines, each with version and date | 0.2.0 |
+| 2 | `literature-review`, `/orchestra:review` | thesis Chapter 1 or manuscript background, synthesised by question (`review_lint.py`, `cite_render.py`) | 0.2.0 |
+| 3 | `protocol-design` | design with trade-offs, eligibility, variables table, bias and confounding | 0.2.0 |
+| 3 | `sample-size-sap` | sample size with a sensitivity table (`samplesize.py`) and a statistical analysis plan | 0.2.0 |
 | 4 | `research-figures` | Table 1, Kaplan–Meier with numbers at risk, forest plots, flow diagrams | P2 |
 | 6 | `research-poster`, `defense-prep`, `conference-abstract` | poster with print preflight, thesis-defence deck, abstract | P2 |
 | 5–6 | `prose-humanizer` | rewrites AI-sounding prose, keeps every number and citation | P2 |
@@ -94,8 +97,12 @@ Vietnamese while the manuscript from the same study is in English.
 
 - **Verified references only.** Every reference enters through `search_lit.py add` and is
   checked by `verify_refs.py` against PubMed, Europe PMC or Crossref. Citations in text use
-  `[@id]` keys that must exist in the ledger.
-- **Numbers from files.** Results come from a results ledger, not from the model's memory.
+  `[@id]` keys that must exist in the ledger, and `cite_render.py` numbers them in Vancouver
+  style from the ledger. A source with no PMID or DOI enters only as an author-supplied record
+  (`add-manual`) and is listed as MANUAL, never as verified.
+- **Numbers from files.** Results come from a results ledger, not from the model's memory, and a
+  sample size comes from `samplesize.py` with a sensitivity table, every parameter sourced or
+  labelled as an assumption.
   A consistency audit that flags numbers disagreeing between sections arrives in P2.
 - **Patient data protected by default.** `phi-guard` knows Vietnamese identifier formats
   (CCCD/CMND, BHYT, record numbers, labelled names, dates of birth, addresses) as well as
@@ -131,7 +138,7 @@ Europe PMC and Crossref APIs; no API key is needed.
 | Phase | Scope | State |
 |---|---|---|
 | P0 Foundation | project folder, ledgers, gates, `phi-guard`, `verify_refs.py`, `search_lit.py`, CI | done (0.1.0) |
-| P1 Plan the study | research question, literature search, appraisal, guideline check, literature review, protocol, sample size and SAP | in progress |
+| P1 Plan the study | research question, literature search, appraisal, guideline check, literature review, protocol, sample size and SAP | done (0.2.0) |
 | P2 Present | figures, poster, defence deck, abstract, prose humanizer, consistency audit | planned |
 | P3 Write | statistical analysis, manuscript, thesis, case report, systematic review | planned |
 | P4 Extend | ethics and CRF, journal selection, reviewer response, Codex and Antigravity packaging | planned |
@@ -145,6 +152,7 @@ has its implementation plan in [`docs/superpowers/plans/`](docs/superpowers/plan
 .claude-plugin/marketplace.json   marketplace manifest (plugins: orchestra, phi-guard)
 plugins/orchestra/                research skills, commands, scripts/, templates/project/
 plugins/phi-guard/                outbound PHI hook, phi_scan.py, deidentify.py, deidentify-data skill
+examples/fictional-cohort/        a simulated project run through every P1 skill, with its checks
 tests/unit/                       tests for every script
 tests/scenarios/                  RED/GREEN behaviour scenarios and the baseline record
 tools/lint_skills.py              skill frontmatter and length checks

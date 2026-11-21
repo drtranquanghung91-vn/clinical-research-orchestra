@@ -22,7 +22,7 @@
 - Every reference that enters a project goes through `search_lit.py add` and `verify_refs.py`; skills never write a PMID or DOI from memory.
 - Sources are Amelia Le's v3 skills (20 Nov 2026) plus both change notes (18 Nov "Skill changes and justification" and v3 "Thay_doi_bo_skill_v3_2026-11-20"). Where the v3 skill text and the 18 Nov notes disagree, v3 wins; record the conflict in the inventory row.
 - Rules written for the author's own machine (for example the `input-router` mod, `~/.claude/skills/...` paths, "install the plugin again") are generalised: "a summarising layer that intercepts tool output", "the plugin root", or dropped with an inventory note saying why.
-- Every commit that ports or adapts Amelia Le's content (Tasks 3, 3a, 4–8) ends with both trailers, in this order:
+- Every commit that ports or adapts Amelia Le's content (Tasks 3, 3a, 4–8) ends with both trailers in ONE final paragraph (one `-m` holding both lines, no blank line between them), in this order:
   `Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>`
   `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
   Contributors are credited by GitHub account; never write a contributor's personal email into the repository.
@@ -44,6 +44,7 @@ plugins/orchestra/references/
 plugins/orchestra/scripts/samplesize.py
 plugins/orchestra/scripts/review_lint.py
 plugins/orchestra/scripts/cite_render.py
+(modified in Task 6a: search_lit.py, verify_refs.py, crolib/litapi.py)
 plugins/orchestra/skills/{research-question, literature-search, critical-appraisal, protocol-design,
                           sample-size-sap, guideline-check, literature-review, review, appraise}/SKILL.md
 tests/unit/{test_samplesize.py, test_cite_render.py, test_review_lint.py, test_reference_library.py}
@@ -306,7 +307,8 @@ Expected: all PASS. If `test_every_documented_example_runs` fails for an example
 
 ```bash
 git add plugins/orchestra/scripts/samplesize.py tests/unit/test_samplesize.py
-git commit -m "feat(orchestra): sample size calculator (Amelia Le) with golden tests" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): sample size calculator (Amelia Le) with golden tests" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -338,7 +340,8 @@ Adapted from Amelia Le's v3 `literature-evidence-research-vi/scripts/cite_render
 
 ```bash
 git add plugins/orchestra/scripts/cite_render.py tests/unit/test_cite_render.py NOTICE.md
-git commit -m "feat(orchestra): cite_render.py numbers [@id] citations in Vancouver style (adapted from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): cite_render.py numbers [@id] citations in Vancouver style (adapted from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 `md2docx.py` from the same source is not ported: Word export belongs to P3 `build_docx.py` (inventory: `deferred: P3 build_docx.py`).
@@ -385,7 +388,8 @@ Expected: 0 lint errors; all tests PASS; no inventory row with an empty `new loc
 
 ```bash
 git add plugins/orchestra/skills/research-question plugins/orchestra/references/workflows/research-question.md
-git commit -m "feat(orchestra): research-question skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): research-question skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -424,7 +428,8 @@ Expected: 0 lint errors, all PASS (including `test_every_skill_link_to_reference
 
 ```bash
 git add plugins/orchestra/skills/literature-search plugins/orchestra/references/workflows/literature-search.md plugins/orchestra/references/literature
-git commit -m "feat(orchestra): literature-search skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): literature-search skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -471,7 +476,36 @@ Run lint and tests as in Task 5 (expected 0 errors, all PASS, no empty inventory
 
 ```bash
 git add plugins/orchestra/skills/critical-appraisal plugins/orchestra/skills/appraise plugins/orchestra/references/appraisal-tools plugins/orchestra/references/workflows/critical-appraisal.md
-git commit -m "feat(orchestra): critical-appraisal skill and /orchestra:appraise (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): critical-appraisal skill and /orchestra:appraise (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 6a: References beyond PMID: DOI records, author-supplied records, Europe PMC fallback
+
+Added 20 Nov 2026 after Task 6 review. Vietnamese theses cite many sources that have a DOI but no PMID (Vietnamese journals on Crossref) or no identifier at all (Vietnamese journals without DOI, theses, Ministry of Health guidelines and decisions). `search_lit.py add` takes PMIDs only, and `verify_refs.py` reports every identifier-less record as `NO_IDENTIFIER` (exit 1), so P1 skills cannot handle these sources honestly. Also, some networks block NCBI E-utilities; PubMed lookups then fail with a network error although Europe PMC answers.
+
+**Files:**
+- Modify: `plugins/orchestra/scripts/search_lit.py`, `plugins/orchestra/scripts/verify_refs.py`, `plugins/orchestra/scripts/crolib/litapi.py`, `plugins/orchestra/references/evidence-policy.md` (§Identifiers), `plugins/orchestra/skills/literature-search/SKILL.md` and `plugins/orchestra/references/workflows/literature-search.md` (commands), `plugins/orchestra/skills/appraise/SKILL.md` (DOI or PDF input)
+- Test: `tests/unit/test_search_lit.py`, `tests/unit/test_verify_refs.py`, `tests/unit/test_litapi.py` (extend; all network calls mocked as the existing tests do)
+
+**Interfaces:**
+- `search_lit.py add <project> <id> [<id> ...]`: each id is a PMID (all digits) or a DOI (starts with `10.`, a `https://doi.org/` prefix is stripped). PMIDs are looked up as today; DOIs via Crossref (`litapi.crossref`). A record whose PMID or DOI (case-insensitive) is already in the ledger is not added twice. Anything else is a usage error (exit 2). Existing exit codes unchanged.
+- `search_lit.py add-manual <project> --title T --authors "Surname AB; Surname CD" --journal J --year YYYY --seen-in TEXT [--volume V] [--issue I] [--pages P] [--url U]`: appends one record with `"source": "manual"`, `"seen_in": TEXT` (what the author holds, for example `00_inputs/tapchi-yhvn-2023.pdf p. 45`), `"verified_by": "author-supplied, not machine-verifiable"`, no `pmid`/`doi`, `id` from `litapi.make_id`. `--seen-in` is required and must be non-empty. Prints the new id. Exit 0, or 2 on usage/IO error.
+- `verify_refs.py`: a record with `source == "manual"` and no PMID or DOI gets status `MANUAL` with note `author-supplied (<seen_in>); not machine-verifiable`. `MANUAL` does not make the exit code non-zero and `--write` leaves its `verified_by` unchanged. A record with no identifier and no `source: manual` stays `NO_IDENTIFIER` (exit 1). Text output lists MANUAL records under their own heading so the author sees them before release. Citations of MANUAL records are allowed.
+- Europe PMC fallback: when the PubMed request raises a network or HTTP error (not when PubMed answers "not found"), `verify_refs.py` and `search_lit.py fetch|add` retry the same PMID through Europe PMC (`litapi.epmc_by_pmid(pmids) -> list[dict]`, query `EXT_ID:<pmid> AND SRC:MED`, `resultType=core`). Records and comparisons use the same fields as today; a retraction is detected from Europe PMC's publication types. The verify note says `checked via Europe PMC (PubMed unreachable)`. If both fail, behaviour is today's `ERROR` (exit 2).
+
+- [ ] **Step 1: Write failing tests** (mock every HTTP call, as the existing tests do): add with a DOI (Crossref mocked) creates a record with `doi` and no `pmid`; add with `https://doi.org/10.x/y` strips the prefix; duplicate DOI not re-added; a malformed id gives exit 2; `add-manual` writes the record with `source`, `seen_in`, `verified_by` and refuses an empty `--seen-in` (exit 2); `verify_refs` gives `MANUAL` for a manual record and exit 0 when all others verify; a non-manual identifier-less record still gives `NO_IDENTIFIER` and exit 1; a PubMed `URLError` followed by a Europe PMC hit gives `VERIFIED` with the Europe PMC note; a Europe PMC record with a retracted publication type gives `RETRACTED`; both sources failing gives `ERROR` and exit 2.
+- [ ] **Step 2: Run them, expect FAIL.**
+- [ ] **Step 3: Implement** in `crolib/litapi.py` (`epmc_by_pmid`), `search_lit.py` and `verify_refs.py`, standard library only; update each script's docstring (usage lines and exit codes).
+- [ ] **Step 4: Policy and skill text.** `evidence-policy.md` §Identifiers gains: "PMID or DOI first. Without either, a source may enter only through `search_lit.py add-manual`, and only when the author holds the document (a PDF, scan or printed page) and names it in `--seen-in`. The agent never creates a manual record from memory or from a search snippet; it asks the author for the document. Manual records are listed as not machine-verifiable at every gate." Update the commands in `literature-search` (SKILL.md and workflow) and `appraise` (a DOI goes through `search_lit.py add <project> <doi>`; a PDF without PMID or DOI goes through `add-manual` with the PDF path as `--seen-in`). Keep both skill bodies ≤ 500 words.
+- [ ] **Step 5: Run the full suite and the lint**; all PASS, 0 errors.
+- [ ] **Step 6: Commit**
+
+```bash
+git add plugins/orchestra/scripts tests/unit plugins/orchestra/references/evidence-policy.md plugins/orchestra/skills/literature-search plugins/orchestra/references/workflows/literature-search.md plugins/orchestra/skills/appraise
+git commit -m "feat(orchestra): DOI and author-supplied references, Europe PMC fallback when PubMed is unreachable" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -500,7 +534,8 @@ Translate the three reference files into `references/design/`, all rows kept, in
 
 ```bash
 git add plugins/orchestra/skills/protocol-design plugins/orchestra/references/design plugins/orchestra/references/workflows/protocol-design.md
-git commit -m "feat(orchestra): protocol-design skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): protocol-design skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -536,7 +571,8 @@ Translate the four reference files (`openevidence-queries.md` becomes `statistic
 
 ```bash
 git add plugins/orchestra/skills/sample-size-sap plugins/orchestra/references/statistics plugins/orchestra/references/workflows/sample-size-sap.md
-git commit -m "feat(orchestra): sample-size-sap skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "feat(orchestra): sample-size-sap skill (ported from Amelia Le)" -m "Co-authored-by: Amelia Le <267516761+ngoclnl189-amelia@users.noreply.github.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---

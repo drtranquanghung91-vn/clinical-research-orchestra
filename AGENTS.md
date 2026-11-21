@@ -11,6 +11,8 @@ Read `docs/superpowers/specs/2026-11-20-clinical-research-orchestra-design.md` f
 - Skill bodies are English and at most 500 words; detail goes to `references/`.
 - Refer to another skill as "use the Skill tool with `<name>`", never by relative path.
 - Shared scripts and references live once at plugin level, reached via `${CLAUDE_PLUGIN_ROOT}`.
+- Never write inside `${CLAUDE_PLUGIN_ROOT}` (or `plugins/` in this repo) at run time. Intermediate
+  files go to `<project>/reviews/tmp/` or the session scratch folder; run scripts from the project folder.
 - "The agent reasons; scripts measure." Anything a script can check is checked by a script.
 - Privacy: nothing leaves the machine except literature-API queries; never the user's name or
   email; never patient data.

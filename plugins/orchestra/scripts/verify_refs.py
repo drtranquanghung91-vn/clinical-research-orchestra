@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Verify every reference record and every in-text citation of a project.
 
-Records: PMID → PubMed esummary; DOI only → Crossref. Title (fuzzy ≥ 0.85), year, first-author
+Records: PMID → PubMed esummary (Europe PMC when PubMed is unreachable); DOI only → Crossref. Title (fuzzy ≥ 0.85), year, first-author
 surname and PMID↔DOI agreement are compared. Retracted publications are reported as RETRACTED.
-Statuses: VERIFIED · MISMATCH · NOT_FOUND · RETRACTED · NO_IDENTIFIER · ERROR.
+Statuses: VERIFIED · MISMATCH · NOT_FOUND · RETRACTED · NO_IDENTIFIER · MANUAL · ERROR.
+MANUAL = author-supplied record (source "manual", no PMID/DOI) added by search_lit.py add-manual: listed
+under its own heading, never machine-verified, does not change the exit code, --write leaves it alone.
 Citations: every [@id] in the given Markdown files must exist in the ledger and not be retracted.
 verified_by records the last status; only a value ending in VERIFIED means verified. An ERROR
 leaves verified_by unchanged (reported as possibly stale).
@@ -11,7 +13,7 @@ Adapted from grand-rounds verify_refs.py (MIT).
 
   python verify_refs.py <project_dir|references.json> [--write] [--json] [--cite FILE ...]
 
-Exit codes: 0 = every reference VERIFIED and no citation finding; 1 = findings (MISMATCH,
+Exit codes: 0 = every reference VERIFIED or MANUAL and no citation finding; 1 = findings (MISMATCH,
 NOT_FOUND, RETRACTED, NO_IDENTIFIER, E-REF); 2 = missing project/ledger, unreadable JSON or
 --cite file, or a reference that could not be checked (network/API ERROR).
 """
@@ -30,7 +32,7 @@ import urllib.parse
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from crolib import ledgers  # noqa: E402
+from crolib import ledgers, litapi  # noqa: E402
 from crolib.http import get as _get  # noqa: E402
 
 
@@ -46,6 +48,16 @@ def fetch_pubmed(pmid: str) -> dict | None:
     return {"title": s.get("title", ""), "year": int(year.group(0)) if year else None,
             "first_author": s.get("sortfirstauthor", ""), "doi": ids.get("doi", ""),
             "journal": s.get("source", ""), "pubtypes": s.get("pubtype", [])}
+
+
+def fetch_epmc(pmid: str) -> dict | None:
+    recs = litapi.epmc_by_pmid([pmid])
+    if not recs:
+        return None
+    r = recs[0]
+    return {"title": r.get("title", ""), "year": r.get("year"),
+            "first_author": (r.get("authors") or [""])[0] or "", "doi": r.get("doi", ""),
+            "journal": r.get("journal", ""), "pubtypes": r.get("pubtypes", [])}
 
 
 def fetch_crossref(doi: str) -> dict | None:
@@ -88,28 +100,49 @@ def compare(rec: dict, found: dict) -> list[str]:
     return problems
 
 
-def verify(rec: dict, pubmed=None, crossref=None) -> tuple[str, list[str]]:
+EPMC_NOTE = "checked via Europe PMC (PubMed unreachable)"
+
+
+def verify(rec: dict, pubmed=None, crossref=None, epmc=None) -> tuple[str, list[str]]:
     pubmed = pubmed or fetch_pubmed
     crossref = crossref or fetch_crossref
+    epmc = epmc or fetch_epmc
     pmid, doi = str(rec.get("pmid") or "").strip(), str(rec.get("doi") or "").strip()
     if not pmid and not doi:
+        if rec.get("source") == "manual":
+            return "MANUAL", [f"author-supplied ({rec.get('seen_in') or 'no source named'}); "
+                              "not machine-verifiable"]
         return "NO_IDENTIFIER", ["no PMID or DOI: cannot be checked"]
     try:
-        notes: list[str] = []
+        problems: list[str] = []
+        info: list[str] = []
         if pmid:
-            found = pubmed(pmid)
+            try:
+                found = pubmed(pmid)
+                source = "PubMed"
+            except (OSError, ValueError) as e:  # network/HTTP error (not "not found"): try Europe PMC
+                try:
+                    found = epmc(pmid)
+                except Exception as e2:
+                    return "ERROR", [f"PubMed: {type(e).__name__}: {e}; Europe PMC: {type(e2).__name__}: {e2}"]
+                source = "Europe PMC"
+                info.append(EPMC_NOTE)
             if not found:
-                return "NOT_FOUND", [f"PMID {pmid} not found on PubMed"]
+                if source == "Europe PMC":  # Europe PMC lags PubMed: a miss here is not "not found"
+                    return "ERROR", [f"PubMed unreachable; Europe PMC has no record of PMID {pmid}; "
+                                     "could not confirm"]
+                return "NOT_FOUND", [f"PMID {pmid} not found on {source}"]
             if doi and found.get("doi") and found["doi"].lower() != doi.lower():
-                notes.append(f"PMID {pmid} has DOI {found['doi']}, record says {doi}")
+                problems.append(f"PMID {pmid} has DOI {found['doi']}, record says {doi}")
         else:
             found = crossref(doi)
             if not found:
                 return "NOT_FOUND", [f"DOI {doi} not found on Crossref"]
-        notes += compare(rec, found)
+        problems += compare(rec, found)
+        notes = problems + info
         if "Retracted Publication" in (found.get("pubtypes") or []):
             return "RETRACTED", notes + ["publication is retracted"]
-        return ("MISMATCH" if notes else "VERIFIED"), notes
+        return ("MISMATCH" if problems else "VERIFIED"), notes
     except Exception as e:  # network or parse problem: never report as verified
         return "ERROR", [f"{type(e).__name__}: {e}"]
 
@@ -191,7 +224,7 @@ def main(argv=None) -> int:
         if status == "ERROR" and r.get("verified_by"):
             notes = notes + [f"stored status '{r['verified_by']}' was not re-checked and may be stale"]
         results.append({"id": r.get("id"), "status": status, "notes": notes})
-        if a.write and status != "ERROR":
+        if a.write and status not in ("ERROR", "MANUAL"):
             r["verified_by"] = f"verify_refs.py {today} {status}"
             r["retracted"] = bool(r.get("retracted")) or status == "RETRACTED"
     if a.write:
@@ -201,8 +234,13 @@ def main(argv=None) -> int:
         print(json.dumps({"references": results, "citations": cites}, ensure_ascii=False, indent=2))
     else:
         print(f"# verify_refs: {len(results)} references, {len(cites)} citation findings")
-        for x in results:
+        for x in (x for x in results if x["status"] != "MANUAL"):
             print(f"- {x['id']}: {x['status']}" + "".join(f"\n    · {n}" for n in x["notes"]))
+        manual = [x for x in results if x["status"] == "MANUAL"]
+        if manual:
+            print("## Author-supplied, not machine-verifiable (check against the document before release)")
+            for x in manual:
+                print(f"- {x['id']}: MANUAL" + "".join(f"\n    · {n}" for n in x["notes"]))
         for c in cites:
             print(f"- {c['code']} {c['file']}: [@{c['key']}] {c['problem']}")
     errors = [x["id"] for x in results if x["status"] == "ERROR"]
@@ -211,7 +249,7 @@ def main(argv=None) -> int:
               f"{', '.join(str(i) for i in errors)}; their stored status was left unchanged and may be stale",
               file=sys.stderr)
         return 2
-    ok = all(x["status"] == "VERIFIED" for x in results) and not cites
+    ok = all(x["status"] in ("VERIFIED", "MANUAL") for x in results) and not cites
     return 0 if ok else 1
 
 

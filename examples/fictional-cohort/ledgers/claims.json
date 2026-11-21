@@ -1,0 +1,60 @@
+{
+  "claims": [
+    {
+      "id": "ch1-1.5.1-chakraborty2021",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "Cac can thiep trong benh vien nham giam thoi gian nam vien/tai nhap vien o DTD type 2 da duoc tong hop trong 1 SR, nhung khong co so lieu gop ro va nhieu tieu chi AMSTAR 2 trong yeu khong xac dinh duoc tu abstract.",
+      "kind": "background",
+      "status": "verified-abstract",
+      "refs": ["chakraborty2021"]
+    },
+    {
+      "id": "ch1-1.5.2-hu2026-cao2026",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "HbA1c luc nhap vien cao hon co the lien quan voi tang nguy co tai nhap vien trong 30-31 ngay o DTD type 2 (aOR 1,15 moi 1% HbA1c, KTC 95% 1,03-1,29; HbA1c la 1 trong 6 bien du bao trong mot nomogram khac); bang chung giai tiep vi moc thoi gian ngan hon 1 nam.",
+      "kind": "background",
+      "status": "verified-abstract",
+      "refs": ["hu2026", "cao2026"]
+    },
+    {
+      "id": "ch1-1.5.3-hu2026-robbins2021",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "Chua ro lieu chieu huong lien quan giua HbA1c va tai nhap vien co phu thuoc vao thoi diem do HbA1c (luc nhap vien vs sau xuat vien) hay khong; HbA1c sau xuat vien thap hon lai lien quan tang tai nhap vien trong mot nghien cuu khac (Cohen's D 0,28, hieu ung nho).",
+      "kind": "background",
+      "status": "verified-abstract",
+      "refs": ["hu2026", "robbins2021"]
+    },
+    {
+      "id": "ch1-1.5.4-li2026",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "O moc 365 ngay, yeu to du bao tai nhap vien o DTD type 2 co the chuyen tu yeu to cap tinh sang bien chung man tinh dac hieu DTD theo mot mo hinh hoc may (SHAP); mo hinh nay khong tach rieng hieu ung doc lap cua HbA1c.",
+      "kind": "background",
+      "status": "verified-abstract",
+      "refs": ["li2026"]
+    },
+    {
+      "id": "ch1-1.5.5-grade-very-low",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "Chua co nghien cuu do dung phoi nhiem (HbA1c luc nhap vien) + dung outcome (tai nhap vien moi nguyen nhan) + dung moc thoi gian (1 nam) o DTD type 2 noi chung; muc do tin cay GRADE so bo = rat thap (very low).",
+      "kind": "derived",
+      "status": "verified-abstract",
+      "refs": ["hu2026", "cao2026", "li2026", "robbins2021"]
+    },
+    {
+      "id": "ch1-1.4-guideline-american2026",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "ADA Standards of Care in Diabetes-2026, muc 16, khuyen cao kiem soat duong huyet noi vien va lap ke hoach xuat vien/chuyen tiep cham soc noi chung; khong doc full-text nen khong trich mot nguong HbA1c cu the tu guideline nay.",
+      "kind": "background",
+      "status": "verified-abstract",
+      "refs": ["american2026"]
+    },
+    {
+      "id": "ch1-1.6-vietnam-not-found",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "Chua tim thay nghien cuu thuc hien tai Viet Nam ve HbA1c luc nhap vien va tai nhap vien o DTD type 2 trong phien tim kiem PubMed da thuc hien; tap chi tieng Viet chua duoc tim trong phien nay (han che, khong phai ket luan 'khong co').",
+      "kind": "background",
+      "status": "unverified",
+      "refs": []
+    }
+  ]
+}

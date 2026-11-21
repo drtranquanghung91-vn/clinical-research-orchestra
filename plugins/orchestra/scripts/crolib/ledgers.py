@@ -25,7 +25,10 @@ def _req(rec: dict, fields: list[str]) -> list[str]:
 def validate_reference(rec: dict) -> list[str]:
     errs = _req(rec, ["id", "title"])
     pmid, doi = str(rec.get("pmid") or ""), str(rec.get("doi") or "")
-    if not pmid and not doi:
+    if rec.get("source") == "manual":
+        if rec.get("seen_in") in (None, ""):
+            errs.append("manual record needs 'seen_in' (the document the author holds)")
+    elif not pmid and not doi:
         errs.append("needs a PMID or DOI")
     if pmid and not pmid.isdigit():
         errs.append(f"PMID '{pmid}' is not numeric")

@@ -221,7 +221,7 @@ evidence_sources: [openevidence, pubmed, europepmc, crossref]
  "verified_by": "verify_refs.py 2026-11-20", "used_in": ["06_writing/thesis/ch1.md#p4"]}
 ```
 
-Rule: a record is created only from a tool lookup in the session. A model-remembered reference is never a record.
+Rule: a record is created only from a tool lookup in the session, or with `search_lit.py add-manual` for a source that has no PMID or DOI, when the author holds the document or confirms an official URL a tool returned (recorded in `seen_in`; status MANUAL, never machine-verified). A model-remembered reference is never a record.
 
 `results-ledger.json`, one record per number:
 
@@ -288,6 +288,7 @@ Optional dependencies (`python-docx`, `python-pptx`, `PyMuPDF`, `playwright`) pr
 | `E-CONS` | consistency | 85% vs 86.3%; "≈26" where formula gives 26.65 → 27; mismatched end dates |
 | `E-RG` | reporting guideline | required item absent |
 | `E-STAT` | statistics | test not in SAP; causal language from observational design |
+| `E-LIT` | literature review structure | review written paper by paper (review_lint.py) |
 | `E-PHI` | patient identifiers | any identifier in a deliverable |
 | `E-PRINT` | print | image below 150 dpi at print size; fonts not embedded; no bleed when requested |
 | `S01…` | AI-prose patterns | blocking only above threshold |

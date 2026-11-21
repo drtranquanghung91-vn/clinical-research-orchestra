@@ -173,6 +173,155 @@ class TestSearchLitCli(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("not found", err)
 
+    # ---- DOI, manual, Europe PMC fallback
+    def fake_crossref(self, doi_map):
+        def fake(url, timeout=30):
+            if "api.crossref.org" in url:
+                doi = urllib.parse.unquote(url.split("/works/")[1])
+                if doi in doi_map:
+                    return json.dumps({"message": doi_map[doi]}).encode()
+                raise urllib.error.HTTPError(url, 404, "nf", {}, None)
+            return fake_ncbi(url, timeout)
+        return mock.patch.object(litapi, "http_get", fake)
+
+    CR = {"title": ["Dịch tễ học PCOS"], "DOI": "10.55/vn.1", "issued": {"date-parts": [[2023]]},
+          "author": [{"family": "Nguyễn", "given": "Văn A"}], "container-title": ["Tap chi Y hoc"]}
+
+    def test_add_doi_creates_doi_record_without_pmid(self):
+        with self.fake_crossref({"10.55/vn.1": self.CR}):
+            code, out, err = self.run_cli("add", str(self.proj), "10.55/vn.1")
+        self.assertEqual(code, 0, err)
+        r = self.refs()[0]
+        self.assertEqual(r["doi"], "10.55/vn.1")
+        self.assertFalse(r.get("pmid"))
+        self.assertEqual(r["id"], "nguyen2023")
+        self.assertEqual(ledgers.validate_reference(r), [])
+
+    def test_add_doi_url_prefix_stripped_and_duplicate_not_added(self):
+        with self.fake_crossref({"10.55/vn.1": self.CR}):
+            self.run_cli("add", str(self.proj), "https://doi.org/10.55/vn.1")
+            code, out, _ = self.run_cli("add", str(self.proj), "10.55/VN.1")
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["added"], [])
+        self.assertEqual(len(self.refs()), 1)
+        self.assertEqual(self.refs()[0]["doi"], "10.55/vn.1")
+
+    def test_add_doi_not_found_exit_1(self):
+        with self.fake_crossref({}):
+            code, out, err = self.run_cli("add", str(self.proj), "10.55/none")
+        self.assertEqual(code, 1)
+        self.assertIn("not found", err)
+        self.assertEqual(self.refs(), [])
+
+    def test_add_mixed_pmid_and_doi(self):
+        with self.fake_crossref({"10.55/vn.1": self.CR}):
+            code, out, _ = self.run_cli("add", str(self.proj), "111", "10.55/vn.1")
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["added"], ["nguyen2026", "nguyen2023"])
+
+    def test_add_malformed_id_exit_2(self):
+        for bad in ("abc", "10.5", "PMID:5"):
+            code, out, err = self.run_cli("add", str(self.proj), bad)
+            self.assertEqual(code, 2, bad)
+            self.assertIn("not a PMID", err)
+        self.assertEqual(self.refs(), [])
+
+    def manual_args(self, **over):
+        a = {"--title": "Khảo sát PCOS", "--authors": "Nguyễn Văn A; Lê Thị B", "--journal": "Tạp chí Y học VN",
+             "--year": "2023", "--seen-in": "00_inputs/tapchi-yhvn-2023.pdf p. 45"}
+        a.update(over)
+        return [x for kv in a.items() for x in kv]
+
+    def test_add_manual_writes_record(self):
+        code, out, err = self.run_cli("add-manual", str(self.proj), *self.manual_args(**{"--pages": "45-50"}))
+        self.assertEqual(code, 0, err)
+        self.assertEqual(out.strip(), "nguyen2023")
+        r = self.refs()[0]
+        self.assertEqual(r["source"], "manual")
+        self.assertEqual(r["seen_in"], "00_inputs/tapchi-yhvn-2023.pdf p. 45")
+        self.assertEqual(r["verified_by"], "author-supplied, not machine-verifiable")
+        self.assertEqual(r["authors"], ["Nguyễn Văn A", "Lê Thị B"])
+        self.assertNotIn("pmid", r)
+        self.assertNotIn("doi", r)
+        self.assertEqual(ledgers.validate_reference(r), [])
+        code, out, _ = self.run_cli("add-manual", str(self.proj), *self.manual_args())
+        self.assertEqual(out.strip(), "nguyen2023a")
+
+    def test_add_manual_refuses_empty_seen_in(self):
+        for blank in ("", "   "):
+            code, out, err = self.run_cli("add-manual", str(self.proj), *self.manual_args(**{"--seen-in": blank}))
+            self.assertEqual(code, 2)
+            self.assertIn("seen-in", err)
+        self.assertEqual(self.refs(), [])
+
+    def test_add_manual_usage_errors(self):
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as cm:
+            search_lit.main(["add-manual", str(self.proj), "--title", "T"])  # missing required options
+        self.assertEqual(cm.exception.code, 2)
+        code, _, _ = self.run_cli("add-manual", str(self.proj), *self.manual_args(**{"--year": "23"}))
+        self.assertEqual(code, 2)
+        code, _, err = self.run_cli("add-manual", str(self.proj / "nope"), *self.manual_args())
+        self.assertEqual(code, 2)
+
+    def test_manual_validation_requires_seen_in(self):
+        rec = {"id": "m", "title": "T", "source": "manual"}
+        self.assertTrue(ledgers.validate_reference(rec))
+        self.assertEqual(ledgers.validate_reference(dict(rec, seen_in="scan.pdf")), [])
+        self.assertTrue(ledgers.validate_reference({"id": "m", "title": "T"}))
+
+    def test_add_falls_back_to_europepmc(self):
+        epmc = {"resultList": {"result": [{"pmid": "111", "title": "Metformin in PMOS.", "pubYear": "2026",
+                "authorString": "Nguyen A", "doi": "10.1371/x", "abstractText": "From EPMC",
+                "authorList": {"author": [{"fullName": "Nguyen A"}]}}]}}
+
+        def fake(url, timeout=30):
+            if "europepmc" in url:
+                return json.dumps(epmc).encode()
+            raise urllib.error.URLError("NCBI blocked")
+        with mock.patch.object(litapi, "http_get", fake):
+            code, out, err = self.run_cli("add", str(self.proj), "111")
+        self.assertEqual(code, 0, err)
+        self.assertIn("Europe PMC", err)
+        r = self.refs()[0]
+        self.assertEqual((r["pmid"], r["abstract"]), ("111", "From EPMC"))
+
+    def test_fetch_both_down_exit_2(self):
+        with mock.patch.object(litapi, "http_get", lambda url, timeout=30: offline()):
+            code, out, err = self.run_cli("fetch", "111")
+        self.assertEqual(code, 2)
+        self.assertEqual(out, "")
+
+
+    # ---- PubMed down + Europe PMC miss is "not checked" (exit 2), never "not found" (final review #2)
+    def epmc_only(self, pmids_known):
+        def fake(url, timeout=30):
+            if "europepmc" in url:
+                q = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)["query"][0]
+                hits = [{"pmid": p, "title": "Metformin in PMOS.", "pubYear": "2026", "authorString": "Nguyen A",
+                         "authorList": {"author": [{"fullName": "Nguyen A"}]}}
+                        for p in pmids_known if f"EXT_ID:{p} " in q]
+                return json.dumps({"resultList": {"result": hits}}).encode()
+            raise urllib.error.URLError("NCBI blocked")
+        return mock.patch.object(litapi, "http_get", fake)
+
+    def test_add_pubmed_down_epmc_miss_exit_2_not_found_never_said(self):
+        with self.epmc_only(["111"]):
+            code, out, err = self.run_cli("add", str(self.proj), "111", "42000001")
+        self.assertEqual(code, 2)
+        self.assertIn("could not be checked", err)
+        self.assertIn("42000001", err)
+        self.assertNotIn("not found", err)
+        res = json.loads(out)
+        self.assertEqual((res["added"], res["not_found"], res["not_checked"]), (["nguyen2026"], [], ["42000001"]))
+        self.assertEqual([r["pmid"] for r in self.refs()], ["111"])
+
+    def test_fetch_pubmed_down_epmc_miss_exit_2(self):
+        with self.epmc_only([]):
+            code, out, err = self.run_cli("fetch", "42000001")
+        self.assertEqual(code, 2)
+        self.assertIn("could not be checked (PubMed unreachable", err)
+        self.assertNotIn("not found", err)
+        self.assertEqual(json.loads(out), [])
 
 if __name__ == "__main__":
     unittest.main()

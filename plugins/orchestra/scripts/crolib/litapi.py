@@ -66,7 +66,9 @@ def summary_to_record(s: dict) -> dict:
     return {
         "id": make_id(s.get("sortfirstauthor") or "", year.group(0) if year else ""),
         "title": (s.get("title") or "").rstrip("."),
-        "authors": [a.get("name") for a in s.get("authors", []) if a.get("authtype") == "Author"],
+        # Group authors (authtype "CollectiveName") are authors too; PubMed marks some with "*".
+        "authors": [a["name"].rstrip("*").strip() for a in s.get("authors", []) or []
+                    if a.get("authtype") in ("Author", "CollectiveName") and a.get("name")],
         "journal": s.get("source", ""),
         "year": int(year.group(0)) if year else None,
         "volume": s.get("volume", ""),
@@ -106,25 +108,46 @@ def make_id(first_author: str, year: str) -> str:
 
 # ---------------------------------------------------------------- Europe PMC
 
+def _epmc_record(r: dict) -> dict:
+    ji = r.get("journalInfo", {}) or {}
+    return {
+        "id": make_id(r.get("authorString", "").split(",")[0], str(r.get("pubYear", ""))),
+        "title": (r.get("title") or "").rstrip("."),
+        # Group authors carry "collectiveName" instead of "fullName"; authorList may be null.
+        "authors": [a.get("fullName") or a.get("collectiveName")
+                    for a in ((r.get("authorList") or {}).get("author") or [])
+                    if a.get("fullName") or a.get("collectiveName")],
+        "journal": ji.get("journal", {}).get("medlineAbbreviation", ""),
+        "year": int(r["pubYear"]) if str(r.get("pubYear", "")).isdigit() else None,
+        "volume": ji.get("volume", "") or "",
+        "issue": ji.get("issue", "") or "",
+        "pages": r.get("pageInfo", "") or "",
+        "doi": r.get("doi", ""),
+        "pmid": r.get("pmid", ""),
+        "pmcid": r.get("pmcid", ""),
+        "pubtypes": (r.get("pubTypeList", {}) or {}).get("pubType", []) or [],
+        "abstract": re.sub(r"<[^>]+>", "", r.get("abstractText", "") or ""),
+        "retrieved_with": "litapi europepmc",
+        "access": "metadata",
+    }
+
+
 def epmc_search(query: str, retmax: int = 10) -> list[dict]:
     url = EPMC + "search?" + urllib.parse.urlencode(
         {"query": query, "format": "json", "pageSize": retmax, "resultType": "core"})
     data = json.loads(http_get(url))
+    return [_epmc_record(r) for r in data.get("resultList", {}).get("result", [])]
+
+
+def epmc_by_pmid(pmids: list[str]) -> list[dict]:
+    """Look PMIDs up on Europe PMC (fallback when NCBI is unreachable). Unknown PMIDs are skipped."""
     out = []
-    for r in data.get("resultList", {}).get("result", []):
-        out.append({
-            "id": make_id(r.get("authorString", "").split(",")[0], str(r.get("pubYear", ""))),
-            "title": (r.get("title") or "").rstrip("."),
-            "authors": [a.get("fullName") for a in r.get("authorList", {}).get("author", [])],
-            "journal": r.get("journalInfo", {}).get("journal", {}).get("medlineAbbreviation", ""),
-            "year": int(r["pubYear"]) if str(r.get("pubYear", "")).isdigit() else None,
-            "doi": r.get("doi", ""),
-            "pmid": r.get("pmid", ""),
-            "pmcid": r.get("pmcid", ""),
-            "abstract": r.get("abstractText", ""),
-            "retrieved_with": "litapi europepmc",
-            "access": "metadata",
-        })
+    for pmid in pmids:
+        url = EPMC + "search?" + urllib.parse.urlencode(
+            {"query": f"EXT_ID:{pmid} AND SRC:MED", "format": "json", "pageSize": 1, "resultType": "core"})
+        for r in json.loads(http_get(url)).get("resultList", {}).get("result", []):
+            if str(r.get("pmid", "")) == str(pmid):
+                out.append(_epmc_record(r))
     return out
 
 
@@ -145,8 +168,12 @@ def epmc_fulltext(pmcid: str) -> str:
 def crossref(doi: str) -> dict:
     data = json.loads(http_get("https://api.crossref.org/works/" + urllib.parse.quote(doi)))["message"]
     year = (data.get("issued", {}).get("date-parts") or [[None]])[0][0]
-    authors = [f"{a.get('family', '')} {''.join(x[0] for x in a.get('given', '').split() if x)}".strip()
-               for a in data.get("author", [])]
+    authors = []
+    for a in data.get("author", []) or []:
+        if a.get("family"):  # person: "Family GI"
+            authors.append(f"{a['family']} {''.join(x[0] for x in (a.get('given') or '').split() if x)}".strip())
+        elif a.get("name"):  # organisation (group author)
+            authors.append(a["name"].strip())
     return {
         "id": make_id(authors[0] if authors else "", str(year or "")),
         "title": (data.get("title") or [""])[0],
