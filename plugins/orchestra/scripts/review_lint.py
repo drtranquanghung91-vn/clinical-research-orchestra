@@ -16,7 +16,7 @@ from pathlib import Path
 
 UP = "A-ZÀ-ỸĐ"
 PATTERNS = [
-    re.compile(rf"^[{UP}][\w'’\-]+(?:\s+[{UP}][\w'’\-]+)*\s+(?:et al\.?|and [{UP}][\w'’\-]+|&\s*[{UP}][\w'’\-]+|và cộng sự|và cs\.?)?\s*\(\d{{4}}[a-z]?\)"),
+    re.compile(rf"^[{UP}][\w'’\-]*\.?(?:\s+[{UP}][\w'’\-]*\.?)*\s+(?:et al\.?|and [{UP}][\w'’\-]+|&\s*[{UP}][\w'’\-]+|và cộng sự|và cs\.?)?\s*\(\d{{4}}[a-z]?\)"),
     re.compile(rf"^[{UP}][\w'’\-]+\s+et al\."),
     re.compile(rf"^(?:In\s+)?(?:a|the|their|his|her)\s+(?:\d{{4}}\s+)?(?:study|trial|cohort|review)\s+(?:by|of)\s+[{UP}]", re.I),
     re.compile(rf"^(?:Tác giả|Nghiên cứu của|Theo nghiên cứu của|Theo tác giả)\s+[{UP}]"),
@@ -26,13 +26,23 @@ SPLIT = re.compile(rf"(?<=[.!?])\s+(?=[{UP}])")
 
 
 def paragraphs(text: str) -> list[str]:
-    out, in_code = [], False
-    for block in re.split(r"\n\s*\n", text):
-        b = block.strip()
-        if b.startswith("```"):
-            in_code = not in_code if b.count("```") == 1 else in_code
+    blocks: list[list[str]] = [[]]
+    in_code = False
+    for line in text.splitlines():
+        if line.strip().startswith("```"):
+            in_code = not in_code
+            blocks.append([])
             continue
-        if in_code or not b or b[0] in "#|>" or re.match(r"^([-*+]|\d+[.)])\s", b):
+        if in_code:
+            continue
+        if not line.strip():
+            blocks.append([])
+        else:
+            blocks[-1].append(line)
+    out = []
+    for lines in blocks:
+        b = " ".join(lines).strip()
+        if not b or b[0] in "#|>" or re.match(r"^([-*+]|\d+[.)])\s", b):
             continue
         out.append(" ".join(b.split()))
     return out

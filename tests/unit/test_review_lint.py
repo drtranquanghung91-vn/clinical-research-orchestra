@@ -39,6 +39,22 @@ class TestReviewLint(unittest.TestCase):
         self.assertEqual(len(rep["flagged"]), 1)
         self.assertFalse(rep["blocking"])
 
+    def test_author_led_single_letter_initials(self):
+        self.assertTrue(rl.author_led("Trần Thị B (2021) báo cáo tỉ lệ tăng."))
+        self.assertTrue(rl.author_led("Smith J. (2019) studied 120 women."))
+        self.assertTrue(rl.author_led("Nguyễn Văn A và cộng sự (2020) ghi nhận kết quả."))
+
+    def test_author_led_negative_common_word_with_year(self):
+        self.assertFalse(rl.author_led("Weight reduction was sustained in later trials (2019) [@a]."))
+        self.assertFalse(rl.author_led("Lifestyle change (2019) remains the first-line advice [@a]."))
+
+    def test_fence_with_blank_line_does_not_hide_following_prose(self):
+        text = "```\ncode\n\nmore code\n```\n\n" + "\n\n".join([LISTING_EN, LISTING_VI])
+        self.assertEqual(len(rl.paragraphs(text)), 2)
+        rep = rl.lint(text)
+        self.assertEqual(len(rep["flagged"]), 2)
+        self.assertTrue(rep["blocking"])
+
 
 if __name__ == "__main__":
     unittest.main()
