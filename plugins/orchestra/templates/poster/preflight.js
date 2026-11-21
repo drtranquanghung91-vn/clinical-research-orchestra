@@ -1,6 +1,7 @@
 /* Poster preflight: runs on load, marks the DOM for poster_build / poster_preflight.
    - every img and inline <svg data-raster>: natural size, and the DRAWN (contained) size in cm (data-placed-w-cm / -h-cm);
-   - every .box: an attribute data-overflow set to 1 when its content is cut off, data-box-w-cm / data-box-h-cm;
+   - every .box: an attribute data-overflow set to 1 when its content is cut off, data-box-w-cm / data-box-h-cm,
+     data-font-pt (the smallest computed font size of any text in it, in pt; inline <svg> text is skipped);
    - every .col: data-fill = content height / available height;
    - document.body.dataset.preflight = "done". */
 (function () {
@@ -27,6 +28,22 @@
     var r = svg.getBoundingClientRect();
     return [r.width, r.height];
   }
+  function minFontPt(root) {
+    var min = Infinity;
+    var all = [root].concat(Array.prototype.slice.call(root.querySelectorAll("*")));
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      if (el.closest && el.closest("svg")) { continue; }
+      var has = false;
+      for (var n = el.firstChild; n; n = n.nextSibling) {
+        if (n.nodeType === 3 && /\S/.test(n.nodeValue)) { has = true; break; }
+      }
+      if (!has) { continue; }
+      var px = parseFloat(window.getComputedStyle(el).fontSize);
+      if (px > 0 && px * 0.75 < min) { min = px * 0.75; }
+    }
+    return min === Infinity ? null : min;
+  }
   function run() {
     var pending = 0;
     function finish() {
@@ -37,6 +54,8 @@
         if (b.scrollHeight > b.clientHeight + 1 || b.scrollWidth > b.clientWidth + 1) {
           b.setAttribute("data-overflow", "1");
         }
+        var fpt = minFontPt(b);
+        if (fpt !== null) { b.setAttribute("data-font-pt", fpt.toFixed(2)); }
         b.setAttribute("data-box-w-cm", (b.clientWidth / PX_PER_CM).toFixed(3));
         b.setAttribute("data-box-h-cm", (b.clientHeight / PX_PER_CM).toFixed(3));
       }
