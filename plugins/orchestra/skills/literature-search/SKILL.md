@@ -18,7 +18,9 @@ review needs a PROSPERO protocol, two independent screeners and PRISMA 2020: say
 
 ## 3. Steps
 Inputs: `01_question/question.md` (PICO/PECO). Detail for every step is in the workflow file.
-0. Nomenclature check (renamed conditions, new criteria, MeSH lag) before any query.
+0. Nomenclature check (renamed conditions, new criteria, MeSH lag) before any query. Record in
+   `02_evidence/search-strategy.md` which MeSH heading, if any, the new-name papers carry (checked by
+   a tool, never from memory) and whether the population block relies on `[tiab]` alone.
 1. Search plan, targeted or exploratory, in `02_evidence/search-strategy.md`
    (`${CLAUDE_PLUGIN_ROOT}/references/literature/search-strategy.md`).
 2. Run `search_lit.py search`; also ClinicalTrials.gov filtered by the study country (the

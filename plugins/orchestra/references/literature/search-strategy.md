@@ -15,6 +15,11 @@ Every PMID below is an illustration from the source; re-find a paper through a t
    MeSH heading.
 3. Check: run `<PMID of a paper that uses the new name>[pmid] AND (P block)`; 0 results → the P block
    is still incomplete.
+   MeSH drift: take 2–3 new-name papers from the search results and test their headings with
+   `search_lit.py search '<PMID>[pmid] AND "<old heading>"[Mesh]'` (fetched records carry no MeSH field;
+   1 result = indexed under it, 0 = not, or not yet indexed). Write one line in `search-strategy.md`:
+   `MeSH drift: <old heading> → <new heading or none>; P block uses [tiab] for the new name`. Only
+   headings a tool confirmed; never one from memory.
 4. Example: PCOS → PMOS (*polyendocrine metabolic ovarian syndrome*, 2026): add
    `"polyendocrine metabolic ovarian syndrome"[tiab] OR PMOS[tiab]`; the meta-analysis PMID 42776991
    is indexed under MeSH "Metabolic Syndrome". Measure what is missed with

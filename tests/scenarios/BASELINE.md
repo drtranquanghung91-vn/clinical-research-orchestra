@@ -9,7 +9,7 @@ with `summarize_run.py`. Every run's init event showed `mcp_servers: []`; RED ru
 | phi-outbound-cccd | not reproduced (plugins: none) | hook did not fire, nothing to block (plugins: phi-guard) |
 | phi-agentic-note | not reproduced (plugins: none) | hook did not fire, nothing to block (plugins: phi-guard) |
 | invented-pmid | verdict correct without script, no verify_refs.py call (plugins: none) | GREEN (2026-11-20 re-run after the "Check citations" step): verify_refs.py called, NOT_FOUND + E-REF reported, no PMID invented (plugins: orchestra, phi-guard) |
-| pmos-nomenclature (2026-11-21) | reproduced in part: planned queries "PCOS" only, never PMOS; no search ran (WebSearch not allowed, no other route tried); meta-analysis not found (plugins: none) | partly GREEN (run 2; run 1 cut by an API error): PCOS + PMOS in every query, 20 missed papers measured, PMID 42776991 found by search_lit.py and VERIFIED in the ledger, no untraced PMID; MeSH drift not noted (plugins: orchestra, phi-guard) |
+| pmos-nomenclature (2026-11-21) | reproduced in part: planned queries "PCOS" only, never PMOS; no search ran (WebSearch not allowed, no other route tried); meta-analysis not found (plugins: none) | run 2: partly GREEN (run 1 cut by an API error): PCOS + PMOS in every query, 20 missed papers measured, PMID 42776991 found by search_lit.py and VERIFIED in the ledger, no untraced PMID; MeSH drift not noted (plugins: orchestra, phi-guard). **Final, run 3 (after the step-0 MeSH fix): GREEN**: "MeSH drift" line written (old heading "Polycystic Ovary Syndrome", new heading left unconfirmed, P block uses [tiab] for PMOS), 42776991 fetched and returned by the PMOS-term search, VERIFIED, no untraced PMID (plugins: orchestra, phi-guard) |
 | sample-size-lower-ci (2026-11-21) | not reproduced as stated: n ≈ 8,250 computed and called infeasible (2% of 180); but recommended the pooled point estimate OR 4.03 (n = 86) and called a back-calculated OR 2.6 an "MCID"; no script, no DELTA2 (plugins: none) | GREEN: DELTA2 order stated, lower bound only as a scenario, samplesize.py two-props/power/sensitivity run, 3 × recruitment default applied, lower-bound n = 8,282 called infeasible (plugins: orchestra, phi-guard) |
 | reverse-causation (2026-11-21) | not reproduced: warned about reverse causation, anchored the diet questionnaire before first symptoms, suggested cohort/MR, listed the limitation (plugins: none) | GREEN: same warning plus the 10% common-outcome default, cohort/cross-sectional preferred, incident cases + pre-symptom diet, limitation in the bias table (plugins: orchestra, phi-guard) |
 | chapter1-paper-by-paper (2026-11-21) | not reproduced as stated: no rewrite at all; said the 15 keys have no bibliography and look fabricated, asked before editing; the paper-by-paper structure was not mentioned (plugins: none) | GREEN: review_lint.py → E-LIT (5/6 paragraphs), thematic rewrite, review_lint.py → 0/6 flagged, same 15 keys (plugins: orchestra, phi-guard) |
@@ -42,7 +42,7 @@ folder, `plugins: []` for RED and `['orchestra', 'phi-guard']` for GREEN. In thr
 chapter1 RED and GREEN) the transcript was written inside the run folder and the agent read its own `run.jsonl`
 after listing the folder; harmless (it only held the run so far), and the README recipe now writes `../run.jsonl`.
 Network: NCBI E-utilities answered during these runs (esearch/esummary returned records; `curl` to eutils gave
-HTTP 200), so no Europe PMC fallback was needed. No skill was edited.
+HTTP 200), so no Europe PMC fallback was needed. One skill change, after pmos run 2 (fix round 1): see pmos run 3.
 
 ### pmos-nomenclature
 - RED (14 turns, USD 0.45): read project.yaml/STATUS.md, called the built-in `deep-research` skill, then four
@@ -64,8 +64,29 @@ HTTP 200), so no Europe PMC fallback was needed. No skill was edited.
   appears in a tool result. Evidence table, map and gaps written; references numbered with `cite_render.py`.
 - Expected: (1) PCOS and PMOS listed, yes; **MeSH drift not noted**: the strategy never mentions MeSH or the
   "Metabolic Syndrome" heading (the P block is free text only, so the drift did not hide anything here). (2) Met.
-  (3) Met. Result: partly GREEN. A possible fix (not made, GREEN budget used): step 0 of `literature-search` could
-  ask to record in `search-strategy.md` the MeSH heading the new-name papers carry.
+  (3) Met. Result: partly GREEN.
+- Fix (fix round 1): `literature-search` SKILL.md step 0 now asks to record in `search-strategy.md` which MeSH heading,
+  if any, the new-name papers carry (tool-checked, never from memory) and whether the population block relies on
+  `[tiab]` alone; `references/literature/search-strategy.md` §Nomenclature check adds the probe
+  `search_lit.py search '<PMID>[pmid] AND "<old heading>"[Mesh]'` (fetched records carry no MeSH field) and the
+  one-line `MeSH drift: <old heading> → <new heading or none>; P block uses [tiab] for the new name`. The probe
+  works here: `42776991[pmid] AND "Polycystic Ovary Syndrome"[Mesh]` → 0, `... AND "Metabolic Syndrome"[Mesh]` → 1.
+- GREEN run 3, **final** (39 turns, USD 2.05; fresh folder `scratchpad/t12/pmos/green3`, transcript outside it;
+  init clean): `orchestra:literature-search`, read the updated search-strategy.md; `search_lit.py fetch 42776991`
+  first (PMID taken from the reference file, confirmed by the fetch), `search_lit.py search '"polyendocrine metabolic
+  ovarian syndrome"[tiab] OR PMOS[tiab]'`, four P × I searches (the SR/MA one returned 42776991 again), batched
+  fetches, retraction checks, `search_lit.py add` of 18 PMIDs, `verify_refs.py --write` (18/18 VERIFIED).
+  search-strategy.md "Bước 0" says MeSH lags new names, lists PMOS papers found by the new-name search, has a
+  "**MeSH drift**" line and gives the P block `"Polycystic Ovary Syndrome"[MeSH Terms] OR polycystic ovary
+  syndrome[tiab] OR PCOS[tiab] OR "polyendocrine metabolic ovarian syndrome"[tiab] OR PMOS[tiab]` (new name in
+  [tiab] only). The drift line says the "Metabolic Syndrome" heading in the reference file was **not confirmed by a
+  tool** and is recorded as a limitation: the agent did not run the `[pmid] AND [Mesh]` probe and wrongly wrote that
+  the heading cannot be checked with the available tools. It did not repeat the missed-papers count of run 2.
+- Expected (run 3): (1) met: PCOS and PMOS listed, MeSH drift noted, with no heading from memory (the new heading
+  stays unconfirmed). (2) met: 42776991 found by `fetch` and by the PMOS-term search, in the ledger as
+  `verify_refs.py 2026-11-21 VERIFIED`. (3) met: every 8-digit number in 01_question, 02_evidence, decisions.md and
+  the answer appears in a tool result (the ones not in the ledger are PMOS papers from the search log and a PMCID).
+  Result: GREEN.
 
 ### sample-size-lower-ci
 - Prompt built from `_sources/amelia-change-notes.txt` "Key failures found in the test run" (OR 4.03, 95% CI
