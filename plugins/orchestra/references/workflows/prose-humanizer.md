@@ -25,13 +25,13 @@ paragraphs first, but read the whole file for tone.
 - Write the whole text to `reviews/tmp/<stem>.humanized.md`. Do not overwrite the original.
 
 ## 4. Verify
-`python "${CLAUDE_PLUGIN_ROOT}/scripts/invariants.py" <file> reviews/tmp/<stem>.humanized.md --merge <file>`
+`python "${CLAUDE_PLUGIN_ROOT}/scripts/invariants.py" <file> reviews/tmp/<stem>.humanized.md --merge reviews/tmp/<stem>.merged.md`
 Exit 0: the rewrite is safe. Exit 1: INV blocks name paragraphs whose numbers, citations, placeholders,
 derived comments or hedge count changed; with `--merge` each such paragraph is replaced by its original.
 Exit 2: usage or I/O error. A changed paragraph count is one "paragraph structure changed" block and the
 merge result is the original.
 Report every reverted paragraph with its reason, and offer a second attempt on those paragraphs.
-The merge result replaces the file only after the author agrees, or directly under the "just do it" rule.
+The merged file (`reviews/tmp/<stem>.merged.md`) replaces `<file>` only after the author agrees, or directly under the "just do it" rule.
 
 ## 5. After
 `lint_prose.py` on the merged file; report hits before and after. Hits the author keeps are fine. Then

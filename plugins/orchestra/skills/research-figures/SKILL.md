@@ -20,7 +20,8 @@ Read the analysis register (`03_protocol/sap.md`), propose a plan and confirm it
 - time-to-event: `km`;
 - rates or proportions by group: `rates`;
 - participant selection: `flow` (STROBE/CONSORT).
-A number a figure needs has no ledger id: add it to the ledger first (`results_ledger.py`).
+A number a figure needs has no ledger id: it comes from `statistical-analysis` (re-run, re-import, G3
+locked again), never typed and never added to a locked ledger by hand.
 
 ## 4. Draw
 Write `07_present/figures/figures.json` (format: `${CLAUDE_PLUGIN_ROOT}/references/presenting/figures-spec.md`),

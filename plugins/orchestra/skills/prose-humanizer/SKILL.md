@@ -21,10 +21,10 @@ count and order. Never touch numbers, `{{R-…}}` placeholders, citation keys, d
 comments, or `ledgers/claims.json`.
 
 ## 4. Verify
-`python "${CLAUDE_PLUGIN_ROOT}/scripts/invariants.py" <file> reviews/tmp/<stem>.humanized.md --merge <file>`
+`python "${CLAUDE_PLUGIN_ROOT}/scripts/invariants.py" <file> reviews/tmp/<stem>.humanized.md --merge reviews/tmp/<stem>.merged.md`
 A paragraph that changes numbers, citations or placeholders, or loses a hedge, is reverted in the merge
-result. Exit 1 lists them: report each reverted paragraph and why. The merge result replaces the file
-only after the author agrees, or directly under the "just do it" rule. Keep the original until then.
+result. Exit 1 lists them: report each reverted paragraph and why. The merged file replaces `<file>`
+only after the author agrees, or directly under the "just do it" rule.
 
 ## 5. Measure after
 Run `lint_prose.py` again and report hits before and after. Hits the author wants to keep stay.
