@@ -1,4 +1,5 @@
 import json
+import math
 import re
 import tempfile
 import unittest
@@ -205,9 +206,10 @@ class TestDom(Base):
         self.spec(size_cm=[45, 60])  # threshold 12 pt
         self.pdf = pdf_bytes(456, 606)
         self.assertEqual(self.run_dom(boxes=b)[2], [])
-        self.spec(size_cm=[120, 90])  # threshold 32 pt
+        self.spec(size_cm=[120, 90])  # k = min(120/90, 90/120) = 0.75: threshold 18 pt, like poster_build
         self.pdf = pdf_bytes(1206, 906)
-        self.assertRegex(self.run_dom(boxes=[("col-1", "A", False, "30.00")])[2][0], r"below 32\.0 pt")
+        self.assertEqual(self.run_dom(boxes=[("col-1", "A", False, "18.00")])[2], [])
+        self.assertRegex(self.run_dom(boxes=[("col-1", "A", False, "17.00")])[2][0], r"below 18\.0 pt")
 
     def test_exactly_at_threshold_is_clean(self):
         self.assertEqual(self.run_dom(boxes=[("col-1", "A", False, "24.00")])[2], [])
@@ -242,16 +244,53 @@ class TestDom(Base):
         self.assertEqual(rc, 0)
         self.assertIn("not checked by script", err[0])
 
-    def test_inline_svg_with_raster_is_checked(self):
-        d = ('<html><body data-preflight="done"><svg data-raster="../figures/F1.png" data-natural-w="600" '
+    def test_inline_svg_with_raster_is_vector_and_has_no_dpi_finding(self):
+        d = ('<html><body data-preflight="done"><svg data-raster="../figures/F1.poster.png" data-natural-w="600" '
              'data-natural-h="300" data-placed-w-cm="17.5" data-placed-h-cm="8.75"><g><path d="M0"></path></g></svg>'
              '<div class="box" data-area="col-1" data-overflow="1"><h2>Tail</h2></div></body></html>')
         self.put(self.pdf, d)
         rc, out, err = self.go()
         self.assertEqual(rc, 1)
-        self.assertEqual(len(err), 2, err)
-        self.assertTrue(any("F1.png: 600 px" in e for e in err))
-        self.assertTrue(any("Tail" in e for e in err))
+        self.assertEqual(len(err), 1, err)
+        self.assertIn("Tail", err[0])
+        self.assertEqual(out, ["poster_preflight: editorial: 1 block, 0 warn",
+                               "poster_preflight: editorial: vector figures (no dpi): F1.poster.svg"])
+
+    def test_img_with_svg_or_pdf_source_is_vector(self):
+        d = ('<html><body data-preflight="done"><img src="../figures/F2.svg" alt="a" data-natural-w="300" '
+             'data-placed-w-cm="17.5"><img src="x/F3.pdf" alt="b" data-natural-w="0" data-placed-w-cm="17.5">'
+             '</body></html>')
+        self.put(self.pdf, d)
+        rc, out, err = self.go()
+        self.assertEqual((rc, err), (0, []))
+        self.assertIn("vector figures (no dpi): F2.svg, F3.pdf", out[1])
+
+
+class TestFigureWidth(Base):
+    def build(self, width):
+        spec = json.loads((self.poster / "poster.json").read_text(encoding="utf-8"))
+        spec["sections"][1]["figure_width_cm"] = width
+        (self.poster / "poster.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+        msgs, errs = [], []
+        rc = pb.build(self.root, layouts=["editorial"], browser=None, pptx=False, out=msgs.append, err=errs.append)
+        return rc, errs
+
+    def test_figure_is_drawn_at_that_width(self):
+        self.spec(size_cm=[90, 120])
+        self.build(17.5)
+        html = (self.poster / "editorial.html").read_text(encoding="utf-8")
+        self.assertIn('data-fig="F1" style="width:17.5cm;max-width:100%"', html)
+
+    def test_wider_than_column_warns(self):
+        self.spec(size_cm=[90, 120])
+        rc, errs = self.build(60)
+        self.assertTrue(any("figure_width_cm 60 is wider than the column" in e for e in errs), errs)
+
+    def test_invalid_values_exit_2(self):
+        for bad in (1, 201, "17", True, 0):
+            rc, errs = self.build(bad)
+            self.assertEqual(rc, 2, bad)
+            self.assertIn("figure_width_cm must be a number from 2 to 200", errs[0])
 
 
 class TestCli(Base):
@@ -332,6 +371,28 @@ class TestRealBuild(unittest.TestCase):
             self.assertTrue(m, blocks)
             self.assertTrue(80 <= int(m.group(2)) <= 95, blocks)
             self.assertIn("F1.png", blocks[0])
+
+    def test_87_dpi_block_with_figure_width_cm_on_90x120(self):
+        with tempfile.TemporaryDirectory(prefix="pre flight ") as tmp:
+            root = tpb.make_project(Path(tmp) / "p", size=(90, 120))
+            tpb.make_png(root / "07_present" / "figures" / "F1.png", 600, 400)
+            specp = root / "07_present" / "poster" / "poster.json"
+            spec = json.loads(specp.read_text(encoding="utf-8"))
+            spec["sections"][1]["figure_width_cm"] = 17.5
+            specp.write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+            msgs, errs = [], []
+            rc = pb.build(root, layouts=["editorial"], browser=BROWSER, pptx=False, out=msgs.append, err=errs.append)
+            self.assertEqual(rc, 0, errs)
+            rc, out, err = self.check(root)
+            self.assertEqual(rc, 1, err)
+            blocks = [e for e in err if "E-PRINT block" in e]
+            self.assertEqual(len(blocks), 1, err)
+            dom_txt = (root / "07_present" / "poster" / "editorial.dom.html").read_text(encoding="utf-8")
+            placed = float(re.search(r'data-placed-w-cm="([\d.]+)"', dom_txt).group(1))
+            self.assertAlmostEqual(placed, 17.5, delta=0.05)
+            need = math.ceil(150 * placed / 2.54)  # 1034 at exactly 17.5 cm
+            self.assertIn("F1.png: 600 px over 17.5 cm = 87 dpi", blocks[0])
+            self.assertIn(f"{need} px wide are needed for 150 dpi", blocks[0])
 
     def test_tampered_media_box_blocks(self):
         with tempfile.TemporaryDirectory(prefix="pre flight ") as tmp:

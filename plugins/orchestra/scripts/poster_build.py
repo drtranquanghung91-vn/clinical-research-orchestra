@@ -285,6 +285,9 @@ def _validate(spec: dict) -> None:
         for key in ("heading", "body"):
             if key in sec and sec[key] is not None and not isinstance(sec[key], str):
                 raise PosterError(f"{who}.{key} must be a string")
+        fw = sec.get("figure_width_cm")
+        if fw is not None and (not _is_num(fw) or not 2 <= fw <= 200):
+            raise PosterError(f"{who}.figure_width_cm must be a number from 2 to 200")
         col = sec.get("column")
         if col is not None and (not isinstance(col, int) or isinstance(col, bool)):
             raise PosterError(f"{who}.column must be an integer")
@@ -336,6 +339,7 @@ class Assets:
     def __init__(self, project: Path, out_dir: Path):
         self.project, self.out_dir = project, out_dir
         self.fig_dir = project / "07_present" / "figures"
+        self.warnings: set[str] = set()
 
     def figure(self, fid: str) -> dict:
         svg, png = self.fig_dir / f"{fid}.svg", self.fig_dir / f"{fid}.png"
@@ -403,7 +407,7 @@ def checklist_items(sec: dict) -> list[tuple[str, bool]]:
 ARROW = {"high": "↑", "low": "↓"}
 
 
-def figure_html(fref: dict, assets: Assets, out_dir: Path) -> str:
+def figure_html(fref: dict, assets: Assets, out_dir: Path, width_cm=None) -> str:
     info = assets.figure(fref["id"])
     caption = fref.get("caption", "")
     alt = fref.get("alt") or caption or fref["id"]
@@ -413,7 +417,8 @@ def figure_html(fref: dict, assets: Assets, out_dir: Path) -> str:
     else:
         body = f'<img src="{raster}" alt="{esc(alt)}">'
     cap = f"<figcaption>{inline_html(caption)}</figcaption>" if caption else ""
-    return f'<figure class="fig" data-fig="{esc(fref["id"])}">{body}{cap}</figure>'
+    style = f' style="width:{num(width_cm)}cm;max-width:100%"' if width_cm else ""
+    return f'<figure class="fig" data-fig="{esc(fref["id"])}"{style}>{body}{cap}</figure>'
 
 
 def lab_html(rows: list[dict], lang: str) -> str:
@@ -434,13 +439,25 @@ def checklist_html(items: list[tuple[str, bool]]) -> str:
         f'<li><span class="mark">{"☑" if done else "☐"}</span>{inline_html(t)}</li>' for t, done in items) + "</ul>"
 
 
+def fig_width(sec: dict, w: float, assets: "Assets") -> float | None:
+    """Width (cm) the section's figure is drawn at when "figure_width_cm" is set, capped at the column width w."""
+    fw = sec.get("figure_width_cm")
+    if fw is None:
+        return None
+    if fw > w + 0.01:
+        assets.warnings.add(f"section {sec.get('heading', '?')!r}: figure_width_cm {fw:g} is wider than the column "
+                            f"({w:.1f} cm); drawn at the column width")
+        return w
+    return float(fw)
+
+
 def section_inner(sec: dict, assets: Assets, out_dir: Path, lang: str, skip_figure=False) -> str:
     parts = []
     if sec.get("heading"):
         parts.append(f"<h2>{inline_html(sec['heading'])}</h2>")
     fref = figure_ref(sec)
     if fref and not skip_figure:
-        parts.append(figure_html(fref, assets, out_dir))
+        parts.append(figure_html(fref, assets, out_dir, sec.get("figure_width_cm")))
     if sec.get("body"):
         parts.append(f'<div class="body">{md_to_html(sec["body"])}</div>')
     if sec.get("lab_table"):
@@ -466,7 +483,8 @@ def est_section_h(sec: dict, w: float, body_pt: float, k: float, assets: "Assets
     fref = figure_ref(sec)
     if fref and figure:
         info = assets.figure(fref["id"])
-        h += min(w * info["aspect"], getattr(assets, "fig_cap", 1e9)) + 0.4 * k
+        fw = fig_width(sec, w, assets) or w
+        h += min(fw * info["aspect"], getattr(assets, "fig_cap", 1e9)) + 0.4 * k
         if fref.get("caption"):
             h += _est_height(fref["caption"], 26 * k, w) + 0.8 * k
     row = 28 * k * PT_CM * 1.9
@@ -832,7 +850,7 @@ def plan_items(layout: str, spec: dict, assets: Assets) -> list[dict]:
             info = assets.figure(fref["id"])
             if not info["png"]:
                 raise PosterError(f"figure {fref['id']}: the PPTX needs {fref['id']}.png (run figures.py)")
-            ph = min(w * info["aspect"], getattr(assets, "fig_cap", 1e9))
+            ph = min((fig_width(sec, w, assets) or w) * info["aspect"], getattr(assets, "fig_cap", 1e9))
             pw = ph / info["aspect"]
             items.append({"kind": "image", "x": x + (w - pw) / 2, "y": y, "w": pw, "h": ph, "path": str(info["png"]),
                           "alt": fref.get("alt") or fref.get("caption") or fref["id"]})
@@ -1067,6 +1085,8 @@ def build(project, spec_path=None, layouts=None, browser=None, pptx=True, pptx_r
                 continue
             htmls[layout] = build_html(layout, spec, assets, out_dir)
         chosen = [x for x in chosen if x in htmls]
+        for wmsg in sorted(assets.warnings):
+            err(f"poster_build: {wmsg}")
     except PosterError as e:
         err(f"poster_build: {e}")
         return 2

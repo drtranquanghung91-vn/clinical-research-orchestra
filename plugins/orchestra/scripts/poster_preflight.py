@@ -12,7 +12,8 @@ preflight markers) is a warn line "not checked by script (<reason>)", never a pa
 Summary per layout (stdout): poster_preflight: <layout>: <b> block, <w> warn.
 Exit 0 = no block; 1 = at least one block; 2 = bad usage or spec.
 Effective dpi = natural pixels / placed width in inches (< 100 block, < 150 warn). Small text: a warning below
-24 pt x width_cm / 90.
+24 pt x min(width_cm / 90, height_cm / 120) (the scale poster_build uses). SVG and PDF figures (inline svg or
+<img src=*.svg|*.pdf>) are vector: no dpi finding; they are listed in a "vector figures (no dpi)" stdout line.
 """
 from __future__ import annotations
 
@@ -213,6 +214,7 @@ class Report:
     def __init__(self, layout: str):
         self.layout = layout
         self.items: list[tuple[str, str, int, str]] = []
+        self.vectors: list[str] = []
 
     def add(self, sev: str, file: str, line: int, msg: str):
         self.items.append((sev, file, line, msg))
@@ -290,6 +292,12 @@ def check_layout(layout: str, poster_dir: Path, size_cm, bleed_mm: float) -> Rep
         name = Path(im["src"]).name or "(inline figure)"
         if im["tag"] == "img" and not a.get("alt", "").strip():
             rep.add("warn", dom_name, line, f"image {name} has no alt text")
+        if im["tag"] == "svg":  # inline SVG (data-raster only names its PNG twin): vector, no pixel dpi
+            rep.vectors.append(Path(im["src"]).stem + ".svg" if im["src"] else "(inline figure)")
+            continue
+        if Path(im["src"]).suffix.lower() in (".svg", ".pdf"):
+            rep.vectors.append(name)
+            continue
         nat, placed = _fnum(a.get("data-natural-w")), _fnum(a.get("data-placed-w-cm"))
         if not nat or not placed or placed <= 0:
             rep.add("warn", dom_name, line, f"image {name}: not checked by script (natural or placed size unknown; "
@@ -304,7 +312,8 @@ def check_layout(layout: str, poster_dir: Path, size_cm, bleed_mm: float) -> Rep
                     f"image {name}: {nat:.0f} px over {placed:.1f} cm = {dpi:.0f} dpi (below {lim:.0f}); "
                     f"{need} px wide are needed for {DPI_WARN:.0f} dpi at this size")
 
-    thr = FONT_PT_90 * size_cm[0] / 90.0
+    k = min(size_cm[0] / 90.0, size_cm[1] / 120.0)  # the same scale as poster_build
+    thr = FONT_PT_90 * k
     for b in dom.boxes:
         a = b["attrs"]
         if a.get("data-overflow") == "1":
@@ -313,7 +322,7 @@ def check_layout(layout: str, poster_dir: Path, size_cm, bleed_mm: float) -> Rep
         if fpt is not None and fpt < thr - 0.05:
             rep.add("warn", dom_name, b["line"],
                     f"text in {_box_name(b)} is {fpt:.1f} pt, below {thr:.1f} pt "
-                    f"({FONT_PT_90:g} pt scaled to a {size_cm[0]:g} cm wide poster)")
+                    f"({FONT_PT_90:g} pt scaled by {k:.2f} = min(width / 90, height / 120))")
     return rep
 
 
@@ -346,6 +355,8 @@ def run(project, layouts=None, spec_path=None, out=print, err=None) -> int:
         for sev, f, line, msg in rep.items:
             err(f"E-PRINT {sev} {f}:{line}: {msg}")
         out(f"poster_preflight: {layout}: {rep.blocks} block, {rep.warns} warn")
+        if rep.vectors:
+            out(f"poster_preflight: {layout}: vector figures (no dpi): {', '.join(rep.vectors)}")
         if rep.blocks:
             rc = 1
     return rc
