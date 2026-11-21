@@ -41,6 +41,11 @@ target:
   word_limit: null
   poster_size_cm: [90, 120]
 evidence_sources: [openevidence, pubmed, europepmc, crossref]
+docx:
+  font: "Times New Roman"
+  size_pt: 13
+  line_spacing: 1.5
+  margins_cm: [2, 2, 3, 2]
 """
 
 

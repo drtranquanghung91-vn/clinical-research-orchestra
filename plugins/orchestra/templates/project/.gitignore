@@ -6,4 +6,7 @@
 # Only de-identified data files are versioned.
 04_data/*
 !04_data/*.deid.csv
+# Codebook and cleaning log carry no identifiers (phi_scan.py --file checks them).
+!04_data/codebook.md
+!04_data/cleaning-log.md
 !04_data/.gitkeep

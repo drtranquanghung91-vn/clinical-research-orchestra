@@ -74,6 +74,18 @@ For the primary outcome (and each key secondary):
 ## 15. Changes from the protocol
 - Table of changes, reasons, dates, and whether each happened before or after unblinding.
 
+## 16. Analysis register
+Every analysis that will produce a reported number gets one row, written before any outcome data are
+analysed. IDs are `A` + integer, unique and never reused; `A0` is reserved for descriptive statistics
+(Table 1). The `statistical-analysis` skill runs the register in ID order; `analysis_plan.py check`
+blocks results that are not in it unless they are declared post-hoc or as deviations in `decisions.md`.
+Write the heading as `## Analysis register` (Vietnamese SAPs: `## Analysis register (Bảng đăng ký phân tích)`).
+
+| ID | Objective | Outcome | Population | Method | Covariates | Multiplicity |
+|---|---|---|---|---|---|---|
+| A0 | descriptive | baseline characteristics | full sample | Table 1 (no p-values in an RCT) | none | not applicable |
+| A1 | primary | <outcome, type, time point> | <ITT / full cohort> | <test or model from test-selection.md> | <pre-specified list> | <none / hierarchical / Holm> |
+
 ## Sources named
 ICH E9; ICH E9(R1); SPIRIT 2013 and SPIRIT 2025; Gamble 2017 (JAMA); CONSORT. None is cited in a project
 without an identifier verified through `search_lit.py add` and `verify_refs.py`
