@@ -19,7 +19,9 @@ plan nothing.
 From the project folder run `python "${CLAUDE_PLUGIN_ROOT}/scripts/consistency_audit.py" .` over
 `06_writing/thesis/` and the abstract. Then call the agent `consistency-auditor` with the Agent tool (not
 the Skill tool). Fix every block in the thesis with the author: unrounded sample size, end date that
-differs between sections, one rate printed two ways. Re-run until the exit code is 0. Do not plan slides
+differs between sections, one rate printed two ways. A number goes back into the source `.md` as its
+`{{R-…}}` placeholder (it prints its own unit: no `%` after it); re-render with `render_results.py . <file>.md`,
+never edit a `.rendered.md` by hand. Re-run until the exit code is 0. Do not plan slides
 while a block stands.
 
 ## 4. Step 2: plan
