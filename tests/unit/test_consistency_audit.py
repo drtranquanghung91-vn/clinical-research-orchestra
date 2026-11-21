@@ -226,6 +226,22 @@ class TestFilesAndJson(Base):
         self.assertEqual(self.blocks(self.run_audit(files=[a])), [])
 
 
+class TestAbstractPrecision(Base):
+    def test_abstract_matches_at_its_own_precision(self):
+        self.w("07_present/abstract.md", "Tỷ lệ đáp ứng 85%, OR 1,8 và 77,7%.\n")
+        self.w("06_writing/thesis/ch3.md", "Tỷ lệ đáp ứng 85,0% và OR 1,84.\n")
+        w = self.warns(needle="abstract number")
+        self.assertEqual([x for x in w if "85%" in x[2] or '"1,8"' in x[2]], [], w)
+        self.assertEqual(len(self.warns(needle="77,7%")), 1)
+
+    def test_abstract_matches_ledger_value_at_lower_precision(self):
+        led = {"results": [{"id": "R-A1-003", "kind": "percent", "value": 85.0, "count": 68, "n": 80,
+                            "status": "prespecified"}]}
+        (self.p / "ledgers" / "results-ledger.json").write_text(json.dumps(led), encoding="utf-8")
+        self.w("07_present/abstract.md", "Tỷ lệ đáp ứng 85%.\n")
+        self.assertEqual(self.warns(needle="abstract number"), [])
+
+
 class TestResultIdMasking(Base):
     def test_result_ids_not_read_as_numbers(self):
         self.w("07_present/defense/deck.json", json.dumps(
