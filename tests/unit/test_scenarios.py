@@ -53,7 +53,7 @@ class ScenarioFormatTest(unittest.TestCase):
                 fdir = FIX / sid
                 self.assertTrue(fdir.is_dir())
                 for p in fdir.rglob("*"):
-                    if p.is_file() and p.suffix != ".png":
+                    if p.is_file() and p.suffix not in (".png", ".pyc") and "__pycache__" not in p.parts:
                         self.assertNotIn(b"\r\n", p.read_bytes(), str(p))
 
 
@@ -85,7 +85,11 @@ class P3FixtureTest(unittest.TestCase):
         fdir = FIX / "poster-87dpi"
         spec = importlib.util.spec_from_file_location("make_figure", fdir / "make_figure.py")
         mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
+        old, sys.dont_write_bytecode = sys.dont_write_bytecode, True  # no __pycache__ in the fixture
+        try:
+            spec.loader.exec_module(mod)
+        finally:
+            sys.dont_write_bytecode = old
         png = (fdir / "07_present" / "figures" / "F1.png").read_bytes()
         # Compare pixels, not compressed bytes: another zlib build may compress the same data differently.
         self.assertEqual(idat_pixels(png), idat_pixels(mod.png_bytes()))
