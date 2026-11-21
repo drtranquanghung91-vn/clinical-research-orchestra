@@ -40,6 +40,32 @@ class TestCheckNumbers(unittest.TestCase):
         self.assertNotEqual(check_numbers.find_unmatched("n = 1,070", RESULTS, "en"), [])
         self.assertNotEqual(check_numbers.find_unmatched("n = 1.070", RESULTS, "vi"), [])
 
+    def test_unicode_minus(self):
+        md = [{"id": "R-A2-001", "kind": "md", "value": -0.30, "ci": [-0.55, -0.05]}]
+        self.assertEqual(check_numbers.find_unmatched("−0.30 (95% CI −0.55 to −0.05)", md, "en"), [])
+        self.assertEqual(check_numbers.find_unmatched("−0,30 (KTC 95%: −0,55 đến −0,05)", md, "vi"), [])
+        self.assertEqual(check_numbers.find_unmatched("−0.31", md, "en"), [(1, "-0.31")])
+
+    def test_ci_label_variants(self):
+        for t in ("khoảng tin cậy 95% 1.21–2.79", "95% confidence interval 1.21–2.79", "95% CrI 1.21–2.79",
+                  "KTC95% 1.21–2.79", "95% ci 1.21–2.79", "95% khoảng tin cậy 1.21–2.79"):
+            self.assertEqual(check_numbers.find_unmatched(t, RESULTS, "en"), [], t)
+        self.assertEqual(check_numbers.find_unmatched("coverage 95%", RESULTS, "en"), [(1, "95%")])
+
+    def test_significance_thresholds(self):
+        for t, lang in (("p < 0,05", "vi"), ("α = 0.05", "en"), ("alpha = 0.05", "en"), ("p ≤ 0.01", "en"),
+                        ("p > 0,1", "vi"), ("P = 0.05", "en")):
+            self.assertEqual(check_numbers.find_unmatched(t, RESULTS, lang), [], t)
+        self.assertEqual(check_numbers.find_unmatched("p = 0.03", RESULTS, "en"), [(1, "0.03")])
+
+    def test_hyphenated_names(self):
+        self.assertEqual(check_numbers.find_unmatched("COVID-19, SARS-CoV-2 and IL-6 in 910 patients", RESULTS, "en"), [])
+
+    def test_not_a_result_marker(self):
+        t = "Tuổi 18–65 <!-- not-a-result: eligibility --> và 77 <!-- not-a-result: ward code -->."
+        self.assertEqual(check_numbers.find_unmatched(t, RESULTS, "vi"), [])
+        self.assertEqual(check_numbers.find_unmatched("Tuổi 18–65 và 77", RESULTS, "vi"), [(1, "18"), (1, "65"), (1, "77")])
+
     def test_cli(self):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d)

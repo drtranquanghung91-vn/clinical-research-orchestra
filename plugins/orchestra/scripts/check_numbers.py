@@ -5,6 +5,8 @@
 
 Numbers written as {{R-…}} placeholders are not checked here (render_results.py checks them). A number
 computed from ledger values carries an inline comment right after it: 0.83 <!-- derived: R-A1-001.ci -->.
+A number that is not a result (an age range in eligibility criteria, a ward code) carries a marker
+right after it, same as derived: 18–65 <!-- not-a-result: eligibility --> (both numbers of a range are skipped).
 Headings, citation groups, table/figure/section references, dates, "95%" in CI labels, integers 0–10 and
 years are not checked (defaults in references/judgement-defaults.md).
 Thousands separators are not parsed (this project never writes them): an author-typed "1,070" (en) or
@@ -28,7 +30,11 @@ COMMENT = re.compile(r"<!--.*?-->")
 CITE = re.compile(r"\[[^\[\]]*@[^\[\]]*\]|\[\d+(?:\s*[–,-]\s*\d+)*\]")
 REFS = re.compile(r"(?:Bảng|Table|Hình|Figure|Biểu đồ|Sơ đồ|mục|Mục|section|Section|Chương|Chapter)\s+\d+(?:\.\d+)*")
 DATES = re.compile(r"\b\d{1,2}/\d{1,2}/\d{2,4}\b|\b\d{4}-\d{2}-\d{2}\b")
-CI95 = re.compile(r"95\s*%\s*(?=CI|KTC)|(?<=KTC)\s*95\s*%|(?<=CI)\s*95\s*%")
+NOTRES = re.compile(r"-?\d+(?:[.,]\d+)?%?(?:\s*[–-]\s*-?\d+(?:[.,]\d+)?%?)?\s*<!--\s*not-a-result:.*?-->")
+CI95 = re.compile(r"95\s*%\s*(?=CI\b|KTC|CrI\b|confidence interval|khoảng tin cậy)"
+                  r"|(?:KTC|CI|CrI|khoảng tin cậy)\s*95\s*%", re.IGNORECASE)
+THRESH = re.compile(r"(?:\bp|α|\balpha)\s*[<≤=>≥]\s*0[.,](?:05|01|1)(?!\d)", re.IGNORECASE)
+NAMES = re.compile(r"(?<=[^\W\d_])-\d+(?!\d)")
 PSMALL = re.compile(r"[<≤]\s*0[.,]001")
 
 
@@ -40,13 +46,16 @@ def find_unmatched(text: str, ledger_results: list[dict], lang: str) -> list[tup
     for n, line in enumerate(text.split("\n"), start=1):
         if line.lstrip().startswith("#"):
             continue
-        s = PLACEHOLDER.sub(" ", line)
+        s = PLACEHOLDER.sub(" ", line.replace("−", "-"))
+        s = NOTRES.sub(" ", s)
         s = DERIVED.sub(" ", s)
         s = COMMENT.sub(" ", s)
         s = CITE.sub(" ", s)
         s = REFS.sub(" ", s)
         s = DATES.sub(" ", s)
         s = CI95.sub(" ", s)
+        s = THRESH.sub(" ", s)
+        s = NAMES.sub(" ", s)
         if has_small_p:
             s = PSMALL.sub(" ", s)
         for tok, value, decimals in numfmt.parse_tokens(s, lang):
