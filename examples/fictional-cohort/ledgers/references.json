@@ -139,7 +139,9 @@
     {
       "id": "american2026",
       "title": "16. Diabetes Care in the Hospital: Standards of Care in Diabetes-2026",
-      "authors": [],
+      "authors": [
+        "American Diabetes Association Professional Practice Committee for Diabetes"
+      ],
       "journal": "Diabetes Care",
       "year": 2026,
       "volume": "49",

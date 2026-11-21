@@ -73,17 +73,28 @@ python plugins/orchestra/scripts/samplesize.py regression-epv --predictors 6 --e
   than 3,000 per extreme group", mixing per-group and total figures from the table; corrected to
   "180 to more than 1,600 per extreme group (360 to more than 3,300 for the two groups)".
 - `STATUS.md` row 6: the next action still said protocol-design was to do; updated.
+- `ledgers/references.json` `american2026.authors` and the `.numbered.md` render: refreshed after the
+  group-author fix (see Known issues); no author name was typed by hand.
 
 ## Known issues
 
 - **Gate naming in literature-search.** After the search the agent wrote "open gate G2" as the
   evidence-approval step in `STATUS.md` and `decisions.md`; G2 belongs to protocol and SAP. The
-  author corrected it in stage 4 and the agent recorded the correction in `decisions.md`.
+  author corrected it in stage 4 and the agent recorded the correction in `decisions.md`. The skill
+  now states that no gate opens at that stage and hands off to `protocol-design`.
 - **Appraisal ran twice.** literature-search step 4c already appraised all five records, so the
   `/orchestra:appraise` stage re-appraised the two key studies (NOS → ROBINS-E as primary tool).
-- **Group author dropped.** The ADA Standards of Care 2026 §16 record (PMID 41358892) entered the
-  ledger with `authors: []`, so its Vancouver entry begins with the title ("1. 16. Diabetes Care in
-  the Hospital...") instead of "American Diabetes Association Professional Practice Committee".
+  Step 4c now covers key studies only and takes the tool from `tools-by-design.md`.
+- **Group author dropped (fixed after the run).** The ADA Standards of Care 2026 §16 record
+  (`american2026`, PMID 41358892) entered the ledger with `authors: []` because `litapi.py` ignored
+  PubMed's `CollectiveName` authors, so its Vancouver entry began with the title. After the fix the
+  authors were refreshed from a live `search_lit.py fetch 41358892`, `verify_refs.py` re-run (VERIFIED)
+  and the `.numbered.md` re-rendered; it now begins "American Diabetes Association Professional
+  Practice Committee for Diabetes".
+- **Hand-numbered references outside Chapter 1.** `01_question/question.md`, `02_evidence/*.md` and
+  `03_protocol/*.md` were written with typed `[n]` numbers and reference lists, before evidence-policy §Citing sources
+  required `[@id]` keys in every project document; only Chapter 1 goes through `verify_refs.py --cite`
+  and `cite_render.py`. The files are kept as the run produced them.
 - **Diagnostic criteria uncited.** protocol-design did not look up the ADA diagnosis section through
   guideline-check; `protocol.md` says the type 2 diabetes criteria have no verified citation yet.
 - **Thin Chapter 1 background.** Sections 1.1–1.3 (definitions, epidemiology, mechanisms) have no
