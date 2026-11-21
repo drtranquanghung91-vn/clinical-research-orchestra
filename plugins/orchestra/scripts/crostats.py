@@ -15,7 +15,13 @@ standard option taken:
   - skewness (n >= 50): adjusted Fisher-Pearson G1 (scipy.stats.skew(bias=False), as SPSS/Excel);
   - Mann-Whitney U: scipy default method "auto" (exact for small samples without ties, else normal
     approximation with continuity correction), two-sided;
-  - mean difference in compare_two: first level minus second level in sorted order;
+  - mean difference in compare_two: first minus second group of `order`, default numeric-aware ascending
+    (0 before 1, 9 before 10), stated in the label as "<first> − <second>";
+  - exact tests: Fisher exact for a 2x2 table when an expected count < 5 or a group has n < 20; Monte
+    Carlo permutation test of the chi-square (10 000 permutations, seed 20261121) for larger tables with
+    an expected count < 5; compare_k: classic Levene (mean-centred) to choose one-way vs Welch ANOVA;
+  - a failed model (separation, non-convergence, collinearity) records nothing and logs
+    "MODEL FAILED A<n>: <reason>; <advice>" after its warnings;
   - Haldane correction (0.5 added to every cell when any cell is 0) applies to OR and RR only; the risk
     difference uses the observed counts (Wald);
   - all CIs are 95% (z = 1.959964 for crude effects and GLM/logit Wald CIs, t for OLS and Welch).
@@ -44,6 +50,7 @@ try:
     import statsmodels.api as sm
     import statsmodels.formula.api as smf
     from statsmodels.stats.diagnostic import het_breuschpagan
+    from statsmodels.stats.oneway import anova_oneway
 except ImportError as e:  # pragma: no cover - exercised only without the dependencies
     raise ImportError("crostats needs pandas, numpy, scipy and statsmodels: "
                       "python -m pip install pandas scipy statsmodels openpyxl") from e
@@ -57,6 +64,15 @@ Z95 = 1.959964
 STATUSES = ("prespecified", "posthoc", "deviation")
 LOG_FILE = "05_analysis/output/log.txt"
 MW = "Mann–Whitney U"
+EXACT_MIN_GROUP_N = 20       # 2x2 tables: Fisher exact when a group has fewer (judgement-defaults "Exact tests")
+PERMUTATIONS = 10000         # Monte Carlo exact test for r x c tables with an expected count < 5
+PERM_SEED = 20261121
+SEPARATION_BETA_SD = 10.0    # |coef x SD of the design column| above this is read as separation / sparse data
+try:
+    from statsmodels.tools.sm_exceptions import PerfectSeparationError as _PSE
+except ImportError:  # pragma: no cover - removed in some statsmodels versions
+    _PSE = None
+_FIT_ERRORS = tuple(e for e in (np.linalg.LinAlgError, _PSE) if e is not None)
 
 
 # ---------------------------------------------------------------- helpers
@@ -117,9 +133,15 @@ def _rank_auc(y, score) -> float:
     return float((r[y == 1].sum() - n1 * (n1 + 1) / 2) / (n1 * n0))
 
 
-def _sm_warnings(caught) -> list:
-    return [f"{w.category.__name__}: {w.message}" for w in caught
-            if getattr(w.category, "__module__", "").startswith("statsmodels")]
+def _sm_warnings(caught, package="statsmodels") -> list:
+    """Distinct warnings raised by `package`, one line each, in order of first appearance."""
+    out = []
+    for w in caught:
+        if getattr(w.category, "__module__", "").startswith(package):
+            text = f"{w.category.__name__}: " + " ".join(str(w.message).split())
+            if text not in out:
+                out.append(text)
+    return out
 
 
 # ---------------------------------------------------------------- data
@@ -326,26 +348,41 @@ def crude_effect(a, b, c, d) -> dict:
 
 
 # ---------------------------------------------------------------- comparisons
-def _two_groups(df, outcome, group):
-    d = df[[outcome, group]].dropna()
-    levels = sorted(d[group].unique(), key=str)
-    if len(levels) != 2:
-        raise ValueError(f"{group} must have exactly 2 groups, has {len(levels)}")
-    return d, levels
+def _level_key(v):
+    """Numeric-aware sort key: numbers and numeric text ascending by value (0 before 1, 9 before 10), then text."""
+    try:
+        return (0, float(v), str(v))
+    except (TypeError, ValueError):
+        return (1, 0.0, str(v))
 
 
-def compare_two(df, outcome, group, rec, analysis_id, status="prespecified", table=None) -> dict:
+def _sorted_levels(values) -> list:
+    return sorted(values, key=_level_key)
+
+
+def compare_two(df, outcome, group, rec, analysis_id, status="prespecified", table=None, order=None) -> dict:
     """Compare a numeric outcome between 2 groups: Welch t-test (mean difference, Welch CI) when both
-    groups use_mean, else Mann-Whitney U (p only, kind p). Difference = first minus second sorted level."""
-    d, (g0, g1) = _two_groups(df, outcome, group)
+    groups use_mean, else Mann-Whitney U (p only, kind p).
+
+    The difference is first minus second group of `order` (a tuple of the two group values); by default
+    the groups are in numeric-aware ascending order (0 before 1, 9 before 10). The label states it as
+    "<first> − <second>"."""
+    d = df[[outcome, group]].dropna()
+    present = _sorted_levels(d[group].unique())
+    if len(present) != 2:
+        raise ValueError(f"{group} must have exactly 2 groups with {outcome} values, has {len(present)}")
+    if order is None:
+        g0, g1 = present
+    else:
+        if len(order) != 2 or any(not (d[group] == g).any() for g in order) or order[0] == order[1]:
+            raise ValueError(f"order {tuple(order)!r} must name the 2 groups of {group}: {present}")
+        g0, g1 = order
     x0 = d.loc[d[group] == g0, outcome].astype(float).to_numpy()
     x1 = d.loc[d[group] == g1, outcome].astype(float).to_numpy()
     n0, n1 = len(x0), len(x1)
-    if min(n0, n1) == 0:
-        raise ValueError(f"{group}: a group has no values of {outcome}")
     d0, d1 = describe(x0), describe(x1)
-    tag = f"{outcome} by {group} ({_level(g0)} vs {_level(g1)})"
-    if d0["use_mean"] and d1["use_mean"] and n0 > 1 and n1 > 1:
+    tag = f"{outcome} by {group}"
+    if d0["use_mean"] and d1["use_mean"]:
         test = "Welch t-test"
         reason = (f"both groups approximately normal and n >= {DEFAULTS['mean_min_n']} "
                   f"(n {n0}/{n1}); unequal variances allowed")
@@ -355,55 +392,187 @@ def compare_two(df, outcome, group, rec, analysis_id, status="prespecified", tab
         md = float(x0.mean() - x1.mean())
         p = float(2 * stats.t.sf(abs(md / se), dfw))
         tc = float(stats.t.ppf(0.975, dfw))
-        rec.log(f"{analysis_id} {tag}: {test}; reason: {reason}; Welch df={_num_str(dfw)}")
-        rid = rec.add(analysis_id, status, f"{tag} mean difference, Welch t-test", md, "md",
-                      ci=(md - tc * se, md + tc * se), p=p, n=n0 + n1, table=table)
-        return {"test": test, "reason": reason, "p": p, "md": md, "ci": (md - tc * se, md + tc * se),
-                "df": dfw, "ids": [rid]}
+        ci = (md - tc * se, md + tc * se)
+        rec.log(f"{analysis_id} {tag} ({_level(g0)} − {_level(g1)}): {test}; reason: {reason}; "
+                f"Welch df={_num_str(dfw)}")
+        rid = rec.add(analysis_id, status, f"{outcome} mean difference {_level(g0)} − {_level(g1)} by {group}, "
+                      f"Welch t-test", md, "md", ci=ci, p=p, n=n0 + n1, table=table)
+        return {"test": test, "reason": reason, "p": p, "md": md, "ci": ci, "df": dfw, "order": (g0, g1),
+                "ids": [rid]}
     test = MW
     why = [f"{_level(g)}: " + ("n < 3" if dd["n"] < 3 else f"n={dd['n']}" + ("" if dd["normal"] else ", not normal"))
            for g, dd in ((g0, d0), (g1, d1)) if not dd["use_mean"]]
-    reason = (f"mean not appropriate in {'; '.join(why) or 'a group with n < 2'} "
-              f"(needs normal and n >= {DEFAULTS['mean_min_n']}); two-sided, scipy method auto")
+    reason = (f"mean not appropriate in {'; '.join(why)} (needs normal and n >= {DEFAULTS['mean_min_n']}); "
+              "two-sided, scipy method auto")
     p = float(stats.mannwhitneyu(x0, x1, alternative="two-sided")[1])
+    rec.log(f"{analysis_id} {tag} ({_level(g0)} vs {_level(g1)}): {test}; reason: {reason}")
+    rid = rec.add(analysis_id, status, f"{tag} ({_level(g0)} vs {_level(g1)}) p, {test}", p, "p", p=p,
+                  n=n0 + n1, table=table)
+    return {"test": test, "reason": reason, "p": p, "order": (g0, g1), "ids": [rid]}
+
+
+def compare_k(df, outcome, group, rec, analysis_id, status="prespecified", table=None) -> dict:
+    """Compare a numeric outcome across 3 or more groups. When every group use_mean: Levene test (classic,
+    centred on the mean); Levene p >= 0.05 gives one-way ANOVA (scipy f_oneway), else Welch ANOVA
+    (statsmodels anova_oneway, use_var="unequal"). Otherwise Kruskal-Wallis (scipy, tie-corrected).
+    Records p (kind p)."""
+    d = df[[outcome, group]].dropna()
+    levels = _sorted_levels(d[group].unique())
+    if len(levels) < 3:
+        raise ValueError(f"{group} must have at least 3 groups with {outcome} values, has {len(levels)}")
+    xs = [d.loc[d[group] == g, outcome].astype(float).to_numpy() for g in levels]
+    descs = [describe(x) for x in xs]
+    n = int(sum(len(x) for x in xs))
+    tag = f"{outcome} by {group} ({', '.join(_level(g) for g in levels)})"
+    lev_p = None
+    if all(dd["use_mean"] for dd in descs):
+        lev_p = _finite(stats.levene(*xs, center="mean")[1])
+        base = (f"every group approximately normal with n >= {DEFAULTS['mean_min_n']} "
+                f"(n {'/'.join(str(len(x)) for x in xs)})")
+        if lev_p is not None and lev_p >= 0.05:
+            test = "One-way ANOVA"
+            reason = f"{base}; equal variances (Levene p={lev_p:.3f} >= 0.05)"
+            p = float(stats.f_oneway(*xs)[1])
+        else:
+            test = "Welch ANOVA"
+            reason = f"{base}; unequal variances (Levene p={'n/a' if lev_p is None else f'{lev_p:.3f}'} < 0.05)"
+            p = float(anova_oneway(xs, use_var="unequal").pvalue)
+    else:
+        test = "Kruskal–Wallis"
+        why = [f"{_level(g)}: " + ("n < 3" if dd["n"] < 3 else f"n={dd['n']}" + ("" if dd["normal"] else ", not normal"))
+               for g, dd in zip(levels, descs) if not dd["use_mean"]]
+        reason = (f"mean not appropriate in {'; '.join(why)} (needs normal and n >= {DEFAULTS['mean_min_n']}); "
+                  "tie-corrected")
+        p = float(stats.kruskal(*xs)[1])
     rec.log(f"{analysis_id} {tag}: {test}; reason: {reason}")
-    rid = rec.add(analysis_id, status, f"{tag} p, {test}", p, "p", p=p, n=n0 + n1, table=table)
-    return {"test": test, "reason": reason, "p": p, "ids": [rid]}
+    rid = rec.add(analysis_id, status, f"{tag} p, {test}", p, "p", p=p, n=n, table=table)
+    return {"test": test, "reason": reason, "p": p, "levene_p": lev_p, "ids": [rid]}
 
 
-def compare_props(df, outcome, group, rec, analysis_id, status="prespecified", table=None) -> dict:
-    """Compare a categorical outcome across groups: Fisher exact (two-sided) for a 2x2 table when any
-    expected count < 5, else Pearson chi-square without continuity correction. Records p (kind p)."""
+def _chi2_permutation_p(g_codes, y_codes, shape, expected, stat, permutations, seed) -> float:
+    """Monte Carlo permutation p of the Pearson chi-square statistic: the outcome labels are shuffled
+    against the groups (both margins fixed); p = (1 + #{X2* >= X2 (1 - 64 eps)}) / (B + 1), as R's
+    chisq.test(simulate.p.value = TRUE)."""
+    rng = np.random.default_rng(seed)
+    r, c = shape
+    n = len(y_codes)
+    thr = stat * (1 - 64 * np.finfo(float).eps)
+    base = g_codes.astype(np.int64) * c
+    y = y_codes.astype(np.int64)
+    batch = max(1, min(permutations, 2_000_000 // max(n, 1)))
+    hits = done = 0
+    while done < permutations:
+        b = min(batch, permutations - done)
+        perm = rng.permuted(np.tile(y, (b, 1)), axis=1)
+        idx = (np.arange(b, dtype=np.int64)[:, None] * (r * c) + base[None, :] + perm).ravel()
+        counts = np.bincount(idx, minlength=b * r * c).reshape(b, r, c)
+        x2 = (((counts - expected) ** 2) / expected).sum(axis=(1, 2))
+        hits += int((x2 >= thr).sum())
+        done += b
+    return (hits + 1) / (permutations + 1)
+
+
+def compare_props(df, outcome, group, rec, analysis_id, status="prespecified", table=None, *,
+                  permutations=PERMUTATIONS, seed=PERM_SEED) -> dict:
+    """Compare a categorical outcome across groups (rows = groups). 2x2 table: Fisher exact (two-sided) when
+    any expected count < 5 or a group has n < 20. Larger table with any expected count < 5: Monte Carlo
+    exact test (permutation distribution of the Pearson chi-square, `permutations` resamples, numpy seed
+    `seed`, both logged). Otherwise Pearson chi-square without continuity correction. Records p (kind p)."""
     d = df[[outcome, group]].dropna()
     tab = pd.crosstab(d[group], d[outcome])
     if tab.shape[0] < 2 or tab.shape[1] < 2:
         raise ValueError(f"{outcome} by {group}: needs at least 2 groups and 2 outcome levels")
+    tab = tab.loc[_sorted_levels(tab.index), _sorted_levels(tab.columns)]
     obs = tab.to_numpy()
     expected = stats.contingency.expected_freq(obs)
     emin = float(expected.min())
+    gmin = int(obs.sum(axis=1).min())
     small = emin < DEFAULTS["exact_min_expected"]
     shape = f"{obs.shape[0]}x{obs.shape[1]}"
     tag = f"{outcome} by {group}"
-    if obs.shape == (2, 2) and small:
+    stat = float(((obs - expected) ** 2 / expected).sum())
+    if obs.shape == (2, 2) and (small or gmin < EXACT_MIN_GROUP_N):
         test = "Fisher exact"
-        reason = f"2x2 table with an expected count < {DEFAULTS['exact_min_expected']} (min {emin:.2f})"
+        why = []
+        if small:
+            why.append(f"an expected count < {DEFAULTS['exact_min_expected']} (min {emin:.2f})")
+        if gmin < EXACT_MIN_GROUP_N:
+            why.append(f"a group with n < {EXACT_MIN_GROUP_N} (min {gmin})")
+        reason = f"2x2 table with {' and '.join(why)}; two-sided"
         p = float(stats.fisher_exact(obs, alternative="two-sided")[1])
+    elif small:
+        test = f"Monte Carlo exact (chi-square, {permutations} permutations)"
+        reason = (f"{shape} table with an expected count < {DEFAULTS['exact_min_expected']} (min {emin:.2f}); "
+                  f"permutation distribution of the Pearson chi-square (X2={stat:.4f}), {permutations} permutations, "
+                  f"seed {seed}")
+        g_codes = pd.Categorical(d[group], categories=tab.index).codes
+        y_codes = pd.Categorical(d[outcome], categories=tab.columns).codes
+        p = float(_chi2_permutation_p(np.asarray(g_codes), np.asarray(y_codes), obs.shape, expected, stat,
+                                       permutations, seed))
     else:
         test = "Chi-square"
-        reason = (f"{shape} table, all expected counts >= {DEFAULTS['exact_min_expected']} (min {emin:.2f}); "
-                  "Pearson, no continuity correction")
-        if small:
-            reason = (f"{shape} table larger than 2x2 with an expected count < {DEFAULTS['exact_min_expected']} "
-                      f"(min {emin:.2f}): chi-square approximation may be poor, consider merging levels")
         chi2, p, dof, _ = stats.chi2_contingency(obs, correction=False)
         p = float(p)
-        reason += f"; chi2={chi2:.4f}, df={dof}"
+        reason = (f"{shape} table, all expected counts >= {DEFAULTS['exact_min_expected']} (min {emin:.2f})"
+                  + (f", every group n >= {EXACT_MIN_GROUP_N}" if obs.shape == (2, 2) else "")
+                  + f"; Pearson, no continuity correction; chi2={chi2:.4f}, df={dof}")
     rec.log(f"{analysis_id} {tag}: {test}; reason: {reason}")
     rid = rec.add(analysis_id, status, f"{tag} p, {test}", p, "p", p=p, n=int(obs.sum()), table=table)
     return {"test": test, "reason": reason, "p": p, "ids": [rid]}
 
 
 # ---------------------------------------------------------------- models
+ADVICE = {
+    "logistic": "consider Firth or exact logistic as a declared deviation",
+    "linear": "remove or combine collinear terms as a declared deviation",
+    "poisson": "merge sparse categories or use a penalised or negative binomial model as a declared deviation",
+    "cox": "consider Firth-penalised Cox regression or merging sparse categories as a declared deviation",
+}
+
+
+def _fail(rec, analysis_id, reason, warn, model, **extra) -> dict:
+    """Log the warnings, then `MODEL FAILED A<n>: <reason>; <advice>`; nothing is recorded for the model."""
+    for w in warn:
+        rec.log(f"{analysis_id} WARNING: {w}")
+    rec.log(f"MODEL FAILED {analysis_id}: {reason}; {ADVICE[model]}")
+    out = {"failed": True, "reason": reason, "warnings": warn, "ids": []}
+    out.update(extra)
+    return out
+
+
+def _design_sds(names, X) -> dict:
+    X = np.asarray(X, dtype=float)
+    if X.ndim != 2 or X.shape[0] < 2:
+        return {}
+    return {str(nm): float(X[:, j].std(ddof=1)) for j, nm in enumerate(names)}
+
+
+def _estimate_problems(params, bse, sds, ratio=True) -> list:
+    """Signs of separation or sparse data: a non-finite coefficient or SE; for ratio models also a
+    non-finite or zero exp(coef) or CI bound, or |coef x SD of its design column| > 10 (a ratio above
+    e^10 per SD is not a real effect)."""
+    probs = []
+    for term in params.index:
+        if term == "Intercept":
+            continue
+        b, se = float(params[term]), float(bse[term])
+        if not (math.isfinite(b) and math.isfinite(se)):
+            probs.append(f"non-finite coefficient for {term} or its SE")
+            continue
+        if not ratio:
+            continue
+        with np.errstate(over="ignore", under="ignore"):
+            vals = np.exp(np.array([b, b - Z95 * se, b + Z95 * se]))
+        if not np.isfinite(vals).all() or (vals == 0).any():
+            probs.append(f"coefficient for {term} has a non-finite ratio or CI (b={b:.3g}, SE={se:.3g})")
+            continue
+        sd = sds.get(str(term))
+        if sd is not None and math.isfinite(sd) and abs(b * sd) > SEPARATION_BETA_SD:
+            probs.append(f"implausibly large coefficient for {term} (|b x SD| = {abs(b * sd):.1f} > "
+                         f"{SEPARATION_BETA_SD:g})")
+    return probs
+
+
 def _fit_ratio_terms(m, rec, analysis_id, status, table, kind, name, formula, n, conf=None):
     """Record exp(coef) of every non-intercept term; returns ({term: (est, lo, hi, p)}, ids)."""
     ci = m.conf_int() if conf is None else conf
@@ -431,16 +600,29 @@ def _hosmer_lemeshow(y, phat, groups=10):
     return stat, float(stats.chi2.sf(stat, k - 2)), k
 
 
-def fit_logistic(df, outcome, terms, rec, analysis_id, status="prespecified", table=None) -> dict:
-    """Logistic regression (statsmodels Logit, ML): OR with Wald 95% CI and p for each non-intercept term
-    (kind or), AUC (kind auc), Hosmer-Lemeshow p (10 groups), EPV = min(events, non-events) / parameters."""
-    formula = f"{outcome} ~ {' + '.join(terms)}"
+def _fit_caught(fit):
+    """Run fit() recording every warning; returns (result, caught warnings)."""
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        m = smf.logit(formula, df).fit(disp=0)
+        res = fit()
+    return res, caught
+
+
+def fit_logistic(df, outcome, terms, rec, analysis_id, status="prespecified", table=None) -> dict:
+    """Logistic regression (statsmodels Logit, ML): OR with Wald 95% CI and p for each non-intercept term
+    (kind or), AUC (kind auc), Hosmer-Lemeshow p (10 groups), EPV = min(events, non-events) / parameters.
+
+    Separation (statsmodels PerfectSeparationWarning or error, non-convergence, a non-finite OR/CI, or
+    |coef x SD| > 10) records nothing for the model: warnings are logged, then
+    `MODEL FAILED A<n>: <reason>; consider Firth or exact logistic as a declared deviation`, and the result
+    is {"failed": True, "reason", "warnings", "ids": []}."""
+    formula = f"{outcome} ~ {' + '.join(terms)}"
+    try:
+        m, caught = _fit_caught(lambda: smf.logit(formula, df).fit(disp=0))
+    except _FIT_ERRORS as e:
+        rec.log(f"{analysis_id} logistic regression {formula}: reason: binary outcome")
+        return _fail(rec, analysis_id, f"fit error ({type(e).__name__}: {e})", [], "logistic")
     warn = _sm_warnings(caught)
-    if not m.mle_retvals.get("converged", True):
-        warn.append("model did not converge")
     y = np.asarray(m.model.endog, dtype=float)
     n = int(m.nobs)
     events = int(y.sum())
@@ -450,31 +632,57 @@ def fit_logistic(df, outcome, terms, rec, analysis_id, status="prespecified", ta
             f"non-events={n - events}, parameters={k}, EPV={epv:.1f}")
     if epv < DEFAULTS["epv_min"]:
         warn.append(f"EPV {epv:.1f} < {DEFAULTS['epv_min']:g}: model is exploratory")
+    problems = []
+    if any("PerfectSeparation" in w.category.__name__ for w in caught):
+        problems.append("perfect separation (statsmodels PerfectSeparationWarning)")
+    if not m.mle_retvals.get("converged", True):
+        problems.append("model did not converge")
+    problems += _estimate_problems(m.params, m.bse, _design_sds(m.model.exog_names, m.model.exog))
+    if problems:
+        return _fail(rec, analysis_id, "; ".join(problems), warn, "logistic", epv=epv, n=n, events=events)
+    for w in warn:
+        rec.log(f"{analysis_id} WARNING: {w}")
     est, ids = _fit_ratio_terms(m, rec, analysis_id, status, table, "or", "OR", formula, n)
     phat = np.asarray(m.predict(), dtype=float)
     auc = _rank_auc(y, phat)
     hl, hl_p, groups = _hosmer_lemeshow(y, phat)
+    diag = []
     if hl_p is None:
-        warn.append(f"Hosmer-Lemeshow not computed: only {groups} distinct risk groups")
+        diag.append(f"Hosmer-Lemeshow not computed: only {groups} distinct risk groups")
     elif hl_p < 0.05:
-        warn.append(f"Hosmer-Lemeshow p={hl_p:.3f} < 0.05: calibration is poor")
+        diag.append(f"Hosmer-Lemeshow p={hl_p:.3f} < 0.05: calibration is poor")
     rec.log(f"{analysis_id} diagnostics: AUC={_num_str(auc)}; Hosmer-Lemeshow "
             + (f"chi2={_num_str(hl)} df={groups - 2} p={_num_str(hl_p)}" if hl_p is not None else "not computed"))
     ids.append(rec.add(analysis_id, status, f"AUC (apparent), {formula}", auc, "auc", n=n, table=table))
-    for w in warn:
+    for w in diag:
         rec.log(f"{analysis_id} WARNING: {w}")
-    return {"or": est, "epv": epv, "auc": auc, "hl_p": hl_p, "n": n, "events": events, "warnings": warn,
-            "ids": ids, "model": m}
+    return {"failed": False, "reason": None, "or": est, "epv": epv, "auc": auc, "hl_p": hl_p, "n": n,
+            "events": events, "warnings": warn + diag, "ids": ids, "model": m}
 
 
 def fit_linear(df, outcome, terms, rec, analysis_id, status="prespecified", table=None) -> dict:
     """Linear regression (OLS): beta with t-based 95% CI and p (kind beta), R^2 (kind other), Shapiro-Wilk on
-    residuals when n < 5000, Breusch-Pagan (LM test) for heteroscedasticity."""
+    residuals when n < 5000, Breusch-Pagan (LM test) for heteroscedasticity. A rank-deficient design
+    (collinear terms), a fit error or a non-finite estimate records nothing and logs MODEL FAILED."""
     formula = f"{outcome} ~ {' + '.join(terms)}"
-    m = smf.ols(formula, df).fit()
+    try:
+        m, caught = _fit_caught(lambda: smf.ols(formula, df).fit())
+    except _FIT_ERRORS as e:
+        rec.log(f"{analysis_id} linear regression (OLS) {formula}: reason: continuous outcome")
+        return _fail(rec, analysis_id, f"fit error ({type(e).__name__}: {e})", [], "linear")
     n = int(m.nobs)
-    warn = []
+    warn = _sm_warnings(caught)
     rec.log(f"{analysis_id} linear regression (OLS) {formula}: reason: continuous outcome; n={n}")
+    X = np.asarray(m.model.exog, dtype=float)
+    rank = int(np.linalg.matrix_rank(X))
+    problems = []
+    if rank < X.shape[1]:
+        problems.append(f"collinear terms (design matrix rank {rank} < {X.shape[1]} columns)")
+    problems += _estimate_problems(m.params, m.bse, {}, ratio=False)
+    if problems:
+        return _fail(rec, analysis_id, "; ".join(problems), warn, "linear", n=n)
+    for w in warn:
+        rec.log(f"{analysis_id} WARNING: {w}")
     ci = m.conf_int()
     est, ids = {}, []
     for term in m.params.index:
@@ -487,69 +695,104 @@ def fit_linear(df, outcome, terms, rec, analysis_id, status="prespecified", tabl
     r2 = float(m.rsquared)
     sw = _finite(stats.shapiro(m.resid)[1]) if 3 <= n < 5000 else None
     bp = _finite(het_breuschpagan(m.resid, m.model.exog)[1])
+    diag = []
     if sw is not None and sw < 0.05:
-        warn.append(f"residuals not normal (Shapiro-Wilk p={sw:.3f}); check the Q-Q plot")
+        diag.append(f"residuals not normal (Shapiro-Wilk p={sw:.3f}); check the Q-Q plot")
     if bp is not None and bp < 0.05:
-        warn.append(f"Breusch-Pagan p={bp:.3f} < 0.05: heteroscedasticity, consider robust (HC3) SE")
+        diag.append(f"Breusch-Pagan p={bp:.3f} < 0.05: heteroscedasticity, consider robust (HC3) SE")
     rec.log(f"{analysis_id} diagnostics: R2={_num_str(r2)}; residual Shapiro-Wilk p="
             + (_num_str(sw) if sw is not None else "not computed") + "; Breusch-Pagan p="
             + (_num_str(bp) if bp is not None else "not computed"))
     ids.append(rec.add(analysis_id, status, f"R2, {formula}", r2, "other", n=n, table=table))
-    for w in warn:
+    for w in diag:
         rec.log(f"{analysis_id} WARNING: {w}")
-    return {"beta": est, "r2": r2, "resid_shapiro_p": sw, "bp_p": bp, "n": n, "warnings": warn, "ids": ids,
-            "model": m}
+    return {"failed": False, "reason": None, "beta": est, "r2": r2, "resid_shapiro_p": sw, "bp_p": bp, "n": n,
+            "warnings": warn + diag, "ids": ids, "model": m}
 
 
 def fit_poisson(df, outcome, terms, rec, analysis_id, status="prespecified", table=None, *, exposure=None) -> dict:
     """Poisson GLM (log link): IRR with Wald 95% CI and p (kind rr, label "IRR ..."); dispersion = Pearson
-    chi2 / residual df, warning when > 2. `exposure` names a person-time column (log offset)."""
+    chi2 / residual df, warning when > 2. `exposure` names a person-time column (log offset).
+    Non-convergence, a fit error, a non-finite IRR/CI or |coef x SD| > 10 records nothing and logs
+    MODEL FAILED."""
     formula = f"{outcome} ~ {' + '.join(terms)}"
     d = df
     kw = {}
     if exposure is not None:
         d = df.dropna(subset=_columns(df, [outcome] + list(terms) + [exposure]))
         kw["exposure"] = d[exposure].astype(float)
-    m = smf.glm(formula, d, family=sm.families.Poisson(), **kw).fit()
+    head = f"{analysis_id} Poisson regression {formula}" + (f", exposure {exposure}" if exposure else "")
+    try:
+        m, caught = _fit_caught(lambda: smf.glm(formula, d, family=sm.families.Poisson(), **kw).fit())
+    except _FIT_ERRORS as e:
+        rec.log(f"{head}: reason: count outcome")
+        return _fail(rec, analysis_id, f"fit error ({type(e).__name__}: {e})", [], "poisson")
     n = int(m.nobs)
-    rec.log(f"{analysis_id} Poisson regression {formula}" + (f", exposure {exposure}" if exposure else "")
-            + f": reason: count outcome; n={n}")
-    est, ids = _fit_ratio_terms(m, rec, analysis_id, status, table, "rr", "IRR", formula, n)
-    disp = float(m.pearson_chi2 / m.df_resid) if m.df_resid > 0 else float("nan")
-    warn = []
-    if math.isfinite(disp) and disp > DEFAULTS["overdispersion_max"]:
-        warn.append(f"Pearson chi2/df = {disp:.2f} > {DEFAULTS['overdispersion_max']:g}: overdispersion, "
-                    "consider negative binomial or robust SE")
-    rec.log(f"{analysis_id} diagnostics: dispersion (Pearson chi2/df)={_num_str(disp) if math.isfinite(disp) else 'n/a'}")
+    warn = _sm_warnings(caught)
+    rec.log(f"{head}: reason: count outcome; n={n}")
+    problems = []
+    if not getattr(m, "converged", True):
+        problems.append("model did not converge")
+    problems += _estimate_problems(m.params, m.bse, _design_sds(m.model.exog_names, m.model.exog))
+    if problems:
+        return _fail(rec, analysis_id, "; ".join(problems), warn, "poisson", n=n)
     for w in warn:
         rec.log(f"{analysis_id} WARNING: {w}")
-    return {"irr": est, "dispersion": disp, "n": n, "warnings": warn, "ids": ids, "model": m}
+    est, ids = _fit_ratio_terms(m, rec, analysis_id, status, table, "rr", "IRR", formula, n)
+    disp = float(m.pearson_chi2 / m.df_resid) if m.df_resid > 0 else float("nan")
+    diag = []
+    if math.isfinite(disp) and disp > DEFAULTS["overdispersion_max"]:
+        diag.append(f"Pearson chi2/df = {disp:.2f} > {DEFAULTS['overdispersion_max']:g}: overdispersion, "
+                    "consider negative binomial or robust SE")
+    rec.log(f"{analysis_id} diagnostics: dispersion (Pearson chi2/df)={_num_str(disp) if math.isfinite(disp) else 'n/a'}")
+    for w in diag:
+        rec.log(f"{analysis_id} WARNING: {w}")
+    return {"failed": False, "reason": None, "irr": est, "dispersion": disp, "n": n, "warnings": warn + diag,
+            "ids": ids, "model": m}
 
 
 def fit_cox(df, duration, event, terms, rec, analysis_id, status="prespecified", table=None) -> dict:
     """Cox proportional hazards (lifelines CoxPHFitter, Efron ties): HR with 95% CI and p (kind hr); PH check
-    by Schoenfeld-residual test (rank time transform), minimum p in `ph_min_p`; EPV = events / parameters."""
+    by Schoenfeld-residual test (rank time transform), minimum p in `ph_min_p`; EPV = events / parameters.
+    A convergence error, a non-finite HR/CI or |coef x SD| > 10 records nothing and logs MODEL FAILED."""
     try:
         from lifelines import CoxPHFitter
         from lifelines.statistics import proportional_hazard_test
     except ImportError as e:
         raise ImportError("fit_cox needs lifelines: python -m pip install lifelines") from e
+    try:
+        from lifelines.exceptions import ConvergenceError
+    except ImportError:  # older lifelines
+        from lifelines.utils import ConvergenceError
     cols = list(dict.fromkeys([duration, event] + _columns(df, terms)))
     d = df[cols].dropna()
     rhs = " + ".join(terms)
-    cph = CoxPHFitter()
-    cph.fit(d, duration_col=duration, event_col=event, formula=rhs)
+    label = f"Surv({duration}, {event}) ~ {rhs}"
     n = int(len(d))
     events = int(d[event].sum())
+    cph = CoxPHFitter()
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            cph.fit(d, duration_col=duration, event_col=event, formula=rhs)
+    except (ConvergenceError, np.linalg.LinAlgError) as e:
+        rec.log(f"{analysis_id} Cox regression {label}: reason: time-to-event outcome; n={n}, events={events}")
+        return _fail(rec, analysis_id, f"fit error ({type(e).__name__}: {e})", [], "cox", n=n, events=events)
+    warn = _sm_warnings(caught, "lifelines")
     s = cph.summary
     k = len(s)
     epv = events / k if k else float("inf")
-    label = f"Surv({duration}, {event}) ~ {rhs}"
     rec.log(f"{analysis_id} Cox regression {label}: reason: time-to-event outcome; n={n}, events={events}, "
             f"parameters={k}, EPV={epv:.1f}")
-    warn = []
     if epv < DEFAULTS["epv_min"]:
         warn.append(f"EPV {epv:.1f} < {DEFAULTS['epv_min']:g}: model is exploratory")
+    norm_sd = getattr(cph, "_norm_std", None)
+    sds = {str(i): float(v) for i, v in norm_sd.items()} if norm_sd is not None else {}
+    problems = _estimate_problems(cph.params_, cph.standard_errors_, sds)
+    if problems:
+        return _fail(rec, analysis_id, "; ".join(problems), warn, "cox", epv=epv, n=n, events=events)
+    for w in warn:
+        rec.log(f"{analysis_id} WARNING: {w}")
     est, ids = {}, []
     for term in s.index:
         e, lo, hi, p = (float(s.loc[term, "exp(coef)"]), float(s.loc[term, "exp(coef) lower 95%"]),
@@ -557,18 +800,19 @@ def fit_cox(df, duration, event, terms, rec, analysis_id, status="prespecified",
         est[str(term)] = (e, lo, hi, p)
         ids.append(rec.add(analysis_id, status, f"HR {term}, {label}", e, "hr", ci=(lo, hi), p=p, n=n, table=table))
     ph = None
+    diag = []
     try:
         ph = _finite(proportional_hazard_test(cph, d, time_transform="rank").summary["p"].min())
     except Exception as e:  # noqa: BLE001 - report, do not hide
-        warn.append(f"proportional-hazards test failed: {e}")
+        diag.append(f"proportional-hazards test failed: {e}")
     if ph is not None and ph < 0.05:
-        warn.append(f"proportional-hazards test min p={ph:.3f} < 0.05: check Schoenfeld residuals")
+        diag.append(f"proportional-hazards test min p={ph:.3f} < 0.05: check Schoenfeld residuals")
     rec.log(f"{analysis_id} diagnostics: concordance={_num_str(cph.concordance_index_)}; PH test min p="
             + (_num_str(ph) if ph is not None else "not computed"))
-    for w in warn:
+    for w in diag:
         rec.log(f"{analysis_id} WARNING: {w}")
-    return {"hr": est, "ph_min_p": ph, "concordance": float(cph.concordance_index_), "epv": epv, "n": n,
-            "events": events, "warnings": warn, "ids": ids, "model": cph}
+    return {"failed": False, "reason": None, "hr": est, "ph_min_p": ph, "concordance": float(cph.concordance_index_),
+            "epv": epv, "n": n, "events": events, "warnings": warn + diag, "ids": ids, "model": cph}
 
 
 def roc_youden(y, score) -> dict:
@@ -621,12 +865,18 @@ def interaction(df, outcome, exposure, modifier, covariates, family="logit") -> 
 
 # ---------------------------------------------------------------- Table 1
 def table1(df, variables, by, rec, table_id, title, analysis_id="A0", show_p=True) -> "pd.DataFrame":
-    """Descriptive table by group. A numeric column with more than 2 distinct values is continuous: mean ± SD
-    when the overall column and every group use_mean, else median (Q1–Q3); anything else is categorical,
-    n (%) of non-missing per level. p (2 groups only) from compare_two / compare_props under analysis_id.
-    Rows with missing `by` are excluded and counted in the log."""
+    """Descriptive table by group. A numeric column with more than 2 distinct values is continuous, anything
+    else categorical (n (%) of non-missing per level).
+
+    A continuous row is shown as mean ± SD when every group (with values) use_mean, else as median (Q1–Q3);
+    the overall column follows the groups. The p value follows what is shown: a mean ± SD row is tested
+    parametrically (Welch t-test for 2 groups, one-way or Welch ANOVA for more, compare_two / compare_k),
+    a median row non-parametrically (Mann–Whitney U / Kruskal–Wallis); both functions use the same
+    every-group use_mean rule, so the test always matches the display. Categorical rows use compare_props
+    (2x2 or r x c). Groups are in numeric-aware ascending order. Rows with missing `by` are excluded and
+    counted in the log; all records go under analysis_id."""
     sub = df[df[by].notna()]
-    groups = sorted(sub[by].unique(), key=str)
+    groups = _sorted_levels(sub[by].unique())
     cols = [("overall", sub)] + [(_level(g), sub[sub[by] == g]) for g in groups]
     header = ["Characteristic"] + [f"{'Overall' if name == 'overall' else name} (n={len(part)})"
                                    for name, part in cols]
@@ -641,11 +891,12 @@ def table1(df, variables, by, rec, table_id, title, analysis_id="A0", show_p=Tru
     def ptest(var, numeric):
         if not show_p:
             return []
-        if len(groups) != 2:
-            rec.log(f"{analysis_id} {var}: p not computed (needs exactly 2 groups, has {len(groups)})")
+        if len(groups) < 2:
+            rec.log(f"{analysis_id} {var}: p not computed (needs at least 2 groups, has {len(groups)})")
             return ["", ""]
+        fn = (compare_two if len(groups) == 2 else compare_k) if numeric else compare_props
         try:
-            r = (compare_two if numeric else compare_props)(sub, var, by, rec, analysis_id, st, table=table_id)
+            r = fn(sub, var, by, rec, analysis_id, st, table=table_id)
         except ValueError as e:
             rec.log(f"{analysis_id} {var}: p not computed ({e})")
             return ["", ""]
@@ -661,10 +912,11 @@ def table1(df, variables, by, rec, table_id, title, analysis_id="A0", show_p=Tru
                    and nonmiss.nunique() > 2)
         if numeric:
             descs = [(name, describe(part[var])) for name, part in cols]
-            use_mean = all(dd["use_mean"] for _, dd in descs if dd["n"] > 0)
-            rec.log(f"{analysis_id} {var}: " + ("mean ± SD (every column normal with n >= "
+            filled = [dd for name, dd in descs[1:] if dd["n"] > 0]
+            use_mean = bool(filled) and all(dd["use_mean"] for dd in filled)
+            rec.log(f"{analysis_id} {var}: " + ("mean ± SD (every group normal with n >= "
                                                  f"{DEFAULTS['mean_min_n']})" if use_mean else
-                                                 "median (Q1–Q3) (a column is not normal or has n < "
+                                                 "median (Q1–Q3) (a group is not normal or has n < "
                                                  f"{DEFAULTS['mean_min_n']})"))
             cells = []
             for name, dd in descs:
@@ -683,10 +935,7 @@ def table1(df, variables, by, rec, table_id, title, analysis_id="A0", show_p=Tru
             name_cell = f"{var}, mean ± SD" if use_mean else f"{var}, median (Q1–Q3)"
             rows.append([name_cell] + cells + ptest(var, True))
         else:
-            try:
-                levels = sorted(nonmiss.unique())
-            except TypeError:
-                levels = sorted(nonmiss.unique(), key=str)
+            levels = _sorted_levels(nonmiss.unique())
             rows.append([f"{var}, n (%)"] + [""] * len(cols) + ptest(var, False))
             for lev in levels:
                 cells = []
