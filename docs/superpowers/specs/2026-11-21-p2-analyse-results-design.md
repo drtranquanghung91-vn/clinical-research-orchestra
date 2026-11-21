@@ -172,7 +172,7 @@ commits that adapt her code or content carry her co-author trailer.
 - Preconditions: G3 locked (`gate.py lock <project> G3 --files ledgers/results-ledger.json
   05_analysis/output/results.json 05_analysis/analysis.py 04_data/<file>.deid.csv`); `check` reports later
   changes.
-- Structure follows the reporting guideline (`guidelines.json`, e.g. STROBE items 13–17, CONSORT 13–19) and
+- Structure follows the reporting guideline (`guidelines.json`; the item numbers come from the guideline version the project uses, e.g. STROBE items 13–17; never hard-code CONSORT numbers, which changed in 2025) and
   the register order: participants and flow, Table 1, primary, secondary, post-hoc (own subsection, labelled).
 - Thesis Chapter 3 (vi): numbered sections by objective ("3.1 Đặc điểm chung", "3.2 Kết quả theo mục tiêu 1"),
   tables "Bảng 3.n" with the title above and source/notes below, and a short "Nhận xét:" paragraph after each
