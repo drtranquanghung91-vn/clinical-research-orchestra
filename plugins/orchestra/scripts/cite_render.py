@@ -142,7 +142,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"cite_render: {ledger} not found", file=sys.stderr)
             return 2
         refs = ledgers.load_references(ledger)
-        text = draft.read_text(encoding="utf-8", newline="")
+        with open(draft, encoding="utf-8", newline="") as fh:  # Path.read_text(newline=) needs 3.13
+            text = fh.read()
     except (OSError, ValueError, AttributeError) as e:
         print(f"cite_render: {type(e).__name__}: {e}", file=sys.stderr)
         return 2
