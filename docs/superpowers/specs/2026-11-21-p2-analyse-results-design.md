@@ -101,8 +101,8 @@ IDs are `A` + integer, unique, never reused. `A0` is reserved for descriptive st
    `stat-analysis-vi`). Numbers in the report also use `{{R-…}}` placeholders.
 
 Rules kept from `stat-analysis-vi`, now written as labelled defaults the author may override
-(`references/judgement-defaults.md`): normality check with Shapiro–Wilk when n < 50; median (IQR) for skewed
-data or n < 50; exact tests when any expected cell < 5 or n < 20 per group; EPV < 10 caveat; reporting
+(`references/judgement-defaults.md`): normality check with Shapiro–Wilk when n < 50; mean (SD) when normal and n ≥ 30, otherwise median (IQR)
+(the owner's source states both "n < 50" and "n ≥ 30"; resolved 21 Nov 2026 to n ≥ 30); exact tests when any expected cell < 5 or n < 20 per group; EPV < 10 caveat; reporting
 precision (OR/RR/HR and CI 2 decimals, p 3 decimals or `p < 0.001`, % 1 decimal, AUC 3 decimals, en dash
 for ranges, Vietnamese decimal comma when `language.output: vi`).
 
@@ -172,7 +172,7 @@ commits that adapt her code or content carry her co-author trailer.
 - Preconditions: G3 locked (`gate.py lock <project> G3 --files ledgers/results-ledger.json
   05_analysis/output/results.json 05_analysis/analysis.py 04_data/<file>.deid.csv`); `check` reports later
   changes.
-- Structure follows the reporting guideline (`guidelines.json`, e.g. STROBE items 13–17, CONSORT 13–19) and
+- Structure follows the reporting guideline (`guidelines.json`; the item numbers come from the guideline version the project uses, e.g. STROBE items 13–17; never hard-code CONSORT numbers, which changed in 2025) and
   the register order: participants and flow, Table 1, primary, secondary, post-hoc (own subsection, labelled).
 - Thesis Chapter 3 (vi): numbered sections by objective ("3.1 Đặc điểm chung", "3.2 Kết quả theo mục tiêu 1"),
   tables "Bảng 3.n" with the title above and source/notes below, and a short "Nhận xét:" paragraph after each

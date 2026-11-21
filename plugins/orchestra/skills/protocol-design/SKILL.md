@@ -55,7 +55,7 @@ installed.
 
 ## 6. Hand-off
 Next: use the Skill tool with `sample-size-sap`. Gate G2 opens after the author approves protocol and
-SAP: `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" open <project> G2 --by "<author>"`.
+SAP: `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" open <project> G2 --by "<author>" --files 03_protocol/sap.md`.
 
 ## 7. Workflow
 `${CLAUDE_PLUGIN_ROOT}/references/workflows/protocol-design.md`

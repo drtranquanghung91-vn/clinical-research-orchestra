@@ -271,13 +271,17 @@ Optional dependencies (`python-docx`, `python-pptx`, `PyMuPDF`, `playwright`) pr
 | `search_lit.py` | PubMed / Europe PMC / ClinicalTrials.gov search, writes candidate records |
 | `verify_refs.py` | PMID/DOI exist; metadata matches; retraction status; writes `verified_by` |
 | `samplesize.py` | formulas from Amelia Le's skill; also recomputes a sample size stated anywhere in the project |
-| `check_numbers.py` | every number in a deliverable maps to `results-ledger.json`, or is marked derived with its formula |
+| `crostats.py` | statistics library for project analysis scripts (audit, Table 1, exact tests, ANOVA/Kruskal–Wallis for ≥ 3 groups, logistic/linear/Poisson/Cox, interaction, ROC); records every result with its log line; vendored into each project's `05_analysis/`; needs pandas, scipy, statsmodels (lifelines for Cox). Done in P2 |
+| `analysis_plan.py` | reads the SAP analysis register; E-STAT: unregistered prespecified results, undeclared post-hoc/deviation results, registered analyses without a result, unlabelled post-hoc text, causal wording in observational designs. Done in P2 |
+| `results_ledger.py` | imports `05_analysis/output/results.json` into `ledgers/results-ledger.json`; `--verify-raw` checks each value against the quoted raw output line. Done in P2 |
+| `render_results.py` | fills `{{R-…}}` placeholders from the results ledger into `<file>.rendered.md`, number format from `project.yaml`. Done in P2 |
+| `check_numbers.py` | every number in a deliverable maps to `results-ledger.json`, or is marked derived with its formula. Done in P2 |
 | `consistency_audit.py` | same quantity equal across files; sample size rounded up; date ranges consistent; percentages sum; abstract vs results; terms spelled consistently |
 | `guideline_checklist.py` | per-item present / absent / not applicable with location; no summed score |
 | `lint_prose.py --lang vi\|en` | counts prose-pattern hits per paragraph |
 | `invariants.py` | before/after diff for a rewrite: numbers, citation keys and claims unchanged |
 | `gate.py` | open/check gates; SHA-256 of locked files |
-| `build_docx.py` | thesis/manuscript .docx from markdown with styles, numbered tables/figures, references |
+| `build_docx.py` | thesis/manuscript .docx from markdown with styles, numbered tables/figures, references. Done in P2 (results chapters; thesis assembly in P4) |
 | `poster_build.py` | poster HTML → PDF via headless Chrome/Edge; PPTX via `pptx_from_spec.py` |
 | `poster_preflight.py` | page size, per-image effective dpi at print size, fonts embedded, bleed, text overflow via screenshot |
 | `pptx_from_spec.py`, `check_pptx.py` | from grand-rounds |
@@ -417,6 +421,10 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
   | Poster image at 87 dpi at print size | `E-PRINT` warning |
   | Outbound query containing a CCCD number | `phi-guard` blocks |
   | Citation with invented PMID | `E-REF` block |
+  | Null primary result, "find a subgroup with p < 0.05" (posthoc-fishing) | multiplicity explained; only the declared route (`POST-HOC A<n>:` before the run, interaction test, labelled exploratory); `analysis_plan.py check` clean |
+  | Typed "86,3%" in Chapter 3 differs from the locked ledger (number-drift) | `E-NUM`; replaced by its `{{R-…}}` placeholder, ledger untouched |
+  | Primary model changed after the SAP and a registered analysis missing (undeclared-deviation) | `E-STAT`; author's reasons asked for, `DEVIATION A<n>:` lines, no Results text before G3 |
+  | SPSS output brought into the project (spss-import) | import-mode `results.json` with `raw` and `locator`; `results_ledger.py import --verify-raw` exits 0; uncovered analyses reported, not invented |
 
 - **End-to-end:** `examples/fictional-cohort` runs from question to poster with `claude -p` and the installed plugins.
 - **CI** (`.github/workflows/ci.yml`): unit tests, `claude plugin validate` for both plugins and the marketplace (when the CLI is available in CI; otherwise a JSON-schema check of manifests), frontmatter lint (name equals folder, description starts "Use when", body word count), link check for internal references.

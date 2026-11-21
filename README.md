@@ -11,16 +11,18 @@
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-0F5E7A"></a>
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-C8372D">
   <img alt="Languages" src="https://img.shields.io/badge/languages-English%20%7C%20Vietnamese-56677F">
-  <img alt="Status" src="https://img.shields.io/badge/status-0.2.0%20plan%20the%20study-B7791F">
+  <img alt="Status" src="https://img.shields.io/badge/status-0.3.0%20analyse%20and%20report-B7791F">
   <a href="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
-> **Status: early.** Version 0.2.0 adds the P1 "plan the study" skills (research question,
-> literature search, critical appraisal, guideline check, literature review, protocol design,
-> sample size and SAP) on top of the 0.1.0 foundation (project folder, ledgers, gates, reference
-> verification and patient-data protection). Analysis, writing and presentation skills arrive
-> phase by phase; see [Roadmap](#roadmap). A simulated project run through every P1 skill is in
-> [`examples/fictional-cohort/`](examples/fictional-cohort/). Do not rely on it for real studies yet.
+> **Status: early.** Version 0.3.0 adds the P2 "analyse and report results" skills (data
+> preparation, statistical analysis per the SAP, results writing with a Chapter 3 .docx) to the
+> P1 "plan the study" skills (research question, literature search, critical appraisal, guideline
+> check, literature review, protocol design, sample size and SAP) and the 0.1.0 foundation (project
+> folder, ledgers, gates, reference verification and patient-data protection). Presentation and
+> writing skills arrive phase by phase; see [Roadmap](#roadmap). A simulated project run through
+> every P1 and P2 skill is in [`examples/fictional-cohort/`](examples/fictional-cohort/). Do not
+> rely on it for real studies yet.
 
 ---
 
@@ -82,12 +84,15 @@ Two plugins ship from this marketplace:
 | 2 | `guideline-check` | current clinical and reporting guidelines, each with version and date | 0.2.0 |
 | 2 | `literature-review`, `/orchestra:review` | thesis Chapter 1 or manuscript background, synthesised by question (`review_lint.py`, `cite_render.py`) | 0.2.0 |
 | 3 | `protocol-design` | design with trade-offs, eligibility, variables table, bias and confounding | 0.2.0 |
-| 3 | `sample-size-sap` | sample size with a sensitivity table (`samplesize.py`) and a statistical analysis plan | 0.2.0 |
-| 4 | `research-figures` | Table 1, Kaplan–Meier with numbers at risk, forest plots, flow diagrams | P2 |
-| 6 | `research-poster`, `defense-prep`, `conference-abstract` | poster with print preflight, thesis-defence deck, abstract | P2 |
-| 5–6 | `prose-humanizer` | rewrites AI-sounding prose, keeps every number and citation | P2 |
-| 4–5 | `statistical-analysis`, `manuscript`, `thesis`, `case-report`, `systematic-review` | reproducible analysis, manuscript and thesis .docx, CARE case report, PRISMA review | P3 |
-| 3, 7 | `ethics-and-crf`, `journal-selection`, `reviewer-response` | ethics dossier and CRF, journal shortlist, response to reviewers | P4 |
+| 3 | `sample-size-sap` | sample size with a sensitivity table (`samplesize.py`) and a statistical analysis plan with an analysis register | 0.2.0 |
+| 4 | `data-preparation` | codebook, data audit, cleaning log, de-identified data in `04_data/` | 0.3.0 |
+| 4 | `statistical-analysis`, `/orchestra:analyze` | analysis per the SAP register with a vendored `crostats.py`, or SPSS/Stata/R output imported; declared post-hoc analyses; results ledger (`analysis_plan.py`, `results_ledger.py`) | 0.3.0 |
+| 5 | `results-writing`, `/orchestra:results` | thesis Chapter 3 or manuscript Results from the locked ledger, with .docx (`render_results.py`, `check_numbers.py`, `build_docx.py`) | 0.3.0 |
+| 4 | `research-figures` | Table 1, Kaplan–Meier with numbers at risk, forest plots, flow diagrams | P3 |
+| 6 | `research-poster`, `defense-prep`, `conference-abstract` | poster with print preflight, thesis-defence deck, abstract | P3 |
+| 5–6 | `prose-humanizer` | rewrites AI-sounding prose, keeps every number and citation | P3 |
+| 5 | `manuscript`, `thesis`, `case-report`, `systematic-review` | manuscript and thesis .docx, CARE case report, PRISMA review | P4 |
+| 3, 7 | `ethics-and-crf`, `journal-selection`, `reviewer-response` | ethics dossier and CRF, journal shortlist, response to reviewers | P5 |
 
 You can talk to the skills in Vietnamese or English. The language of research documents is
 a project setting (`project.yaml → language.output`), so a thesis can be written in
@@ -103,7 +108,10 @@ Vietnamese while the manuscript from the same study is in English.
 - **Numbers from files.** Results come from a results ledger, not from the model's memory, and a
   sample size comes from `samplesize.py` with a sensitivity table, every parameter sourced or
   labelled as an assumption.
-  A consistency audit that flags numbers disagreeing between sections arrives in P2.
+  Results enter text only as `{{R-…}}` placeholders filled from the locked ledger, and
+  `check_numbers.py` blocks any typed number the ledger does not hold, at its printed precision (see
+  `judgement-defaults.md`). A consistency audit that
+  flags numbers disagreeing between sections arrives in P3.
 - **Patient data protected by default.** `phi-guard` knows Vietnamese identifier formats
   (CCCD/CMND, BHYT, record numbers, labelled names, dates of birth, addresses) as well as
   phones and emails. Detection is heuristic and not proof that a text is clean.
@@ -130,8 +138,10 @@ Then start a project:
 
 ### Tools the scripts use
 
-Python 3.10 or later, standard library only. Literature lookups call the public PubMed,
-Europe PMC and Crossref APIs; no API key is needed.
+Python 3.10 or later. The harness scripts use the standard library only. Literature lookups call
+the public PubMed, Europe PMC and Crossref APIs; no API key is needed. Analysis scripts written by
+`statistical-analysis` need `pandas`, `scipy` and `statsmodels` (`lifelines` for Cox models):
+`python -m pip install pandas scipy statsmodels openpyxl lifelines`.
 
 ## Roadmap
 
@@ -139,9 +149,10 @@ Europe PMC and Crossref APIs; no API key is needed.
 |---|---|---|
 | P0 Foundation | project folder, ledgers, gates, `phi-guard`, `verify_refs.py`, `search_lit.py`, CI | done (0.1.0) |
 | P1 Plan the study | research question, literature search, appraisal, guideline check, literature review, protocol, sample size and SAP | done (0.2.0) |
-| P2 Present | figures, poster, defence deck, abstract, prose humanizer, consistency audit | planned |
-| P3 Write | statistical analysis, manuscript, thesis, case report, systematic review | planned |
-| P4 Extend | ethics and CRF, journal selection, reviewer response, Codex and Antigravity packaging | planned |
+| P2 Analyse and report results | data preparation, statistical analysis (run and import), results ledger, results writing, Chapter 3 .docx | done (0.3.0) |
+| P3 Present | figures, poster, defence deck, abstract, prose humanizer, consistency audit | next |
+| P4 Write | manuscript, thesis, case report, systematic review | planned |
+| P5 Extend | ethics and CRF, journal selection, reviewer response, Codex and Antigravity packaging | planned |
 
 The design spec is in [`docs/superpowers/specs/`](docs/superpowers/specs/) and each phase
 has its implementation plan in [`docs/superpowers/plans/`](docs/superpowers/plans/).
@@ -152,7 +163,7 @@ has its implementation plan in [`docs/superpowers/plans/`](docs/superpowers/plan
 .claude-plugin/marketplace.json   marketplace manifest (plugins: orchestra, phi-guard)
 plugins/orchestra/                research skills, commands, scripts/, templates/project/
 plugins/phi-guard/                outbound PHI hook, phi_scan.py, deidentify.py, deidentify-data skill
-examples/fictional-cohort/        a simulated project run through every P1 skill, with its checks
+examples/fictional-cohort/        a simulated project run through every P1 and P2 skill, with its checks
 tests/unit/                       tests for every script
 tests/scenarios/                  RED/GREEN behaviour scenarios and the baseline record
 tools/lint_skills.py              skill frontmatter and length checks

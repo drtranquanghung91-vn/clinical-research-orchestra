@@ -7,7 +7,7 @@
 
 - **Tên đề tài:** HbA1c lúc nhập viện và nguy cơ tái nhập viện trong 1 năm ở người bệnh đái tháo
   đường type 2 xuất viện tại Bệnh viện Mô phỏng (2021–2023): một nghiên cứu đoàn hệ hồi cứu.
-- **Phiên bản SAP:** 1.0. **Ngày:** 2026-11-21. **Tác giả/người viết SAP:** Example author (với hỗ
+- **Phiên bản SAP:** 1.1 (1.0 ngày 2026-11-21; 1.1 thêm bảng đăng ký phân tích, mục 16). **Ngày:** 2026-11-21. **Tác giả/người viết SAP:** Example author (với hỗ
   trợ soạn thảo của Claude, Anthropic — xem công bố sử dụng AI ở `02_evidence/search-strategy.md`).
 - **Trạng thái:** soạn trước khi trích xuất dữ liệu (pre-data-lock) — đúng nguyên tắc viết SAP trước
   khi có dữ liệu.
@@ -166,7 +166,29 @@ thập dữ liệu kéo dài cần phân tích giữa kỳ, không có DSMB.
 
 | Thay đổi | Lý do | Ngày | Trước/sau khi xem outcome |
 |---|---|---|---|
-| *(chưa có thay đổi nào — SAP viết trước khi trích xuất dữ liệu)* | — | — | — |
+| Thêm bảng đăng ký phân tích A0–A5 (mục 16), mỗi phân tích ở mục 7–9 một ID | Để kiểm tra được phân tích nào đã định trước (`analysis_plan.py check`) | 2026-11-21 | Trước — chưa có dữ liệu |
+| Bỏ phân tích độ nhạy Fine-Gray (mục 4, mục 10) | Sau xuất viện, HIS chỉ ghi nhận tử vong xảy ra trong một lần nhập viện tại BV Mô phỏng, tức là sau khi đã tái nhập viện; biến cố này không thể xảy ra trước và ngăn cản tái nhập viện, nên không phải nguy cơ cạnh tranh. Tử vong ngoài viện (nguy cơ cạnh tranh thật) không đo được — giữ là hạn chế ở mục 4 | 2026-11-21 | Trước — chưa có dữ liệu |
+| Phần mềm: Python (pandas, statsmodels, lifelines; thư viện `crostats.py` sao vào `05_analysis/`) thay cho R/Stata | Script chạy lại được, cùng nguyên tắc mục 14 | 2026-11-21 | Trước — chưa có dữ liệu |
+
+## 16. Bảng đăng ký phân tích (Analysis register)
+
+Mỗi kết quả trong `05_analysis/output/results.json` mang một ID dưới đây. Phân tích không có trong bảng
+là hậu kiểm (`POST-HOC A<n>:` trong `decisions.md`, trước khi chạy) hoặc sai lệch so với kế hoạch
+(`DEVIATION A<n>:`).
+
+| ID | Objective | Outcome | Population | Method | Covariates | Multiplicity |
+|---|---|---|---|---|---|---|
+| A0 | MT1, mô tả | Đặc điểm chung theo 3 nhóm HbA1c và tổng (Bảng 1); tỷ lệ tái nhập viện 1 năm chung và theo nhóm | Quần thể mô tả (mục 6) | Trung bình ± ĐLC hoặc trung vị [KTPV]; n (%); tỷ lệ kèm KTC 95% Wilson; không kèm p | Không | Không áp dụng |
+| A1 | MT2, chính | Tái nhập viện mọi nguyên nhân trong 1 năm | Quần thể phân tích chính (mục 6, ca đầy đủ theo mục 11) | Hồi quy logistic: nhóm HbA1c 3 mức (< 7% tham chiếu); OR thô và OR hiệu chỉnh, KTC 95%; EPV, VIF; quy tắc < 5 sự kiện/nhóm ở mục 8 | Tuổi, giới, thời gian mắc ĐTĐ, bệnh đồng mắc chính (≥ 1 trong THA, BTM, bệnh tim mạch) | Không (kết cục chính duy nhất, α = 0,05 hai phía) |
+| A2 | MT2, phụ | Tái nhập viện mọi nguyên nhân trong 1 năm | Như A1 | Hồi quy logistic, HbA1c liên tục (OR mỗi 1%) | Như A1 | Thăm dò, không hiệu chỉnh đa so sánh |
+| A3 | MT1, phụ | Tái nhập viện liên quan ĐTĐ trong 1 năm | Như A1 | Hồi quy logistic, nhóm HbA1c 3 mức | Như A1 | Thăm dò, không hiệu chỉnh đa so sánh |
+| A4 | MT1, phụ | Thời gian đến lần tái nhập viện đầu tiên (kiểm duyệt tại 365 ngày) | Như A1 | Hồi quy Cox, nhóm HbA1c 3 mức; HR thô và HR hiệu chỉnh, KTC 95%; giả định PH bằng phần dư Schoenfeld | Như A1 | Thăm dò, không hiệu chỉnh đa so sánh |
+| A5 | MT1, phụ | Tử vong trong viện trong 1 năm | Quần thể mô tả | Tần số, tỷ lệ, KTC 95% Wilson; không phân tích đa biến (mục 9) | Không | Thăm dò |
+
+Các phân tích có điều kiện ở mục 10–11 không có ID: NLR/SII/SIRI và nguy cơ dinh dưỡng (chỉ khi dữ
+liệu đủ theo ngưỡng 20%), độ nhạy dữ liệu thiếu (chỉ khi một biến hiệu chỉnh thiếu > 5%). Nếu điều kiện
+thoả và phân tích được chạy, nó nhận ID mới kèm dòng `DEVIATION A<n>:` trước khi chạy; nếu không, lý do
+được ghi trong `decisions.md`.
 
 ## Tài liệu tham khảo
 

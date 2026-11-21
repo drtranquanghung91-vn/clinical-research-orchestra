@@ -106,6 +106,22 @@ class TestInitProject(unittest.TestCase):
         for d in init_project.DESIGNS:
             self.assertIn(d, init_project.GUIDELINE_BY_DESIGN)
 
+    def test_gitignore_versions_codebook_and_cleaning_log(self):
+        with tempfile.TemporaryDirectory() as t:
+            dest = init_project.create(Path(t) / "p", "A", "manuscript", "cohort", "en", "vi")
+            gi = (dest / ".gitignore").read_text(encoding="utf-8")
+            self.assertIn("!04_data/codebook.md", gi)
+            self.assertIn("!04_data/cleaning-log.md", gi)
+            self.assertIn("04_data/*", gi)
+
+    def test_project_yaml_has_docx_block(self):
+        with tempfile.TemporaryDirectory() as t:
+            dest = init_project.create(Path(t) / "p", "A", "manuscript", "cohort", "en", "vi")
+            y = (dest / "project.yaml").read_text(encoding="utf-8")
+            self.assertIn("\ndocx:\n", y)
+            for key in ("font:", "size_pt:", "line_spacing:", "margins_cm:"):
+                self.assertIn(key, y)
+
 
 if __name__ == "__main__":
     unittest.main()

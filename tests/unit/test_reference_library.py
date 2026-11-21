@@ -44,6 +44,18 @@ class TestReferenceLibrary(unittest.TestCase):
             self.assertEqual(ledgers.validate_reference(r), [], r["id"])
             self.assertTrue(r["verified_by"] and "VERIFIED" in r["verified_by"], r["id"])
 
+    def test_sap_template_has_analysis_register(self):
+        t = (REF / "statistics" / "sap-template.md").read_text(encoding="utf-8")
+        self.assertIn("## Analysis register", t)
+        self.assertIn("| ID | Objective | Outcome | Population | Method | Covariates | Multiplicity |", t)
+        self.assertIn("A0", t)
+
+    def test_judgement_defaults_cover_p2(self):
+        t = (REF / "judgement-defaults.md").read_text(encoding="utf-8")
+        for needle in ("Shapiro", "IQR × 1.5", "EPV", "Times New Roman", "integers 0–10"):
+            self.assertIn(needle, t, needle)
+
+
 
 if __name__ == "__main__":
     unittest.main()

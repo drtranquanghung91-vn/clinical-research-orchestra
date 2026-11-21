@@ -1,0 +1,14 @@
+id,label,value,ci_low,ci_high,p,n
+R-A4-001,"HR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%], Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%'))",1.0734463839806172,0.7601752021904489,1.5158178482549038,0.6872814182967266,1070
+R-A4-002,"HR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%], Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%'))",1.3529233327707926,0.9429041754157311,1.9412381364719227,0.10083358313079256,1070
+R-A4-003,"concordance, mô hình Cox thô A4",0.531175626409477,,,,1070
+R-A4-004,"PH test min p, mô hình Cox thô A4",0.47216542727648114,,,,1070
+R-A4-005,"HR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%], Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.0660821568901435,0.7544170415290076,1.506502508130101,0.7168353121404898,1043
+R-A4-006,"HR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%], Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.3455022620623514,0.9358339309975865,1.9345059815100607,0.10916059834563482,1043
+R-A4-007,"HR age, Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.0152076134962673,1.0021265056666377,1.028459473602264,0.022548589122213233,1043
+R-A4-008,"HR C(sex)[T.Nữ], Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",0.9417818222080856,0.7283109902205829,1.2178217994114735,0.6474136204463763,1043
+R-A4-009,"HR dm_duration_years, Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.010313841245858,0.98611125969926,1.0351104378670823,0.4068624343110563,1043
+R-A4-010,"HR comorb_any, Surv(time_to_readmit_days, readmit_1y) ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.331513601985093,1.0093055082974287,1.7565825785118558,0.042817115321604135,1043
+R-A4-011,"EPV, mô hình Cox hiệu chỉnh A4",39.0,,,,1043
+R-A4-012,"concordance, mô hình Cox hiệu chỉnh A4",0.5779452744825292,,,,1043
+R-A4-013,"PH test min p, mô hình Cox hiệu chỉnh A4",0.27394941394033306,,,,1043

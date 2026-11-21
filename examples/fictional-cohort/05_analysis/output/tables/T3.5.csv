@@ -1,0 +1,9 @@
+id,label,value,ci_low,ci_high,p,n
+R-A3-001,"OR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.2. 7-9%], readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",2.9694942076528794,1.3102564754611161,6.729900606811148,0.009126032231593516,1043
+R-A3-002,"OR C(hba1c_grp3, Treatment(reference='1. <7%'))[T.3. >9%], readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",5.503020831214025,2.4246084227204405,12.489950123491418,4.5453001625830486e-05,1043
+R-A3-003,"OR C(sex)[T.Nữ], readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",0.8486907205185443,0.5510242219021549,1.3071583978792585,0.4565865662973042,1043
+R-A3-004,"OR age, readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.011296443243555,0.9894115697714424,1.0336653899785273,0.314256601980644,1043
+R-A3-005,"OR dm_duration_years, readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.0215294526322856,0.9810586922801922,1.0636697180367929,0.301706029932058,1043
+R-A3-006,"OR comorb_any, readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",1.53746824914746,0.9639193122199108,2.452288886808061,0.07096542810669725,1043
+R-A3-007,"AUC (apparent), readmit_dm_1y ~ C(hba1c_grp3, Treatment(reference='1. <7%')) + age + C(sex) + dm_duration_years + comorb_any",0.6698820707127323,,,,1043
+R-A3-008,"EPV, mô hình A3",15.666666666666666,,,,1043

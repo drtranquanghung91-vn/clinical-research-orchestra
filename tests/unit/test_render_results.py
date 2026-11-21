@@ -1,0 +1,136 @@
+import json
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+import _paths  # noqa: F401
+from _paths import ORCH_SCRIPTS
+import render_results
+
+SCRIPT = ORCH_SCRIPTS / "render_results.py"
+LEDGER = {"results": [
+    {"id": "R-A1-001", "kind": "or", "value": 1.8412, "ci": [1.214, 2.786], "p": 0.0041, "n": 1070,
+     "status": "prespecified"},
+    {"id": "R-A0-001", "kind": "percent", "value": 12.54, "count": 134, "status": "prespecified"}]}
+
+
+class TestRender(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.p = Path(self.tmp.name)
+        (self.p / "ledgers").mkdir()
+        (self.p / "ledgers" / "results-ledger.json").write_text(json.dumps(LEDGER), encoding="utf-8")
+        (self.p / "project.yaml").write_text("language:\n  output: vi\n", encoding="utf-8")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def run_cli(self, f):
+        return subprocess.run([sys.executable, str(SCRIPT), str(self.p), str(f)], capture_output=True, text=True)
+
+    def test_render_text_en(self):
+        by_id = {r["id"]: r for r in LEDGER["results"]}
+        out, probs = render_results.render_text(
+            "OR {{R-A1-001.full}}, p = {{R-A1-001.p}}; {{R-A0-001.full}}.", by_id, "en")
+        self.assertEqual(probs, [])
+        self.assertEqual(out, "OR 1.84 (95% CI 1.21–2.79), p = 0.004; 134 (12.5%).")
+
+    def test_cli_uses_project_language(self):
+        f = self.p / "ch3.md"
+        f.write_text("Tỷ lệ {{R-A0-001}}.\n", encoding="utf-8")
+        r = self.run_cli(f)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual((self.p / "ch3.rendered.md").read_text(encoding="utf-8"), "Tỷ lệ 12,5%.\n")
+
+    def test_unknown_id_and_missing_part(self):
+        f = self.p / "ch3.md"
+        f.write_text("A {{R-A9-001}}\nB {{R-A0-001.ci}}\n", encoding="utf-8")
+        r = self.run_cli(f)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("E-NUM block", r.stdout)
+        self.assertIn(":1:", r.stdout)
+        self.assertIn(":2:", r.stdout)
+        self.assertFalse((self.p / "ch3.rendered.md").exists())
+
+    def test_bad_ledgers_exit_2_without_traceback(self):
+        f = self.p / "ch3.md"
+        f.write_text("A {{R-A0-001}}\n", encoding="utf-8")
+        ledger = self.p / "ledgers" / "results-ledger.json"
+        for content in ("[1, 2]", '{"results": 5}', '{"results": [1, "x"]}', "not json"):
+            ledger.write_text(content, encoding="utf-8")
+            r = self.run_cli(f)
+            self.assertEqual(r.returncode, 2, content)
+            self.assertNotIn("Traceback", r.stderr)
+            self.assertTrue(r.stderr.strip())
+        ledger.unlink()
+        ledger.mkdir()
+        r = self.run_cli(f)
+        self.assertEqual(r.returncode, 2)
+        self.assertNotIn("Traceback", r.stderr)
+
+    def test_missing_input_exit_2(self):
+        r = self.run_cli(self.p / "nope.md")
+        self.assertEqual(r.returncode, 2)
+        self.assertNotIn("Traceback", r.stderr)
+
+    def test_crlf_preserved(self):
+        f = self.p / "ch3.md"
+        f.write_bytes("a {{R-A0-001}}\r\nb\r\n".encode("utf-8"))
+        r = self.run_cli(f)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual((self.p / "ch3.rendered.md").read_bytes(), "a 12,5%\r\nb\r\n".encode("utf-8"))
+
+    def test_malformed_placeholders_block(self):
+        forms = ["{{R-A1-1}}", "{{R-A1-001.foo}}", "{{ R-A1-001 }}", "{{r-a1-001}}", "{{R-A1-001.CI}}"]
+        for form in forms:
+            f = self.p / "ch3.md"
+            f.write_text("ok {{R-A0-001}}\nbad " + form + "\n", encoding="utf-8")
+            r = self.run_cli(f)
+            self.assertEqual(r.returncode, 1, form)
+            self.assertIn(":2: malformed placeholder " + form, r.stdout)
+            self.assertEqual(r.stdout.count("E-NUM block"), 1, form)
+            self.assertFalse((self.p / "ch3.rendered.md").exists())
+
+    def test_plain_braces_left_alone(self):
+        f = self.p / "ch3.md"
+        f.write_text("x {{x}} and {{ y }}\n", encoding="utf-8")
+        r = self.run_cli(f)
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertEqual((self.p / "ch3.rendered.md").read_text(encoding="utf-8"), "x {{x}} and {{ y }}\n")
+
+    def test_non_string_id_exit_2(self):
+        f = self.p / "ch3.md"
+        f.write_text("A {{R-A0-001}}\n", encoding="utf-8")
+        ledger = self.p / "ledgers" / "results-ledger.json"
+        for rid in ('["x"]', "5", "null"):
+            ledger.write_text('{"results": [{"id": %s, "kind": "n", "value": 1}]}' % rid, encoding="utf-8")
+            r = self.run_cli(f)
+            self.assertEqual(r.returncode, 2, rid)
+            self.assertNotIn("Traceback", r.stderr)
+            self.assertTrue(r.stderr.strip())
+
+    def test_table_cell(self):
+        f = self.p / "ch3.md"
+        f.write_text("| OR | p |\n|---|---|\n| {{R-A1-001}} | {{R-A1-001.p}} |\n", encoding="utf-8")
+        r = self.run_cli(f)
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertEqual((self.p / "ch3.rendered.md").read_text(encoding="utf-8"),
+                         "| OR | p |\n|---|---|\n| 1,84 | 0,004 |\n")
+
+    def test_count_part(self):
+        by_id = {r["id"]: r for r in LEDGER["results"]}
+        out, probs = render_results.render_text("{{R-A0-001.count}} of them; {{R-A1-001.count}}", by_id, "en")
+        self.assertEqual(out.split(";")[0], "134 of them")
+        self.assertEqual(len(probs), 1)
+        self.assertIn("no 'count'", probs[0])
+
+    def test_negative_ci_renders_with_words(self):
+        by_id = {"R-A2-001": {"id": "R-A2-001", "kind": "md", "value": -0.3, "ci": [-0.55, 0.05]}}
+        out, probs = render_results.render_text("{{R-A2-001.ci}}", by_id, "vi")
+        self.assertEqual((out, probs), ("-0,55 đến 0,05", []))
+
+
+if __name__ == "__main__":
+    unittest.main()

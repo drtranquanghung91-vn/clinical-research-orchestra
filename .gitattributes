@@ -1,0 +1,2 @@
+tests/scenarios/fixtures/** -text
+examples/** -text
