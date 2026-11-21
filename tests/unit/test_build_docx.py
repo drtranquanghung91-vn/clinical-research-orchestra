@@ -87,6 +87,35 @@ class TestBuildDocx(unittest.TestCase):
         self.assertIn(">a|b<", doc)
         self.assertEqual(doc.count("<w:tc>"), 4)
 
+    def test_block_quote_indented_and_marker_stripped(self):
+        doc = self.doc_xml(build_docx.build("> trích dẫn *nghiêng*\n> dòng hai\n\nthường", build_docx.settings_from_project(None)))
+        xml.dom.minidom.parseString(doc)
+        self.assertIn('<w:ind w:left="567"/>', doc)
+        self.assertNotIn("&gt;", doc)
+        self.assertIn("trích dẫn ", doc)
+        self.assertEqual(doc.count('<w:ind w:left="567"/>'), 2)
+
+    def test_inline_backticks_stripped_code_kept(self):
+        doc = self.doc_xml(build_docx.build("Dùng `crostats.table1(*x*)` và `p<0,05` ở đây", build_docx.settings_from_project(None)))
+        xml.dom.minidom.parseString(doc)
+        self.assertNotIn("`", doc)
+        self.assertIn("crostats.table1(*x*)", doc)
+        self.assertIn("p&lt;0,05", doc)
+        self.assertIn("Consolas", doc)
+
+    def test_cli_help_and_vietnamese_paths_on_cp1252_console(self):
+        import os
+        env = dict(os.environ, PYTHONIOENCODING="cp1252", PYTHONUTF8="0")
+        r = subprocess.run([sys.executable, str(SCRIPT), "--help"], capture_output=True, env=env)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertNotIn(b"Traceback", r.stderr)
+        with tempfile.TemporaryDirectory() as d:
+            src, out = Path(d, "kết quả.md"), Path(d, "báo cáo.docx")
+            src.write_text(MD, encoding="utf-8")
+            r = subprocess.run([sys.executable, str(SCRIPT), str(src), str(out)], capture_output=True, env=env)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertTrue(zipfile.is_zipfile(out))
+
     def test_cli(self):
         with tempfile.TemporaryDirectory() as d:
             src, out = Path(d, "a.md"), Path(d, "a.docx")

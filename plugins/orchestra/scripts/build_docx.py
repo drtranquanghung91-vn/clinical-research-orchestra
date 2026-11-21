@@ -32,6 +32,8 @@ COMMENT = re.compile(r"<!--.*?-->")
 INLINE = re.compile(r"(?<![\w*])(\*\*(?=[^\s*])[^*]+(?<=\S)\*\*|\*(?=[^\s*])[^*]+(?<=\S)\*)(?![\w*])")
 CTRL = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
 ESC_STAR, ESC_PIPE = "\ue000", "\ue001"
+CODE = re.compile(r"`([^`\n]+)`")
+QUOTE = re.compile(r"^>\s?(.*)")
 
 
 def settings_from_project(project: Path | None) -> dict:
@@ -54,6 +56,21 @@ def settings_from_project(project: Path | None) -> dict:
 
 
 def _runs(text: str, bold_all: bool = False) -> str:
+    """Runs for text; `code` spans lose their backticks and become monospace runs."""
+    out = []
+    for idx, part in enumerate(CODE.split(text)):
+        if not part:
+            continue
+        if idx % 2 == 1:
+            bold = "<w:b/>" if bold_all else ""
+            out.append(f'<w:r><w:rPr><w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:cs="Consolas"/>{bold}</w:rPr>'
+                       f'<w:t xml:space="preserve">{html.escape(part)}</w:t></w:r>')
+        else:
+            out.append(_emph_runs(part, bold_all))
+    return "".join(out)
+
+
+def _emph_runs(text: str, bold_all: bool = False) -> str:
     out = []
     for idx, part in enumerate(INLINE.split(text.replace("\\*", ESC_STAR))):
         if not part:
@@ -68,8 +85,10 @@ def _runs(text: str, bold_all: bool = False) -> str:
     return "".join(out)
 
 
-def _p(text: str, style: str | None = None, indent: bool = False) -> str:
+def _p(text: str, style: str | None = None, indent: bool = False, quote: bool = False) -> str:
     ppr = (f'<w:pStyle w:val="{style}"/>' if style else "") + ('<w:ind w:left="567" w:hanging="283"/>' if indent else "")
+    if quote:
+        ppr += '<w:ind w:left="567"/>'
     return f"<w:p><w:pPr>{ppr}</w:pPr>{_runs(text)}</w:p>"
 
 
@@ -115,6 +134,8 @@ def _body(md_text: str) -> str:
             out.append(_p(ln, "Caption"))
         elif after_table and NOTE.match(ln):
             out.append(_p(ln, "TableNote"))
+        elif QUOTE.match(ln):
+            out.append(_p(QUOTE.match(ln).group(1), quote=True))
         elif re.match(r"^[-*]\s+", ln):
             out.append(_p("– " + re.sub(r"^[-*]\s+", "", ln), indent=True))
         elif re.match(r"^\d+\.\s+", ln):
@@ -179,6 +200,11 @@ def build(md_text: str, settings: dict) -> bytes:
 
 
 def main(argv=None) -> int:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("input")
     ap.add_argument("output")
