@@ -33,6 +33,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import os
 import re
 import shutil
 import sys
@@ -54,10 +55,12 @@ LOG = "reviews/worklog.json"
 MAX_ROUNDS = 3
 MAX_TOTAL = 2 * len(reviews.CRITERIA)
 SCRIPTED = ("guideline", "consistency", "prose")
-HEAD = re.compile(r"Giả định\s*/\s*Assumptions", re.I)
+HEAD = re.compile(r"(?:Giả định\s*/\s*Assumptions|Assumptions\s*/\s*Giả định)", re.I)
+QUOTE = re.compile(r"^\s*>[ \t]?")
 BULLET = re.compile(r"^\s*[-*]\s+(.*)")
 WAIVE = re.compile(r"^\s*(?:[-*]\s+)?(WAIVE G\d:.*?)\s*$")
-SOURCES = ("01_question/question.md", "03_protocol/protocol.md", "decisions.md")
+SOURCES = ("01_question/question.md", "03_protocol/protocol.md", "03_protocol/sample-size.md",
+           "03_protocol/sap.md", "decisions.md")
 TEXT = {
     "vi": {"title": "# Quyết định của tác giả",
            "note": "> Bản nháp do `worklog.py decisions` tạo. Tác giả đọc, ghi quyết định và chịu trách nhiệm; "
@@ -100,22 +103,33 @@ def load_log(project: Path) -> dict:
         data = json.loads(p.read_text(encoding="utf-8"))
     except ValueError as e:
         raise UsageError(f"{LOG} is unreadable: {e}") from e
-    if not isinstance(data, dict) or not isinstance(data.get("rounds", []), list):
-        raise UsageError(f"{LOG} must be an object with a 'rounds' list")
+    if not isinstance(data, dict):
+        raise UsageError(f"{LOG} must be a JSON object")
     data.setdefault("rounds", [])
     data.setdefault("events", [])
+    if not isinstance(data["rounds"], list) or not isinstance(data["events"], list):
+        raise UsageError(f"{LOG}: 'rounds' and 'events' must be lists")
+    for e in data["rounds"]:
+        if (not isinstance(e, dict) or type(e.get("round")) is not int
+                or e.get("deliverable") not in drafts.DELIVERABLES):
+            raise UsageError(f"{LOG}: every round needs an integer 'round' and a known 'deliverable'")
     return data
 
 
 def save_log(project: Path, log: dict) -> None:
-    _write(Path(project) / LOG, json.dumps(log, ensure_ascii=False, indent=2) + "\n")
+    path = Path(project) / LOG
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(json.dumps(log, ensure_ascii=False, indent=2) + "\n")
+    os.replace(tmp, path)
 
 
 def round_dir(project: Path, deliverable: str, n: int) -> Path:
     return Path(project) / "reviews" / "rounds" / deliverable / f"r{n}"
 
 
-def guideline_score(project: Path) -> tuple[int, str]:
+def guideline_score(project: Path, deliverable: str) -> tuple[int, str]:
     p = Path(project) / "reviews" / "guideline-checklist.json"
     if not p.is_file():
         raise UsageError("reviews/guideline-checklist.json not found: run reporting-guideline-checker first")
@@ -123,6 +137,10 @@ def guideline_score(project: Path) -> tuple[int, str]:
         data = json.loads(p.read_text(encoding="utf-8-sig"))
     except ValueError as e:
         raise UsageError(f"reviews/guideline-checklist.json is unreadable: {e}") from e
+    said = data.get("deliverable") if isinstance(data, dict) else None
+    if said and said != deliverable:
+        raise UsageError(f"reviews/guideline-checklist.json is for the {said}, not the {deliverable}: "
+                         f"rerun reporting-guideline-checker on the {deliverable}")
     entries = data.get("items", {}) if isinstance(data, dict) else {}
     absent = sum(1 for e in entries.values() if isinstance(e, dict) and e.get("status") == "absent")
     items = ORCH / "references" / "reporting-guidelines" / "items" / f"{data.get('guideline', '')}.json"
@@ -210,6 +228,10 @@ def score(project: Path, deliverable: str, rnd: int) -> dict:
         if not path.is_file():
             raise UsageError(f"{rel} not found: run the {agent} agent on the {deliverable} first")
         parsed = reviews.parse_report(path.read_text(encoding="utf-8-sig"))
+        if parsed["bad_scores"]:
+            raise UsageError(f"{rel} has a malformed ```scores block (not a JSON object); fix it and rerun {agent}")
+        if sum(1 for b in parsed["scores"] if b.get("deliverable") == deliverable) > 1:
+            raise UsageError(f"{rel} has more than one ```scores block for the {deliverable}; keep one")
         block = reviews.scores_for(parsed, deliverable)
         if block is None:
             raise UsageError(f"{rel} has no ```scores block for the {deliverable}")
@@ -221,11 +243,11 @@ def score(project: Path, deliverable: str, rnd: int) -> dict:
                 if v is not None:
                     said[c] = v
                 continue
-            if isinstance(v, bool) or v not in (0, 1, 2):
+            if type(v) is not int or v not in (0, 1, 2):
                 raise UsageError(f"{rel}: '{c}' must be 0, 1 or 2 (got {v!r})")
             scores[c] = v
         requests += [{"agent": agent, "text": t} for t in parsed["requests"]]
-    for key, (val, why) in (("guideline", guideline_score(project)), ("consistency", consistency_score(project)),
+    for key, (val, why) in (("guideline", guideline_score(project, deliverable)), ("consistency", consistency_score(project)),
                             ("prose", prose_score(project, deliverable))):
         scores[key] = val
         notes.append(f"{key} {val}: {why}")
@@ -255,6 +277,9 @@ def revert(project: Path, deliverable: str, to: int | None = None) -> dict:
         if not kept:
             raise UsageError(f"no kept round of the {deliverable} to revert to")
         to = kept[-1]["round"]
+    target = next((e for e in mine if e["round"] == to), None)
+    if target is not None and not target.get("kept"):
+        raise UsageError(f"round {to} of the {deliverable} was itself reverted; choose a kept round")
     snap = round_dir(project, deliverable, to)
     if not snap.is_dir():
         raise UsageError(f"snapshot reviews/rounds/{deliverable}/r{to} not found")
@@ -280,12 +305,14 @@ def assumptions(project: Path) -> list[tuple[str, str]]:
         p = Path(project) / rel
         if not p.is_file():
             continue
-        lines = p.read_text(encoding="utf-8-sig").splitlines()
+        lines = [QUOTE.sub("", ln) for ln in p.read_text(encoding="utf-8-sig").splitlines()]
         i = 0
         while i < len(lines):
-            if not HEAD.search(lines[i]):
+            m0 = HEAD.search(lines[i])
+            if not m0:
                 i += 1
                 continue
+            before = len(out)
             j, skipped = i + 1, 0
             while j < len(lines) and lines[j].strip() and not BULLET.match(lines[j]) and skipped < 3:
                 j, skipped = j + 1, skipped + 1
@@ -293,12 +320,22 @@ def assumptions(project: Path) -> list[tuple[str, str]]:
                 m = BULLET.match(lines[j])
                 if m:
                     out.append((f"{rel}:{j + 1}", m.group(1).strip()))
-                elif out and lines[j][:1] in (" ", "\t"):
+                elif len(out) > before and lines[j][:1] in (" ", "\t"):
                     out[-1] = (out[-1][0], out[-1][1] + " " + lines[j].strip())
                 else:
                     break
                 j += 1
-            i = j
+            if len(out) == before:
+                # a prose box: the whole paragraph is one assumption
+                k = i + 1
+                while k < len(lines) and lines[k].strip():
+                    k += 1
+                para = " ".join(ln.strip() for ln in [lines[i][m0.end():]] + lines[i + 1:k] if ln.strip())
+                para = para.lstrip("*_ .:").strip()
+                if para:
+                    out.append((f"{rel}:{i + 1}", para))
+                j = k
+            i = max(j, i + 1)
     return out
 
 

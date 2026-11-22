@@ -34,6 +34,10 @@ def reports(p: Path, deliverable="thesis", digest=None, request=None, **s) -> No
         (p / rel).write_text(f"STATUS: FINDINGS\nFINDINGS\n| code | location | fix |\n{req}"
                              f"drafts-digest: {deliverable} {digest}\n```scores\n{json.dumps(block)}\n```\n", encoding="utf-8")
 
+BOX = ("# Tính cỡ mẫu\n\n> **Assumptions / Giả định.** Theo yêu cầu của tác giả, tham số không có\n"
+       "> nguồn thì ghi GIẢ ĐỊNH và làm luôn.\n> Đây là giả định rủi ro nhất.\n\n## 1. Tóm tắt\n")
+BOX_BULLETS = "> **Giả định / Assumptions**:\n> - Tỷ lệ nền 20%.\n>   theo ngoại suy.\n> - OR 1,5.\n\nHết.\n"
+
 
 class TestWorklog(unittest.TestCase):
     def setUp(self):
@@ -176,3 +180,72 @@ class TestWorklog(unittest.TestCase):
         self.assertTrue(drafts.results_bearing("06_writing/thesis/ch4-discussion.md"))
         self.assertFalse(drafts.results_bearing("06_writing/thesis/ch2-methods.md"))
         self.assertTrue(drafts.is_literature("06_writing/thesis/ch1-literature-review.md"))
+
+    def test_assumptions_blockquote_and_both_heading_orders(self):
+        (self.p / "03_protocol").mkdir(exist_ok=True)
+        (self.p / "03_protocol" / "sample-size.md").write_text(BOX, encoding="utf-8")
+        (self.p / "03_protocol" / "sap.md").write_text(BOX_BULLETS, encoding="utf-8")
+        found = worklog.assumptions(self.p)
+        box = [t for loc, t in found if loc.startswith("03_protocol/sample-size.md")]
+        self.assertEqual(len(box), 1)
+        self.assertIn("tham số không có nguồn thì ghi GIẢ ĐỊNH", box[0])
+        self.assertIn("giả định rủi ro nhất", box[0])
+        sap = [t for loc, t in found if loc.startswith("03_protocol/sap.md")]
+        self.assertEqual(sap, ["Tỷ lệ nền 20%. theo ngoại suy.", "OR 1,5."])
+
+    def test_checklist_for_another_deliverable_refused(self):
+        with self.assertRaises(worklog.UsageError) as cm:
+            worklog.guideline_score(self.p, "manuscript")
+        self.assertIn("thesis", str(cm.exception))
+        self.assertEqual(worklog.guideline_score(self.p, "thesis")[0], 2)
+
+    def test_bad_log_shape_exit_2(self):
+        log = self.p / "reviews" / "worklog.json"
+        for bad in ('{"rounds": [1]}', '{"rounds": [{"round": "1", "deliverable": "thesis"}]}',
+                    '{"rounds": [{"round": 1, "deliverable": "essay"}]}', '{"rounds": [], "events": {}}'):
+            log.write_text(bad, encoding="utf-8")
+            reports(self.p)
+            self.assertEqual(self.cli("score", str(self.p), "thesis", "--round", "1")[0], 2, bad)
+            self.assertEqual(self.cli("revert", str(self.p), "thesis")[0], 2, bad)
+            self.assertEqual(self.cli("decisions", str(self.p))[0], 2, bad)
+
+    def test_revert_validates_log_before_touching_files(self):
+        self.score(1, structure=1)
+        d = self.p / "06_writing" / "thesis"
+        (d / "ch4-discussion.md").write_text("changed\n", encoding="utf-8")
+        (self.p / "reviews" / "worklog.json").write_text('{"rounds": "x"}', encoding="utf-8")
+        self.assertEqual(self.cli("revert", str(self.p), "thesis")[0], 2)
+        self.assertEqual((d / "ch4-discussion.md").read_text(encoding="utf-8"), "changed\n")
+
+    def test_log_written_atomically(self):
+        self.score(1)
+        self.assertEqual([p.name for p in (self.p / "reviews").glob("worklog.json*")], ["worklog.json"])
+
+    def test_scores_must_be_plain_ints(self):
+        for bad in (1.0, True, "2", 3):
+            reports(self.p, structure=bad)
+            code, _, err = self.cli("score", str(self.p), "thesis", "--round", "1")
+            self.assertEqual(code, 2, bad)
+            self.assertIn("must be 0, 1 or 2", err)
+        self.assertFalse((self.p / "reviews" / "worklog.json").exists())
+
+    def test_malformed_and_duplicate_scores_blocks(self):
+        reports(self.p)
+        rep = self.p / "reviews" / "scientific-editor.md"
+        good = rep.read_text(encoding="utf-8")
+        rep.write_text(good.replace("```scores\n", "```scores\n{oops", 1), encoding="utf-8")
+        code, _, err = self.cli("score", str(self.p), "thesis", "--round", "1")
+        self.assertEqual(code, 2)
+        self.assertIn("malformed", err)
+        rep.write_text(good + good[good.index("```scores"):], encoding="utf-8")
+        code, _, err = self.cli("score", str(self.p), "thesis", "--round", "1")
+        self.assertEqual(code, 2)
+        self.assertIn("more than one", err)
+        self.assertFalse((self.p / "reviews" / "worklog.json").exists())
+
+    def test_revert_to_a_reverted_round_refused(self):
+        self.score(1, structure=1)
+        self.assertEqual(self.score(2, structure=1, claim_scope=0)["decision"], "REVERT")
+        code, _, err = self.cli("revert", str(self.p), "thesis", "--to", "2")
+        self.assertEqual(code, 2)
+        self.assertIn("reverted", err)
