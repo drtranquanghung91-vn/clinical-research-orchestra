@@ -73,6 +73,16 @@ no text leaves the canvas or overlaps another.
 - `flow`: boxes top to bottom; `n` is a ledger ref (`R-A0-001.n`) or a formula over ledger refs (same rules as
   `<!-- derived: -->`: numbers, ids, + - * / and parentheses). Each exclusion is a side box on the arrow after box `after`
   (1-based; default the position in the list).
+- `forest` (P5): optional `pooled` (a whole result id with `ci`, drawn as a diamond in its own bottom row, label
+  `pooled_label` or "Ước lượng gộp"/"Pooled estimate") and `prediction` (a result id whose `ci` is the 95% prediction
+  interval, drawn as a grey bar through the diamond; needs `pooled`). `meta.py forest-spec` writes these entries.
+- `prisma` (P5): the PRISMA 2020 flow. Required ledger ids `identified`, `duplicates`, `screened`, `excluded`, `sought`,
+  `not_retrieved`, `assessed`, `reports_excluded`, `studies`; optional `registers`, `reports` and `reasons`
+  (`[{"text": "wrong population", "n": "R-A0-051"}]`). Ids written without a part mean `.value`. Stage labels
+  Identification / Screening / Included are drawn on the left. Every number comes from `screening.py counts`.
+- `rob` (P5): traffic-light summary from `04_data/sr/rob.csv` for one `outcome` and one `tool` (domains D1… plus
+  overall). Judgements have colour and a symbol for greyscale printing: + low, − some concerns / moderate,
+  × high / serious, ! critical, ? no information.
 
 ## `F<n>.data.json`
 
@@ -96,3 +106,6 @@ Estimates are the raw ledger values; `text` is what the figure prints.
   coordinates are fractions (0–1) of the content box, y from the top (the grand-rounds `diagram` slide format).
   Main boxes are `n1…`, exclusion boxes `x1…`; exclusion edges add `from_side: 2`, `to_side: 1`.
   `values` lists each box's `n` with its ref or formula.
+- `forest` with `pooled`: `chart.pooled` `{label, est, lo, hi}` and `chart.prediction` `[lo, hi]` or null; the pooled row is
+  the last item of `values`. `prisma`: the `flow` chart plus `stages`. `rob`: `chart` = `{"kind": "rob", "tool", "studies",
+  "domains", "cells"}` with `data_file` and `data_sha256`.

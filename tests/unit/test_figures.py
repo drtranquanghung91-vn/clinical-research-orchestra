@@ -412,5 +412,110 @@ class TestFigureLayout(unittest.TestCase):
         self.assertEqual(r.returncode, 2)
 
 
+
+
+P5_LEDGER = {"results": [
+    {"id": "R-A1-011", "kind": "rr", "value": 0.6, "ci": [0.3, 1.2]},
+    {"id": "R-A1-012", "kind": "rr", "value": 0.9, "ci": [0.5, 1.6]},
+    {"id": "R-A1-001", "kind": "rr", "value": 0.78, "ci": [0.55, 1.1], "count": 2},
+    {"id": "R-A1-005", "kind": "rr", "value": 0.78, "ci": [0.3, 2.0]},
+] + [{"id": f"R-A0-{i:03d}", "kind": "n", "value": v}
+     for i, v in ((1, 6), (2, 0), (3, 2), (4, 4), (5, 2), (6, 2), (7, 0), (8, 2), (9, 1), (10, 1), (11, 1), (51, 1))]}
+ROB_CSV = ("study_id,outcome,tool,domain,judgement,support,reviewer\n"
+           + "".join(f"S0{s},mortality,RoB 2,{d},{j},q,A; B\n" for s, row in ((1, ("low", "low", "some concerns", "low", "low", "some concerns")),
+                                                                            (2, ("high", "low", "low", "low", "low", "high")))
+                     for d, j in zip(("D1", "D2", "D3", "D4", "D5", "overall"), row)))
+P5_SPEC = {"figures": [
+    {"id": "F5", "type": "forest", "log_scale": True, "x_label": "RR (KTC 95%)",
+     "rows": [{"label": "S01", "result": "R-A1-011"}, {"label": "S02", "result": "R-A1-012"}],
+     "pooled": "R-A1-001", "prediction": "R-A1-005"},
+    {"id": "F6", "type": "prisma", "identified": "R-A0-001", "registers": "R-A0-002", "duplicates": "R-A0-003",
+     "screened": "R-A0-004", "excluded": "R-A0-005", "sought": "R-A0-006", "not_retrieved": "R-A0-007",
+     "assessed": "R-A0-008", "reports_excluded": "R-A0-009", "studies": "R-A0-010", "reports": "R-A0-011",
+     "reasons": [{"text": "wrong population", "n": "R-A0-051"}]},
+    {"id": "F7", "type": "rob", "outcome": "mortality", "tool": "RoB 2", "source": "04_data/sr/rob.csv"},
+]}
+
+
+@unittest.skipUnless(HAVE_MPL, "matplotlib is not installed")
+class TestP5Figures(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.p = Path(self.tmp.name)
+        (self.p / "ledgers").mkdir()
+        (self.p / "ledgers" / "results-ledger.json").write_text(json.dumps(P5_LEDGER), encoding="utf-8")
+        (self.p / "project.yaml").write_text("language:\n  output: vi\n", encoding="utf-8")
+        (self.p / "04_data" / "sr").mkdir(parents=True)
+        (self.p / "04_data" / "sr" / "rob.csv").write_text(ROB_CSV, encoding="utf-8")
+        (self.p / "07_present" / "figures").mkdir(parents=True)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def run_spec(self, spec, *extra):
+        (self.p / "07_present" / "figures" / "figures.json").write_text(json.dumps(spec), encoding="utf-8")
+        return subprocess.run([sys.executable, str(SCRIPT), str(self.p), "--dpi", "80", *extra], capture_output=True,
+                              text=True, encoding="utf-8")
+
+    def data(self, fid):
+        return json.loads((self.p / "07_present" / "figures" / f"{fid}.data.json").read_text(encoding="utf-8"))
+
+    def test_all_p5_types_render(self):
+        r = self.run_spec(P5_SPEC)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        for fid in ("F5", "F6", "F7"):
+            self.assertTrue((self.p / "07_present" / "figures" / f"{fid}.png").read_bytes().startswith(b"\x89PNG"))
+
+    def test_forest_pooled_diamond_and_prediction(self):
+        self.assertEqual(self.run_spec(P5_SPEC, "--only", "F5").returncode, 0)
+        d = self.data("F5")
+        self.assertEqual(d["chart"]["pooled"], {"label": "Ước lượng gộp", "est": 0.78, "lo": 0.55, "hi": 1.1})
+        self.assertEqual(d["chart"]["prediction"], [0.3, 2.0])
+        last = d["values"][-1]
+        self.assertEqual(last["ref"], "R-A1-001")
+        self.assertEqual(last["text"], "0,78 (0,55–1,10); KDB 95% 0,30–2,00")
+        bad = {"figures": [dict(P5_SPEC["figures"][0], pooled=None)]}
+        r = self.run_spec(bad)
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("'prediction' needs 'pooled'", r.stderr)
+
+    def test_prisma_boxes_from_ledger(self):
+        self.assertEqual(self.run_spec(P5_SPEC, "--only", "F6").returncode, 0)
+        ch = self.data("F6")["chart"]
+        texts = [n["text"] for n in ch["nodes"]]
+        self.assertIn("Bản ghi từ cơ sở dữ liệu\nvà sổ đăng ký (n = 0)\nn = 6", texts)
+        self.assertIn("Bản ghi được sàng lọc\nn = 4", texts)
+        self.assertIn("Báo cáo bị loại\nwrong population (n = 1)\nn = 1", texts)
+        self.assertIn("Nghiên cứu được đưa vào\nBáo cáo của các nghiên cứu (n = 1)\nn = 1", texts)
+        self.assertEqual([s["label"] for s in ch["stages"]], ["Nhận diện", "Sàng lọc", "Đưa vào"])
+        refs = {v["ref"] for v in self.data("F6")["values"]}
+        self.assertTrue({"R-A0-001.value", "R-A0-051.value", "R-A0-002.value"} <= refs)
+        bad = {"figures": [{k: v for k, v in P5_SPEC["figures"][1].items() if k != "assessed"}]}
+        r = self.run_spec(bad)
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("assessed", r.stderr)
+
+    def test_rob_traffic_light(self):
+        self.assertEqual(self.run_spec(P5_SPEC, "--only", "F7").returncode, 0)
+        d = self.data("F7")
+        self.assertEqual(d["data_file"], "04_data/sr/rob.csv")
+        self.assertEqual(len(d["data_sha256"]), 64)
+        ch = d["chart"]
+        self.assertEqual((ch["kind"], ch["tool"]), ("rob", "RoB 2"))
+        self.assertEqual(ch["studies"], ["S01", "S02"])
+        self.assertEqual(ch["domains"], ["D1", "D2", "D3", "D4", "D5", "overall"])
+        self.assertEqual(ch["cells"][1][0], "high")
+        svg = (self.p / "07_present" / "figures" / "F7.svg").read_text(encoding="utf-8")
+        for sym in ("+", "−", "×"):
+            self.assertIn(sym, svg)                       # symbols for greyscale printing
+        (self.p / "04_data" / "sr" / "rob.csv").write_text(ROB_CSV.replace(",high,", ",awful,"), encoding="utf-8")
+        r = self.run_spec(P5_SPEC, "--only", "F7")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("awful", r.stderr)
+        r = self.run_spec({"figures": [dict(P5_SPEC["figures"][2], outcome="pain")]})
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("no rows for outcome 'pain'", r.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
