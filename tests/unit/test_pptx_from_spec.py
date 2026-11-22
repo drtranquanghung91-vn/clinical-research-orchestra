@@ -417,6 +417,16 @@ class TestFixRound1(unittest.TestCase):
             expect = gf.left + gf.width * (px + pw * t / 100)
             self.assertAlmostEqual(centres[j], expect, delta=gf.width * 0.01)
 
+    def test_km_ticks_follow_at_risk_step_when_last_time_is_a_whole_year(self):
+        d = {"id": "F2", "type": "km", "chart": {"kind": "km", "series": [
+            {"name": "A", "points": [[0, 1.0], [365, 0.8]]}],
+            "at_risk": {"times": [0, 90, 180, 270, 365], "rows": [{"name": "A", "n": [9, 8, 7, 6, 5]}]}}}
+        rc, out = self.build({"slides": [{"type": "chart", "chart": "km", "title": "K", "data": "F2.data.json"}]},
+                             {"F2.data.json": d})
+        self.assertEqual(rc, 0)
+        gf = next(s for s in Presentation(str(out)).slides[0].shapes if getattr(s, "has_chart", False) and s.has_chart)
+        self.assertEqual(gf.chart.category_axis.major_unit, 90)
+
     def test_km_layout_table_below_chart_note_below_table(self):
         rc, out = self.build({"slides": [{"type": "chart", "chart": "km", "title": "K",
                                           "data": "F2.data.json"}]}, {"F2.data.json": KM})

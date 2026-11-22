@@ -278,6 +278,9 @@ research-figures):
   figures redrawn with `figures.py` in both profiles (document, then `--profile poster`), which also
   replaces the stale document copy of F1; F2 changes only in line endings (`figures.py` and the
   `poster_build.py` DOM dump now write LF on Windows too).
+- `deck.pptx` rebuilt once more after `pptx_from_spec.py` learnt to set the KM time-axis ticks to the
+  at-risk step when only the last step is longer (0, 90, 180, 270, 365): ticks and at-risk columns now
+  line up on slide 12.
 
 ### P3 known issues (found by looking at every poster PNG and the rendered deck)
 
@@ -300,8 +303,8 @@ research-figures):
 - **Deck defects that `check_pptx.py` and `lint_prose.py --slides` do not catch.** The KM slide 12
   prints the figure's fixed provenance line with a file path ("Vẽ lại từ 04_data/cohort.deid.csv");
   the sample-size figures on slides 7 and 19 (300, 535, 0,554…) are typed
-  from `03_protocol/sample-size.md`, which no check reads; KM slide 12 has a flat plot, an at-risk table
-  whose columns do not line up with the axis ticks and a > 9 line close in colour to < 7; value labels
+  from `03_protocol/sample-size.md`, which no check reads; KM slide 12 has a flat plot and a > 9 line close
+  in colour to < 7 (the slide uses the deck palette, not the figure's colour keys); value labels
   collide with the whiskers on slide 10; the forest axis on slide 11 runs 0,1–10, which squeezes the
   intervals; backup tables (slides 21–22) fill a quarter of the slide and most text slides leave the
   lower half empty.
