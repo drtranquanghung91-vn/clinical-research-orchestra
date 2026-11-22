@@ -1,0 +1,88 @@
+{
+  "G1": {
+    "status": "open",
+    "at": "2026-11-23T01:43:52",
+    "by": "Example author",
+    "files": {}
+  },
+  "G2": {
+    "status": "open",
+    "at": "2026-11-23T01:43:53",
+    "by": "Example author",
+    "files": {
+      "03_protocol/sr-protocol.md": "480c9680a99ba4de392ab60890eff9e07c546ad04eddeb9b7341f30e3ebad5d1",
+      "03_protocol/prospero.md": "a721e5036352efed832a2cbada67eb1c3c5ff7b8e64aa0f12349131488f1a345",
+      "02_evidence/sr/strings.md": "13f24be3e5f72ab4849c20151a7252534e8c13470d2b699f50c82058e38ce211"
+    }
+  },
+  "G3": {
+    "status": "open",
+    "at": "2026-11-23T01:54:38",
+    "by": "Example author",
+    "files": {
+      "ledgers/results-ledger.json": "c68fe39dac75b02ffd03fe4cbef3281ecac7d1a5d1b60b2a80dc44a0651d7d51",
+      "02_evidence/sr/screening.csv": "f4b41d9fc9e4b03bae74bc2758a232d26a99d17d5521379b5c1d0a0838a6be20",
+      "04_data/sr/extraction.csv": "56f839a4d5683e2cb44ff49e39346ef069a3f2da446586c0b931f05eea455c46",
+      "04_data/sr/rob.csv": "910985488174edd65e7a6659e0821ad225316da0a35dde7bfdf020378b5a36b8",
+      "05_analysis/meta/grade.json": "5aaa5031ae6880963f1c8d09efdf66c5bedb874b4f71eef3536b9f23bdb3a6f4"
+    }
+  },
+  "G4": {
+    "status": "open",
+    "at": "2026-11-23T03:21:57",
+    "by": "Example author",
+    "files": {
+      "06_writing/review/00-title.md": "a366e01d3a59fdc957e28fd07a6ae26500a6c54310d557d048a369cc0c2a9cbf",
+      "06_writing/review/01-abstract.md": "46c7d9005c585a6910164f705f005aa83ce06ca84daca605fbc72914a84f7ba7",
+      "06_writing/review/02-introduction.md": "ef8953d33e30d7cb645ec0a5c6036d33600290b03e763c8583451709ae064b81",
+      "06_writing/review/03-methods.md": "0d1eb42a45ed5e603839e0774a0daa5ccd4f10aed2f8c740ba774273a997a178",
+      "06_writing/review/04-results.md": "b92f39e87a3512b7affcbdb47dd41482c63d2f4d8deabf8885b871cfe98bb707",
+      "06_writing/review/05-discussion.md": "04506b1c5769393d69e7bab1bada5c098c20fc40636b3c28d1faaaa3c81b5f03",
+      "06_writing/review/06-conclusion.md": "d4e5c3ac9441336c9645a859ee4d5d9847b87ed2b491022663e79ac3c088d2da",
+      "06_writing/review/07-other-information.md": "c61086832622cd92f827ca50e8e59a5b0256066763afecf7f0c07d19495c3e19",
+      "06_writing/review/sof.md": "fa8f859839010f55e0440b8692d209d5bdae8e3efe23346e17639526b78bfbfb",
+      "07_present/figures/F-PRISMA.png": "1b9edab6853bf126584908f96f0bc3b599eac446bf4082ebe9d739488eb1b455",
+      "07_present/figures/F-ROB.png": "d9e6433be428861c98ff06372abe987960a7b460b94013bba817bd34f89ebb7c",
+      "07_present/figures/F-A1.png": "40d2e9151be8fbf21b4705babb17c9849f3b44cdc538a51068010f3098fd8277",
+      "ledgers/references.json": "1413bff63667834aa0a920adfc2ec00f8d45fcd3f77cdc360e41a3734b832eee",
+      "ledgers/results-ledger.json": "c68fe39dac75b02ffd03fe4cbef3281ecac7d1a5d1b60b2a80dc44a0651d7d51",
+      "ledgers/claims.json": "3874259b03f259e4aef8750b018008aa3a1bcda33a25aff0a8bf0a299c279324",
+      "02_evidence/sr/records.csv": "76b2727edf394c2513a4c4530da4816e8ce5563c8a5a5b2d08882731346c81c2",
+      "02_evidence/sr/screening.csv": "f4b41d9fc9e4b03bae74bc2758a232d26a99d17d5521379b5c1d0a0838a6be20",
+      "04_data/sr/extraction.csv": "56f839a4d5683e2cb44ff49e39346ef069a3f2da446586c0b931f05eea455c46",
+      "04_data/sr/rob.csv": "910985488174edd65e7a6659e0821ad225316da0a35dde7bfdf020378b5a36b8",
+      "05_analysis/meta/grade.json": "5aaa5031ae6880963f1c8d09efdf66c5bedb874b4f71eef3536b9f23bdb3a6f4",
+      "04_data/sr/charting.csv": null
+    },
+    "deliverables": {
+      "review": {
+        "at": "2026-11-23T03:21:57",
+        "by": "Example author",
+        "audit_at": "2026-11-23T03:21:11",
+        "files": {
+          "06_writing/review/00-title.md": "a366e01d3a59fdc957e28fd07a6ae26500a6c54310d557d048a369cc0c2a9cbf",
+          "06_writing/review/01-abstract.md": "46c7d9005c585a6910164f705f005aa83ce06ca84daca605fbc72914a84f7ba7",
+          "06_writing/review/02-introduction.md": "ef8953d33e30d7cb645ec0a5c6036d33600290b03e763c8583451709ae064b81",
+          "06_writing/review/03-methods.md": "0d1eb42a45ed5e603839e0774a0daa5ccd4f10aed2f8c740ba774273a997a178",
+          "06_writing/review/04-results.md": "b92f39e87a3512b7affcbdb47dd41482c63d2f4d8deabf8885b871cfe98bb707",
+          "06_writing/review/05-discussion.md": "04506b1c5769393d69e7bab1bada5c098c20fc40636b3c28d1faaaa3c81b5f03",
+          "06_writing/review/06-conclusion.md": "d4e5c3ac9441336c9645a859ee4d5d9847b87ed2b491022663e79ac3c088d2da",
+          "06_writing/review/07-other-information.md": "c61086832622cd92f827ca50e8e59a5b0256066763afecf7f0c07d19495c3e19",
+          "06_writing/review/sof.md": "fa8f859839010f55e0440b8692d209d5bdae8e3efe23346e17639526b78bfbfb",
+          "07_present/figures/F-PRISMA.png": "1b9edab6853bf126584908f96f0bc3b599eac446bf4082ebe9d739488eb1b455",
+          "07_present/figures/F-ROB.png": "d9e6433be428861c98ff06372abe987960a7b460b94013bba817bd34f89ebb7c",
+          "07_present/figures/F-A1.png": "40d2e9151be8fbf21b4705babb17c9849f3b44cdc538a51068010f3098fd8277",
+          "ledgers/references.json": "1413bff63667834aa0a920adfc2ec00f8d45fcd3f77cdc360e41a3734b832eee",
+          "ledgers/results-ledger.json": "c68fe39dac75b02ffd03fe4cbef3281ecac7d1a5d1b60b2a80dc44a0651d7d51",
+          "ledgers/claims.json": "3874259b03f259e4aef8750b018008aa3a1bcda33a25aff0a8bf0a299c279324",
+          "02_evidence/sr/records.csv": "76b2727edf394c2513a4c4530da4816e8ce5563c8a5a5b2d08882731346c81c2",
+          "02_evidence/sr/screening.csv": "f4b41d9fc9e4b03bae74bc2758a232d26a99d17d5521379b5c1d0a0838a6be20",
+          "04_data/sr/extraction.csv": "56f839a4d5683e2cb44ff49e39346ef069a3f2da446586c0b931f05eea455c46",
+          "04_data/sr/rob.csv": "910985488174edd65e7a6659e0821ad225316da0a35dde7bfdf020378b5a36b8",
+          "05_analysis/meta/grade.json": "5aaa5031ae6880963f1c8d09efdf66c5bedb874b4f71eef3536b9f23bdb3a6f4",
+          "04_data/sr/charting.csv": null
+        }
+      }
+    }
+  }
+}

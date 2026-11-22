@@ -1,0 +1,19 @@
+{
+  "outcomes": [
+    {
+      "outcome": "tử vong mọi nguyên nhân (30 ngày)",
+      "result": "R-A1-001",
+      "design": "rct",
+      "rob_tool": "RoB 2",
+      "downgrades": {
+        "risk_of_bias": [-1, "Hai trong năm thử nghiệm có 'some concerns' theo RoB 2 (tamsett2020 miền D2, lindqvar2022 miền D1) và hiệu ứng gộp phụ thuộc nhiều vào hai thử nghiệm này."],
+        "inconsistency": [0, "Không thống nhất ở mức trung bình được giải thích bởi phân nhóm theo nguy cơ sai lệch; đã tính ở mục nguy cơ sai lệch nên không hạ hai lần."],
+        "indirectness": [0, "Dân số, can thiệp, nhóm chứng và kết cục khớp trực tiếp với câu hỏi."],
+        "imprecision": [-1, "Ít sự kiện, giới hạn trên của khoảng tin cậy gần mức không hiệu quả và khoảng dự đoán bao trùm mức không hiệu quả."],
+        "publication_bias": [0, "Dưới mười nghiên cứu nên không đánh giá được bằng kiểm định; ghi là hạn chế."]
+      },
+      "comparator_risk": 0.18,
+      "comparator_source": "trung vị nguy cơ tử vong 30 ngày ở nhóm giả dược của năm thử nghiệm được đưa vào (số liệu hư cấu)"
+    }
+  ]
+}

@@ -80,5 +80,62 @@ class TestFictionalCohortWrite(unittest.TestCase):
         self.assertFalse([f for f in data["findings"] if f.get("level") == "block"])
 
 
+SR = ROOT / "examples" / "fictional-sr"
+sys.path.insert(0, str(GATE.parent))
+
+
+class TestFictionalSystematicReview(unittest.TestCase):
+    """P5: a fictional systematic review exported through G4; every number from the ledger."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.led = {r["id"]: r for r in json.loads((SR / "ledgers" / "results-ledger.json").read_text(encoding="utf-8"))["results"]}
+
+    def test_gates_and_outputs(self):
+        for args in (("G2",), ("G3",), ("G4", "--deliverable", "review")):
+            r = subprocess.run([sys.executable, str(GATE), "check", str(SR), *args], capture_output=True, text=True,
+                               encoding="utf-8")
+            self.assertEqual(r.returncode, 0, f"{args}: {r.stdout}{r.stderr}")
+        with zipfile.ZipFile(SR / "out" / "review.docx") as z:
+            self.assertIn("word/document.xml", z.namelist())
+        data = json.loads((SR / "reviews" / "audit.json").read_text(encoding="utf-8"))
+        self.assertEqual((data["blocks"], data["deliverables"]), (0, ["review"]))
+        for name in ("ai-use-disclosure.md", "author-decisions.md"):
+            self.assertTrue((SR / "out" / name).read_text(encoding="utf-8").strip(), name)
+
+    def test_ledger_holds_counts_pooled_heterogeneity_and_absolute_effects(self):
+        for i in range(1, 12):
+            rec = self.led[f"R-A0-{i:03d}"]
+            self.assertEqual((rec["status"], rec["kind"]), ("observed", "n"))
+        pooled = self.led["R-A1-001"]
+        self.assertEqual((pooled["kind"], pooled["count"]), ("rr", 5))
+        self.assertEqual(len(pooled["ci"]), 2)
+        self.assertEqual(self.led["R-A1-002"]["kind"], "tau2")
+        self.assertEqual(self.led["R-A1-003"]["kind"], "percent")
+        self.assertEqual(len(self.led["R-A1-005"]["ci"]), 2)
+        self.assertNotIn("R-A1-006", self.led)                      # k < 10: no Egger
+        for i in (901, 902, 903):
+            self.assertEqual(self.led[f"R-A1-{i}"]["kind"], "absolute")
+
+    def test_logs_clean_and_text_uses_placeholders(self):
+        import extract_check
+        import screening
+        self.assertEqual([f for f in screening.check(SR) if f[0] == "block"], [])
+        self.assertEqual([f for f in extract_check.check(SR) if f[0] == "block"], [])
+        results = (SR / "06_writing" / "review" / "04-results.md").read_text(encoding="utf-8")
+        for s in ("{{R-A0-", "{{R-A1-001", "{{R-A1-003", "{{R-A1-005"):
+            self.assertIn(s, results)
+        figs = json.loads((SR / "07_present" / "figures" / "figures.json").read_text(encoding="utf-8"))["figures"]
+        self.assertEqual({f["type"] for f in figs} >= {"prisma", "forest", "rob"}, True)
+
+    def test_included_studies_are_fictional_manual_records(self):
+        refs = json.loads((SR / "ledgers" / "references.json").read_text(encoding="utf-8"))["references"]
+        studies = [r for r in refs if r.get("source") == "manual"]
+        self.assertEqual(len(studies), 5)
+        self.assertTrue(all(r["title"].startswith("Fictional") and r.get("seen_in") for r in studies))
+        self.assertTrue(all(str(r.get("verified_by", "")).endswith("VERIFIED") for r in refs if r.get("source") != "manual"))
+        self.assertIn("fictional", (SR / "README.md").read_text(encoding="utf-8").lower())
+
+
 if __name__ == "__main__":
     unittest.main()

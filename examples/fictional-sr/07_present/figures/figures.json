@@ -1,0 +1,65 @@
+{
+  "figures": [
+    {
+      "id": "F-PRISMA",
+      "type": "prisma",
+      "title": "Sơ đồ PRISMA",
+      "source": "05_analysis/output/screening-log.txt",
+      "identified": "R-A0-001",
+      "duplicates": "R-A0-003",
+      "screened": "R-A0-004",
+      "excluded": "R-A0-005",
+      "sought": "R-A0-006",
+      "not_retrieved": "R-A0-007",
+      "assessed": "R-A0-008",
+      "reports_excluded": "R-A0-009",
+      "studies": "R-A0-010",
+      "reports": "R-A0-011",
+      "reasons": [
+        {"text": "thiết kế không phải thử nghiệm ngẫu nhiên có đối chứng", "n": "R-A0-052"},
+        {"text": "không báo cáo tử vong trong 30 ngày", "n": "R-A0-051"}
+      ]
+    },
+    {
+      "id": "F-ROB",
+      "type": "rob",
+      "title": "Nguy cơ sai lệch (RoB 2)",
+      "outcome": "tử vong mọi nguyên nhân",
+      "tool": "RoB 2",
+      "source": "04_data/sr/rob.csv"
+    },
+    {
+      "id": "F-A1",
+      "type": "forest",
+      "title": "tử vong mọi nguyên nhân (30 ngày)",
+      "null": 1,
+      "log_scale": true,
+      "x_label": "RR (95% CI)",
+      "source": "05_analysis/output/meta-log.txt",
+      "rows": [
+        {
+          "label": "varrow2017",
+          "result": "R-A1-011"
+        },
+        {
+          "label": "quellin2019",
+          "result": "R-A1-012"
+        },
+        {
+          "label": "tamsett2020",
+          "result": "R-A1-013"
+        },
+        {
+          "label": "orbeck2021",
+          "result": "R-A1-014"
+        },
+        {
+          "label": "lindqvar2022",
+          "result": "R-A1-015"
+        }
+      ],
+      "pooled": "R-A1-001",
+      "prediction": "R-A1-005"
+    }
+  ]
+}
