@@ -32,6 +32,8 @@ Defaults: vector plus 300 dpi PNG, 16 cm width, Arial 9 pt.
 
 ## 5. Notes
 - A KM figure carries "Vẽ lại từ <file>" / "Redrawn from <file>" (fixed by the script).
+- A figure note never prints a ledger id (`R-…`): say what the number is, not where it is stored.
+- Colour keys in `style.colors` match group labels exactly; fix every unmatched-key warning.
 - `check_numbers.py` is not run on figures: numbers come from the ledger by construction.
   `consistency_audit.py` still reads the strings in each `F<n>.data.json`; run it after drawing.
 

@@ -22,7 +22,7 @@ the Skill tool). Fix every block in the thesis with the author: unrounded sample
 differs between sections, one rate printed two ways. A number goes back into the source `.md` as its
 `{{R-…}}` placeholder (it prints its own unit: no `%` after it); re-render with `render_results.py . <file>.md`,
 never edit a `.rendered.md` by hand. Re-run until the exit code is 0. Do not plan slides
-while a block stands.
+while a block stands. Never edit `01_question/` or the protocol: report the mismatch and ask the author.
 
 ## 4. Step 2: plan
 Write `07_present/defense/deck.json` in the format of
@@ -31,6 +31,12 @@ finding), one message per slide, a time budget (18-20 minutes, about one slide a
 author for the committee's limit), speaker notes on every slide. Charts come from
 `07_present/figures/F<n>.data.json` (use the Skill tool with `research-figures` when one is missing). If
 the author gave an institution template, set `template` in the spec.
+
+Slide text: print a citation as short text resolved from the project's reference library ("Hu và cs.,
+2026" / "Hu et al., 2026"), never `[@key]`. Never print file paths, backticks, ledger ids (`R-…`) or
+thesis table numbers. Describe an ordered trend ("tăng dần theo", "increases with", "dose-response")
+only when the results ledger holds a trend test supporting it; otherwise give the group values and say
+the CIs include 1.
 
 ## 5. Step 3: build and check
 - If the Skill tool lists `grand-rounds:medical-deck`, hand it the plan.
