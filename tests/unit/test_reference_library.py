@@ -55,6 +55,37 @@ class TestReferenceLibrary(unittest.TestCase):
         for needle in ("Shapiro", "IQR × 1.5", "EPV", "Times New Roman", "integers 0–10"):
             self.assertIn(needle, t, needle)
 
+    def test_p4_role_briefs_start_with_the_marker(self):
+        roles = REF / "writing" / "roles"
+        for name in ("introduction", "methods", "results", "discussion", "conclusion", "abstract"):
+            text = (roles / f"{name}.md").read_text(encoding="utf-8")
+            self.assertEqual(text.splitlines()[0], f"orchestra-role: {name}")
+            if name != "introduction":
+                self.assertIn("{{R-", text)
+            self.assertIn("[@id]", text)
+        disc = (roles / "discussion.md").read_text(encoding="utf-8").lower()
+        for s in ("principal finding", "mechanism", "strengths", "limitations", "implications", "causal", "trend",
+                  "evidence table", "studied population"):
+            self.assertIn(s, disc)
+        self.assertIn("<!-- results: R-A1-004 -->", (roles / "conclusion.md").read_text(encoding="utf-8"))
+        methods = (roles / "methods.md").read_text(encoding="utf-8")
+        for s in ("Part B", "Part A", "Part C", "past tense", "DEVIATION", "POST-HOC"):
+            self.assertIn(s, methods)
+
+    def test_p4_writing_references(self):
+        w = REF / "writing"
+        thesis = (w / "vn-thesis.md").read_text(encoding="utf-8")
+        for s in ("Đặt vấn đề", "Chương 1", "Chương 2", "Chương 3", "Chương 4", "Kết luận", "Kiến nghị",
+                  "Tài liệu tham khảo", "Phụ lục", "Lời cam đoan", "Mục lục", "Bảng 3.1.", "Hình 3.1.", "Biểu đồ 3.1.",
+                  "{TOC}", "institution.template"):
+            self.assertIn(s, thesis)
+        man = (w / "manuscript.md").read_text(encoding="utf-8")
+        for s in ("IMRaD", "structured abstract", "target.word_limit", "--count-words", "Vancouver", "[[AUTHOR:"):
+            self.assertIn(s, man)
+        dis = (w / "ai-disclosure.md").read_text(encoding="utf-8")
+        for s in ("ICMJE", "not an author", "không phải là tác giả", "STATUS.md", "decisions.md", "never marked final"):
+            self.assertIn(s, dis)
+
 
 
 if __name__ == "__main__":
