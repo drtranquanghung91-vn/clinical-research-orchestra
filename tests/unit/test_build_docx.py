@@ -294,3 +294,36 @@ class TestBuildDocxP4(unittest.TestCase):
         for name in ("word/document.xml", "word/styles.xml", "word/numbering.xml", "word/footer1.xml",
                      "word/settings.xml", "[Content_Types].xml", "word/_rels/document.xml.rels"):
             xml.dom.minidom.parseString(self.part(data, name))
+
+
+class TestBuildDocxReviewFixes(unittest.TestCase):
+    def test_output_is_deterministic(self):
+        import time
+        s = build_docx.settings_from_project(None)
+        a = build_docx.build("{TOC}\n# A\n- b\n", s)
+        time.sleep(2)
+        b = build_docx.build("{TOC}\n# A\n- b\n", s)
+        self.assertEqual(a, b)
+
+    def test_image_in_folder_with_parentheses(self):
+        with tempfile.TemporaryDirectory() as d:
+            sub = Path(d, "thư mục (1)")
+            sub.mkdir()
+            (sub / "f.png").write_bytes(png(40, 20))
+            md = sub / "a.md"
+            md.write_text("![Hình 1.1. x](f.png)\n", encoding="utf-8")
+            out = Path(d, "o.docx")
+            r = subprocess.run([sys.executable, str(SCRIPT), str(md), str(out)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            with zipfile.ZipFile(out) as z:
+                self.assertIn("word/media/image1.png", z.namelist())
+            data = build_docx.build("![x](" + (sub / "f.png").as_posix() + ")\n", build_docx.settings_from_project(None))
+            with zipfile.ZipFile(__import__("io").BytesIO(data)) as z:
+                self.assertIn("word/media/image1.png", z.namelist())
+
+    def test_heading_outline_levels(self):
+        data = build_docx.build("# A\n", build_docx.settings_from_project(None))
+        with zipfile.ZipFile(__import__("io").BytesIO(data)) as z:
+            styles = z.read("word/styles.xml").decode("utf-8")
+        for lvl in range(4):
+            self.assertIn(f'<w:outlineLvl w:val="{lvl}"/>', styles)

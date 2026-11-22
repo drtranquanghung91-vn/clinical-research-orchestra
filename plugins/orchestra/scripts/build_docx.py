@@ -50,7 +50,7 @@ CTRL = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
 ESC_STAR, ESC_PIPE = "\ue000", "\ue001"
 CODE = re.compile(r"`([^`\n]+)`")
 QUOTE = re.compile(r"^>\s?(.*)")
-IMAGE = re.compile(r"^!\[([^\]]*)\]\(([^)]+)\)\s*$")
+IMAGE = re.compile(r"^!\[([^\]]*)\]\((.+)\)\s*$")
 BULLET = re.compile(r"^[-*]\s+")
 NUMBERED = re.compile(r"^(\d+)\.\s+")
 PNG_SIG = b"\x89PNG\r\n\x1a\n"
@@ -112,7 +112,7 @@ def absolutize_images(text: str, base: Path) -> str:
     def rep(m: re.Match) -> str:
         src = m.group(2).strip()
         return m.group(0) if Path(src).is_absolute() else f"![{m.group(1)}]({(Path(base) / src).as_posix()})"
-    return re.sub(r"(?m)^!\[([^\]]*)\]\(([^)]+)\)[ \t]*$", rep, text)
+    return re.sub(r"(?m)^!\[([^\]]*)\]\((.+)\)[ \t]*$", rep, text)
 
 
 def load_template(path: Path) -> tuple[str, str]:
@@ -336,10 +336,10 @@ def _styles(s: dict) -> str:
             f'<w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="{line}" w:lineRule="auto"/><w:jc w:val="both"/></w:pPr>'
             f"</w:pPrDefault></w:docDefaults>"
             f'<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>'
-            + style("Heading1", "heading 1", '<w:keepNext/><w:jc w:val="center"/><w:spacing w:before="240"/>', f'<w:b/><w:sz w:val="{sz + 4}"/>')
-            + style("Heading2", "heading 2", '<w:keepNext/><w:spacing w:before="200"/>', f'<w:b/><w:sz w:val="{sz + 2}"/>')
-            + style("Heading3", "heading 3", '<w:keepNext/>', "<w:b/><w:i/>")
-            + style("Heading4", "heading 4", '<w:keepNext/>', "<w:i/>")
+            + style("Heading1", "heading 1", '<w:keepNext/><w:spacing w:before="240"/><w:jc w:val="center"/><w:outlineLvl w:val="0"/>', f'<w:b/><w:sz w:val="{sz + 4}"/>')
+            + style("Heading2", "heading 2", '<w:keepNext/><w:spacing w:before="200"/><w:outlineLvl w:val="1"/>', f'<w:b/><w:sz w:val="{sz + 2}"/>')
+            + style("Heading3", "heading 3", '<w:keepNext/><w:outlineLvl w:val="2"/>', "<w:b/><w:i/>")
+            + style("Heading4", "heading 4", '<w:keepNext/><w:outlineLvl w:val="3"/>', "<w:i/>")
             + style("Caption", "caption", '<w:keepNext/><w:jc w:val="center"/>', "<w:b/>")
             + style("FigureCaption", "figure caption", '<w:spacing w:after="240"/><w:jc w:val="center"/>', "<w:b/>")
             + style("Figure", "figure", '<w:keepNext/><w:jc w:val="center"/>')
@@ -392,7 +392,10 @@ def build(md_text: str, settings: dict, base_dir: Path | None = None, template: 
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         for name, content in files.items():
-            z.writestr(name, content)
+            info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            z.writestr(info, content)
     return buf.getvalue()
 
 

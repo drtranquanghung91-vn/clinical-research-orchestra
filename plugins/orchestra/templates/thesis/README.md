@@ -30,7 +30,7 @@ Word style ids stay English (`Heading1`) whatever the display language of the te
 
 In Word: References > Insert Table of Figures > Options, then pick the style `caption` (tables) or
 `figure caption` (figures). A `{TOC}` line in the Markdown gives the table of contents; Word fills it when
-the file opens (choose "Update field" if it asks).
+the file opens: Word asks whether to update the fields because of the table of contents; answer Yes.
 
 ## Without a template
 
