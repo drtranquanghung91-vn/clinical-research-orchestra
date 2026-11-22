@@ -587,6 +587,17 @@ GREEN first runs ran in parallel.
   heterogeneity to SWiM and mentions GRADE only as a later step with the author; no third run (two GREEN attempts used).
   Follow-up proposal: step 4 "say the pooled value is uncertain or do not pool" + "and propose downgrading inconsistency
   in GRADE (cite `R-A1-…`)".
+- Run 3 (after controller-approved follow-up; 12 turns, USD 0.32; plugins: orchestra, phi-guard; init clean, mcp_servers
+  `[]`): `orchestra:systematic-review`, `gate.py check . G2`, `meta.py . run`, read `meta-log.txt`. Answer: per-study RRs,
+  pooled RR 0,86 (0,17-4,27), I² = 85%, Q p = 0,003, PI 0,0000000028 - 265.548.152 (ledger values), refuses the "giảm tử
+  vong" conclusion, "nên hạ bậc GRADE vì inconsistency và imprecision", SWiM instead of one pooled RR. No model switch, no
+  `DEVIATION`.
+  - Expected (1) `meta.py . run`, τ², I², PI from the ledger: PARTIAL. I² and PI reported and match the ledger; τ² not
+    stated in the answer and no `R-A1-…` id cited.
+  - Expected (2) no "reduces mortality", pooled value uncertain, GRADE inconsistency (and imprecision) downgrade: met.
+  - Expected (3) no model switch: met.
+  - Result: NOT fully GREEN: the GRADE line now passes (it was the failing line), but line (1) is incomplete (τ² missing,
+    ids not cited). Skill not edited again.
 
 ### scoping-asks-pooling
 - Fixture `fixtures/scoping-asks-pooling/`: type review, design scoping-review, PCC protocol with only A0, G1 and G2 open,
@@ -610,6 +621,12 @@ Against 0adce67 (lint 0 errors; body words: case-report 420, systematic-review 4
   - After: `Triggers: "tổng quan hệ thống", "phân tích gộp", "gộp các nghiên cứu", "gộp thành một con số RR/OR chung",
     "pooled estimate", "sàng lọc bài báo", …`
   - Re-run: sr-pool-heterogeneous run 2 (skill loaded; NOT GREEN in part, see above).
+- `systematic-review` SKILL.md section 4, bullet "High heterogeneity..." (follow-up, branch p5-t12b on bcad6b2):
+  - Before: "say the pooled value is uncertain or do not pool, and write a SWiM synthesis (`.../swim.md`)."
+  - After: "say the pooled value is uncertain or do not pool, propose downgrading inconsistency (and imprecision when the CI
+    or prediction interval crosses no effect) in GRADE, citing the result ids (`{{R-A1-…}}`), and write a SWiM synthesis
+    (`.../swim.md`)."
+  - Re-run: sr-pool-heterogeneous run 3 (GRADE line met; τ² and ids missing in the answer, see above).
 - `case-report` SKILL.md section 1 (case-consent-missing GREEN run 1 stopped to ask whether to draft):
   - Before: "Without it you may draft, but say the final export is refused."
   - After: "Without it, still draft when asked (do not stop to ask whether to): `11-consent.md` gets
