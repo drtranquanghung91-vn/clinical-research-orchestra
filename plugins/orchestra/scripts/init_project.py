@@ -39,6 +39,7 @@ target:
   journal: ""
   conference: ""
   word_limit: null
+  text_words: null
   poster_size_cm: [90, 120]
 evidence_sources: [openevidence, pubmed, europepmc, crossref]
 docx:

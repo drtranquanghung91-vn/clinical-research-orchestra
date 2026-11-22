@@ -114,6 +114,12 @@ class TestInitProject(unittest.TestCase):
             self.assertIn("!04_data/cleaning-log.md", gi)
             self.assertIn("04_data/*", gi)
 
+    def test_creates_thesis_and_manuscript_folders(self):
+        with tempfile.TemporaryDirectory() as t:
+            dest = init_project.create(Path(t) / "p", "A", "manuscript", "cohort", "en", "vi")
+            self.assertTrue((dest / "06_writing" / "thesis").is_dir())
+            self.assertTrue((dest / "06_writing" / "manuscript").is_dir())
+
     def test_project_yaml_has_docx_block(self):
         with tempfile.TemporaryDirectory() as t:
             dest = init_project.create(Path(t) / "p", "A", "manuscript", "cohort", "en", "vi")

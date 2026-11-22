@@ -13,3 +13,4 @@ This repository is MIT-licensed (see LICENSE). It includes or adapts the followi
 | Statistical-analysis workflow (`statistical-analysis`, `crostats.py` test choices and reporting defaults) | `stat-analysis-vi` skill by Trần Quang Hưng (repository owner) | MIT | ported to English, adapted (SAP register, post-hoc rules) |
 | `build_docx.py` | Amelia Le, `md2docx.py` (v3, 20 Nov 2026) | contributed under MIT | approach adapted (WordprocessingML written directly; Markdown subset, numbered tables) |
 | `pptx_from_spec.py`, `check_pptx.py` | grand-rounds 0.2.0 (Trần Quang Hưng) | MIT | adapted: placeholders, km/forest charts, poster size |
+| STROBE item list (`references/reporting-guidelines/items/STROBE.json`, read by `guideline_checklist.py`) | STROBE Statement 2007 (strobe-statement.org) | none needed (ids and order only) | item ids and order only; every item text (34 items) is our own paraphrase in ≤ 12 words, no official wording |

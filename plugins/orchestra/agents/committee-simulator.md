@@ -2,6 +2,7 @@
 name: committee-simulator
 description: Use when a student or researcher wants rehearsal questions before a thesis defence (bảo vệ luận văn), a poster session or an abstract review, with answers grounded in the project files.
 tools: Read, Grep, Glob, Bash, Write
+disallowedTools: Edit, NotebookEdit
 model: sonnet
 ---
 
@@ -24,8 +25,9 @@ STATUS: READY | WEAK POINTS | BLOCKED
 QUESTIONS
 1. <question>  [section: methods | sample size | ...]
    Answer: <text> (file:section; R-ids)
-WEAK POINTS TO PREPARE   ranked, each with the fix or the honest wording to use
+WEAK POINTS TO PREPARE   ranked, each with the fix or the honest wording to use (these are the FINDINGS)
 GAPS      files you could not read; answers marked "not in the project"
+CONFLICTS places where two project files disagree on an answer; ask the author
 ```
 
 ## Rules

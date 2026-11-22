@@ -1,9 +1,11 @@
+import struct
 import subprocess
 import sys
 import tempfile
 import unittest
 import xml.dom.minidom
 import zipfile
+import zlib
 from pathlib import Path
 
 import _paths  # noqa: F401
@@ -126,3 +128,202 @@ class TestBuildDocx(unittest.TestCase):
             r2 = subprocess.run([sys.executable, str(SCRIPT), str(Path(d, "none.md")), str(out)],
                                 capture_output=True, text=True)
             self.assertEqual(r2.returncode, 2)
+
+
+def png(w: int, h: int) -> bytes:
+    raw = b"".join(b"\x00" + b"\xff\x00\x00" * w for _ in range(h))
+
+    def chunk(t: bytes, d: bytes) -> bytes:
+        return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
+
+
+def make_template(path: Path) -> None:
+    w = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+    r = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    styles = (f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="{w}">'
+              '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/>'
+              '<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/></w:rPr></w:style>'
+              '<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/>'
+              '<w:rPr><w:b/><w:color w:val="1F3864"/></w:rPr></w:style>'
+              '<w:style w:type="paragraph" w:styleId="ThesisBody"><w:name w:val="Thesis body"/></w:style></w:styles>')
+    doc = (f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="{w}" xmlns:r="{r}" '
+           'xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"><w:body><w:p/>'
+           '<w:sectPr w:rsidR="00AB" w14:dummy="1"><w:headerReference w:type="default" r:id="rId9"/>'
+           '<w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1000" w:bottom="1440" w:left="2000" '
+           'w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>')
+    with zipfile.ZipFile(path, "w") as z:
+        z.writestr("word/styles.xml", styles)
+        z.writestr("word/document.xml", doc)
+
+
+class TestBuildDocxP4(unittest.TestCase):
+    def part(self, data: bytes, name: str) -> str:
+        import io
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            return z.read(name).decode("utf-8")
+
+    def names(self, data: bytes) -> list:
+        import io
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            return z.namelist()
+
+    def s(self):
+        return build_docx.settings_from_project(None)
+
+    def test_heading4_and_caption_styles(self):
+        data = build_docx.build("#### Bốn\n", self.s())
+        self.assertIn('w:val="Heading4"', self.part(data, "word/document.xml"))
+        styles = self.part(data, "word/styles.xml")
+        for sid in ("Heading4", "Caption", "FigureCaption", "Figure", "ListParagraph"):
+            self.assertIn(f'w:styleId="{sid}"', styles)
+
+    def test_real_list_numbering(self):
+        md = "- a\n- b\n\n1. x\n2. y\n\nz\n\n3. p\n4. q\n"
+        data = build_docx.build(md, self.s())
+        doc, num = self.part(data, "word/document.xml"), self.part(data, "word/numbering.xml")
+        for part in (doc, num):
+            xml.dom.minidom.parseString(part)
+        self.assertEqual(doc.count('<w:numId w:val="1"/>'), 2)
+        self.assertEqual(doc.count('<w:numId w:val="2"/>'), 2)
+        self.assertEqual(doc.count('<w:numId w:val="3"/>'), 2)
+        self.assertIn('<w:startOverride w:val="3"/>', num)
+        self.assertIn('w:val="bullet"', num)
+        self.assertIn('w:val="decimal"', num)
+        self.assertNotIn("1. x", doc)
+        self.assertIn(">x</w:t>", doc)
+
+    def test_png_image_fitted_caption_below(self):
+        with tempfile.TemporaryDirectory() as d:
+            Path(d, "f.png").write_bytes(png(200, 100))
+            data = build_docx.build("![Hình 3.1. Biểu đồ thử](f.png)\n", self.s(), base_dir=Path(d))
+            doc = self.part(data, "word/document.xml")
+            xml.dom.minidom.parseString(doc)
+            self.assertIn('<wp:extent cx="5760085" cy="2880042"/>', doc)
+            self.assertLess(doc.index("<w:drawing>"), doc.index('w:val="FigureCaption"'))
+            self.assertIn("Hình 3.1. Biểu đồ thử", doc)
+            self.assertIn("word/media/image1.png", self.names(data))
+            self.assertIn('Extension="png"', self.part(data, "[Content_Types].xml"))
+            self.assertIn('Target="media/image1.png"', self.part(data, "word/_rels/document.xml.rels"))
+            self.assertEqual(build_docx.png_size(png(200, 100)), (200, 100))
+
+    def test_image_errors(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(ValueError):
+                build_docx.build("![Hình 1. x](none.png)\n", self.s(), base_dir=Path(d))
+            Path(d, "f.png").write_bytes(b"GIF89a....")
+            with self.assertRaises(ValueError):
+                build_docx.build("![Hình 1. x](f.png)\n", self.s(), base_dir=Path(d))
+
+    def test_toc_field_and_update_on_open(self):
+        data = build_docx.build("{TOC}\n\n# A\n", self.s())
+        doc = self.part(data, "word/document.xml")
+        self.assertIn('TOC \\o "1-3"', doc)
+        self.assertNotIn("{TOC}", doc)
+        self.assertIn('<w:updateFields w:val="true"/>', self.part(data, "word/settings.xml"))
+        self.assertNotIn("updateFields", self.part(build_docx.build("# A\n", self.s()), "word/settings.xml"))
+
+    def test_page_number_footer(self):
+        data = build_docx.build("x\n", self.s())
+        footer = self.part(data, "word/footer1.xml")
+        xml.dom.minidom.parseString(footer)
+        self.assertIn(" PAGE ", footer)
+        self.assertIn('<w:footerReference w:type="default" r:id="rId3"/>', self.part(data, "word/document.xml"))
+        self.assertIn("footer1.xml", self.part(data, "word/_rels/document.xml.rels"))
+        self.assertIn("/word/footer1.xml", self.part(data, "[Content_Types].xml"))
+
+    def test_template_styles_and_page_setup(self):
+        with tempfile.TemporaryDirectory() as d:
+            tpl = Path(d, "tpl.docx")
+            make_template(tpl)
+            Path(d, "f.png").write_bytes(png(100, 100))
+            data = build_docx.build("# A\n\n![Hình 1.1. x](f.png)\n", self.s(), base_dir=Path(d), template=tpl)
+            styles, doc = self.part(data, "word/styles.xml"), self.part(data, "word/document.xml")
+            xml.dom.minidom.parseString(doc)
+            self.assertIn('w:styleId="ThesisBody"', styles)
+            self.assertEqual(styles.count('w:styleId="Heading1"'), 1)
+            self.assertIn("1F3864", styles)
+            self.assertIn('w:styleId="FigureCaption"', styles)
+            self.assertIn('w:w="12240"', doc)
+            self.assertNotIn("headerReference", doc)
+            self.assertNotIn("w14:", doc)
+            self.assertIn("footerReference", doc)
+            self.assertIn(f'cx="{(12240 - 2000 - 1000) * 635}"', doc)
+
+    def test_template_from_project_yaml_and_errors(self):
+        with tempfile.TemporaryDirectory() as d:
+            make_template(Path(d, "tpl.docx"))
+            Path(d, "project.yaml").write_text('institution:\n  name: ""\n  template: "tpl.docx"\n', encoding="utf-8")
+            self.assertEqual(build_docx.template_from_project(Path(d)), Path(d) / "tpl.docx")
+            src, out = Path(d, "a.md"), Path(d, "a.docx")
+            src.write_text("x\n", encoding="utf-8")
+            r = subprocess.run([sys.executable, str(SCRIPT), str(src), str(out), "--project", d], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn('w:styleId="ThesisBody"', self.part(out.read_bytes(), "word/styles.xml"))
+            r = subprocess.run([sys.executable, str(SCRIPT), str(src), str(out), "--template", str(Path(d, "none.docx"))],
+                               capture_output=True, text=True)
+            self.assertEqual(r.returncode, 2)
+
+    def test_multi_input_cli_with_relative_images(self):
+        with tempfile.TemporaryDirectory() as d:
+            sub = Path(d, "ch3")
+            sub.mkdir()
+            (sub / "f.png").write_bytes(png(50, 50))
+            a, b, out = Path(d, "a.md"), sub / "b.md", Path(d, "o.docx")
+            a.write_text("# Một\n", encoding="utf-8")
+            b.write_text("# Hai\n\n![Hình 3.1. x](f.png)\n", encoding="utf-8")
+            r = subprocess.run([sys.executable, str(SCRIPT), str(a), str(b), str(out)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            data = out.read_bytes()
+            doc = self.part(data, "word/document.xml")
+            self.assertIn("Một", doc)
+            self.assertIn("Hai", doc)
+            self.assertIn("word/media/image1.png", self.names(data))
+            r = subprocess.run([sys.executable, str(SCRIPT), str(a), str(Path(d, "o.md"))], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 2)
+            r = subprocess.run([sys.executable, str(SCRIPT), str(out)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 2)
+            Path(d, "c.md").write_text("![Hình 1. x](missing.png)\n", encoding="utf-8")
+            r = subprocess.run([sys.executable, str(SCRIPT), str(Path(d, "c.md")), str(out)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 2)
+            self.assertIn("image not found", r.stderr)
+
+    def test_all_parts_well_formed(self):
+        data = build_docx.build("{TOC}\n# A\n- b\n1. c\n", self.s())
+        for name in ("word/document.xml", "word/styles.xml", "word/numbering.xml", "word/footer1.xml",
+                     "word/settings.xml", "[Content_Types].xml", "word/_rels/document.xml.rels"):
+            xml.dom.minidom.parseString(self.part(data, name))
+
+
+class TestBuildDocxReviewFixes(unittest.TestCase):
+    def test_output_is_deterministic(self):
+        import time
+        s = build_docx.settings_from_project(None)
+        a = build_docx.build("{TOC}\n# A\n- b\n", s)
+        time.sleep(2)
+        b = build_docx.build("{TOC}\n# A\n- b\n", s)
+        self.assertEqual(a, b)
+
+    def test_image_in_folder_with_parentheses(self):
+        with tempfile.TemporaryDirectory() as d:
+            sub = Path(d, "thư mục (1)")
+            sub.mkdir()
+            (sub / "f.png").write_bytes(png(40, 20))
+            md = sub / "a.md"
+            md.write_text("![Hình 1.1. x](f.png)\n", encoding="utf-8")
+            out = Path(d, "o.docx")
+            r = subprocess.run([sys.executable, str(SCRIPT), str(md), str(out)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            with zipfile.ZipFile(out) as z:
+                self.assertIn("word/media/image1.png", z.namelist())
+            data = build_docx.build("![x](" + (sub / "f.png").as_posix() + ")\n", build_docx.settings_from_project(None))
+            with zipfile.ZipFile(__import__("io").BytesIO(data)) as z:
+                self.assertIn("word/media/image1.png", z.namelist())
+
+    def test_heading_outline_levels(self):
+        data = build_docx.build("# A\n", build_docx.settings_from_project(None))
+        with zipfile.ZipFile(__import__("io").BytesIO(data)) as z:
+            styles = z.read("word/styles.xml").decode("utf-8")
+        for lvl in range(4):
+            self.assertIn(f'<w:outlineLvl w:val="{lvl}"/>', styles)

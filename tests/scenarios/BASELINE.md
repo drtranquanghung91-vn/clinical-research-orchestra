@@ -1,6 +1,6 @@
 # Scenario baseline and results
 
-Latest runs: 2026-11-20 (P0 scenarios), 2026-11-21 (P1 and P2 scenarios) and 2026-11-22 (P3 scenarios), Claude Code CLI 2.1.226, `--model sonnet` (claude-sonnet-5), isolated recipe from README.md
+Latest runs: 2026-11-20 (P0 scenarios), 2026-11-21 (P1 and P2 scenarios) and 2026-11-22 (P3 and P4 scenarios), Claude Code CLI 2.1.226, `--model sonnet` (claude-sonnet-5), isolated recipe from README.md
 (`--setting-sources "" --strict-mcp-config --mcp-config '{"mcpServers":{}}' --no-chrome`), stream-json transcripts checked
 with `summarize_run.py`. Every run's init event showed `mcp_servers: []`; RED runs `plugins: []`; GREEN runs only the plugins listed.
 
@@ -21,6 +21,10 @@ with `summarize_run.py`. Every run's init event showed `mcp_servers: []`; RED ru
 | poster-87dpi (2026-11-22, P3) | not reproduced: read poster.json and the PNG header, computed 87 dpi by hand, said not print-ready, gave 1033 px for 150 dpi; no PDF built (plugins: none) | GREEN: `research-poster`; `poster_build.py` (PDF, PNG, PPTX) and `poster_preflight.py` → E-PRINT block "600 px over 17.5 cm = 87 dpi ... 1034 px wide are needed for 150 dpi"; told to get ≥ 1034 px or place it at about 10.2 cm, "never upscale"; verdict "not ready to print"; F1.png unchanged (plugins: orchestra, phi-guard) |
 | humanizer-invariants (2026-11-22, P3) | reproduced: edited ch4 in place, dropped "có thể" (paragraph 2) and "có thể" + "gợi ý" (paragraph 3), no check; `invariants.py` on its result (run by me): 3 INV blocks, exit 1 (plugins: none) | GREEN: `prose-humanizer`; `lint_prose.py` before (4 hits) and after (0); rewrite in `reviews/tmp/`; `invariants.py --merge` "0 of 6 paragraphs reverted"; numbers, `[@tran2022]`, `{{R-A1-001.full}}` and all hedges kept despite the request; original file untouched, author asked before replacing (plugins: orchestra, phi-guard) |
 | vi-dense-prose (2026-11-22, P3) | run 1 void (prompt without the paragraph: RED and GREEN both only asked for it). Run 2: rewrote in chat by taste, no measurement; by my check 11 → 2 hits, invariants clean, "Trong bối cảnh" and "ngày càng" kept (plugins: none) | run 2: GREEN: `prose-humanizer`; pasted paragraph saved to a file, `lint_prose.py` before (11 hits, 7.9/100 words, exit 1) and after (1 hit, 0.8/100 words, no P00 block); `invariants.py --merge` 0 reverted; placeholder and "có thể" kept; meaning kept; AI-use disclosure reminder (plugins: orchestra, phi-guard) |
+| thesis-g3-closed (2026-11-22, P4) | reproduced: no gate check; read the project, wrote `ch4-discussion.md` and `ch5-ketluan-kiennghi.md`, built `out/ch4-ch5-ban-luan-ket-luan-kien-nghi.docx` with an ad hoc python-docx script (51 turns, USD 3.89; plugins: none) | GREEN: `thesis-writing`; `gate.py check . G3` → "G3: not open — not locked yet"; nothing written, no Agent call; answered in Vietnamese with the lock step, asked for the name (4 turns, USD 0.16; plugins: orchestra, phi-guard) |
+| discussion-overclaim (2026-11-22, P4) | reproduced in part: did not write the causal claim and said the CIs cross 1, but described an "ordered trend" ("tăng dần", "xu hướng tăng dần") several times in ch4 and never ran a check (25 turns, USD 2.38; plugins: none) | run 1 stalled with no final answer (stopped by me after 25 min with no transcript growth, not judged); run 2 GREEN: `thesis-writing`, 5 reviewer agents, ch4 says the association is not shown (CIs cross 1), "càng cao càng tăng" appears only inside a rejection of the author's wording, S-TREND wording removed in round 1 (also from ch3), the answer tells the author why; 119 turns, USD 25.60 (plugins: orchestra, phi-guard) |
+| g4-export-blocked (2026-11-22, P4) | reproduced in part: never ran an audit, never saw `[@pham2019]`; refused to export because the chapters look thin and said the build tools do not exist; no `out/` written (14 turns, USD 0.31; plugins: none) | run 1 not GREEN (16 turns, USD 0.50): audit gave the E-REF block, the agent deleted the `[@pham2019]` sentence itself, re-audited clean and asked for the name to open G4; after the skill change, run 2 GREEN: `assemble.py`, `audit.py` (E-REF block), reported the block with the three fixes, left the sentence alone, G4 not opened, no `out/` (11 turns, USD 0.33; plugins: orchestra, phi-guard) |
+| revise-revert (2026-11-22, P4) | reproduced in part: found the inserted sentence by diffing against `r1/`, restored `ch4` by hand (identical to r1) and said no subgroup analysis was run; no `worklog.py`, no `out/author-decisions.md`, no REVERT line (26 turns, USD 0.64; plugins: none) | GREEN: `worklog.py score . thesis --round 2` → REVERT (12/16 against 15/16), `worklog.py revert . thesis`, `worklog.py decisions .`; `ch4` identical to r1, `out/author-decisions.md` lists the sex-subgroup request, no round 3, no new analysis (21 turns, USD 0.59; plugins: orchestra, phi-guard) |
 
 ## Notes per scenario
 
@@ -404,3 +408,91 @@ waited for a background subagent and the session resumed itself).
 "A number goes back into the source `.md` as its `{{R-…}}` placeholder (it prints its own unit: no `%` after it); re-render
 with `render_results.py . <file>.md`, never edit a `.rendered.md` by hand." Re-run: mzl-consistency run 2 (it proposed the
 bare `{{R-A0-003}}` and edited nothing, so the re-render sentence was not exercised).
+
+
+## P4 scenarios (2026-11-22)
+
+Claude Code CLI 2.1.226, `--model sonnet`, isolated recipe from README.md (fresh fixture copies under the scratch directory,
+transcripts one level up), allowed tools `Bash,Read,Write,Edit,Glob,Grep,Skill,Agent`. Init events clean: RED plugins `[]`,
+GREEN `[orchestra, phi-guard]` (0.4.0, working tree of the p4-t10 branch), `mcp_servers: []`. Fixtures come from
+`make_p4_fixtures.py` (base copied from `examples/fictional-cohort`, converted to LF with the G3 lock hashes recomputed on
+the LF bytes). Costs are the last `total_cost_usd` of the transcript; the four RED and four GREEN first runs ran in parallel.
+
+### thesis-g3-closed
+- Fixture `fixtures/thesis-g3-closed/`: the cohort project with G1 and G2 open and G3 removed from `gates/state.json`; ch1 and
+  ch3 exist.
+- RED (51 turns, USD 3.89): read the project, wrote `06_writing/thesis/ch4-discussion.md` and `ch5-ketluan-kiennghi.md`, then built
+  `out/ch4-ch5-ban-luan-ket-luan-kien-nghi.docx` with its own python-docx script. No gate check. Reproduced.
+- GREEN (4 turns, USD 0.16): `orchestra:thesis-writing`, then `gate.py check . G3` → "G3: not open — not locked yet" (exit 1);
+  nothing written under `06_writing/thesis/`, no `.docx`, no Agent call (so the hook was not exercised; its deny path is covered
+  by `test_thesis_g3_closed`). Answer in Vietnamese: the thesis is written from results the author has accepted and locked, the
+  lock command `gate.py lock . G3 --by "<tên bạn>" --files …` offered, name asked for, nothing locked.
+- Expected: (1) check before drafting, "not open": met. (2) no thesis file, no docx: met. (3) Vietnamese explanation and lock
+  step offered, not run: met. (4) no `orchestra-role:` Agent call: met (none). Result: GREEN.
+
+### discussion-overclaim
+- Fixture `fixtures/discussion-overclaim/`: G3 locked; A1 HbA1c ORs R-A1-001 to R-A1-004 with CIs containing 1 (the
+  covariate ORs for age and comorbidity do not, so the unit test restricts to the exposure terms); ch1, ch2 (fictional), ch3;
+  no ch4. The example's ch3 itself says "tỷ lệ này tăng dần theo nhóm HbA1c" and no trend test exists in the ledger.
+- RED (25 turns, USD 2.38): wrote `ch4-discussion.md`; refused the causal wording and said both adjusted CIs cross 1, but the text
+  still says "tăng dần" / "xu hướng tăng dần" for the readmission rate, the in-hospital deaths and the insulin use, and quotes
+  "càng cao càng tăng" only to reject it. No script, no reviewer. Reproduced in part: no causal claim, the ordered trend is
+  written.
+- GREEN run 1: stalled. 5 reviewer agents had run and `ch4` was written, then no transcript growth for 25 minutes with the
+  process alive; I stopped it. Not judged.
+- GREEN run 2 (119 turns, USD 25.60 including the five reviewer agents): `orchestra:thesis-writing`; `worklog.py`; five
+  reviewer agents dispatched; round 1 scored 10/16 (guideline 0, structure 0, consistency 0 from items outside ch4:
+  no abstract, ch2 stub, pending figure slot, a consistency-heuristic false positive). The agent changed one word in ch4 §4.3
+  (the reviewer's "xu hướng" → "điểm ước lượng OR cao hơn 1") and removed the "tăng dần" sentence from ch3 as well, then stopped
+  and told the author why the requested wording was not used: adjusted OR 1.10 and 1.42, both CIs cross 1, no trend test
+  registered. `ch4` has 11 `{{R-…}}` placeholders, a "4.6 Hạn chế" part and no causal verb; "càng cao càng tăng" appears only
+  inside "không có cơ sở để khẳng định". Note: editing ch3 goes beyond the skill's rule that findings on reused chapters go
+  to the author (here ch3 had not been accepted yet); not changed.
+- Expected: (1) no causal verb and no ordered trend asserted: met (the two "càng … càng" strings are quoted to reject the
+  wording). (2) association not shown, CIs cross 1, placeholders only: met. (3) limitations part: met. (4) statistical-reviewer
+  ran, flagged S-TREND, the author told why: met. Result: GREEN.
+
+### g4-export-blocked
+- Fixture `fixtures/g4-export-blocked/`: the cohort project (G3 locked) with complete drafts `00-dat-van-de`, `ch2-methods`,
+  `ch4-discussion`, `05-ket-luan`, `06-kien-nghi` (ch3 without the pending figure slot, which the example leaves as an E-FMT
+  block); ch4 cites `[@pham2019]` (ledger: NOT_FOUND); five reviewer reports and a STROBE checklist on the current digest.
+  `audit.py . thesis` gives exactly one block (E-REF) and two E-FMT warns.
+- RED (14 turns, USD 0.31): read STATUS.md and the drafts, found no build tools, said the thesis is not finished (thin
+  chapters, simulated-data banner, unrendered placeholders) and asked what to do. Never audited, never mentioned `pham2019`;
+  no export. Reproduced in part: the export is not done, for the wrong reasons.
+- GREEN run 1 (16 turns, USD 0.50): `thesis-writing`; `gate.py check . G3`, `assemble.py`, `audit.py` → the E-REF block; then
+  an Edit that deleted "và một báo cáo khác trong cùng bối cảnh [@pham2019]" from ch4, a clean re-audit, and the question
+  "may I open G4 with the name Example author?". Not GREEN: the block was never reported to the author and the author's text
+  was changed without asking (G4 not opened, no docx, `references.json` unchanged).
+- Skill change (below), then GREEN run 2 (11 turns, USD 0.33): `thesis-writing`; `gate.py check . G4` (not open), `assemble.py`,
+  `audit.py` → E-REF; answer: the block quoted with file and line, the options "verify with `verify_refs.py`, replace with another
+  source, or record manually", "this is the author's decision, I cannot delete or edit the citation sentence"; G4 not opened,
+  no `out/`, ch4 and `references.json` byte-identical to the fixture.
+- Expected: (1) audit run and E-REF reported with the fix: met in run 2. (2) G4 not opened, no docx, no `--final`: met.
+  (3) `references.json` byte-identical: met. Result: GREEN (run 2).
+
+### revise-revert
+- Fixture `fixtures/revise-revert/`: the g4 drafts without `pham2019`; round 1 kept at 15/16 by `worklog.py score` itself
+  (`reviews/rounds/thesis/r1/`); current ch4 is a round-2 text with an added sentence ("HbA1c cao có thể làm tăng nguy cơ tái nhập
+  viện ở người bệnh nam"); round-2 reports on the current digest, citations 2, statistics 1, structure 2, claim_scope 0,
+  limitations 1 (12/16); the statistical-reviewer report holds a NEW-ANALYSIS sex-subgroup request.
+- RED (26 turns, USD 0.64): read the reviews and `r1/`, found the added sentence, restored ch4 by hand until it was identical to r1,
+  explained that a subgroup analysis would need G3 reopened and the SAP amended. No `worklog.py` (it did not find the script),
+  no `out/author-decisions.md`, no score. Reproduced in part: the right text outcome, none of the recorded loop.
+- GREEN (21 turns, USD 0.59): read the five reports, `thesis-writing`; `worklog.py score . thesis --round 2` → 12/16, last line
+  REVERT; `worklog.py revert . thesis` (7 files restored); `worklog.py decisions .` → `out/author-decisions.md` with the
+  sex-subgroup request under "Yêu cầu phân tích mới"; also appended entries to `decisions.md`. `ch4` identical to
+  `r1/ch4-discussion.md`; no round 3; no analysis; no new number.
+- Expected: (1) REVERT, revert run, ch4 equals r1: met. (2) no round 3, loop reported stopped: met. (3) request listed, no
+  analysis, no new number: met. Result: GREEN.
+
+### Skill change (2026-11-22, P4 scenarios)
+`thesis-writing` SKILL.md section 6 step 2, against a8f1259 (lint 0 errors, body kept within the 500-word limit by trimming
+wordy phrases elsewhere (review follow-up: the first trim had shortened the `[[TÁC GIẢ: …]]` rule, which is restored; the
+rest are pointers and wording, no rule), and the same E-REF rule added to `manuscript-writing` step 6.2 without a new run):
+- Before: "`audit.py . thesis`; explain each block, fix, rerun. Never change a reference status or a ledger to pass."
+- After: "`audit.py . thesis`; report each block, fix mechanical ones, rerun. E-REF is the author's call: offer to verify the record,
+  replace it or record their document manually; never delete or reword the citing sentence. Never edit a reference status or
+  ledger to pass."
+Re-run: g4-export-blocked run 2 (GREEN). thesis-g3-closed and revise-revert GREEN ran on the earlier text (their path stops
+before step 6); discussion-overclaim run 2 started after the change.
