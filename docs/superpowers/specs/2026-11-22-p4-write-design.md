@@ -67,7 +67,7 @@ cannot spawn subagents). Both pipelines share one engine:
 | `/orchestra:audit` | command skill | runs `audit.py`, explains blocks in the user's language, never fixes silently |
 | `citation-verifier` | agent | each citation exists in `references.json` (VERIFIED) and the claim fits the stored abstract |
 | `statistical-reviewer` | agent | methods vs SAP and `analysis_plan.py`, effect sizes with CIs, multiplicity, p-value and trend overclaiming |
-| `reporting-guideline-checker` | agent | writes `reviews/guideline-checklist.json` item by item with locations; never a summed score |
+| `reporting-guideline-checker` | agent | writes `reviews/guideline-checklist-<deliverable>.json` item by item with locations; never a summed score (one file per deliverable since the Task 11 fix wave; the single `reviews/guideline-checklist.json` is still read when it is for that deliverable) |
 | `scientific-editor` | agent | structure, argument, claim scope vs design and population, limitations present |
 
 Agents: frontmatter `tools: Read, Grep, Glob, Bash, Write`, `disallowedTools: Edit, NotebookEdit`,
@@ -200,7 +200,9 @@ every finding in the shared format) and `reviews/audit.json` (`{"deliverable", "
 
 Item lists ship as `references/reporting-guidelines/items/<code>.json` (`{"code", "version", "items":
 [{"id": "1a", "section", "text"}]}`; item text paraphrased in a few words, never copied). The checker reads
-`reviews/guideline-checklist.json` (`{"guideline", "items": {"1a": {"status": "present|partial|absent|na",
+`reviews/guideline-checklist-<deliverable>.json` (changed in the Task 11 fix wave from one shared
+`reviews/guideline-checklist.json`, which the thesis and manuscript reviews overwrote; that file is still read
+when its `deliverable` matches or is missing) (`{"guideline", "items": {"1a": {"status": "present|partial|absent|na",
 "file", "line", "quote", "reason"}}}`), and reports `E-RG`: an item of the guideline missing from the file
 (block), `absent` (block), `na` without reason (block), `partial` (warn), `present` whose quote is not
 found within ±3 lines of `file:line` (block). `--table` prints the checklist as a markdown table for the

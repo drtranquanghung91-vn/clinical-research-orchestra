@@ -45,7 +45,7 @@ class TestAgents(unittest.TestCase):
 
     def test_specific_duties(self):
         self.assertIn("guideline_checklist.py", self.load("reporting-guideline-checker")[1])
-        self.assertIn("reviews/guideline-checklist.json", self.load("reporting-guideline-checker")[1])
+        self.assertIn("reviews/guideline-checklist-<d>.json", self.load("reporting-guideline-checker")[1])
         self.assertIn("never a summed score", self.load("reporting-guideline-checker")[1].lower())
         self.assertIn("analysis_plan.py", self.load("statistical-reviewer")[1])
         self.assertIn("NEW-ANALYSIS:", self.load("statistical-reviewer")[1])

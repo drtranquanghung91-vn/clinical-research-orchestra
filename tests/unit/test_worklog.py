@@ -195,9 +195,23 @@ class TestWorklog(unittest.TestCase):
 
     def test_checklist_for_another_deliverable_refused(self):
         with self.assertRaises(worklog.UsageError) as cm:
-            worklog.guideline_score(self.p, "manuscript")
-        self.assertIn("thesis", str(cm.exception))
+            worklog.guideline_score(self.p, "manuscript")    # the legacy file is the thesis's: ignored
+        self.assertIn("reviews/guideline-checklist-manuscript.json not found", str(cm.exception))
         self.assertEqual(worklog.guideline_score(self.p, "thesis")[0], 2)
+
+    def test_per_deliverable_checklists_scored_and_snapshotted_apart(self):
+        (self.p / "reviews" / "guideline-checklist.json").unlink()
+        for d, absent in (("thesis", 0), ("manuscript", 5)):
+            items = {f"x{i}": ({"status": "absent"} if i < absent else {"status": "na", "reason": "t"})
+                     for i in range(6)}
+            (self.p / "reviews" / f"guideline-checklist-{d}.json").write_text(json.dumps(
+                {"guideline": "TEST-GL", "deliverable": d, "items": items}), encoding="utf-8")
+        self.assertEqual(worklog.guideline_score(self.p, "thesis")[0], 2)
+        self.assertEqual(worklog.guideline_score(self.p, "manuscript")[0], 0)
+        reports(self.p)
+        worklog.score(self.p, "thesis", 1)
+        snap = self.p / "reviews/rounds/thesis/r1/reviews/guideline-checklist.json"
+        self.assertEqual(snap.read_bytes(), (self.p / "reviews" / "guideline-checklist-thesis.json").read_bytes())
 
     def test_bad_log_shape_exit_2(self):
         log = self.p / "reviews" / "worklog.json"

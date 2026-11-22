@@ -42,7 +42,7 @@ ROWS = [("ledgers", "E-REF"), ("citations", "E-REF"), ("results numbers", "E-NUM
         ("guideline checklist", "E-RG"), ("sections and captions", "E-FMT"), ("identifiers", "E-PHI"),
         ("reviewer reports", "E-REV")]
 ROWS_FILE = {"ledgers": "ledgers", "citations": "ledgers/references.json", "results numbers": "ledgers/results-ledger.json",
-             "analysis declarations": "03_protocol/sap.md", "guideline checklist": "reviews/guideline-checklist.json",
+             "analysis declarations": "03_protocol/sap.md", "guideline checklist": "reviews/guideline-checklist-<deliverable>.json",
              "reviewer reports": "reviews"}
 FIX = {
     "en": {"E-REF": "verify or replace the reference (verify_refs.py --write, search_lit.py); never edit its status by hand.",
@@ -207,24 +207,29 @@ def pick(project: Path, rel: str, d: str, accept) -> Path | None:
 
 
 def check_guideline(a: Audit, d: str) -> None:
+    legacy = a.project / guideline_checklist.CHECKLIST
+
     def accept(c: Path) -> bool:
         try:
             got = json.loads(c.read_text(encoding="utf-8-sig")).get("deliverable", d)
         except (ValueError, AttributeError):
-            return c == a.project / "reviews" / "guideline-checklist.json"
+            return c == legacy
         return got == d
-    path = pick(a.project, "reviews/guideline-checklist.json", d, accept)
+    # the deliverable's own checklist, else the legacy single file when it is for d, else the latest round copy
+    per = a.project / guideline_checklist.deliverable_rel(d)
+    path = per if per.is_file() else pick(a.project, guideline_checklist.CHECKLIST, d, accept)
+    where = f"{guideline_checklist.rel_path(a.project, path) if path else guideline_checklist.deliverable_rel(d)}:1"
     if path is None:
-        a.add("guideline checklist", "E-RG", "block", "reviews/guideline-checklist.json:1",
+        a.add("guideline checklist", "E-RG", "block", where,
               f"no guideline checklist for the {d}: run the reporting-guideline-checker agent")
         return
     try:
         found = guideline_checklist.check(a.project, checklist_path=path, deliverable=d)
     except guideline_checklist.NoItemList as e:
-        a.add("guideline checklist", "E-RG", "warn", "reviews/guideline-checklist.json:1", f"{e}; check the guideline by hand")
+        a.add("guideline checklist", "E-RG", "warn", where, f"{e}; check the guideline by hand")
         return
     except guideline_checklist.InputError as e:
-        a.add("guideline checklist", "E-RG", "block", "reviews/guideline-checklist.json:1", str(e))
+        a.add("guideline checklist", "E-RG", "block", where, str(e))
         return
     for sev, loc, msg in found:
         a.add("guideline checklist", "E-RG", sev, loc, msg)

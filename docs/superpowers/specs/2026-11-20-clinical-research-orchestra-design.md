@@ -277,7 +277,7 @@ Optional dependencies (`python-docx`, `python-pptx`, `PyMuPDF`, `playwright`; in
 | `render_results.py` | fills `{{R-…}}` placeholders from the results ledger into `<file>.rendered.md`, number format from `project.yaml`. Done in P2 |
 | `check_numbers.py` | every number in a deliverable maps to `results-ledger.json`, or is marked derived with its formula. Done in P2 |
 | `consistency_audit.py` | same quantity equal across files; sample size rounded up; date ranges consistent; percentages sum; abstract vs results; terms spelled consistently. Done in P3 (`E-CONS`) |
-| `guideline_checklist.py` | per-item present / absent / not applicable with location; no summed score; `--table` for the thesis appendix (`E-RG`; STROBE item list). Done in P4 |
+| `guideline_checklist.py` | per-item present / absent / not applicable with location; no summed score; `--table` for the thesis appendix (`E-RG`; STROBE item list); one checklist per deliverable (`reviews/guideline-checklist-<deliverable>.json`). Done in P4 |
 | `assemble.py` | thesis or manuscript from its section drafts: order, `{{R-…}}` rendered, one citation numbering over the whole text, caption numbering, images, draft .docx; `--final` writes `out/<deliverable>.docx` only with G4 open (`E-FMT`). Done in P4 |
 | `audit.py` | one pass over every check (E-REF, E-NUM, E-STAT, E-LIT, E-CONS, P-codes, E-RG, E-FMT, E-PHI, E-REV) → `reviews/audit.md` and `reviews/audit.json` with the hashes of the drafts and ledgers it checked. Done in P4 |
 | `worklog.py` | revise loop: `score` (KEEP / REVERT / STOP from the reviewers' sub-scores and three script-measured criteria), `revert`, `digest`, `decisions` → `out/author-decisions.md`; snapshots in `reviews/rounds/`. Done in P4 |

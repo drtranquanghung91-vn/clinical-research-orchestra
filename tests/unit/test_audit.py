@@ -195,6 +195,22 @@ class TestAudit(unittest.TestCase):
         self.cli("thesis")
         self.assertTrue(any(f["code"] == "E-RG" for f in self.blocks()))   # none matches thesis
 
+    def test_per_deliverable_checklists_do_not_overwrite_each_other(self):
+        legacy = self.p / "reviews" / "guideline-checklist.json"
+        per = self.p / "reviews" / "guideline-checklist-thesis.json"
+        data = json.loads(legacy.read_text(encoding="utf-8"))
+        per.write_text(json.dumps(data), encoding="utf-8")
+        other = dict(data, deliverable="manuscript", items={k: v for k, v in data["items"].items() if k != "1a"})
+        legacy.write_text(json.dumps(other), encoding="utf-8")              # the old shared file, now the manuscript's
+        (self.p / "reviews" / "guideline-checklist-manuscript.json").write_text(json.dumps(other), encoding="utf-8")
+        self.assertEqual(self.cli("thesis")[0], 0)
+        self.assertFalse([f for f in self.blocks() if f["code"] == "E-RG"])
+        per.unlink()                                                           # the manuscript's file never counts
+        self.assertEqual(self.cli("thesis")[0], 1)
+        rg = [f for f in self.blocks() if f["code"] == "E-RG"]
+        self.assertTrue(rg)
+        self.assertTrue(all(f["file"].startswith("reviews/guideline-checklist-thesis.json") for f in rg), rg)
+
     def append(self, name, text):
         (self.d / name).write_text((self.d / name).read_text(encoding="utf-8") + text, encoding="utf-8")
         write_reports(self.p)

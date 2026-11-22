@@ -16,7 +16,9 @@
   `audit.py` (one pass over E-REF, E-NUM, E-STAT, E-LIT, E-CONS, P-codes, E-RG, E-FMT, E-PHI, E-REV →
   `reviews/audit.md` and `reviews/audit.json` with the hashes of what it checked),
   `guideline_checklist.py` (item-by-item checklist with locations, `--table` for the appendix; STROBE
-  item list), `worklog.py` (`score` KEEP/REVERT/STOP, `revert`, `digest`, `decisions` →
+  item list; one checklist per deliverable, `reviews/guideline-checklist-<deliverable>.json`, so the thesis
+  and manuscript reviews never overwrite each other; the single `reviews/guideline-checklist.json` is still
+  read when it is for that deliverable), `worklog.py` (`score` KEEP/REVERT/STOP, `revert`, `digest`, `decisions` →
   `out/author-decisions.md`), shared `crolib/drafts.py` and `crolib/reviews.py`. `build_docx.py` takes
   several inputs, lists, PNG images, a table of contents, a footer and an institution template, and
   writes a deterministic zip. `gate.py` opens G4 only from a clean, current audit, with one lock per
