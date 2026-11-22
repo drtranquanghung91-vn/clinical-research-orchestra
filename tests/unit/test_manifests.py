@@ -33,6 +33,13 @@ class TestManifests(unittest.TestCase):
             self.assertTrue((ROOT / f).is_file(), f)
         self.assertIn("Amelia Le", (ROOT / "CONTRIBUTORS.md").read_text(encoding="utf-8"))
 
+    def test_orchestra_gate_hook_registered(self):
+        hj = load("plugins/orchestra/hooks/hooks.json")
+        entry = hj["hooks"]["PreToolUse"][0]
+        self.assertEqual(set(entry["matcher"].split("|")), {"Bash", "PowerShell", "Agent", "Task"})
+        self.assertIn("${CLAUDE_PLUGIN_ROOT}/scripts/gate_hook.py", entry["hooks"][0]["command"])
+        self.assertTrue((ROOT / "plugins" / "orchestra" / "scripts" / "gate_hook.py").is_file())
+
 
 if __name__ == "__main__":
     unittest.main()
