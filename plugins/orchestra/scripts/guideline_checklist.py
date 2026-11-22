@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """E-RG: verify the reporting-guideline checklist written by the reporting-guideline-checker agent.
 
-  python guideline_checklist.py <project> [--guideline CODE] [--table] [--json]
+  python guideline_checklist.py <project> [--guideline CODE] [--deliverable thesis|manuscript] [--table] [--json]
 
 Item lists: references/reporting-guidelines/items/<CODE>.json ({"code", "version", "items": [{"id", "section",
 "text"}]}; text paraphrased, never copied). Checklist: <project>/reviews/guideline-checklist.json
@@ -45,6 +45,14 @@ class InputError(Exception):
 
 class NoItemList(InputError):
     """The project's guideline has no item list in this release."""
+
+
+class _Outside(Exception):
+    """The file points outside the project folder."""
+
+
+class _NotUtf8(Exception):
+    """The source file is not valid UTF-8."""
 
 
 def _norm(s: str) -> str:
@@ -102,15 +110,22 @@ def _ledger(project: Path) -> dict:
 
 
 def _windows(project: Path, rel: str, line: int, by_id: dict, lang: str) -> list[str] | None:
-    p = Path(project) / rel
+    root = Path(project).resolve()
+    p = (root / rel).resolve()
+    if not p.is_relative_to(root):
+        raise _Outside
     if not p.is_file():
         return None
-    lines = p.read_text(encoding="utf-8-sig").splitlines()
+    try:
+        lines = p.read_text(encoding="utf-8-sig").splitlines()
+    except UnicodeDecodeError as e:
+        raise _NotUtf8 from e
     chunk = "\n".join(lines[max(0, line - 1 - WINDOW):min(len(lines), line + WINDOW)])
     return [chunk, render_results.render_text(chunk, by_id, lang)[0]] if by_id else [chunk]
 
 
-def check(project: Path, guideline: str | None = None, checklist_path: Path | None = None) -> list[tuple[str, str, str]]:
+def check(project: Path, guideline: str | None = None, checklist_path: Path | None = None,
+          deliverable: str | None = None) -> list[tuple[str, str, str]]:
     project = Path(project)
     code = guideline_code(project, guideline)
     items = load_items(code)
@@ -118,6 +133,9 @@ def check(project: Path, guideline: str | None = None, checklist_path: Path | No
     entries, found = data["items"], []
     if str(data.get("guideline", "")).upper() != code.upper():
         found.append(("block", f"{CHECKLIST}:1", f"the checklist is for {data.get('guideline')!r}; the project uses {code}"))
+    if deliverable and data.get("deliverable") != deliverable:
+        found.append(("warn", f"{CHECKLIST}:1",
+                      f"the checklist's deliverable is {data.get('deliverable')!r}; expected {deliverable!r}"))
     by_id, lang = _ledger(project), projectcfg.output_lang(project)
     ids = [it["id"] for it in items["items"]]
     section = {it["id"]: it["section"] for it in items["items"]}
@@ -134,15 +152,24 @@ def check(project: Path, guideline: str | None = None, checklist_path: Path | No
         elif st == "absent":
             found.append(("block", loc, f"item {iid} ({section[iid]}) is absent: add it to the draft or record why it does not apply"))
         elif st == "na":
-            if not str(e.get("reason") or "").strip():
+            if not (isinstance(e.get("reason"), str) and e["reason"].strip()):
                 found.append(("block", loc, f"item {iid} is marked NA without a reason"))
         elif st == "partial":
             found.append(("warn", f"{rel}:{line}" if has_loc else loc,
                           f"item {iid} is only partly reported: {e.get('reason') or 'see the checklist'}"))
         elif not has_loc or not quote.strip():
             found.append(("block", loc, f"item {iid} is present but has no file, line or quote"))
+        elif not _norm(quote):
+            found.append(("block", loc, f"item {iid} has an empty quote"))
         else:
-            wins = _windows(project, rel, line, by_id, lang)
+            try:
+                wins = _windows(project, rel, line, by_id, lang)
+            except _Outside:
+                found.append(("block", loc, f"item {iid}: {rel} is outside project folder"))
+                continue
+            except _NotUtf8:
+                found.append(("block", loc, f"item {iid}: {rel} is unreadable (not UTF-8)"))
+                continue
             if wins is None:
                 found.append(("block", loc, f"item {iid}: {rel} not found"))
             elif not any(_norm(quote) in _norm(w) for w in wins):
@@ -160,11 +187,19 @@ def absent_count(project: Path, guideline: str | None = None, checklist_path: Pa
     return sum(1 for i in ids if not isinstance(entries.get(i), dict) or entries[i].get("status") == "absent")
 
 
+def _loc(e: dict) -> str:
+    line = e.get("line")
+    return f"{e['file']}:{line}" if isinstance(line, int) and not isinstance(line, bool) else str(e["file"])
+
+
 def table(project: Path, guideline: str | None = None, checklist_path: Path | None = None) -> str:
     project = Path(project)
     code = guideline_code(project, guideline)
     items = load_items(code)["items"]
-    entries = load_checklist(project, checklist_path)[0]["items"]
+    data = load_checklist(project, checklist_path)[0]
+    if str(data.get("guideline", "")).upper() != code.upper():
+        raise InputError(f"the checklist is for {data.get('guideline')!r}; the project uses {code}")
+    entries = data["items"]
     vi = projectcfg.output_lang(project) == "vi"
     head = ("| Mục | Phần | Nội dung (diễn giải) | Trạng thái | Vị trí |" if vi
             else "| Item | Section | Recommendation (paraphrase) | Status | Location |")
@@ -172,7 +207,7 @@ def table(project: Path, guideline: str | None = None, checklist_path: Path | No
     for it in items:
         e = entries.get(it["id"]) if isinstance(entries.get(it["id"]), dict) else {}
         st = e.get("status", "absent")
-        where = e.get("reason", "") if st == "na" else (f"{e.get('file')}:{e.get('line')}" if e.get("file") else "")
+        where = e.get("reason", "") if st == "na" else (_loc(e) if e.get("file") else "")
         label = STATUS_VI.get(st, st) if vi else ("NA" if st == "na" else st)
         rows.append(f"| {it['id']} | {it['section']} | {it['text']} | {label} | {str(where).replace('|', '/')} |")
     return "\n".join(rows) + "\n"
@@ -182,6 +217,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("project")
     ap.add_argument("--guideline")
+    ap.add_argument("--deliverable", choices=("thesis", "manuscript"))
     ap.add_argument("--table", action="store_true")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
@@ -194,7 +230,7 @@ def main(argv=None) -> int:
             print(table(project, a.guideline), end="")
             return 0
         code = guideline_code(project, a.guideline)
-        found = check(project, a.guideline)
+        found = check(project, a.guideline, deliverable=a.deliverable)
     except (InputError, OSError) as e:
         print(f"guideline_checklist: {e}", file=sys.stderr)
         return 2

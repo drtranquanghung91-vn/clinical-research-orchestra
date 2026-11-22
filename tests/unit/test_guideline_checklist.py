@@ -15,6 +15,7 @@ IDS = ["1a", "1b", "2", "3", "4", "5", "6a", "6b", "7", "8", "9", "10", "11", "1
 SECTIONS = {"Title and abstract", "Introduction", "Methods", "Results", "Discussion", "Other information"}
 METHODS = ("# Chương 2\n\nDòng hai.\nDòng ba.\nNghiên cứu đoàn hệ hồi cứu tại một bệnh viện tỉnh.\nDòng năm.\n"
            "Dòng sáu.\nDòng bảy.\nDòng tám.\nDòng chín.\nDòng mười.\nCỡ mẫu gồm {{R-A0-001.n}} người bệnh.\n")
+NL = chr(10)
 REL = "06_writing/thesis/ch2-methods.md"   # design sentence on line 5, sample size on line 12
 
 
@@ -110,3 +111,49 @@ class TestGuidelineChecklist(unittest.TestCase):
         other.mkdir(parents=True)
         (other / "guideline-checklist.json").write_text(json.dumps({"guideline": "STROBE", "items": {}}), encoding="utf-8")
         self.assertEqual(len(gc.check(self.p, checklist_path=other / "guideline-checklist.json")), 34)
+
+    def _present(self, **kw):
+        self.write(**{"4": dict({"status": "present", "file": REL, "line": 5, "quote": "đoàn hệ"}, **kw)})
+        return gc.check(self.p)
+
+    def test_file_outside_project_blocks(self):
+        outside = self.t / "outside.md"
+        outside.write_text("đoàn hệ" + NL, encoding="utf-8")
+        for bad in (str(outside), "../outside.md"):
+            found = self._present(file=bad, line=1)
+            self.assertTrue(any(l == "block" and "outside project" in m for l, _, m in found), (bad, found))
+
+    def test_non_utf8_source_blocks_without_traceback(self):
+        (self.p / REL).write_bytes(bytes([255, 254, 0, 98, 10]) * 5)
+        found = self._present()
+        self.assertTrue(any(l == "block" and "not UTF-8" in m for l, _, m in found), found)
+
+    def test_empty_quote_blocks(self):
+        for q in ("***", "_", "`"):
+            found = self._present(quote=q)
+            self.assertTrue(any(l == "block" and "empty quote" in m for l, _, m in found), (q, found))
+
+    def test_deliverable_mismatch_warns(self):
+        self.write()
+        self.assertEqual(gc.check(self.p, deliverable="thesis"), [])
+        found = gc.check(self.p, deliverable="manuscript")
+        self.assertTrue(any(l == "warn" and "deliverable" in m for l, _, m in found), found)
+        self.assertEqual(self.cli("--deliverable", "manuscript")[0], 0)
+        (self.p / "reviews" / "guideline-checklist.json").write_text(
+            json.dumps({"guideline": "STROBE", "items": {i: {"status": "na", "reason": "x"} for i in IDS}}),
+            encoding="utf-8")
+        self.assertTrue(any(l == "warn" for l, _, _ in gc.check(self.p, deliverable="thesis")))
+
+    def test_na_reason_must_be_a_string(self):
+        self.write(**{"1a": {"status": "na", "reason": 5}})
+        self.assertTrue(any(l == "block" and "item 1a" in m for l, _, m in gc.check(self.p)))
+
+    def test_table_without_line_and_wrong_guideline(self):
+        self.write(**{"4": {"status": "partial", "file": REL, "reason": "x"}})
+        out = self.cli("--table")[1]
+        self.assertNotIn("None", out)
+        self.assertIn(f"| {REL} |", out)
+        self.write(guideline="CONSORT-2025")
+        code, _, err = self.cli("--table")
+        self.assertEqual(code, 2)
+        self.assertIn("CONSORT-2025", err)
