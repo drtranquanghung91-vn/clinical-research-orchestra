@@ -39,6 +39,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from crolib import drafts  # noqa: E402
+
 GATES = ("G1", "G2", "G3", "G4")
 
 
@@ -211,7 +214,42 @@ def export_problems(project: Path, deliverable: str | None) -> list[str]:
             continue
         if w not in problems:
             problems.append(w)
+    if data is not None:
+        for w in _uncovered(project, data, deliverable):
+            if w not in problems:
+                problems.append(w)
     return problems
+
+
+_IMG = re.compile(r"!\[[^\]]*\]\(([^)\s]+)")
+
+
+def _uncovered(project: Path, data: dict, deliverable: str | None) -> list[str]:
+    """Current drafts, order.txt and images that the audit's file map does not cover (added since the audit)."""
+    project = Path(project)
+    root = project.resolve()
+    known = data["files"]
+    ds = [deliverable] if deliverable else audited_deliverables(data)
+    out: list[str] = []
+    for d in ds:
+        if d not in drafts.DELIVERABLES:
+            continue
+        base = drafts.folder(project, d)
+        paths = list(drafts.tracked_files(project, d))
+        for f in drafts.draft_files(project, d):
+            for m in _IMG.finditer(f.read_text(encoding="utf-8-sig", errors="replace")):
+                src = m.group(1)
+                img = Path(src) if Path(src).is_absolute() else base / src
+                if img.is_file():
+                    paths.append(img)
+        for f in paths:
+            try:
+                rel = f.resolve().relative_to(root).as_posix()
+            except ValueError:
+                continue            # outside the project: the audit cannot hash it
+            if rel not in known and f"{rel} is not covered by the audit (added since)" not in out:
+                out.append(f"{rel} is not covered by the audit (added since)")
+    return out
 
 
 def check_line(project: Path, gate: str, ok: bool, why: list[str], deliverable: str | None = None) -> str:
