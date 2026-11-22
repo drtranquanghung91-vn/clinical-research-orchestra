@@ -318,6 +318,24 @@ class TestGateG4Review(unittest.TestCase):
             why = gate.export_problems(p, "thesis")
             self.assertEqual(why, ["06_writing/thesis/ch4.md changed since the audit"])
 
+    def test_export_problems_new_draft_order_or_image_since_audit(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            audited(p, text="![f](f.png)\n")
+            (p / "06_writing" / "thesis" / "f.png").write_bytes(b"\x89PNG")
+            gate.open_gate(p, "G4", by="A")
+            why = gate.export_problems(p, "thesis")
+            self.assertEqual(why, ["06_writing/thesis/f.png is not covered by the audit (added since)"])
+            (p / "06_writing" / "thesis" / "f.png").unlink()
+            self.assertEqual(gate.export_problems(p, "thesis"), [])
+            (p / "06_writing" / "thesis" / "ch5.md").write_text("new\n", encoding="utf-8")
+            self.assertEqual(gate.export_problems(p, "thesis"),
+                             ["06_writing/thesis/ch5.md is not covered by the audit (added since)"])
+            (p / "06_writing" / "thesis" / "ch5.md").unlink()
+            (p / "06_writing" / "thesis" / "order.txt").write_text("ch4.md\n", encoding="utf-8")
+            self.assertEqual(gate.export_problems(p, "thesis"),
+                             ["06_writing/thesis/order.txt is not covered by the audit (added since)"])
+
     def test_export_problems_waiver_needs_a_matching_audit_but_tolerates_blocks(self):
         with tempfile.TemporaryDirectory() as t:
             p = project(t)
