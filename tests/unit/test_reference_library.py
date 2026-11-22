@@ -138,7 +138,6 @@ class TestReferenceLibrary(unittest.TestCase):
             self.assertIn("gate.py", text)
             self.assertIn("audit.py", text)
 
-    @unittest.skipUnless((REF / "review" / "grade-wording.md").exists(), "needs Task 8 (grade-wording.md)")
     def test_p5_grade_wording(self):
         text = (REF / "review" / "grade-wording.md").read_text(encoding="utf-8")
         for s in ("## vi", "## en"):
