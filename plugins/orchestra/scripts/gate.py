@@ -15,10 +15,12 @@ or "G3: closed" plus the reasons (a locked file changed or is missing).
 
 G4 opens only from a clean, fresh audit: `open <project> G4 --by NAME` locks the files listed in
 reviews/audit.json (refused with the reasons while the audit is missing, has blocks, or a file changed since);
-`lock ... G4` and `--files` are usage errors. `check <project> G4 --deliverable thesis|manuscript` checks only
+`lock ... G4` and `--files` are usage errors. `check <project> G4 --deliverable thesis|manuscript|case-report|review` checks only
 that deliverable's locked files. Line: "G4: open — approved after a clean audit by <by> on <date>; <n> locked files
 unchanged", "G4: not open — not approved yet[ for the <d>]", or "G4: closed — <reason>; <reason>".
 `check <project> G4` without --deliverable checks every per-deliverable entry and fails if any fails.
+
+A case report's final export also needs a `CONSENT: obtained …` line in decisions.md (P5).
 
 export_problems(project, deliverable) -> list[str] is the one rule for a FINAL export (assemble.py --final,
 build_docx.py out/<d>.docx, the orchestra gate hook): [] = allowed. It returns the reasons G4 is not open for the
@@ -81,7 +83,7 @@ def _waived(project: Path, gate: str) -> bool:
     return re.search(rf"^WAIVE {gate}:", d.read_text(encoding="utf-8"), re.M) is not None
 
 
-DELIVERABLES = ("thesis", "manuscript")
+DELIVERABLES = drafts.DELIVERABLES
 AUDIT = Path("reviews") / "audit.json"
 
 
@@ -223,6 +225,12 @@ def export_problems(project: Path, deliverable: str | None) -> list[str]:
         for w in _uncovered(project, data, deliverable):
             if w not in problems:
                 problems.append(w)
+    covered = [deliverable] if deliverable else (audited_deliverables(data) if data is not None else [])
+    if "case-report" in covered:
+        import case_lint  # lazy: case_lint imports audit, which imports gate
+        if not case_lint.consent_recorded(project):
+            problems.append("consent not recorded in decisions.md ('CONSENT: obtained <form, who signed>'); "
+                            "a case report is never exported without it")
     return problems
 
 

@@ -129,5 +129,42 @@ class TestInitProject(unittest.TestCase):
                 self.assertIn(key, y)
 
 
+class TestInitP5(unittest.TestCase):
+    def test_type_design_pairs_folders_and_keys(self):
+        from crolib import projectcfg
+        with tempfile.TemporaryDirectory() as t:
+            t = Path(t)
+            with self.assertRaises(ValueError):
+                init_project.create(t / "a", "A", "review", "systematic-review", "en", "vi")
+            with self.assertRaises(ValueError):
+                init_project.create(t / "b", "A", "case-report", "cohort", "en", "vi")
+            c = init_project.create(t / "c", "A", "case-report", "case-report", "en", "vi")
+            self.assertTrue((c / "01_case").is_dir() and (c / "06_writing" / "case-report").is_dir())
+            self.assertFalse((c / "04_data" / "sr").exists())
+            s = init_project.create(t / "s", "A", "systematic-review", "systematic-review", "en", "vi")
+            for d in ("02_evidence/sr", "04_data/sr", "05_analysis/meta", "06_writing/review"):
+                self.assertTrue((s / d).is_dir(), d)
+            n = init_project.create(t / "n", "A", "review", "narrative-review", "en", "vi")
+            self.assertTrue((n / "06_writing" / "review").is_dir())
+            self.assertFalse((n / "02_evidence" / "sr").exists())
+            self.assertIn("reporting_guideline: SANRA", (n / "project.yaml").read_text(encoding="utf-8"))
+            self.assertEqual(projectcfg.parse_list(projectcfg.get(s, "review.reviewers", "")), [])
+            for key in ("review.registration", "target.journal_style", "tools.rscript", "institution.city"):
+                self.assertIsNone(projectcfg.get(s, key), key)
+            m = init_project.create(t / "m", "A", "thesis-masters", "cohort", "vi", "vi")   # P1-P4 types unchanged
+            self.assertFalse((m / "01_case").exists())
+
+    def test_review_data_folder_is_versioned(self):
+        if not shutil.which("git"):
+            self.skipTest("git not installed")
+        with tempfile.TemporaryDirectory() as t:
+            dest = init_project.create(Path(t) / "p", "A", "systematic-review", "systematic-review", "en", "vi")
+            subprocess.run(["git", "init", "-q", str(dest)], check=True, capture_output=True)
+            ignored = lambda rel: subprocess.run(["git", "-C", str(dest), "check-ignore", "-q", "--no-index", rel],  # noqa: E731
+                                                 capture_output=True).returncode == 0
+            self.assertFalse(ignored("04_data/sr/extraction.csv"))
+            self.assertTrue(ignored("04_data/raw.csv"))
+
+
 if __name__ == "__main__":
     unittest.main()
