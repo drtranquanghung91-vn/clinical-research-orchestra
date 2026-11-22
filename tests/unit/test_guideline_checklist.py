@@ -198,3 +198,70 @@ class TestGuidelineChecklist(unittest.TestCase):
         code, _, err = self.cli("--table")
         self.assertEqual(code, 2)
         self.assertIn("CONSORT-2025", err)
+
+
+
+P5_LISTS = {
+    "CARE": ("2013",
+             ["1", "2", "3a", "3b", "3c", "3d", "4", "5a", "5b", "5c", "5d", "6", "7", "8a", "8b", "8c", "8d",
+              "9a", "9b", "9c", "10a", "10b", "10c", "10d", "11a", "11b", "11c", "11d", "12", "13"],
+             {"Title", "Key words", "Abstract", "Introduction", "Patient information", "Clinical findings", "Timeline",
+              "Diagnostic assessment", "Therapeutic intervention", "Follow-up and outcomes", "Discussion",
+              "Patient perspective", "Informed consent"}),
+    "PRISMA-2020": ("2020",
+                    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10a", "10b", "11", "12", "13a", "13b", "13c", "13d",
+                     "13e", "13f", "14", "15", "16a", "16b", "17", "18", "19", "20a", "20b", "20c", "20d", "21", "22",
+                     "23a", "23b", "23c", "23d", "24a", "24b", "24c", "25", "26", "27"],
+                    {"Title", "Abstract", "Introduction", "Methods", "Results", "Discussion", "Other information"}),
+    "PRISMA-ScR": ("2018", [str(i) for i in range(1, 23)],
+                   {"Title", "Abstract", "Introduction", "Methods", "Results", "Discussion", "Funding"}),
+    "SANRA": ("2019", [str(i) for i in range(1, 7)], {"Quality item"}),
+}
+P5_RECORDS = {"CARE": "gagnier2013", "PRISMA-2020": "page2021", "PRISMA-ScR": "tricco2018", "SANRA": "baethge2019"}
+
+
+class TestP5ItemLists(unittest.TestCase):
+    def setUp(self):
+        self.t = Path(tempfile.mkdtemp())
+        self.p = init_project.create(self.t / "p", "T", "systematic-review", "systematic-review", "en", "en")
+
+    def tearDown(self):
+        shutil.rmtree(self.t, ignore_errors=True)
+
+    def test_item_lists_load_with_official_ids(self):
+        for code, (version, ids, sections) in P5_LISTS.items():
+            with self.subTest(guideline=code):
+                data = gc.load_items(code)
+                self.assertEqual((data["code"], data["version"]), (code, version))
+                self.assertEqual([i["id"] for i in data["items"]], ids)
+                for it in data["items"]:
+                    self.assertIn(it["section"], sections)
+                    self.assertTrue(0 < len(it["text"].split()) <= 12, it)
+                    self.assertTrue(it["text"].endswith("."), it)
+
+    def test_guideline_records_are_verified(self):
+        lib = json.loads((gc.ITEMS_DIR.parent / "guidelines.json").read_text(encoding="utf-8"))
+        by = {r["id"]: r for r in lib["references"]}
+        index = (gc.ITEMS_DIR.parent / "index.md").read_text(encoding="utf-8")
+        for code, rid in P5_RECORDS.items():
+            with self.subTest(guideline=code):
+                self.assertTrue(str(by[rid].get("verified_by", "")).endswith("VERIFIED"))
+                self.assertIn(f"| {code} |", index)
+                self.assertIn(f"items/{code}.json", index)
+
+    def test_checklist_runs_for_each_p5_guideline(self):
+        for code, (_, ids, _) in P5_LISTS.items():
+            with self.subTest(guideline=code):
+                path = self.p / "reviews" / f"cl-{code}.json"
+                items = {i: {"status": "na", "reason": "fixture"} for i in ids}
+                path.write_text(json.dumps({"guideline": code, "items": items}), encoding="utf-8")
+                self.assertEqual(gc.check(self.p, guideline=code, checklist_path=path), [])
+                del items[ids[-1]]
+                path.write_text(json.dumps({"guideline": code, "items": items}), encoding="utf-8")
+                found = gc.check(self.p, guideline=code, checklist_path=path)
+                self.assertTrue(any(s == "block" and f"item {ids[-1]}" in m for s, _, m in found), found)
+
+    def test_notice_rows(self):
+        notice = (_paths.ROOT / "NOTICE.md").read_text(encoding="utf-8")
+        for code in P5_LISTS:
+            self.assertIn(f"`references/reporting-guidelines/items/{code}.json`", notice)
