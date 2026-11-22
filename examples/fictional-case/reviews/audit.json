@@ -1,0 +1,71 @@
+{
+  "deliverable": "case-report",
+  "deliverables": [
+    "case-report"
+  ],
+  "at": "2026-11-23T02:11:50",
+  "blocks": 0,
+  "warns": 5,
+  "online": false,
+  "files": {
+    "06_writing/case-report/00-title.md": "da26f841f95432aa2561ef2b4fd7ce99b0af01eaa5325528a51cc9f5db538b36",
+    "06_writing/case-report/01-abstract.md": "797cb1f3a3f36cdd7d4f87ad3a193cd678b8ac13f4c2b0bc02e22db02caefff2",
+    "06_writing/case-report/02-introduction.md": "8a5f7bc6bd34ebad557c4015347e72124082e2385f204fcb9200537a58244250",
+    "06_writing/case-report/03-patient-information.md": "c99715c0c36961c791d19dc1ddfccc41478ad20b7a761067fe9698d9e9bbaaee",
+    "06_writing/case-report/04-clinical-findings.md": "f77ba85d8717bb2fa14b802e3499ef669856659970227978785e2c244650bcf2",
+    "06_writing/case-report/05-timeline.md": "b340b9310a018c92ea595a2f55fe57f3f74f814a7683acd55b02724fe9ec1714",
+    "06_writing/case-report/06-diagnostic-assessment.md": "3205c4274572bf974262187aa1fc24e361cfe363ad079dee2eb127a95ce78eb3",
+    "06_writing/case-report/07-therapeutic-intervention.md": "f871b28bb2396e8a348ee9e44951e52210ab4ce075cc78eebe3a07856066f59f",
+    "06_writing/case-report/08-follow-up.md": "9ea943363a12c5bf5efd336491a3b222d2bbe4a36d96745ad72815e56e6ec6fc",
+    "06_writing/case-report/09-discussion.md": "a1b9dde5c601d92cf9b94d7471ddef34b0031c932a15faab85efcffa9c95a2da",
+    "06_writing/case-report/10-patient-perspective.md": "df313e13791122b7ecddb8254a5342b014bcaabe2b126b33e575f3c2e32e2b15",
+    "06_writing/case-report/11-consent.md": "a47be8d3e01265d0766f5bcb1990b2a33f6c8bf74d8d22f37049e054f8ed2ce5",
+    "ledgers/references.json": "a658bd10e1eedb572ef43070e1841feba466808ff6d7662f0915418a9be13f29",
+    "ledgers/results-ledger.json": "a7223039071dc763e5f0c5b916ff5e77ac721e39cce362063c76a2cd6d639540",
+    "ledgers/claims.json": "3874259b03f259e4aef8750b018008aa3a1bcda33a25aff0a8bf0a299c279324",
+    "01_case/facts.csv": "4b460ec28aed07400c81fbe45359b8879b7f681cfb1fab5d16a43b78004a15b4",
+    "01_case/similar-cases.csv": "e711cea8956d99697c60eeb9c3938d3d42ddd01e4688b2095999fdb2dff49cfd"
+  },
+  "findings": [
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/citation-verifier.md",
+      "line": 1,
+      "msg": "citation-verifier reviewed an earlier version of the case-report drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/statistical-reviewer.md",
+      "line": 1,
+      "msg": "statistical-reviewer reviewed an earlier version of the case-report drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/reporting-guideline-checker.md",
+      "line": 1,
+      "msg": "reporting-guideline-checker reviewed an earlier version of the case-report drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/scientific-editor.md",
+      "line": 1,
+      "msg": "scientific-editor reviewed an earlier version of the case-report drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/consistency.md",
+      "line": 1,
+      "msg": "consistency-auditor reviewed an earlier version of the case-report drafts (digest differs); rerun it if the content changed"
+    }
+  ]
+}
