@@ -35,6 +35,7 @@ COLUMNS = ("id", "label", "value", "unit", "day", "source")
 COUNT_UNITS = {"", "n", "cases", "case", "ca", "lần", "times", "episodes", "đợt"}
 NUMBER = re.compile(r"-?\d+(?:[.,]\d+)?")
 DAY = re.compile(r"[+-]?\d{1,5}")
+FACT_ID = re.compile(r"[A-Za-z][\w-]*")
 
 
 def _decimals(text: str) -> int:
@@ -60,8 +61,17 @@ def read_rows(project: Path) -> tuple[list[dict], list[str]]:
             raise ValueError(f"{FACTS} lacks column(s) {', '.join(missing)} (needs {','.join(COLUMNS)})")
         rows = list(reader)
     probs, seen = [], set()
+    if not rows:
+        probs.append(f"{FACTS}: no fact rows (needs at least one; an empty file would drop the recorded A0 facts)")
     for i, r in enumerate(rows, start=2):
         fid = (r.get("id") or "").strip() or f"line {i}"
+        if None in r or any(v is None for v in r.values()):
+            got = len(r.get(None) or []) + sum(v is not None for k, v in r.items() if k is not None)
+            probs.append(f"{fid}: row has {got} fields, expected {len(COLUMNS)}; quote a decimal comma, "
+                         f'e.g. "1,25" ({FACTS}:{i})')
+            continue
+        if not FACT_ID.fullmatch((r.get("id") or "").strip()):
+            probs.append(f"{fid}: id must start with a letter and use letters, digits, _ or - ({FACTS}:{i})")
         if fid in seen:
             probs.append(f"{fid}: duplicate id ({FACTS}:{i})")
         seen.add(fid)
@@ -108,20 +118,34 @@ def main(argv=None) -> int:
             print(x)
         print(f"case_facts: {len(probs)} problems; nothing written")
         return 1
+    snap = {rel: ((project / rel).read_bytes() if (project / rel).is_file() else None) for rel in (LOG_REL, DOC_REL)}
+
+    def restore() -> None:  # a refused run leaves the log and results document as they were
+        for rel, data in snap.items():
+            f = project / rel
+            if data is None:
+                f.unlink(missing_ok=True)
+            else:
+                f.write_bytes(data)
+
     try:
         doc, mapping = build(project, rows)
         n, bad = resultlog.import_merged(project, doc, a.accept_relabel)
     except results_ledger.LockedError as e:
+        restore()
         print(f"case_facts: {e}", file=sys.stderr)
         return 1
     except results_ledger.RelabelError as e:
+        restore()
         print(str(e), file=sys.stderr)
         print("case_facts: labels changed; ledger not written (re-run with --accept-relabel)", file=sys.stderr)
         return 1
     except (OSError, ValueError) as e:
+        restore()
         print(f"case_facts: {type(e).__name__}: {e}", file=sys.stderr)
         return 2
     if bad:
+        restore()
         for x in bad:
             print(x)
         return 1

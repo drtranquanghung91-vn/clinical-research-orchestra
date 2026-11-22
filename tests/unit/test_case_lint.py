@@ -129,6 +129,51 @@ class TestCaseLint(unittest.TestCase):
         self.assertIn("78 g/L", masked)
         self.assertEqual(len(masked), len(text))
 
+    def test_age_ranges_and_bounds_pass(self):
+        for s in ("Patients aged 40–49.", "Bệnh nhân 40 - 49 tuổi.", "từ 40 đến 49 tuổi", "trên 65 tuổi",
+                  "patients aged 65 years and older", "children under 5 years of age", "in her 40s",
+                  "dưới 5 tuổi", "over 65 years old", "aged 40 to 49", "65 tuổi trở lên", "≥ 65 years old",
+                  "Hb 45 mmol/L, published (2019), day +3."):
+            with self.subTest(text=s):
+                self.dossier(s + "\n")
+                self.assertEqual(self.found(level="block"), [])
+
+    def test_more_exact_ages_and_dates_block(self):
+        for s in ("a 45 years old man", "age 45", "age: 45", "45 yo", "45 y/o", "a 45-yr-old", "March 5th, 2025",
+                  "2025/03/05", "03/2025"):
+            with self.subTest(text=s):
+                self.dossier(s + "\n")
+                self.assertTrue(self.found(level="block"), s)
+        for s in ("on 5 March", "March 5", "ngày 5 tháng 3", "ngày 05/03"):
+            with self.subTest(text=s):
+                self.dossier(s + "\n")
+                self.assertTrue(self.found(level="warn"), s)
+
+    def test_mask_keeps_real_numbers(self):
+        for text, keep in (("BE −8 mmol/L", "8"), ("increased by +12%", "12"), ("z-score −2.5", "2.5"),
+                           ("within 24 hours 3 doses", "3 doses"), ("mỗi ngày 2 lần", "2 lần")):
+            with self.subTest(text=text):
+                self.assertIn(keep, case_lint.mask_relative_time(text))
+        for text in ("day +3", "ngày 14", "week 6", "tuần 6", "3 days later", "sau 3 ngày", "within 24 hours"):
+            with self.subTest(text=text):
+                self.assertEqual(case_lint.mask_relative_time(text).strip(), "")
+
+    def test_consent_placeholders_rejected(self):
+        for tail in ("obtained <form, who signed>", "obtained — pending", "obtained, not yet", "obtained chưa", "obtained TBD"):
+            with self.subTest(tail=tail):
+                (self.p / "decisions.md").write_text(f"CONSENT: {tail}\n", encoding="utf-8")
+                self.assertFalse(case_lint.consent_recorded(self.p))
+
+    def test_institution_word_boundary_and_diacritics(self):
+        set_institution(self.p, "Bệnh viện Mô phỏng", "Huế")
+        self.dossier("Nộp thuế đúng hạn.\n")
+        self.assertEqual(self.found(level="block"), [])
+        self.dossier("Sống ở Hue.\n")
+        self.assertTrue(self.found(level="block"))
+        set_institution(self.p, "Bệnh viện Mô phỏng", "Hà Nội")
+        self.dossier("Lives in Ha Noi.\n")
+        self.assertTrue(self.found(level="block"))
+
     def test_cli_exit_codes(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):

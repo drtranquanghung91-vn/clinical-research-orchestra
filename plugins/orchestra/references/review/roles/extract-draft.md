@@ -4,7 +4,9 @@ orchestra-prep: extract-draft
 
 ## Input
 The protocol's data items and extraction form (`03_protocol/sr-protocol.md`), the included studies' full text the
-author provides, and the columns `study_id,outcome,timepoint,group,n,events,mean,sd,es,se` plus the protocol's own.
+author provides, and the columns `study_id,outcome,timepoint,group,n,events,mean,sd,es,se,design` plus the protocol's own (`design` is the
+study design; `meta.py` reads the register's subgroup `factor` as a column of this name, so add a column
+named exactly like the factor when the register uses another one).
 
 ## Output
 - One file: `reviews/tmp/extraction-draft.csv` with those columns and a `quote` column: the exact sentence or

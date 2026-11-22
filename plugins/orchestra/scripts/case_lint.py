@@ -19,6 +19,7 @@ import argparse
 import csv
 import re
 import subprocess
+import unicodedata
 import sys
 from pathlib import Path
 
@@ -37,24 +38,37 @@ DRAFTS = "06_writing/case-report"
 SIMILAR_COLS = ("ref_id", "age_range", "sex", "presentation", "key_finding", "treatment", "outcome")
 MONTH = (r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t(?:ember)?)?"
          r"|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)")
+ORD = r"(?:st|nd|rd|th)?"
 DATES = [re.compile(r"\b\d{1,2}[/.-]\d{1,2}[/.-](?:19|20)\d{2}\b"),
-         re.compile(r"\b(?:19|20)\d{2}-\d{1,2}-\d{1,2}\b"),
+         re.compile(r"\b(?:19|20)\d{2}[/.-]\d{1,2}[/.-]\d{1,2}\b"),
+         re.compile(r"(?<![/.\d-])\b\d{1,2}/(?:19|20)\d{2}\b"),
          re.compile(r"(?i)\btháng\s+\d{1,2}(?:\s+năm\s+|\s*/\s*)(?:19|20)\d{2}\b"),
-         re.compile(rf"\b(?:\d{{1,2}}\s+)?{MONTH}\.?\s+(?:\d{{1,2}},?\s+)?(?:19|20)\d{{2}}\b")]
-AGES = [re.compile(r"(?i)(?<![\d–—-])\b\d{1,3}\s*(?:(?:tháng|ngày)\s+)?tuổi\b"),
-        re.compile(r"(?i)\b\d{1,3}[- ](?:year|month|week|day)[- ]old\b"),
-        re.compile(r"(?i)\baged\s+\d{1,3}\b"),
-        re.compile(r"(?i)\b\d{1,3}\s+(?:years?|months?)\s+of\s+age\b")]
+         re.compile(rf"\b(?:\d{{1,2}}{ORD}\s+(?:of\s+)?)?{MONTH}\.?\s+(?:\d{{1,2}}{ORD},?\s+)?(?:19|20)\d{{2}}\b")]
+# day and month without a year: a warning, not a block (it still dates the case)
+DATES_WARN = [re.compile(rf"\b\d{{1,2}}{ORD}\s+(?:of\s+)?{MONTH}\b(?!\.?,?\s*(?:19|20)\d{{2}})"),
+              re.compile(rf"\b{MONTH}\.?\s+\d{{1,2}}{ORD}\b(?!\s*,?\s*(?:19|20)\d{{2}})"),
+              re.compile(r"(?i)\bngày\s+\d{1,2}\s+tháng\s+\d{1,2}\b(?!\s*(?:năm\s+|/)\s*(?:19|20)\d{2})"),
+              re.compile(r"(?i)\bngày\s+\d{1,2}\s*/\s*\d{1,2}\b(?!\s*/\s*\d)")]
+_NUM = r"\d{1,3}(?!\d)(?!\s*(?:[–—-]|to|đến)\s*\d)"
+AGES = [re.compile(rf"(?i)\b{_NUM}\s*(?:(?:tháng|ngày)\s+)?tuổi\b"),
+        re.compile(rf"(?i)\b{_NUM}[- ]?(?:(?:years?|yrs?|months?|weeks?|days?)[- ]old|y/?o)\b"),
+        re.compile(rf"(?i)\bage(?:d)?(?:\s*:\s*|\s+){_NUM}\b"),
+        re.compile(rf"(?i)\b{_NUM}\s+(?:years?|months?)\s+of\s+age\b")]
+AGE_SKIP_BEFORE = re.compile(r"(?i)(?:[≥≤><–—-]|\b(?:over|under|above|below|older than|younger than|than|to|trên|dưới|từ|đến))\s*$")
+AGE_SKIP_AFTER = re.compile(r"(?i)^\s*(?:(?:years?|yrs?|tuổi)\s*)?(?:(?:and|or)\s+(?:older|over|above|younger|under|below)|trở\s+(?:lên|xuống))")
 CONSENT = re.compile(r"(?im)^\s*(?:[-*]\s+)?CONSENT:\s*obtained\b[ \t]*[,:;-]?[ \t]*(\S.*)$")
+CONSENT_PLACEHOLDER = re.compile(r"(?i)<[^>]*>|\b(?:pending|not|tbd)\b|\bchưa\b")
 TITLE_WORDS = [("rare", r"\brare\b"), ("first", r"\bfirst\b"), ("hiếm", r"hiếm"), ("đầu tiên", r"đầu tiên")]
 TIMELINE = re.compile(r"(?i)timeline|dòng thời gian|diễn tiến theo thời gian")
 BULLET = re.compile(r"^\s*(?:[-*]|\d+\.)\s+\S")
-RELTIME = [re.compile(r"(?i)\b(?:days?|weeks?|months?|hours?|years?|ngày|tuần|tháng|giờ|năm)\s*(?:thứ\s*)?[+−-]?\s*\d+\b"),
-           re.compile(r"(?i)(?<![\w.])[+−]\d+\b"),
-           re.compile(r"(?i)\b\d+\s*(?:days?|weeks?|months?|hours?)\s+(?:later|after|before|earlier)\b"),
+RELTIME = [re.compile(r"(?i)\b\d+\s*(?:days?|weeks?|months?|hours?)\s+(?:later|after|before|earlier)\b"),
            re.compile(r"(?i)\b(?:after|within|for|over)\s+\d+\s*(?:days?|weeks?|months?|hours?)\b"),
            re.compile(r"(?i)\b(?:sau|trong|trước)\s+\d+\s*(?:ngày|tuần|tháng|giờ)\b"),
-           re.compile(r"(?i)\b\d+\s*(?:ngày|tuần|tháng|giờ)\s+(?:sau|trước)\b")]
+           re.compile(r"(?i)\b\d+\s*(?:ngày|tuần|tháng|giờ)\s+(?:sau|trước)\b"),
+           # "day +3", "ngày 14", "week 6", "D14": the only place a signed number is read as a day
+           re.compile(r"(?<!\d\s)(?:(?i:\b(?:days?|weeks?|months?|hours?|years?|ngày|tuần|tháng|giờ|năm)\s*(?:thứ\s*)?)"
+                      r"|(?<![\w])(?<!itamin )D\s*)[+−-]?\s*\d+\b"
+                      r"(?!\s*(?i:lần|times?|doses?|tablets?|viên|liều))")]
 
 
 def bmj_mode(project: Path) -> bool:
@@ -70,7 +84,27 @@ def mask_relative_time(text: str) -> str:
 
 def consent_recorded(project: Path) -> bool:
     p = Path(project) / "decisions.md"
-    return p.is_file() and CONSENT.search(p.read_text(encoding="utf-8-sig")) is not None
+    return p.is_file() and any(not CONSENT_PLACEHOLDER.search(m.group(1))
+                               for m in CONSENT.finditer(p.read_text(encoding="utf-8-sig")))
+
+
+def _fold(text: str) -> str:
+    """Case- and diacritic-folded text (Huế -> hue, Hà Nội -> ha noi) for name matching."""
+    t = text.replace("đ", "d").replace("Đ", "D")
+    return "".join(c for c in unicodedata.normalize("NFKD", t) if not unicodedata.combining(c)).casefold()
+
+
+def _name_in(name: str, line: str) -> bool:
+    n = " ".join(_fold(name).split())
+    return bool(n) and re.search(rf"(?<!\w){re.escape(n)}(?!\w)", " ".join(_fold(line).split())) is not None
+
+
+def _exact_ages(line: str):
+    for rx in AGES:
+        for m in rx.finditer(line):
+            if AGE_SKIP_BEFORE.search(line[:m.start()]) or AGE_SKIP_AFTER.match(line[m.end():]):
+                continue
+            yield m
 
 
 def _files(project: Path) -> list[Path]:
@@ -126,12 +160,15 @@ def lint(project: Path, strict: bool = False, phi: bool = True) -> list[tuple[st
                 for m in rx.finditer(line):
                     found.append(("E-CASE", "block", f"{rel}:{i}", f'calendar date "{m.group(0)}"; use relative time '
                                                                    "(day 0, day +3, week 6)"))
-            for rx in AGES:
+            for rx in DATES_WARN:
                 for m in rx.finditer(line):
-                    found.append(("E-CASE", "block", f"{rel}:{i}", f'exact age "{m.group(0)}"; use a range '
-                                                                   '("in her 40s", "40–49 tuổi")'))
+                    found.append(("E-CASE", "warn", f"{rel}:{i}", f'day and month "{m.group(0)}"; use relative time '
+                                                                  "(day 0, day +3, week 6)"))
+            for m in _exact_ages(line):
+                found.append(("E-CASE", "block", f"{rel}:{i}", f'exact age "{m.group(0)}"; use a range '
+                                                               '("in her 40s", "40–49 tuổi")'))
             for n in names:
-                if n.casefold() in line.casefold():
+                if _name_in(n, line):
                     found.append(("E-CASE", "block", f"{rel}:{i}", f'names the institution or city "{n}" '
                                                                    "(project.yaml institution); remove it"))
     if phi and files:

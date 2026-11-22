@@ -109,6 +109,32 @@ class TestCaseFacts(unittest.TestCase):
             self.assertIn(s, out)
         self.assertNotIn("R-A0", (self.p / "ledgers" / "results-ledger.json").read_text(encoding="utf-8"))
 
+    def test_row_shape_and_ids_are_checked(self):
+        for extra, needle in (("C07,x,1,25,,,x\n", "C07"), ("C07,x\n", "C07"), ("7bad,x,1,,0,x\n", "id must"),
+                              (",x,1,,0,x\n", "id must")):
+            with self.subTest(row=extra):
+                (self.p / "01_case" / "facts.csv").write_text(FACTS + extra, encoding="utf-8")
+                code, out, err = quiet(case_facts.main, [str(self.p)])
+                self.assertEqual(code, 1, out + err)
+                self.assertIn(needle, out)
+        (self.p / "01_case" / "facts.csv").write_text(FACTS + 'C07,x,"1,25",,0,x\n', encoding="utf-8")
+        self.assertEqual(quiet(case_facts.main, [str(self.p)])[0], 0)
+
+    def test_empty_facts_refused(self):
+        (self.p / "01_case" / "facts.csv").write_text("id,label,value,unit,day,source\n", encoding="utf-8")
+        code, out, err = quiet(case_facts.main, [str(self.p)])
+        self.assertEqual(code, 1)
+        self.assertIn("no fact rows", out)
+
+    def test_refused_rerun_leaves_log_byte_identical(self):
+        self.assertEqual(quiet(case_facts.main, [str(self.p)])[0], 0)
+        log, doc = self.p / case_facts.LOG_REL, self.p / case_facts.DOC_REL
+        before = (log.read_bytes(), doc.read_bytes())
+        gate.open_gate(self.p, "G3", by="A", files=["ledgers/results-ledger.json", "01_case/facts.csv"])
+        (self.p / "01_case" / "facts.csv").write_text(FACTS.replace(",78,", ",79,"), encoding="utf-8")
+        self.assertEqual(quiet(case_facts.main, [str(self.p)])[0], 1)
+        self.assertEqual((log.read_bytes(), doc.read_bytes()), before)
+
     def test_usage_errors_exit_2(self):
         (self.p / "01_case" / "facts.csv").write_text("id,label\nC01,x\n", encoding="utf-8")
         self.assertEqual(quiet(case_facts.main, [str(self.p)])[0], 2)
