@@ -1,0 +1,30 @@
+title: "Sốt kéo dài và ban da sau dùng thuốc (ca hư cấu)"
+type: case-report
+design: case-report
+reporting_guideline: CARE
+language:
+  chat: vi
+  output: vi
+institution:
+  name: "Bệnh viện Đa khoa Hư Cấu"
+  city: "Thành phố Giả Lập"
+  template: ""
+citation_style: vancouver
+target:
+  journal: ""
+  journal_style: null
+  conference: ""
+  word_limit: null
+  text_words: null
+  poster_size_cm: [90, 120]
+evidence_sources: [openevidence, pubmed, europepmc, crossref]
+docx:
+  font: "Times New Roman"
+  size_pt: 13
+  line_spacing: 1.5
+  margins_cm: [2, 2, 3, 2]
+review:
+  reviewers: []
+  registration: null
+tools:
+  rscript: null

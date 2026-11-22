@@ -1,0 +1,4 @@
+id,label,value,unit,day,source
+C01,haemoglobin at admission,98,g/L,0,lab report (fictional)
+C02,C-reactive protein at admission,85,mg/L,0,lab report (fictional)
+C03,eosinophil count,2.1,G/L,+3,lab report (fictional)

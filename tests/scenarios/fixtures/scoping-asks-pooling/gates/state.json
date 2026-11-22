@@ -1,0 +1,16 @@
+{
+  "G1": {
+    "status": "open",
+    "at": "2026-11-23T01:35:16",
+    "by": "Example author",
+    "files": {}
+  },
+  "G2": {
+    "status": "open",
+    "at": "2026-11-23T01:35:16",
+    "by": "Example author",
+    "files": {
+      "03_protocol/sr-protocol.md": "eeb1b265b324f869dc598f48cb639b9f400385f50ebad62781a855bc2e837bab"
+    }
+  }
+}

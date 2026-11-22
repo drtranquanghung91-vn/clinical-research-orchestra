@@ -1,0 +1,2 @@
+database,platform,date_run,string_id,hits,export_file
+PubMed,PubMed,2026-11-20,S1,6,exports/pubmed.ris

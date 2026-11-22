@@ -1,0 +1,3 @@
+R-A0-001 haemoglobin at admission [C01]: value=98
+R-A0-002 C-reactive protein at admission [C02]: value=85
+R-A0-003 eosinophil count [C03]: value=2.1

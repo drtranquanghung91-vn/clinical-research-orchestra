@@ -1,6 +1,6 @@
 ---
 name: systematic-review
-description: 'Use when the user wants a systematic review or meta-analysis planned, screened, extracted, pooled, graded or written. Triggers: "tổng quan hệ thống", "phân tích gộp", "sàng lọc bài báo", "trích xuất dữ liệu", "risk of bias cho tổng quan hệ thống", "systematic review", "meta-analysis", "PRISMA", "PROSPERO", "meta-analysis forest plot", "forest plot gộp", "GRADE summary of findings", "bảng tóm tắt kết quả GRADE".'
+description: 'Use when the user wants a systematic review or meta-analysis planned, screened, extracted, pooled, graded or written. Triggers: "tổng quan hệ thống", "phân tích gộp", "gộp các nghiên cứu", "gộp thành một con số RR/OR chung", "pooled estimate", "sàng lọc bài báo", "trích xuất dữ liệu", "risk of bias cho tổng quan hệ thống", "systematic review", "meta-analysis", "PRISMA", "PROSPERO", "meta-analysis forest plot", "forest plot gộp", "GRADE summary of findings", "bảng tóm tắt kết quả GRADE".'
 ---
 
 # Systematic review

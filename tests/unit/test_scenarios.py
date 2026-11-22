@@ -192,5 +192,80 @@ class P4FixtureTest(unittest.TestCase):
         self.assertIn("giới tính", (proj / "out" / "author-decisions.md").read_text(encoding="utf-8"))
 
 
+P5 = ("case-identifiers", "case-consent-missing", "sr-single-screener", "sr-pool-heterogeneous", "scoping-asks-pooling")
+
+
+class P5FixtureTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def copy(self, sid: str) -> Path:
+        dst = self.tmp / sid
+        shutil.copytree(FIX / sid, dst)
+        return dst
+
+    def hook(self, payload: dict) -> dict | None:
+        r = subprocess.run([sys.executable, str(ORCH_SCRIPTS / "gate_hook.py")], input=json.dumps(payload),
+                           capture_output=True, text=True, encoding="utf-8")
+        return json.loads(r.stdout)["hookSpecificOutput"] if r.stdout.strip() else None
+
+    def test_p5_scenarios_have_fixtures_and_lf_only(self):
+        for sid in P5:
+            with self.subTest(scenario=sid):
+                self.assertTrue((SCEN / f"{sid}.md").is_file())
+                for p in (FIX / sid).rglob("*"):
+                    if p.is_file():
+                        self.assertNotIn(b"\r\n", p.read_bytes(), str(p))
+
+    def test_case_identifiers_notes_hold_identifiers(self):
+        proj = self.copy("case-identifiers")
+        shutil.copy(proj / "00_inputs" / "case-notes.md", proj / "01_case" / "dossier.md")
+        r = run("case_lint.py", ".", cwd=proj)
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        for s in ("calendar date", "exact age", "names the institution or city"):
+            self.assertIn(s, r.stdout)
+
+    def test_case_consent_missing(self):
+        proj = self.copy("case-consent-missing")
+        self.assertEqual(run("gate.py", "check", ".", "G3", cwd=proj).returncode, 0)
+        r = run("case_lint.py", ".", "--strict", cwd=proj)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("consent not recorded", r.stdout)
+        d = self.hook({"tool_name": "Bash", "tool_input": {"command": "python /x/assemble.py . case-report --final"},
+                       "cwd": str(proj)})
+        self.assertEqual(d["permissionDecision"], "deny")
+        self.assertIn("consent", d["permissionDecisionReason"])
+
+    def test_sr_single_screener(self):
+        proj = self.copy("sr-single-screener")
+        self.assertEqual(run("gate.py", "check", ".", "G2", cwd=proj).returncode, 0)
+        self.assertFalse((proj / "02_evidence" / "sr" / "screening.csv").exists())
+        self.assertEqual(len((proj / "02_evidence" / "sr" / "records.csv").read_text(encoding="utf-8").splitlines()), 7)
+        r = run("screening.py", ".", "decide", "--stage", "ta", "--reviewer", "Claude", "--rec", "rec-0001",
+                "--decision", "include", cwd=proj)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("looks like an AI", r.stdout)
+
+    def test_sr_pool_heterogeneous_is_heterogeneous(self):
+        proj = self.copy("sr-pool-heterogeneous")
+        r = run("meta.py", ".", "run", cwd=proj)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        led = {x["id"]: x for x in json.loads((proj / "ledgers" / "results-ledger.json").read_text(encoding="utf-8"))["results"]}
+        self.assertGreater(led["R-A1-003"]["value"], 50)                      # I² high
+        lo, hi = led["R-A1-005"]["ci"]
+        self.assertTrue(lo < 1 < hi)                                          # prediction interval crosses 1
+
+    def test_scoping_asks_pooling_is_refused_by_meta(self):
+        proj = self.copy("scoping-asks-pooling")
+        r = run("meta.py", ".", "run", cwd=proj)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("do not pool", r.stdout)
+        self.assertFalse((proj / "04_data" / "sr" / "rob.csv").exists())
+        self.assertEqual(run("extract_check.py", ".", cwd=proj).returncode, 0)
+
+
 if __name__ == "__main__":
     unittest.main()
