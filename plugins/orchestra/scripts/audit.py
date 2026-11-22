@@ -1,11 +1,12 @@
 """Audit a deliverable before export: one pass over every check, written to reviews/audit.md and reviews/audit.json.
 
-CLI: audit.py <project> [thesis|manuscript] [--online] [--json]
+CLI: audit.py <project> [thesis|manuscript|case-report|review] [--online] [--json]
   no deliverable = every deliverable with drafts. Exit 0 no block, 1 blocks, 2 usage / missing project / no drafts /
   --online network error / cannot write reviews/.
-Checks (E-REF ledgers and citations, E-NUM, E-STAT, E-LIT, E-CONS, P-codes, E-RG, E-FMT, E-PHI, E-REV) are listed in
+Checks (E-REF ledgers and citations, E-NUM, E-STAT, E-CASE, E-SCR, E-GRADE, E-LIT, E-CONS, P-codes, E-RG, E-FMT, E-PHI, E-REV) are listed in
 ROWS. reviews/audit.json records the sha256 of the tracked drafts, order.txt, referenced images and the ledgers that
-exist; gate.py G4 and assemble.py --final refuse when any of them changed afterwards.
+exist; gate.py G4 and assemble.py --final refuse when any of them changed afterwards. Case reports skip E-STAT (no
+register) and mask relative time for E-NUM; reviews add E-SCR (systematic and scoping) and E-GRADE.
 """
 from __future__ import annotations
 
@@ -27,27 +28,38 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from crolib import drafts, ledgers, reviews  # noqa: E402
 import analysis_plan  # noqa: E402
 import assemble  # noqa: E402
+import case_lint  # noqa: E402
 import check_numbers  # noqa: E402
 import cite_render  # noqa: E402
 import consistency_audit  # noqa: E402
 import gate  # noqa: E402
+import grade  # noqa: E402
 import guideline_checklist  # noqa: E402
 import lint_prose  # noqa: E402
 import render_results  # noqa: E402
 import review_lint  # noqa: E402
+import screening  # noqa: E402
 
 ORCH = Path(__file__).resolve().parents[1]
 ROWS = [("ledgers", "E-REF"), ("citations", "E-REF"), ("results numbers", "E-NUM"), ("analysis declarations", "E-STAT"),
+        ("case report", "E-CASE"), ("screening and extraction", "E-SCR"), ("GRADE wording", "E-GRADE"),
         ("literature synthesis", "E-LIT"), ("consistency", "E-CONS"), ("prose density", "P00"),
         ("guideline checklist", "E-RG"), ("sections and captions", "E-FMT"), ("identifiers", "E-PHI"),
         ("reviewer reports", "E-REV")]
 ROWS_FILE = {"ledgers": "ledgers", "citations": "ledgers/references.json", "results numbers": "ledgers/results-ledger.json",
              "analysis declarations": "03_protocol/sap.md", "guideline checklist": "reviews/guideline-checklist-<deliverable>.json",
-             "reviewer reports": "reviews"}
+             "reviewer reports": "reviews", "case report": "decisions.md",
+             "screening and extraction": "02_evidence/sr/screening.csv", "GRADE wording": "05_analysis/meta/grade.json"}
+INPUT_FILES = ("01_case/facts.csv", "01_case/similar-cases.csv", "02_evidence/sr/records.csv",
+               "02_evidence/sr/screening.csv", "04_data/sr/extraction.csv", "04_data/sr/rob.csv",
+               "04_data/sr/charting.csv", "05_analysis/meta/grade.json")
 FIX = {
     "en": {"E-REF": "verify or replace the reference (verify_refs.py --write, search_lit.py); never edit its status by hand.",
            "E-NUM": "replace the typed number with its {{R-...}} placeholder, or mark it <!-- not-a-result: ... -->.",
            "E-STAT": "declare the post-hoc analysis or deviation in decisions.md, or label it in the text.",
+           "E-CASE": "use relative time and age ranges, remove the institution and identifiers, record consent as 'CONSENT: obtained <form, who signed>' in decisions.md.",
+           "E-SCR": "complete the second reviewer's decisions, resolve conflicts with a consensus row, give full-text exclusion reasons, rerun screening.py counts and extract_check.py.",
+           "E-GRADE": "hedge the claim to its GRADE certainty (references/review/grade-wording.md).",
            "E-LIT": "rewrite the chapter by theme, not paper by paper.",
            "E-CONS": "decide which source is right (the ledger first) and align the other places.",
            "P": "reduce the flagged prose pattern (prose-humanizer).",
@@ -58,6 +70,9 @@ FIX = {
     "vi": {"E-REF": "xác minh hoặc thay tài liệu tham khảo (verify_refs.py --write, search_lit.py); không sửa trạng thái bằng tay.",
            "E-NUM": "thay số gõ tay bằng ô {{R-...}}, hoặc đánh dấu <!-- not-a-result: ... --> nếu không phải kết quả.",
            "E-STAT": "ghi phân tích post-hoc hoặc sai lệch vào decisions.md, hoặc gắn nhãn trong văn bản.",
+           "E-CASE": "dùng thời gian tương đối và khoảng tuổi, bỏ tên cơ sở và định danh, ghi 'CONSENT: obtained <mẫu, người ký>' vào decisions.md.",
+           "E-SCR": "bổ sung quyết định của người sàng lọc thứ hai, giải quyết bất đồng bằng dòng consensus, ghi lý do loại toàn văn, chạy lại screening.py counts và extract_check.py.",
+           "E-GRADE": "viết mức khẳng định theo độ chắc chắn GRADE (references/review/grade-wording.md).",
            "E-LIT": "viết lại chương theo chủ đề, không theo từng bài báo.",
            "E-CONS": "xác định nguồn đúng (sổ cái trước) rồi sửa các chỗ còn lại cho khớp.",
            "P": "giảm mẫu văn phong bị đánh dấu (prose-humanizer).",
@@ -155,11 +170,32 @@ def check_numbers_(a: Audit, d: str, files: list[Path]) -> None:
         for x in probs:
             line, _, msg = x.partition(": ")
             a.add("results numbers", "E-NUM", "block", f"{p}:{line}", msg)
-        for n, tok in check_numbers.find_unmatched(rendered, results, lang):
+        checked = case_lint.mask_relative_time(rendered) if d == "case-report" else rendered
+        for n, tok in check_numbers.find_unmatched(checked, results, lang):
             a.add("results numbers", "E-NUM", "block", f"{p}:{n}",
                   f"{tok} is not in the results ledger (use a {{{{R-…}}}} placeholder or <!-- not-a-result: … -->)")
         for n, sev, msg in check_numbers.check_derived(rendered, results):
             a.add("results numbers", "E-NUM", sev, f"{p}:{n}", msg)
+
+
+def stat_applies(project: Path, d: str) -> bool:
+    return d in ("thesis", "manuscript") or (d == "review" and drafts.review_kind(project) in ("systematic", "scoping"))
+
+
+def check_case(a: Audit) -> None:
+    for code, level, loc, msg in case_lint.lint(a.project, strict=False, phi=False):
+        a.add("case report" if code == "E-CASE" else "citations", code, level, loc, msg)
+
+
+def check_screening(a: Audit) -> None:
+    import extract_check  # lazy: Task 4 module
+    for sev, loc, msg in screening.check(a.project) + extract_check.check(a.project):
+        a.add("screening and extraction", "E-SCR", sev, loc, msg)
+
+
+def check_grade(a: Audit, files: list[Path]) -> None:
+    for sev, loc, msg in grade.check_wording(a.project, [f for f in files if drafts.results_bearing(f)]):
+        a.add("GRADE wording", "E-GRADE", sev, loc, msg)
 
 
 def check_stat(a: Audit, files: list[Path]) -> None:
@@ -300,7 +336,14 @@ def run(project: Path, ds: list[str], named: str | None, online: bool) -> dict:
         files = drafts.draft_files(a.project, d)
         guarded("citations", check_citations, a, files, online)
         guarded("results numbers", check_numbers_, a, d, files)
-        guarded("analysis declarations", check_stat, a, files)
+        if stat_applies(a.project, d):
+            guarded("analysis declarations", check_stat, a, files)
+        if d == "case-report":
+            guarded("case report", check_case, a)
+        if d == "review":
+            if drafts.review_kind(a.project) in ("systematic", "scoping"):
+                guarded("screening and extraction", check_screening, a)
+            guarded("GRADE wording", check_grade, a, files)
         guarded("literature synthesis", check_literature, a, files)
         guarded("prose density", check_prose, a, files)
         guarded("guideline checklist", check_guideline, a, d)
@@ -313,6 +356,7 @@ def run(project: Path, ds: list[str], named: str | None, online: bool) -> dict:
             except ValueError:
                 pass            # outside the project: gate skips it too
     hashed.update({rel: gate.sha256(a.project / rel) for rel in LEDGER_FILES if (a.project / rel).is_file()})
+    hashed.update({rel: gate.sha256(a.project / rel) for rel in INPUT_FILES if (a.project / rel).is_file()})
     order = {label: i for i, (label, _) in enumerate(ROWS)}
     a.findings.sort(key=lambda f: order.get(f["check"], 99))
     blocks = sum(1 for f in a.findings if f["level"] == "block")
@@ -361,7 +405,7 @@ def main(argv=None) -> int:
         return 2
     ds = [a.deliverable] if a.deliverable else [d for d in drafts.DELIVERABLES if drafts.draft_files(project, d)]
     if not ds or not all(drafts.draft_files(project, d) for d in ds):
-        print(f"audit: no drafts in 06_writing/{a.deliverable or 'thesis|manuscript'}/", file=sys.stderr)
+        print(f"audit: no drafts in 06_writing/{a.deliverable or '|'.join(drafts.DELIVERABLES)}/", file=sys.stderr)
         return 2
     rv = project / "reviews"
     for stale in ("audit.md", "audit.json"):       # a failed run must not leave an older clean report behind

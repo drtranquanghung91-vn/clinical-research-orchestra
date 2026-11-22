@@ -3,6 +3,10 @@
 
   python init_project.py <dest> --title "..." --type thesis-masters --design cohort --output-lang vi --chat-lang vi
 
+Types case-report, systematic-review and review (with --design scoping-review or narrative-review) also create
+their folders (01_case/ or 02_evidence/sr/, 04_data/sr/, 05_analysis/meta/, and 06_writing/case-report/ or
+06_writing/review/).
+
 Exit codes: 0 = created; 2 = bad arguments, destination already has project.yaml, or cannot write.
 """
 from __future__ import annotations
@@ -22,6 +26,12 @@ GUIDELINE_BY_DESIGN = {
     "scoping-review": "PRISMA-ScR", "narrative-review": "SANRA",
 }
 DESIGNS = tuple(GUIDELINE_BY_DESIGN)
+TYPE_DESIGNS = {"case-report": ("case-report",), "systematic-review": ("systematic-review",),
+                "review": ("scoping-review", "narrative-review")}
+FOLDERS = {"case-report": ("01_case", "06_writing/case-report"),
+           "systematic-review": ("02_evidence/sr", "04_data/sr", "05_analysis/meta", "06_writing/review"),
+           "scoping-review": ("02_evidence/sr", "04_data/sr", "05_analysis/meta", "06_writing/review"),
+           "narrative-review": ("06_writing/review",)}
 LANGS = ("vi", "en")
 
 YAML = """title: "{title}"
@@ -33,10 +43,12 @@ language:
   output: {output}
 institution:
   name: ""
+  city: ""
   template: ""
 citation_style: {style}
 target:
   journal: ""
+  journal_style: null
   conference: ""
   word_limit: null
   text_words: null
@@ -47,6 +59,11 @@ docx:
   size_pt: 13
   line_spacing: 1.5
   margins_cm: [2, 2, 3, 2]
+review:
+  reviewers: []
+  registration: null
+tools:
+  rscript: null
 """
 
 
@@ -55,6 +72,8 @@ def create(dest: Path, title: str, ptype: str, design: str, output_lang: str, ch
         raise ValueError(f"type must be one of {TYPES}")
     if design not in DESIGNS:
         raise ValueError(f"design must be one of {DESIGNS}")
+    if ptype in TYPE_DESIGNS and design not in TYPE_DESIGNS[ptype]:
+        raise ValueError(f"type {ptype} needs --design {' or '.join(TYPE_DESIGNS[ptype])}")
     if output_lang not in LANGS or chat_lang not in LANGS:
         raise ValueError("languages must be 'vi' or 'en'")
     dest = Path(dest)
@@ -66,6 +85,8 @@ def create(dest: Path, title: str, ptype: str, design: str, output_lang: str, ch
     (dest / "project.yaml").write_text(YAML.format(
         title=safe_title, ptype=ptype, design=design, guideline=GUIDELINE_BY_DESIGN[design],
         chat=chat_lang, output=output_lang, style=style), encoding="utf-8")
+    for rel in (FOLDERS.get(design, ()) if ptype in TYPE_DESIGNS else ()):
+        (dest / rel).mkdir(parents=True, exist_ok=True)
     return dest
 
 

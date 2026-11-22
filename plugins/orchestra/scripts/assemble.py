@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Assemble a thesis or manuscript from its section drafts and build the .docx.
+"""Assemble a thesis, manuscript, case report or review from its section drafts and build the .docx.
 
-  python assemble.py <project> thesis|manuscript [--final] [--lang vi|en]
+  python assemble.py <project> thesis|manuscript|case-report|review [--final] [--lang vi|en]
 
+Case report (CARE or, with target.journal_style: bmj, BMJ headings) and review (systematic, scoping or narrative
+from project.yaml design) orders and required sections: crolib/drafts.py ORDERS and REQUIRED_BY. A case report's
+--final also needs consent recorded in decisions.md (gate.export_problems).
 Order: 06_writing/<deliverable>/order.txt (one file name or glob per line, # comments) or the default (thesis:
 00-tom-tat, 00-dat-van-de, ch1-*, ch2-methods, ch3-results, ch4-discussion, 05-ket-luan, 06-kien-nghi, 90-phu-luc;
 manuscript: 00-title, 01-abstract, 02-introduction, 03-methods, 04-results, 05-discussion, 06-conclusion). A
@@ -150,11 +153,12 @@ def image_findings(base: Path, sections: list[tuple[str, str]]) -> list[tuple[st
 def format_findings(project: Path, deliverable: str, strict: bool = False) -> list[tuple[str, str, str, str]]:
     project = Path(project)
     files, missing, required = drafts.ordered(project, deliverable)
+    req = drafts.required(project, deliverable)
     base_rel = f"06_writing/{deliverable}"
-    found = [("E-FMT", "block", f"{base_rel}/{n}:1", f"required section missing: {drafts.REQUIRED[deliverable][n]} ({n})")
+    found = [("E-FMT", "block", f"{base_rel}/{n}:1", f"required section missing: {req[n]} ({n})")
              for n in required]
     found += [("E-FMT", "warn", f"{base_rel}/{e}:1", "in the section order but not found; skipped")
-              for e in missing if e not in drafts.REQUIRED[deliverable]]
+              for e in missing if e not in req]
     listed = {p.name for p in files}
     found += [("E-FMT", "warn", f"{base_rel}/{p.name}:1", "draft not in the section order; not assembled")
               for p in drafts.draft_files(project, deliverable) if p.name not in listed]
@@ -202,7 +206,7 @@ def _join(parts: list[tuple[str, str]], deliverable: str, lang: str) -> str:
         if deliverable == "thesis" and name.startswith("9") and not placed:
             chunks.append((ref_block, True))
             placed = True
-        brk = bool(chunks) and (deliverable == "thesis" or prev in ("00-title.md", "01-abstract.md"))
+        brk = bool(chunks) and (deliverable == "thesis" or prev in ("00-title.md", "01-abstract.md", "01-summary.md"))
         chunks.append((t, brk))
         prev = name
     if not placed:

@@ -10,3 +10,5 @@
 !04_data/codebook.md
 !04_data/cleaning-log.md
 !04_data/.gitkeep
+# Systematic-review data come from published studies, never from patients.
+!04_data/sr/
