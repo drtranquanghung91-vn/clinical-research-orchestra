@@ -184,6 +184,74 @@ class TestScreening(unittest.TestCase):
         found = screening.check(self.p)
         self.assertTrue(any(s == "block" and "differ from a fresh counts run" in m for s, _, m in found), found)
 
+    def both_ta(self, rec, a="include", b="include"):
+        self.assertEqual(self.decide("ta", "Reviewer A", rec, a)[0], 0)
+        self.assertEqual(self.decide("ta", "Reviewer B", rec, b)[0], 0)
+
+    def test_consensus_alone_never_finalises(self):
+        self.load()
+        code, out, _ = self.decide("ta", "consensus", "rec-0001", "include")
+        self.assertEqual(code, 1)
+        self.assertIn("consensus is refused until both human reviewers", out)
+        # a hand-edited log with a consensus row alone is still a block
+        with open(self.p / screening.SCREENING, "a", encoding="utf-8", newline="") as fh:
+            fh.write("stage,rec_id,reviewer,decision,reason,study,at\n"
+                     "ta,rec-0001,consensus,include,,,2026-11-22\n")
+        st = screening.resolve(self.p)["ta"]["rec-0001"]
+        self.assertIsNone(st["final"])
+        self.assertIn("consensus without both human decisions", st["why"])
+        found = screening.check(self.p)
+        self.assertTrue(any(s == "block" and "consensus without both human decisions" in m for s, _, m in found), found)
+        self.assertEqual(self.decide("ta", "Reviewer A", "rec-0001", "include")[0], 0)
+        self.assertIsNone(screening.resolve(self.p)["ta"]["rec-0001"]["final"])
+        self.assertEqual(self.decide("ta", "Reviewer B", "rec-0001", "exclude")[0], 0)
+        self.assertEqual(screening.resolve(self.p)["ta"]["rec-0001"]["final"], "include")
+
+    def test_more_ai_names_refused(self):
+        for name in ("GPT4", "Claude_Opus", "ChatGPT-5", "OpenAI", "Gemini", "Copilot", "LLaMA", "Mistral",
+                     "DeepSeek", "Grok", "Bard", "Perplexity", "gpt-4o", "claude"):
+            self.assertTrue(screening.AI_NAME.search(name), name)
+        for name in ("Reviewer A", "Nguyen Van Minh", "Minh"):
+            self.assertIsNone(screening.AI_NAME.search(name), name)
+        self.load()
+        set_reviewers(self.p, ["Reviewer A", "GPT4"])
+        code, out, _ = self.decide("ta", "GPT4", "rec-0001", "include")
+        self.assertEqual(code, 1)
+        self.assertIn("surname-first", out)
+
+    def test_full_text_reasons_or_studies_that_differ_conflict(self):
+        self.load()
+        for rec in ("rec-0001", "rec-0002"):
+            self.both_ta(rec)
+        self.assertEqual(self.decide("ft", "Reviewer A", "rec-0001", "exclude", "--reason", "wrong population")[0], 0)
+        code, out, _ = self.decide("ft", "Reviewer B", "rec-0001", "exclude", "--reason", "wrong outcome")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.decide("ft", "Reviewer A", "rec-0002", "include", "--study", "S01")[0], 0)
+        self.assertEqual(self.decide("ft", "Reviewer B", "rec-0002", "include", "--study", "S02")[0], 0)
+        code, out, _ = cli(self.p, "conflicts", "--stage", "ft")
+        self.assertEqual(code, 1)
+        self.assertIn("rec-0001: conflict: the reviewers gave different reasons", out)
+        self.assertIn("rec-0002: conflict: the reviewers gave different studys", out)
+        self.assertEqual(cli(self.p, "counts")[0], 1)
+        found = screening.check(self.p)
+        self.assertTrue(any(s == "block" and "rec-0001 (ft)" in m for s, _, m in found), found)
+        self.assertEqual(self.decide("ft", "consensus", "rec-0001", "exclude", "--reason", "wrong outcome")[0], 0)
+        self.assertEqual(self.decide("ft", "consensus", "rec-0002", "include", "--study", "S01")[0], 0)
+        self.assertEqual(cli(self.p, "conflicts", "--stage", "ft")[0], 0)
+
+    def test_ris_detected_by_content_without_blank_lines(self):
+        txt = self.ex / "export.txt"
+        txt.write_text(RIS, encoding="utf-8")
+        code, out, err = cli(self.p, "import", txt, "--database", "Embase")
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("2 records imported", out)
+
+    def test_dedupe_title_year_needs_first_author(self):
+        rows = [dict(rec_id=f"rec-000{i}", database="X", pmid="", doi="", title="Same title here", authors="",
+                     year="2020", journal="", abstract="", duplicate_of="") for i in (1, 2)]
+        screening.write_csv(self.p / screening.RECORDS, screening.RECORD_COLS, rows)
+        self.assertEqual(screening.dedupe(self.p), (2, 0))
+
     def test_check_blocks_missing_decisions_and_reasons(self):
         self.load()
         self.decide("ta", "Reviewer A", "rec-0001", "include")
@@ -191,7 +259,8 @@ class TestScreening(unittest.TestCase):
         self.assertTrue(any(s == "block" and "rec-0001 (ta): not decided by Reviewer B" in m for s, _, m in found), found)
         with open(self.p / screening.SCREENING, "a", encoding="utf-8", newline="") as fh:
             fh.write("ta,rec-0001,Reviewer B,include,,,2026-11-22\n"
-                     "ft,rec-0001,consensus,exclude,,,2026-11-22\n")
+                     "ft,rec-0001,Reviewer A,exclude,,,2026-11-22\n"
+                     "ft,rec-0001,Reviewer B,exclude,,,2026-11-22\n")
         found = screening.check(self.p)
         self.assertTrue(any("full-text exclusion without a reason" in m for _, _, m in found), found)
 

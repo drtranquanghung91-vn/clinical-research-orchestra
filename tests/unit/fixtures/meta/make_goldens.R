@@ -18,6 +18,7 @@ studies2x2 <- function(id, a, n1, c, n2)
 summ <- function(r) {
   tau2 <- if (is.null(r$tau2)) 0 else r$tau2
   re <- !is.null(r$method) && r$method %in% c("REML", "DL")
+  # The prediction interval is computed by hand with qt(k - 2), matching the Python definition; it is not metafor's predict().
   pi <- if (re && r$k >= 3) r$b[1] + c(-1, 1) * qt(0.975, r$k - 2) * sqrt(tau2 + r$se^2) else NULL
   sprintf('"estimate": %s, "se": %s, "ci": %s, "p": %s, "tau2": %s, "i2": %s, "q": %s, "q_p": %s, "pi": %s, "k": %d',
           num(r$b[1]), num(r$se), arr(c(r$ci.lb, r$ci.ub)), num(r$pval), num(tau2), num(r$I2), num(r$QE),

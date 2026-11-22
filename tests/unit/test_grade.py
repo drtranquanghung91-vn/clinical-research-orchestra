@@ -154,6 +154,22 @@ class TestGrade(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("E-GRADE warn 06_writing/review/04-results.md:3", out)
 
+    def test_month_may_is_not_a_hedge(self):
+        self.write_grade(outcome())
+        d = self.p / "06_writing" / "review"
+        (d / "04-results.md").write_text(
+            "# Results\n\nIn the trial published in May 2024 drug X reduces mortality ({{R-A1-001.full}}).\n\n"
+            "May reduce mortality, the trial suggests ({{R-A1-001.full}}).\n", encoding="utf-8")
+        locs = [loc for _, loc, _ in grade.check_wording(self.p, [d / "04-results.md"])]
+        self.assertEqual(locs, ["06_writing/review/04-results.md:3"])
+
+    def test_hedge_words_match_across_unicode_forms(self):
+        import unicodedata
+        word = "có thể"
+        for form in ("NFC", "NFD"):
+            self.assertTrue(grade._hedged(unicodedata.normalize(form, "thuốc có thể giảm tử vong"),
+                                          [unicodedata.normalize("NFD" if form == "NFC" else "NFC", word)], "vi"))
+
     def test_wording_lists(self):
         for lang in ("vi", "en"):
             w = grade.load_wording(lang)

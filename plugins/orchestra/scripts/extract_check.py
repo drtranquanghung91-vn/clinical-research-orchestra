@@ -65,6 +65,9 @@ def check_extraction(project: Path, humans: list[str]) -> list[tuple[str, str, s
     found: list[tuple[str, str, str]] = []
     files = sorted((project / SRD).glob("extraction-*.csv")) if (project / SRD).is_dir() else []
     if not files:
+        if (project / EXTRACTION).is_file():
+            found.append(("block", f"{EXTRACTION}:1", "extraction.csv has no source: two extraction-<reviewer>.csv files "
+                                                      "(one per human reviewer) are needed"))
         return found
     by_slug = {screening.slug(h): h for h in humans}
     named = []
@@ -98,7 +101,10 @@ def check_extraction(project: Path, humans: list[str]) -> list[tuple[str, str, s
         if diffs:
             found.append(("block", f"{EXTRACTION}:1", f"no consensus file: {diffs} difference(s) between the extractors"))
         return found
-    for k, (line, row) in _keyed(cons_path, EXTRACTION, found).items():
+    cons = _keyed(cons_path, EXTRACTION, found)
+    for k in sorted((set(ra) | set(rb)) - set(cons)):
+        found.append(("block", f"{EXTRACTION}:1", f"{' / '.join(k)}: extracted by the reviewers but missing from extraction.csv"))
+    for k, (line, row) in cons.items():
         if (row.get("consensus_note") or "").strip():
             continue
         label = " / ".join(k)
@@ -159,7 +165,7 @@ def check_rob(project: Path, humans: list[str]) -> list[tuple[str, str, str]]:
         for dom in spec["domains"] + ["overall"]:
             if dom not in doms:
                 found.append(("block", where, f"{label}: {dom} missing"))
-        if "overall" in doms:
+        if "overall" in doms and doms["overall"] != "no information":
             worst = max((doms[d] for d in spec["domains"] if d in doms), key=lambda x: _rank(tool, x), default=None)
             if worst and _rank(tool, doms["overall"]) < _rank(tool, worst):
                 found.append(("block", where, f"{label}: overall {doms['overall']!r} is better than the worst domain {worst!r}"))

@@ -1,6 +1,6 @@
 ---
 name: systematic-review
-description: 'Use when the user wants a systematic review or meta-analysis planned, screened, extracted, pooled, graded or written. Triggers: "tổng quan hệ thống", "phân tích gộp", "sàng lọc bài báo", "trích xuất dữ liệu", "đánh giá nguy cơ sai lệch", "systematic review", "meta-analysis", "PRISMA", "PROSPERO", "forest plot", "GRADE", "risk of bias".'
+description: 'Use when the user wants a systematic review or meta-analysis planned, screened, extracted, pooled, graded or written. Triggers: "tổng quan hệ thống", "phân tích gộp", "sàng lọc bài báo", "trích xuất dữ liệu", "risk of bias cho tổng quan hệ thống", "systematic review", "meta-analysis", "PRISMA", "PROSPERO", "meta-analysis forest plot", "forest plot gộp", "GRADE summary of findings", "bảng tóm tắt kết quả GRADE".'
 ---
 
 # Systematic review
@@ -46,3 +46,4 @@ roles; reviewers, then `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score 
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/assemble.py" . review`; `python "${CLAUDE_PLUGIN_ROOT}/scripts/audit.py" . review`;
 the author opens G4; `python "${CLAUDE_PLUGIN_ROOT}/scripts/assemble.py" . review --final`. Then the disclosure (AI
 suggestions counted) and `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" decisions .`.
+E-REF is the author's call: verify, replace or record manually; never delete or reword the citing sentence, nor edit a reference status or ledger to pass. In drafts, ask the author to fill each `[[AUTHOR: …]]`/`[[TÁC GIẢ: …]]`, never fill them yourself.

@@ -267,9 +267,9 @@ def pool(y: list[float], v: list[float], model: str, hksj: bool = False) -> dict
     if hksj:
         qh = sum(wi * (yi - mu) ** 2 for wi, yi in zip(ws, y)) / df
         se = math.sqrt(qh / sws)
-        crit, p = t_ppf(0.975, df), t_p2(mu / se, df) if se > 0 else 0.0
+        crit, p = t_ppf(0.975, df), t_p2(mu / se, df) if se > 0 else None   # se = 0: no test, no p
     else:
-        crit, p = Z975, 2 * Z.cdf(-abs(mu / se))
+        crit, p = Z975, 2 * Z.cdf(-abs(mu / se)) if se > 0 else None
     out = {"k": k, "estimate": mu, "se": se, "ci": [mu - crit * se, mu + crit * se], "p": p, "tau2": tau2,
            "i2": i2, "q": q, "q_df": df, "q_p": chi2_sf(q, df), "pi": None}
     if model != "CE-IV" and k >= 3:
@@ -399,7 +399,10 @@ def studies_for(rows: list[dict], a: dict) -> list[dict]:
         if a["measure"].startswith("GEN"):
             if e is None:
                 raise ValueError(f"{where}: no '{a['experimental']}' row with es and se")
-            s.update(yi=_num(e.get("es"), f"{where} es"), vi=_num(e.get("se"), f"{where} se") ** 2)
+            se = _num(e.get("se"), f"{where} se")
+            if not se > 0:
+                raise ValueError(f"{where}: se must be greater than 0 (got {se:g})")
+            s.update(yi=_num(e.get("es"), f"{where} es"), vi=se ** 2)
             s["n"] = int(_num(e.get("n"), f"{where} n")) if (e.get("n") or "").strip() else 0
         else:
             if e is None or c is None:
@@ -411,6 +414,13 @@ def studies_for(rows: list[dict], a: dict) -> list[dict]:
                 s.update(m1=_num(e.get("mean"), f"{where} mean"), sd1=_num(e.get("sd"), f"{where} sd"),
                          n1=int(_num(e.get("n"), f"{where} n")), m2=_num(c.get("mean"), f"{where} mean"),
                          sd2=_num(c.get("sd"), f"{where} sd"), n2=int(_num(c.get("n"), f"{where} n")))
+            if min(s["n1"], s["n2"]) < 1:
+                raise ValueError(f"{where}: each group needs n of at least 1 (got {s['n1']} and {s['n2']})")
+            if a["measure"] not in ("OR", "RR", "RD"):
+                if not (s["sd1"] > 0 and s["sd2"] > 0):
+                    raise ValueError(f"{where}: sd must be greater than 0 in both groups (got {s['sd1']:g} and {s['sd2']:g})")
+                if a["measure"] == "SMD" and s["n1"] + s["n2"] <= 3:
+                    raise ValueError(f"{where}: SMD needs n1 + n2 greater than 3 (got {s['n1'] + s['n2']})")
             s["n"] = s["n1"] + s["n2"]
         if a["factor"]:
             level = ((e or {}).get(a["factor"]) or "").strip()
@@ -449,6 +459,8 @@ class Run:
 
     def add_pooled(self, a, status, f, kept, number, label) -> None:
         n = sum(s.get("n") or 0 for s, _ in kept)
+        if f["p"] is None:
+            self.log.log(f"{a['id']}: the pooled standard error is 0, so no p-value is given for '{label}'")
         self.log.add(a["id"], status, label, self.out(a, f["estimate"]), KIND[a["measure"]],
                      ci=[self.out(a, f["ci"][0]), self.out(a, f["ci"][1])], p=f["p"], n=n or None, count=f["k"],
                      number=number)
@@ -608,6 +620,7 @@ for (i in seq_len(nrow(plan))) {
   p <- plan[i, ]
   r <- fit(inp[inp$key == p$key, ], p$measure, p$model, p$hksj)
   tau2 <- if (is.null(r$tau2)) 0 else r$tau2
+  # The prediction interval is computed by hand with qt(k - 2), matching the Python definition; it is not metafor's predict().
   pi <- if (p$model %in% c("RE-REML", "RE-DL") && r$k >= 3) r$b[1] + c(-1, 1) * qt(0.975, r$k - 2) * sqrt(tau2 + r$se^2) else c(NA, NA)
   out <- c(out, sprintf('  "%s": {"estimate": %s, "ci": [%s, %s], "tau2": %s, "i2": %s, "q": %s, "pi": [%s, %s], "k": %d}',
                         p$key, num(r$b[1]), num(r$ci.lb), num(r$ci.ub), num(tau2), num(r$I2), num(r$QE),
@@ -640,7 +653,10 @@ def rscript_candidates(project: Path, env=None, system=None, which=shutil.which)
     out: list[Path] = []
     cfg = projectcfg.get(project, "tools.rscript")
     if isinstance(cfg, str) and cfg:
-        out.append(Path(cfg))
+        p = Path(cfg).expanduser()
+        if not p.is_absolute() and len(p.parts) > 1:
+            p = Path(project) / p            # a relative path is relative to the project folder
+        out.append(p)
     w = which(exe) or which("Rscript")
     if w:
         out.append(Path(w))
@@ -782,7 +798,8 @@ def main(argv=None) -> int:
     except FileNotFoundError as e:
         print(f"meta: {e}", file=sys.stderr)
         return 2
-    except (OSError, ValueError, KeyError, RuntimeError, csv.Error, subprocess.TimeoutExpired) as e:
+    except (OSError, ValueError, KeyError, RuntimeError, csv.Error, subprocess.TimeoutExpired,
+            ZeroDivisionError) as e:
         print(f"meta: {type(e).__name__}: {e}", file=sys.stderr)
         return 2
 

@@ -696,9 +696,11 @@ def build_flow(ctx: Ctx, fig: dict, by_id: dict, lang: str, **_):
 
 def _prisma_ref(fid: str, item: dict, key: str) -> str:
     v = item.get(key)
-    if not isinstance(v, str) or not derived.RID.search(v):
-        raise FigureError(f"{fid}: prisma '{key}' must be a ledger id such as R-A0-001")
-    return v if "." in v else f"{v}.value"
+    terms = [t.strip() for t in v.split("+")] if isinstance(v, str) else []
+    if not terms or not all(re.fullmatch(r"R-A\d+-\d{3}(\.(value|n))?", t) for t in terms):
+        raise FigureError(f"{fid}: prisma '{key}' must be a ledger id such as R-A0-001, or ids added with + "
+                          "(typed numbers are not allowed)")
+    return " + ".join(t if "." in t else f"{t}.value" for t in terms)
 
 
 def build_prisma(ctx: Ctx, fig: dict, by_id: dict, lang: str, **_):

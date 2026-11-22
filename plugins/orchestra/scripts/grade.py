@@ -21,6 +21,7 @@ import argparse
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 for _s in (sys.stdout, sys.stderr):
@@ -219,7 +220,7 @@ def load_wording(lang: str) -> dict[str, list[str]]:
         elif s.startswith("### "):
             sub = s[4:].strip()
         elif s.startswith("- ") and section == lang and sub in out:
-            out[sub].append(s[2:].strip().casefold())
+            out[sub].append(unicodedata.normalize("NFC", s[2:].strip()).casefold())
     return out
 
 
@@ -243,6 +244,10 @@ def certainty_by_result(project: Path) -> dict[str, str]:
 
 
 def _hedged(text: str, words: list[str], lang: str) -> bool:
+    text = unicodedata.normalize("NFC", text)
+    words = [unicodedata.normalize("NFC", w) for w in words]
+    if lang == "en":
+        text = re.sub(r"\bMay\s+\d", " ", text)          # the month ("May 2024"), not the verb
     low = text.casefold()
     if lang == "en":
         return any(re.search(r"(?<![\w-])" + re.escape(w) + r"(?![\w-])", low) for w in words)
