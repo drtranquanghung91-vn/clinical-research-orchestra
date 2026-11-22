@@ -181,13 +181,16 @@ table with fewer than 3 rows, no timeline table. `audit.py` runs it for the `cas
   prediction-interval bar); `r-script` writes `05_analysis/meta/metafor.R` reproducing every analysis.
 - R is optional, never required. The Python engine is the reference for the ledger, so a user without R
   gets every result, figure and check. When R is present, `meta.py r-status` reports it (Rscript found via
-  `project.yaml → tools.rscript`, `PATH`, `R_HOME`, or the standard Windows locations such as
-  `%LOCALAPPDATA%\Programs\R\R-*\bin` and `%ProgramFiles%\R\R-*\bin`; `metafor` installed or not), and
+  `project.yaml → tools.rscript`, `PATH`, `R_HOME`, or the standard install locations on each OS:
+  Windows `%LOCALAPPDATA%\Programs\R\R-*\bin`, `%ProgramFiles%\R\R-*\bin`; macOS
+  `/Library/Frameworks/R.framework/Resources/bin`, `/opt/homebrew/bin`, `/usr/local/bin`; Linux `/usr/bin`,
+  `/usr/local/bin`; newest version first; `metafor` installed or not), and
   `meta.py r-check` runs `metafor.R` and compares every pooled estimate, CI, τ², I² and prediction interval
   with the Python values (relative tolerance 1e-4); a mismatch is a `E-META` warn in the report, never a
-  silent switch of engine. `r-check` without R or `metafor` exits 2 with an install hint; the skill only
-  offers it when `r-status` says both are available.
-- Tests: the unit suite never needs R. Golden values produced once by `metafor` on the owner's machine are
+  silent switch of engine. `r-check` without R or `metafor` exits 2 with an install hint for the user's
+  OS (`install.packages("metafor")`); the skill only offers it when `r-status` says both are available,
+  and never installs software itself.
+- Tests: the unit suite never needs R. Golden values produced once by `metafor` on a maintainer's machine are
   committed as `tests/unit/fixtures/meta/metafor-goldens.json` (with R and `metafor` versions and the
   script that made them), and the Python results are tested against them; `tests/unit/test_meta_r.py`
   re-runs the comparison live and is skipped when R or `metafor` is absent (CI). No number is typed from
@@ -286,7 +289,9 @@ mismatch in `r-check`, warn only). Same format as P4.
    rendering, `E-NUM` and G3 need no new code paths. PRISMA counts use the same route.
 3. Meta-analysis is computed in Python (stdlib) so the repo works for users without R; R with `metafor` is an
    optional cross-check backend (`r-status`, `r-check`, generated `metafor.R`), and `metafor` goldens
-   generated once on the owner's machine (R 4.6.1) anchor the unit tests. CI does not install R.
+   generated once by a maintainer (R 4.6.1, metafor 5.2.1 on 22 Nov 2026) anchor the unit tests. CI does
+   not install R. The repo is public and used by anyone with Claude Code, so nothing depends on one
+   machine: no user-specific paths, OS-aware discovery, and every feature works without R.
 4. Default random-effects estimator REML; HKSJ optional; prediction interval when k ≥ 3; Egger only when
    k ≥ 10. The protocol records the author's choice; the skill does not switch models after seeing the
    results (a switch is a `DEVIATION` line).
