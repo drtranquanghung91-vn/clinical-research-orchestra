@@ -22,18 +22,18 @@ _help_cache: dict[str, str] = {}
 
 
 def _p9_ready() -> bool:
-    """TEMPORARY guard (remove after Tasks 5 and 9 merge): CLI lines that need meta.py or the case-report/review deliverables."""
+    """TEMPORARY guard (remove after Task 9 merges): CLI lines that need the case-report/review deliverables."""
     r = subprocess.run([sys.executable, str(ORCH / "scripts" / "assemble.py"), "--help"],
                        capture_output=True, text=True, encoding="utf-8", timeout=60)
-    return "case-report" in r.stdout and (ORCH / "scripts" / "meta.py").exists()
+    return "case-report" in r.stdout
 
 
 P9_READY = _p9_ready()
 
 
 def needs_p9(name: str, rest: str) -> bool:
-    """True for a command line that cannot pass before Tasks 5/9 are merged."""
-    return not P9_READY and (name == "meta" or bool(re.search(r"(?<![\w-])(case-report|review)(?![\w-])", rest.split("→")[0])))
+    """True for a command line that cannot pass before Task 9 are merged."""
+    return not P9_READY and bool(re.search(r"(?<![w-])(case-report|review)(?![w-])", rest.split("→")[0]))
 
 
 def positionals(script: str) -> list:
@@ -77,7 +77,7 @@ class TestWritingCommands(unittest.TestCase):
             for m in MENTION.finditer(text):
                 name, rest = m.group(1), m.group(2)
                 if needs_p9(name, rest):
-                    continue  # needs Task 9/5
+                    continue  # needs Task 9
                 with self.subTest(file=f.name, cmd=m.group(0)[:60]):
                     self.assertTrue((ORCH / "scripts" / (name + ".py")).exists(), name + ".py does not exist")
                     slots = positionals(name)
@@ -95,7 +95,7 @@ class TestWritingCommands(unittest.TestCase):
             for m in MENTION.finditer(f.read_text(encoding="utf-8")):
                 name, rest = m.group(1), m.group(2)
                 if needs_p9(name, rest):
-                    continue  # needs Task 9/5
+                    continue  # needs Task 9
                 positionals(name)  # fills the help cache
                 helptext = _help_cache[name]
                 head = rest.split("→")[0].split(";")[0]
@@ -129,7 +129,6 @@ class TestP5Skills(unittest.TestCase):
     def text(self, name):
         return (ORCH / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
 
-    @unittest.skipUnless(P9_READY, "needs Task 9/5")
     def test_p5_scripts_are_cited(self):
         found = set()
         for f in FILES:
