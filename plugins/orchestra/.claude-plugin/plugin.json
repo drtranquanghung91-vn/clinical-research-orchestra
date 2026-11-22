@@ -1,9 +1,9 @@
 {
   "name": "orchestra",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Evidence-first clinical research lifecycle for medical students and healthcare professionals (Vietnamese and English).",
   "author": { "name": "Trần Quang Hưng" },
   "license": "MIT",
   "repository": "https://github.com/drtranquanghung91-vn/clinical-research-orchestra",
-  "keywords": ["clinical-research", "medical", "thesis", "manuscript", "poster", "evidence", "vietnamese"]
+  "keywords": ["clinical-research", "medical", "thesis", "manuscript", "case-report", "systematic-review", "poster", "evidence", "vietnamese"]
 }

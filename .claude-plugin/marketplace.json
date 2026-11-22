@@ -2,8 +2,8 @@
   "name": "clinical-research-orchestra",
   "owner": { "name": "Trần Quang Hưng" },
   "metadata": {
-    "description": "Evidence-first Claude Code plugins for clinical research: question, evidence, protocol, analysis, manuscript, thesis, poster and defence.",
-    "version": "0.5.0"
+    "description": "Evidence-first Claude Code plugins for clinical research: question, evidence, protocol, analysis, manuscript, thesis, case report, systematic review, poster and defence.",
+    "version": "0.6.0"
   },
   "plugins": [
     {
@@ -14,7 +14,7 @@
     {
       "name": "orchestra",
       "source": "./plugins/orchestra",
-      "description": "Research lifecycle skills: question, literature, appraisal, protocol, sample size, analysis, manuscript, thesis, poster and defence, with verified references and checked numbers."
+      "description": "Research lifecycle skills: question, literature, appraisal, protocol, sample size, analysis, manuscript, thesis, case report, systematic review, poster and defence, with verified references and checked numbers."
     }
   ]
 }
