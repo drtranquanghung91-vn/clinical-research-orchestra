@@ -11,20 +11,22 @@
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-0F5E7A"></a>
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-C8372D">
   <img alt="Languages" src="https://img.shields.io/badge/languages-English%20%7C%20Vietnamese-56677F">
-  <img alt="Status" src="https://img.shields.io/badge/status-0.5.0%20write-B7791F">
+  <img alt="Status" src="https://img.shields.io/badge/status-0.6.0%20reviews-B7791F">
   <a href="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
-> **Status: early.** Version 0.5.0 adds the P4 "write" skills (thesis and journal manuscript
+> **Status: early.** Version 0.6.0 adds the P5 "reviews and case reports" skills (a CARE case report, a PRISMA 2020
+> systematic review with dual screening, double extraction, meta-analysis and a GRADE summary of
+> findings, and a standalone narrative or scoping review) to the P4 "write" skills (thesis and journal manuscript
 > written from locked results, reviewed by read-only agents in scored rounds, one audit command and
-> export only through gate G4) to the P3 "present" skills (figures, conference abstract, print poster
+> export only through gate G4), the P3 "present" skills (figures, conference abstract, print poster
 > in three layouts with preflight, thesis-defence deck with rehearsal questions, prose humanizer,
 > consistency audit), the P2 "analyse and report results" skills (data preparation, statistical
 > analysis per the SAP, results writing with a Chapter 3 .docx), the P1 "plan the study" skills
 > (research question, literature search, critical appraisal, guideline check, literature review,
 > protocol design, sample size and SAP) and the 0.1.0 foundation (project folder, ledgers, gates,
-> reference verification and patient-data protection). Case reports, systematic reviews and the
-> remaining skills arrive phase by phase; see [Roadmap](#roadmap). A simulated project run through
+> reference verification and patient-data protection). The remaining skills (ethics, journal choice,
+> reviewer response) arrive in P6; see [Roadmap](#roadmap). A simulated project run through
 > every P1 to P4 skill is in [`examples/fictional-cohort/`](examples/fictional-cohort/). Do not
 > rely on it for real studies yet.
 
@@ -102,7 +104,9 @@ Two plugins ship from this marketplace:
 | 5 | `manuscript-writing`, `/orchestra:manuscript` | IMRaD journal article with a structured abstract, word counts against the journal limits, author declarations left to the author; .docx through G4 | 0.5.0 |
 | 5 | `/orchestra:audit` | one pass over citations, numbers, statistics, literature structure, consistency, prose, guideline items, captions, identifiers and reviews; `reviews/audit.md` (`audit.py`) | 0.5.0 |
 | 5 | agents `citation-verifier`, `statistical-reviewer`, `reporting-guideline-checker`, `scientific-editor` | read-only reviews of the drafts, each with sub-scores for the revise loop | 0.5.0 |
-| 5 | `case-report`, `systematic-review`, `/orchestra:sr`, `literature-review` mode (c) | CARE case report, PRISMA systematic review, standalone narrative or scoping review | P5 |
+| 5 | `case-report`, `/orchestra:case` | CARE case report (BMJ Case Reports mode) from a de-identified dossier: case facts locked, similar-cases table, consent checked before the final export (`case_facts.py`, `case_lint.py`) | 0.6.0 |
+| 2–5 | `systematic-review`, `/orchestra:sr` | PRISMA 2020 review: protocol and PROSPERO draft, search log, dual screening with kappa and PRISMA flow, double extraction and risk of bias, meta-analysis with prediction interval, GRADE summary of findings, `out/review.docx` through G4 (`screening.py`, `extract_check.py`, `meta.py`, `grade.py`; the R `metafor` cross-check is optional) | 0.6.0 |
+| 2 | `literature-review` mode (c), `/orchestra:review` | standalone narrative review (SANRA) or scoping review (PRISMA-ScR, charts instead of pooling) | 0.6.0 |
 | 3, 7 | `ethics-and-crf`, `journal-selection`, `reviewer-response` | ethics dossier and CRF, journal shortlist, response to reviewers | P6 |
 
 You can talk to the skills in Vietnamese or English. The language of research documents is
@@ -168,8 +172,8 @@ install hint and exits 2; the skills report that check as not run.
 | P2 Analyse and report results | data preparation, statistical analysis (run and import), results ledger, results writing, Chapter 3 .docx | done (0.3.0) |
 | P3 Present | figures, conference abstract, poster with print preflight, defence deck, prose humanizer, consistency audit | done (0.4.0) |
 | P4 Write | thesis and manuscript writing, reviewer agents, revise loop, audit, gate G4 and its hook | done (0.5.0) |
-| P5 Reviews and case reports | case report (CARE), systematic review with `/orchestra:sr` (PRISMA 2020), literature review mode (c) | next |
-| P6 Extend | ethics and CRF, journal selection, reviewer response, Codex and Antigravity packaging | planned |
+| P5 Reviews and case reports | case report (CARE) with `/orchestra:case`, systematic review with `/orchestra:sr` (PRISMA 2020), literature review mode (c) | done (0.6.0) |
+| P6 Extend | ethics and CRF, journal selection, reviewer response, autorater, Codex and Antigravity packaging | next |
 
 The design spec is in [`docs/superpowers/specs/`](docs/superpowers/specs/) and each phase
 has its implementation plan in [`docs/superpowers/plans/`](docs/superpowers/plans/).
@@ -187,6 +191,13 @@ tools/lint_skills.py              skill frontmatter and length checks
 docs/superpowers/                 design spec and phase plans
 AGENTS.md                         conventions for agents working on this repository
 ```
+
+## Optional tools and known issues
+
+R is optional (cross-check only). `meta.py` pools in Python; if R 4 or later with the `metafor` package is found, `meta.py r-check` compares every pooled estimate with it and reports a mismatch as a warning (`E-META`). Without R, everything else runs.
+
+- The R cross-check needs R 4 or later with `metafor` installed.
+- On Windows with the Microsoft Store build of Python, R started from Python may not see your R library. Set `R_LIBS_USER` to the library folder, or set `tools.rscript` in `project.yaml`.
 
 ## Testing
 

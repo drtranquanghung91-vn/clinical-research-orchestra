@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.6.0 (2026-11-23)
+- P5 reviews and case reports: model skills `case-report` (CARE 2013, BMJ Case Reports mode through
+  `target.journal_style: bmj`) and `systematic-review` (PRISMA 2020), `literature-review` mode (c)
+  (narrative review with SANRA, scoping review with PRISMA-ScR; a request for pooling or risk of bias in a
+  scoping review is redirected to `systematic-review`); commands `/orchestra:case` and `/orchestra:sr`;
+  `/orchestra:review` also offers mode (c). Workflows
+  `references/workflows/{case-report,systematic-review,scoping-review}.md` and `references/review/`
+  (protocol and PROSPERO templates, search strings, GRADE wording, SWiM, role briefs).
+- Scripts: `case_facts.py` (de-identified case facts into the ledger as `observed`), `case_lint.py`
+  (anonymisation, consent, structure; `--strict` blocks the final export without recorded consent),
+  `screening.py` (import, dedupe, decide, conflicts, kappa, counts, suggest; PRISMA counts from the log),
+  `extract_check.py` (double extraction, consensus, risk-of-bias and charting files), `meta.py` (pooled
+  estimates with tau-squared, I-squared and prediction interval, subgroups, forest spec; `r-check`
+  against `metafor` is optional), `grade.py` (summary of findings from the certainty ratings). Figures:
+  `figures.py` adds the pooled diamond and prediction bar to `forest`, `type: prisma` (PRISMA 2020 flow)
+  and `type: rob` (traffic-light summary).
+- Deliverables `case-report` and `review` in `assemble.py`, `audit.py`, `worklog.py`,
+  `guideline_checklist.py`, `gate.py`, G4 and the hook; `init_project.py` types `case-report`,
+  `systematic-review` and `review` (designs `scoping-review`, `narrative-review`). Hook marker
+  `orchestra-prep:` (review-work briefs `screen-suggest`, `extract-draft`, `rob-draft`) is denied unless G2
+  is open; `orchestra-role:` still needs G3. Item files for CARE, PRISMA-2020, PRISMA-ScR and SANRA.
+- New finding codes: `E-CASE` (case-report anonymisation, consent, structure), `E-SCR` (screening and
+  extraction log integrity), `E-GRADE` (claim strength against certainty, warn only), `E-META` (Python
+  against `metafor` mismatch, warn only).
+- Plan decisions: D1 each producer writes its own log and results document and `results_ledger.py import
+  --merge` replaces only that source's records; D7 review-work briefs start with `orchestra-prep:` and need
+  G2, not G3; D15 R is found per OS (`tools.rscript`, `PATH`, `R_HOME`, then standard install folders) and
+  is never required.
+- Scenarios (RED/GREEN, `tests/scenarios/BASELINE.md`): case-identifiers, case-consent-missing,
+  sr-single-screener, sr-pool-heterogeneous, scoping-asks-pooling.
+- Examples: `examples/fictional-case` (fictional patient, real verified references) and
+  `examples/fictional-sr` (fictional included studies recorded as `add-manual`), each through G4.
+- Known issues: the R cross-check needs R 4 or later with `metafor`; with the Microsoft Store build of
+  Python on Windows, R started from Python may not see your R library (set `R_LIBS_USER` or
+  `tools.rscript`).
+- Roadmap: P5 done; P6 Extend (`ethics-and-crf`, `journal-selection`, `reviewer-response`, autorater,
+  Codex and Antigravity packaging) is next.
+
 ## 0.5.0 (2026-11-22)
 - P4 write: model skills `thesis-writing` (Vietnamese thesis: Đặt vấn đề, Chương 1–4, Kết luận,
   Kiến nghị, Tài liệu tham khảo, Phụ lục) and `manuscript-writing` (IMRaD article with a structured
