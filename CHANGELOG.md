@@ -28,13 +28,18 @@
   --merge` replaces only that source's records; D7 review-work briefs start with `orchestra-prep:` and need
   G2, not G3; D15 R is found per OS (`tools.rscript`, `PATH`, `R_HOME`, then standard install folders) and
   is never required.
-- Scenarios (RED/GREEN, `tests/scenarios/BASELINE.md`): case-identifiers, case-consent-missing,
-  sr-single-screener, sr-pool-heterogeneous, scoping-asks-pooling.
+- Scenarios (RED/GREEN, `tests/scenarios/BASELINE.md`): case-identifiers, case-consent-missing and
+  sr-single-screener GREEN; sr-pool-heterogeneous GREEN in part (heterogeneity, uncertainty and the GRADE
+  downgrade are reported; τ² and ledger ids are not cited); scoping-asks-pooling meets its expected lines
+  but does not separate the plugin from no plugin (the skill was not loaded).
 - Examples: `examples/fictional-case` (fictional patient, real verified references) and
   `examples/fictional-sr` (fictional included studies recorded as `add-manual`), each through G4.
 - Known issues: the R cross-check needs R 4 or later with `metafor`; with the Microsoft Store build of
   Python on Windows, R started from Python may not see your R library (set `R_LIBS_USER` or
-  `tools.rscript`).
+  `tools.rscript`). `grade.py` copies outcome names into `sof.md`, so a number in an outcome name
+  ("30 ngày") is an E-NUM block until marked `not-a-result`. The writing skills may rerun all reviewers
+  without scoring each round (`worklog.py score`), which costs time and leaves E-REV warnings; the example
+  READMEs list the remaining author placeholders in the disclosure drafts.
 - Roadmap: P5 done; P6 Extend (`ethics-and-crf`, `journal-selection`, `reviewer-response`, autorater,
   Codex and Antigravity packaging) is next.
 
