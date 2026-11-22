@@ -9,6 +9,8 @@ out/
 !plugins/orchestra/templates/project/out/.gitkeep
 # The example project's exported .docx is part of the example
 !examples/fictional-cohort/out/
+!examples/fictional-case/out/
+!examples/fictional-sr/out/
 # Scratch files written into a plugin's scripts folder are never committed
 plugins/*/scripts/*
 !plugins/*/scripts/*.py
