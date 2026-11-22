@@ -224,6 +224,20 @@ def export_problems(project: Path, deliverable: str | None) -> list[str]:
 _IMG = re.compile(r"!\[[^\]]*\]\(([^)\s]+)")
 
 
+def export_files(project: Path, deliverable: str) -> list[Path]:
+    """Files a final export depends on: drafts, order.txt and every existing image the drafts reference."""
+    project = Path(project)
+    base = drafts.folder(project, deliverable)
+    paths = list(drafts.tracked_files(project, deliverable))
+    for f in drafts.draft_files(project, deliverable):
+        for m in _IMG.finditer(f.read_text(encoding="utf-8-sig", errors="replace")):
+            src = m.group(1)
+            img = Path(src) if Path(src).is_absolute() else base / src
+            if img.is_file() and img not in paths:
+                paths.append(img)
+    return paths
+
+
 def _uncovered(project: Path, data: dict, deliverable: str | None) -> list[str]:
     """Current drafts, order.txt and images that the audit's file map does not cover (added since the audit)."""
     project = Path(project)
@@ -234,14 +248,7 @@ def _uncovered(project: Path, data: dict, deliverable: str | None) -> list[str]:
     for d in ds:
         if d not in drafts.DELIVERABLES:
             continue
-        base = drafts.folder(project, d)
-        paths = list(drafts.tracked_files(project, d))
-        for f in drafts.draft_files(project, d):
-            for m in _IMG.finditer(f.read_text(encoding="utf-8-sig", errors="replace")):
-                src = m.group(1)
-                img = Path(src) if Path(src).is_absolute() else base / src
-                if img.is_file():
-                    paths.append(img)
+        paths = export_files(project, d)
         for f in paths:
             try:
                 rel = f.resolve().relative_to(root).as_posix()
