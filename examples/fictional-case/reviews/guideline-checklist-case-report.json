@@ -1,0 +1,186 @@
+{
+  "guideline": "CARE",
+  "deliverable": "case-report",
+  "items": {
+    "1": {
+      "status": "present",
+      "file": "06_writing/case-report/00-title.md",
+      "line": 1,
+      "quote": "Drug reaction with eosinophilia and systemic symptoms after a urate-lowering drug in a patient with chronic kidney disease: a case report"
+    },
+    "2": {
+      "status": "present",
+      "file": "06_writing/case-report/00-title.md",
+      "line": 3,
+      "quote": "Keywords: drug reaction with eosinophilia and systemic symptoms; allopurinol; HLA-B*58:01; chronic kidney disease; case report"
+    },
+    "3a": {
+      "status": "present",
+      "file": "06_writing/case-report/01-abstract.md",
+      "line": 8,
+      "quote": "illustrates how these risk factors combined in a single patient, together with human herpesvirus-6"
+    },
+    "3b": {
+      "status": "present",
+      "file": "06_writing/case-report/01-abstract.md",
+      "line": 14,
+      "quote": "A man in his 50s with gout, hypertension and chronic kidney disease developed fever, a widespread"
+    },
+    "3c": {
+      "status": "present",
+      "file": "06_writing/case-report/01-abstract.md",
+      "line": 22,
+      "quote": "A RegiSCAR score of {{R-A0-015}} supported a diagnosis of definite DRESS, with positive HLA-B*58:01"
+    },
+    "3d": {
+      "status": "present",
+      "file": "06_writing/case-report/01-abstract.md",
+      "line": 30,
+      "quote": "In patients with chronic kidney disease, allopurinol should be started at a renally adjusted dose"
+    },
+    "4": {
+      "status": "present",
+      "file": "06_writing/case-report/02-introduction.md",
+      "line": 16,
+      "quote": "This case is reported (as a fictional, illustrative example) because it brings these three features"
+    },
+    "5a": {
+      "status": "present",
+      "file": "06_writing/case-report/03-patient-information.md",
+      "line": 3,
+      "quote": "A man in his 50s presented with fever and a widespread rash. He had gout, with flares of the first"
+    },
+    "5b": {
+      "status": "present",
+      "file": "06_writing/case-report/03-patient-information.md",
+      "line": 12,
+      "quote": "His main concern at the outpatient visit before this episode was a painful gout flare. Serum uric"
+    },
+    "5c": {
+      "status": "present",
+      "file": "06_writing/case-report/03-patient-information.md",
+      "line": 9,
+      "quote": "Family history was not recorded. His HLA-B*58:01 genotype was unknown at that time, since this test"
+    },
+    "5d": {
+      "status": "present",
+      "file": "06_writing/case-report/03-patient-information.md",
+      "line": 4,
+      "quote": "metatarsophalangeal joint several times a year, self-treated with colchicine during flares; and"
+    },
+    "6": {
+      "status": "present",
+      "file": "06_writing/case-report/04-clinical-findings.md",
+      "line": 3,
+      "quote": "At admission, temperature was {{R-A0-004}} °C and heart rate {{R-A0-005}} beats/min; blood pressure"
+    },
+    "7": {
+      "status": "present",
+      "file": "06_writing/case-report/05-timeline.md",
+      "line": 3,
+      "quote": "Table 1. Timeline"
+    },
+    "8a": {
+      "status": "present",
+      "file": "06_writing/case-report/06-diagnostic-assessment.md",
+      "line": 5,
+      "quote": "On day 0, full blood count showed a white-cell count of {{R-A0-007}} ×10⁹/L, an eosinophil"
+    },
+    "8b": {
+      "status": "present",
+      "file": "06_writing/case-report/06-diagnostic-assessment.md",
+      "line": 22,
+      "quote": "The onset more than three weeks after starting allopurinol, rather than within the first days, made"
+    },
+    "8c": {
+      "status": "present",
+      "file": "06_writing/case-report/06-diagnostic-assessment.md",
+      "line": 29,
+      "quote": "Fever, a widespread maculopapular rash beginning weeks after a new drug, facial oedema,"
+    },
+    "8d": {
+      "status": "present",
+      "file": "06_writing/case-report/06-diagnostic-assessment.md",
+      "line": 44,
+      "quote": "A RegiSCAR score of {{R-A0-015}} indicated definite DRESS. HLA-B*58:01 carriage and a"
+    },
+    "9a": {
+      "status": "present",
+      "file": "06_writing/case-report/07-therapeutic-intervention.md",
+      "line": 5,
+      "quote": "Pharmacological: withdrawal of the suspected culprit and co-prescribed drugs, systemic"
+    },
+    "9b": {
+      "status": "present",
+      "file": "06_writing/case-report/07-therapeutic-intervention.md",
+      "line": 10,
+      "quote": "Allopurinol (already self-discontinued by the patient) and colchicine were stopped. Intravenous"
+    },
+    "9c": {
+      "status": "present",
+      "file": "06_writing/case-report/07-therapeutic-intervention.md",
+      "line": 19,
+      "quote": "No dose escalation or change in the choice of immunosuppressant was needed; the oral prednisolone"
+    },
+    "10a": {
+      "status": "present",
+      "file": "06_writing/case-report/08-follow-up.md",
+      "line": 5,
+      "quote": "From the clinician's perspective, fever, rash, and the haematological, hepatic and renal"
+    },
+    "10b": {
+      "status": "present",
+      "file": "06_writing/case-report/08-follow-up.md",
+      "line": 12,
+      "quote": "Liver enzymes and eosinophil count normalised by outpatient follow-up, and renal function returned"
+    },
+    "10c": {
+      "status": "present",
+      "file": "06_writing/case-report/08-follow-up.md",
+      "line": 18,
+      "quote": "Adherence and tolerability were assessed by clinical interview at the day +43 and day +62"
+    },
+    "10d": {
+      "status": "present",
+      "file": "06_writing/case-report/08-follow-up.md",
+      "line": 24,
+      "quote": "No adverse events beyond the index drug reaction and its direct complications (transient liver and"
+    },
+    "11a": {
+      "status": "present",
+      "file": "06_writing/case-report/09-discussion.md",
+      "line": 5,
+      "quote": "The management followed the usual principles for DRESS: prompt withdrawal of the suspected culprit"
+    },
+    "11b": {
+      "status": "present",
+      "file": "06_writing/case-report/09-discussion.md",
+      "line": 22,
+      "quote": "Allopurinol-induced DRESS in patients with pre-existing renal impairment, or presenting with"
+    },
+    "11c": {
+      "status": "present",
+      "file": "06_writing/case-report/09-discussion.md",
+      "line": 43,
+      "quote": "A single case cannot establish how often HLA-B*58:01 carriage, non-renally-adjusted dosing or HHV-6"
+    },
+    "11d": {
+      "status": "present",
+      "file": "06_writing/case-report/09-discussion.md",
+      "line": 52,
+      "quote": "In a patient with chronic kidney disease who needs a urate-lowering drug, the allopurinol starting"
+    },
+    "12": {
+      "status": "present",
+      "file": "06_writing/case-report/10-patient-perspective.md",
+      "line": 5,
+      "quote": "I thought the rash was an ordinary allergy and kept taking the tablets for two more days. Nobody"
+    },
+    "13": {
+      "status": "present",
+      "file": "06_writing/case-report/11-consent.md",
+      "line": 3,
+      "quote": "Written informed consent for publication of this case report was obtained from the patient (a"
+    }
+  }
+}
