@@ -33,7 +33,7 @@ P9_READY = _p9_ready()
 
 def needs_p9(name: str, rest: str) -> bool:
     """True for a command line that cannot pass before Task 9 are merged."""
-    return not P9_READY and bool(re.search(r"(?<![w-])(case-report|review)(?![w-])", rest.split("→")[0]))
+    return not P9_READY and bool(re.search(r"(?<![\w-])(case-report|review)(?![\w-])", rest.split("→")[0]))
 
 
 def positionals(script: str) -> list:
