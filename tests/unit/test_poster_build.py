@@ -487,6 +487,7 @@ class TestBrowser(unittest.TestCase):
             for ext in (".pdf", ".png", ".dom.html"):
                 self.assertTrue((poster / f"editorial{ext}").stat().st_size > 1000, ext)
             dom = (poster / "editorial.dom.html").read_text(encoding="utf-8")
+            self.assertNotIn(b"\r\n", (poster / "editorial.dom.html").read_bytes())  # LF only, every OS
             self.assertIn('data-preflight="done"', dom)
             self.assertRegex(dom, r'data-natural-w="\d+"')
             self.assertRegex(dom, r'data-placed-w-cm="[\d.]+"')

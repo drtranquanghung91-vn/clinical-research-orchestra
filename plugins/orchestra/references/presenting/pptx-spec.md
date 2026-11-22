@@ -8,7 +8,7 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/check_pptx.py" OUT [--min-body 18] [--min-
 Both need `python-pptx` (`python -m pip install python-pptx`; missing → hint and exit 2).
 Exit codes: `pptx_from_spec.py` 0 built, 2 any error (bad spec, unreadable file, unknown placeholder).
 `check_pptx.py` 0 clean or only advisory findings, 1 serious findings (`off-slide`, `may-overflow`,
-`tiny-text`), 2 unreadable file. Advisory: `small-body`, `no-alt-text`, `no-notes`.
+`tiny-text`, `leftover-markup`), 2 unreadable file. Advisory: `small-body`, `no-alt-text`, `no-notes`.
 
 The spec is a JSON file, for example `07_present/defense/deck.json`. Paths in it (`image`, `data`,
 `template`) are relative to the spec's folder.
@@ -120,7 +120,10 @@ otherwise bottom to top (target below) or top to bottom. Sides written in the sp
 
 `off-slide` (a shape beyond the slide edge), `may-overflow` (estimated text taller than its box),
 `tiny-text` (below `--min-any`, default 10 pt), `small-body` (a `Body` text box below `--min-body`,
-default 18 pt), `no-alt-text` (picture without a description), `no-notes` (no speaker notes).
+default 18 pt), `no-alt-text` (picture without a description), `no-notes` (no speaker notes),
+`leftover-markup` (S22: slide text in titles, bodies, tables or groups holding a pandoc citation key `[@key]` or
+`@key`, a markdown backtick, or an unrendered `{{…}}` placeholder; speaker notes are not read). Write
+citations on a slide as short text ("Hu và cs., 2026").
 `--poster` scales both floors by the slide width, 24 pt body at 90 cm wide (so about 13 pt for any
 text), and skips the notes check. `--render DIR` exports PNGs through PowerPoint or LibreOffice where
 installed (not needed for the checks).
