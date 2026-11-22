@@ -18,6 +18,13 @@ reviews/audit.json (refused with the reasons while the audit is missing, has blo
 `lock ... G4` and `--files` are usage errors. `check <project> G4 --deliverable thesis|manuscript` checks only
 that deliverable's locked files. Line: "G4: open — approved after a clean audit by <by> on <date>; <n> locked files
 unchanged", "G4: not open — not approved yet[ for the <d>]", or "G4: closed — <reason>; <reason>".
+`check <project> G4` without --deliverable checks every per-deliverable entry and fails if any fails.
+
+export_problems(project, deliverable) -> list[str] is the one rule for a FINAL export (assemble.py --final,
+build_docx.py out/<d>.docx, the orchestra gate hook): [] = allowed. It returns the reasons G4 is not open for the
+deliverable (a "WAIVE G4:" line counts as open), plus the reasons reviews/audit.json is missing, unreadable, or
+no longer matches the files on disk. The audit file must exist and match even when G4 is waived; blocking
+findings in it are tolerated only when G4 is waived.
 
 Exit codes: open/lock 0 = recorded; check 0 = open (or waived), 1 = closed (reasons listed);
 2 = usage error, missing project folder or file, unreadable state (open/lock). Errors go to stderr.
@@ -116,6 +123,8 @@ def _open_g4(project: Path, by: str) -> dict:
     data, why = audit_status(project)
     if why:
         raise Refused("; ".join(why))
+    if not audited_deliverables(data):
+        raise Refused("reviews/audit.json names no thesis or manuscript deliverable")
     state = _load(project)
     old = state.get("G4") if isinstance(state.get("G4"), dict) and state["G4"].get("status") == "open" else {}
     now = dt.datetime.now().isoformat(timespec="seconds")
@@ -165,20 +174,44 @@ def check_gate(project: Path, gate: str, deliverable: str | None = None) -> tupl
         return False, [str(e)]
     if not entry or entry.get("status") != "open":
         return False, [f"{gate} is not open: the author has not approved it"]
-    files = entry.get("files", {})
-    if gate == "G4" and deliverable:
-        sub = entry.get("deliverables", {}).get(deliverable)
-        if not isinstance(sub, dict):
-            return False, [f"G4 is not open for the {deliverable}: the author has not opened it after a clean audit"]
-        files = sub.get("files", {})
+    groups = [entry.get("files", {})]
+    if gate == "G4":
+        per = entry.get("deliverables")
+        if deliverable:
+            sub = per.get(deliverable) if isinstance(per, dict) else None
+            if not isinstance(sub, dict):
+                return False, [f"G4 is not open for the {deliverable}: the author has not opened it after a clean audit"]
+            groups = [sub.get("files", {})]
+        elif isinstance(per, dict) and per:
+            groups = [s.get("files", {}) for s in per.values() if isinstance(s, dict)]
     why = []
-    for rel, digest in files.items():
-        f = project / rel
-        if not f.exists():
-            why.append(f"{rel} is missing since the audit" if gate == "G4" else f"{rel} is missing since {gate} was locked")
-        elif sha256(f) != digest:
-            why.append(f"{rel} changed since the audit" if gate == "G4" else f"{rel} changed after {gate} was locked")
+    for files in groups:
+        for rel, digest in files.items():
+            f = project / rel
+            if not f.exists():
+                msg = f"{rel} is missing since the audit" if gate == "G4" else f"{rel} is missing since {gate} was locked"
+            elif sha256(f) != digest:
+                msg = f"{rel} changed since the audit" if gate == "G4" else f"{rel} changed after {gate} was locked"
+            else:
+                continue
+            if msg not in why:
+                why.append(msg)
     return (not why), why
+
+
+def export_problems(project: Path, deliverable: str | None) -> list[str]:
+    """Reasons a final export of `deliverable` is not allowed; [] = allowed (see the module docstring)."""
+    project = Path(project)
+    ok, why = check_gate(project, "G4", deliverable or None)
+    problems = [] if ok else list(why)
+    waived_g4 = _waived(project, "G4")
+    data, awhy = audit_status(project)
+    for w in awhy:
+        if waived_g4 and data is not None and w.startswith("the audit has "):
+            continue
+        if w not in problems:
+            problems.append(w)
+    return problems
 
 
 def check_line(project: Path, gate: str, ok: bool, why: list[str], deliverable: str | None = None) -> str:

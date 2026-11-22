@@ -273,3 +273,58 @@ class TestGateG4(unittest.TestCase):
                 encoding="utf-8")
             with self.assertRaises(gate.Refused):
                 gate.open_gate(p, "G4", by="A")
+
+
+class TestGateG4Review(unittest.TestCase):
+    def test_check_without_deliverable_checks_each_entry(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            audited(p, "thesis")
+            gate.open_gate(p, "G4", by="A")
+            m = audited(p, "manuscript")
+            gate.open_gate(p, "G4", by="A")
+            # a file listed only in the thesis entry changes: the union would still hide nothing, but each entry counts
+            state_p = p / "gates" / "state.json"
+            state = json.loads(state_p.read_text(encoding="utf-8"))
+            state["G4"]["files"] = {}
+            state_p.write_text(json.dumps(state), encoding="utf-8")
+            self.assertTrue(gate.check_gate(p, "G4")[0])
+            (p / "06_writing" / "thesis" / "ch4.md").write_text("edited\n", encoding="utf-8")
+            ok, why = gate.check_gate(p, "G4")
+            self.assertFalse(ok)
+            self.assertIn("06_writing/thesis/ch4.md changed since the audit", why)
+            self.assertTrue(m.is_file())
+
+    def test_open_refused_when_no_deliverable_resolves(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            audited(p)
+            audit = json.loads((p / "reviews" / "audit.json").read_text(encoding="utf-8"))
+            audit["deliverables"] = ["all"]
+            (p / "reviews" / "audit.json").write_text(json.dumps(audit), encoding="utf-8")
+            self.assertEqual(gate.audited_deliverables(audit), [])
+            with self.assertRaises(gate.Refused):
+                gate.open_gate(p, "G4", by="A")
+
+    def test_export_problems(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            self.assertTrue(any("not open" in w for w in gate.export_problems(p, "thesis")))
+            f = audited(p)
+            gate.open_gate(p, "G4", by="A")
+            self.assertEqual(gate.export_problems(p, "thesis"), [])
+            self.assertTrue(gate.export_problems(p, "manuscript"))
+            f.write_text("edited\n", encoding="utf-8")
+            why = gate.export_problems(p, "thesis")
+            self.assertEqual(why, ["06_writing/thesis/ch4.md changed since the audit"])
+
+    def test_export_problems_waiver_needs_a_matching_audit_but_tolerates_blocks(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            with (p / "decisions.md").open("a", encoding="utf-8") as fh:
+                fh.write("\nWAIVE G4: internal report, 2026-11-22\n")
+            self.assertTrue(any("audit.json not found" in w for w in gate.export_problems(p, "thesis")))
+            f = audited(p, blocks=3)
+            self.assertEqual(gate.export_problems(p, "thesis"), [])
+            f.write_text("edited\n", encoding="utf-8")
+            self.assertTrue(any("changed since the audit" in w for w in gate.export_problems(p, "thesis")))

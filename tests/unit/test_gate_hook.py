@@ -92,7 +92,53 @@ class TestGateHook(unittest.TestCase):
         self.assertIsNone(run(shell("python /plug/scripts/assemble.py . thesis --final", self.t)))
         with (self.p / "decisions.md").open("a", encoding="utf-8") as fh:
             fh.write("\nWAIVE G4: internal report, 2026-11-22\n")
+        d = run(shell("python /plug/scripts/assemble.py . thesis --final", self.p))
+        self.assertEqual(d["permissionDecision"], "deny")  # a waiver still needs a matching audit
+        self.assertIn("audit.json not found", d["permissionDecisionReason"])
+        f = self.p / "06_writing" / "thesis" / "x.md"
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text("x\n", encoding="utf-8")
+        (self.p / "reviews" / "audit.json").write_text(json.dumps({
+            "deliverable": "thesis", "at": "t", "blocks": 2, "warns": 0,
+            "files": {"06_writing/thesis/x.md": gate.sha256(f)}}), encoding="utf-8")
         self.assertIsNone(run(shell("python /plug/scripts/assemble.py . thesis --final", self.p)))
+        self.assertIsNone(run(shell("python /plug/scripts/build_docx.py a.md out/thesis.docx --project .", self.p)))
+
+    def test_deny_text_does_not_repeat_itself(self):
+        d = run(shell("python /plug/scripts/assemble.py . thesis --final", self.p))
+        self.assertEqual(d["permissionDecisionReason"].count("G4 is not open"), 1)
+
+    def test_map_path(self):
+        self.assertEqual(gate_hook.map_path("/c/Users/x/p", nt=True), "C:/Users/x/p")
+        self.assertEqual(gate_hook.map_path("/d", nt=True), "D:/")
+        self.assertEqual(gate_hook.map_path("/c/Users/x/p", nt=False), "/c/Users/x/p")
+        self.assertEqual(gate_hook.map_path("/srv/p", nt=True), "/srv/p")
+        self.assertEqual(gate_hook.map_path("~/proj", nt=False), os.path.expanduser("~/proj"))
+
+    def _bash_path(self, path: Path) -> str:
+        s = path.as_posix()
+        return "/" + s[0].lower() + s[2:] if os.name == "nt" and s[1:2] == ":" else s
+
+    def test_git_bash_drive_paths(self):
+        bp = self._bash_path(self.p)
+        for cmd, tool in ((f'cd "{bp}" && python /plug/scripts/assemble.py . thesis --final', "Bash"),
+                          (f"python /plug/scripts/assemble.py {bp} thesis --final", "Bash"),
+                          (f"python /plug/scripts/build_docx.py a.md {bp}/out/thesis.docx", "Bash"),
+                          (f"Push-Location {bp}; python /plug/scripts/assemble.py . thesis --final", "PowerShell")):
+            d = run(shell(cmd, self.t, tool=tool))
+            self.assertIsNotNone(d, cmd)
+            self.assertEqual(d["permissionDecision"], "deny", cmd)
+
+    def test_quotes_case_and_normalised_out_path(self):
+        spaced = self.t / "my proj"
+        shutil.copytree(self.p, spaced)
+        for cmd in ('python /plug/scripts/build_docx.py a.md out/thesis.docx --project="my proj"',
+                    'python /plug/scripts/assemble.py "my proj"/. thesis --final',
+                    'python /plug/scripts/ASSEMBLE.PY "my proj" thesis --final',
+                    "python /plug/scripts/build_docx.py a.md out/../out/thesis.docx --project 'my proj'"):
+            d = run(shell(cmd, self.t))
+            self.assertIsNotNone(d, cmd)
+            self.assertEqual(d["permissionDecision"], "deny", cmd)
 
     def test_writer_role_needs_g3(self):
         payload = {"tool_name": "Agent", "tool_input": {"description": "draft Chương 4",

@@ -12,8 +12,8 @@
 from __future__ import annotations
 
 import json
+import os
 import re
-import shlex
 import sys
 from pathlib import Path
 
@@ -30,17 +30,27 @@ SHELL = ("Bash", "PowerShell")
 AGENT = ("Agent", "Task")
 ROLE = re.compile(r"orchestra-role:\s*([\w-]+)")
 SEP = re.compile(r"&&|\|\||[;|\n]")
-CD = {"cd", "set-location", "sl", "pushd", "chdir"}
+CD = {"cd", "set-location", "sl", "pushd", "push-location", "chdir"}
 OPTS_WITH_VALUE = {"assemble.py": {"--lang"}, "build_docx.py": {"--project", "--template"}}
 FINAL_NAMES = ("thesis.docx", "manuscript.docx")
 
 
+TOKEN = re.compile(r"""(?:[^\s"']|"[^"]*"|'[^']*')+""")
+
+
 def _tokens(segment: str) -> list[str]:
-    try:
-        toks = shlex.split(segment, posix=False)
-    except ValueError:
-        toks = segment.split()
-    return [t.strip("\"'") for t in toks]
+    """Whitespace tokens; a quoted part (also inside a word: --project="a b") stays in one token, quotes removed."""
+    toks = TOKEN.findall(segment) or segment.split()
+    return [t.replace('"', "").replace("'", "") for t in toks]
+
+
+def map_path(s: str, nt: bool | None = None) -> str:
+    """Git Bash paths on Windows: `/c/x` -> `C:/x`; `~` -> the home folder."""
+    if s.startswith("~"):
+        s = os.path.expanduser(s)
+    if (os.name == "nt" if nt is None else nt) and re.match(r"^/[A-Za-z](/|$)", s):
+        s = s[1].upper() + ":" + (s[2:] or "/")
+    return s
 
 
 def _name(tok: str) -> str:
@@ -74,21 +84,21 @@ def exports(command: str, cwd: Path) -> list[tuple[Path, str, str]]:
         if toks[0].lower() in CD:
             target = next((t for t in toks[1:] if not t.startswith("-")), None)
             if target:
-                cwd = cwd / target
+                cwd = cwd / map_path(target)
             continue
         for i, tok in enumerate(toks):
             name = _name(tok)
             if name == "assemble.py":
                 pos, opts = _args(toks, i, name)
                 if "--final" in opts:
-                    found.append((cwd / pos[0] if pos else cwd, pos[1] if len(pos) > 1 else "", "assemble.py --final"))
+                    found.append((cwd / map_path(pos[0]) if pos else cwd, pos[1] if len(pos) > 1 else "", "assemble.py --final"))
             elif name == "build_docx.py":
                 pos, opts = _args(toks, i, name)
                 if len(pos) >= 2:
-                    out = cwd / pos[-1]
+                    out = Path(os.path.normpath(cwd / map_path(pos[-1])))
                     if out.name.lower() in FINAL_NAMES and out.parent.name.lower() == "out":
                         proj = opts.get("--project")
-                        project = cwd / proj if isinstance(proj, str) and proj else out.parent.parent
+                        project = cwd / map_path(proj) if isinstance(proj, str) and proj else out.parent.parent
                         found.append((project, out.stem.lower(), f"build_docx.py → out/{out.name}"))
     return found
 
@@ -111,15 +121,16 @@ def decide(data: dict) -> dict | None:
     cwd = Path(str(data.get("cwd") or ".")).expanduser()
     if tool in SHELL:
         cmd = str(tin.get("command", "")) if isinstance(tin, dict) else str(tin)
-        if "assemble.py" not in cmd and "build_docx.py" not in cmd:
+        low = cmd.lower()
+        if "assemble.py" not in low and "build_docx.py" not in low:
             return None
         for project, deliverable, what in exports(cmd, cwd):
             if not (project / "project.yaml").is_file():
                 continue
-            ok, why = gate.check_gate(project, "G4", deliverable or None)
-            if not ok:
+            why = gate.export_problems(project, deliverable or None)
+            if why:
                 scope = f" for the {deliverable}" if deliverable else ""
-                return _deny(f"[orchestra] {what} is a final export and G4 is not open{scope}: {'; '.join(why)}. "
+                return _deny(f"[orchestra] {what} is a final export and cannot run{scope}: {'; '.join(why)}. "
                              "Run /orchestra:audit, fix every block, then the author opens G4 "
                              "(gate.py open . G4 --by NAME) and the export runs again. / "
                              "Xuất bản cuối cần cổng G4 mở: chạy /orchestra:audit, sửa hết lỗi chặn, rồi tác giả mở G4.")
