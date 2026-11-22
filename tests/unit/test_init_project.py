@@ -154,6 +154,29 @@ class TestInitP5(unittest.TestCase):
             m = init_project.create(t / "m", "A", "thesis-masters", "cohort", "vi", "vi")   # P1-P4 types unchanged
             self.assertFalse((m / "01_case").exists())
 
+    def test_review_and_case_designs_need_their_type(self):
+        with tempfile.TemporaryDirectory() as t:
+            t = Path(t)
+            for i, (ptype, design) in enumerate((("thesis-masters", "case-report"), ("manuscript", "systematic-review"),
+                                                 ("thesis-phd", "scoping-review"), ("poster-only", "narrative-review"),
+                                                 ("systematic-review", "scoping-review"), ("review", "case-report"))):
+                with self.subTest(ptype=ptype, design=design):
+                    with self.assertRaises(ValueError):
+                        init_project.create(t / f"x{i}", "A", ptype, design, "en", "vi")
+                    self.assertFalse((t / f"x{i}" / "project.yaml").exists())
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                code = init_project.main([str(t / "cli"), "--title", "A", "--type", "thesis-masters", "--design", "case-report"])
+            self.assertEqual(code, 2)
+            self.assertIn("case-report", err.getvalue())
+            primary = [d for d in init_project.DESIGNS
+                       if d not in ("case-report", "systematic-review", "scoping-review", "narrative-review")]
+            n = 0
+            for ptype in ("thesis-ckii", "thesis-masters", "thesis-phd", "de-tai-co-so", "manuscript", "poster-only"):
+                for design in primary:                                    # every P1-P4 combination still accepted
+                    n += 1
+                    init_project.create(t / f"ok{n}", "A", ptype, design, "vi", "vi")
+
     def test_review_data_folder_is_versioned(self):
         if not shutil.which("git"):
             self.skipTest("git not installed")

@@ -4,6 +4,9 @@
 - A shell command running `assemble.py <project> <deliverable> … --final`, or `build_docx.py … <dir>/out/thesis.docx`
   (manuscript.docx, case-report.docx or review.docx), is denied unless `gate.py check <project> G4` passes for that deliverable. The project is
   the <project> argument (build_docx: --project, else the folder holding out/), else the working directory.
+  `python -m assemble` / `-m build_docx` count too; redirections (`> log`, `2>&1`, `*>`) are dropped, `$(…)`,
+  backticks and braces are opened, every build_docx positional is checked, and trailing dots or spaces in the
+  output name are ignored (Windows drops them). build_docx.py refuses the same exports on its own.
 - An Agent/Task prompt containing `orchestra-role:` is denied unless G3 is open for the project in the working
   directory (the nearest folder upward with project.yaml).
 - An Agent/Task prompt containing `orchestra-prep:` (P5 review-work briefs) is denied unless G2 is open.
@@ -31,8 +34,13 @@ SHELL = ("Bash", "PowerShell")
 AGENT = ("Agent", "Task")
 ROLE = re.compile(r"orchestra-role:\s*([\w-]+)")
 SEP = re.compile(r"&&|\|\||[;|\n]")
+CONTINUATION = re.compile(r"[`\\]\r?\n")          # bash `\` and PowerShell backtick line continuations
+SUBST = re.compile(r"\$\(|[`(){}]")                # $(…), `…`, (…), { … }: the command inside still runs
+REDIRECT = re.compile(r"^(?:\d|\*|&)?(?:>>?|<)(?:&\d)?")
+GLUED_REDIRECT = re.compile(r"(?:\d|\*|&)?(?:>>?|<)")
 CD = {"cd", "set-location", "sl", "pushd", "push-location", "chdir"}
 OPTS_WITH_VALUE = {"assemble.py": {"--lang"}, "build_docx.py": {"--project", "--template"}}
+MODULES = {"assemble": "assemble.py", "build_docx": "build_docx.py"}
 FINAL_NAMES = ("thesis.docx", "manuscript.docx", "case-report.docx", "review.docx")
 PREP = re.compile(r"orchestra-prep:\s*([\w-]+)")
 
@@ -46,6 +54,25 @@ def _tokens(segment: str) -> list[str]:
     return [t.replace('"', "").replace("'", "") for t in toks]
 
 
+def _strip_redirects(toks: list[str]) -> list[str]:
+    """Drop shell redirections (`>`, `>>`, `2>`, `2>&1`, `*>`, `&>`, `<`, `>file`, `2>file`) and their targets."""
+    out, skip = [], False
+    for t in toks:
+        if skip:
+            skip = False
+            continue
+        m = GLUED_REDIRECT.search(t)
+        if m and m.start() > 0:                     # out/thesis.docx>log.txt
+            out.append(t[:m.start()])
+            t = t[m.start():]
+        r = REDIRECT.match(t)
+        if r:
+            skip = not t[r.end():] and not r.group(0)[-1].isdigit()   # bare operator: the next token is its file
+            continue
+        out.append(t)
+    return out
+
+
 def map_path(s: str, nt: bool | None = None) -> str:
     """Git Bash paths on Windows: `/c/x` -> `C:/x`; `~` -> the home folder."""
     if s.startswith("~"):
@@ -56,7 +83,23 @@ def map_path(s: str, nt: bool | None = None) -> str:
 
 
 def _name(tok: str) -> str:
-    return tok.replace("\\", "/").rsplit("/", 1)[-1].lower()
+    """Last path part, lower case, trailing dots and spaces dropped (Windows ignores them: out/thesis.docx.)."""
+    return tok.replace("\\", "/").rstrip("/").rsplit("/", 1)[-1].rstrip(". ").lower()
+
+
+def _script(toks: list[str], i: int) -> str | None:
+    """assemble.py | build_docx.py when toks[i] runs one: a path to the script, or `-m build_docx` / `-mbuild_docx`."""
+    tok = toks[i]
+    name = _name(tok)
+    if name in OPTS_WITH_VALUE:
+        return name
+    if tok.startswith("-m") and len(tok) > 2:
+        module = tok[2:]
+    elif i > 0 and toks[i - 1] == "-m":
+        module = tok
+    else:
+        return None
+    return MODULES.get(module.rsplit(".", 1)[-1].rstrip(". ").lower())
 
 
 def _args(toks: list[str], i: int, script: str) -> tuple[list[str], dict]:
@@ -76,11 +119,22 @@ def _args(toks: list[str], i: int, script: str) -> tuple[list[str], dict]:
     return pos, opts
 
 
-def exports(command: str, cwd: Path) -> list[tuple[Path, str, str]]:
-    """(project, deliverable, what) for every final export the command would run."""
+def _final_out(arg: str, cwd: Path) -> tuple[Path, str] | None:
+    """(normalised path, final name) when arg names <dir>/out/<thesis|manuscript|case-report|review>.docx."""
+    out = Path(os.path.normpath(cwd / map_path(arg)))
+    name = _name(out.name)
+    if name in FINAL_NAMES and _name(out.parent.name) == "out":
+        return out, name
+    return None
+
+
+def _exports(command: str, cwd: Path, loose: bool) -> list[tuple[Path, str, str]]:
     found = []
-    for seg in SEP.split(command):
-        toks = _tokens(seg.strip())
+    for seg in SEP.split(CONTINUATION.sub(" ", command)):
+        seg = SUBST.sub(" ", seg)
+        if loose:                       # a command quoted inside another (bash -c "…", x="$(…)") also runs
+            seg = seg.replace('"', " ").replace("'", " ")
+        toks = _strip_redirects(_tokens(seg.strip()))
         if not toks:
             continue
         if toks[0].lower() in CD:
@@ -88,20 +142,30 @@ def exports(command: str, cwd: Path) -> list[tuple[Path, str, str]]:
             if target:
                 cwd = cwd / map_path(target)
             continue
-        for i, tok in enumerate(toks):
-            name = _name(tok)
+        for i in range(len(toks)):
+            name = _script(toks, i)
             if name == "assemble.py":
                 pos, opts = _args(toks, i, name)
                 if "--final" in opts:
                     found.append((cwd / map_path(pos[0]) if pos else cwd, pos[1] if len(pos) > 1 else "", "assemble.py --final"))
             elif name == "build_docx.py":
                 pos, opts = _args(toks, i, name)
-                if len(pos) >= 2:
-                    out = Path(os.path.normpath(cwd / map_path(pos[-1])))
-                    if out.name.lower() in FINAL_NAMES and out.parent.name.lower() == "out":
+                for arg in pos:         # every positional: the output is not always the last word
+                    hit = _final_out(arg, cwd)
+                    if hit:
+                        out, fname = hit
                         proj = opts.get("--project")
                         project = cwd / map_path(proj) if isinstance(proj, str) and proj else out.parent.parent
-                        found.append((project, out.stem.lower(), f"build_docx.py → out/{out.name}"))
+                        found.append((project, fname[:-len(".docx")], f"build_docx.py → out/{fname}"))
+    return found
+
+
+def exports(command: str, cwd: Path) -> list[tuple[Path, str, str]]:
+    """(project, deliverable, what) for every final export the command would run. Redirections are dropped,
+    $(…), backticks and braces are opened, and a second loose pass also reads commands quoted inside others."""
+    found: list[tuple[Path, str, str]] = []
+    for loose in (False, True):
+        found += [f for f in _exports(command, cwd, loose) if f not in found]
     return found
 
 
@@ -124,7 +188,7 @@ def decide(data: dict) -> dict | None:
     if tool in SHELL:
         cmd = str(tin.get("command", "")) if isinstance(tin, dict) else str(tin)
         low = cmd.lower()
-        if "assemble.py" not in low and "build_docx.py" not in low:
+        if "assemble" not in low and "build_docx" not in low:
             return None
         for project, deliverable, what in exports(cmd, cwd):
             if not (project / "project.yaml").is_file():

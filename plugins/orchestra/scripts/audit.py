@@ -4,8 +4,10 @@ CLI: audit.py <project> [thesis|manuscript|case-report|review] [--online] [--jso
   no deliverable = every deliverable with drafts. Exit 0 no block, 1 blocks, 2 usage / missing project / no drafts /
   --online network error / cannot write reviews/.
 Checks (E-REF ledgers and citations, E-NUM, E-STAT, E-CASE, E-SCR, E-GRADE, E-LIT, E-CONS, P-codes, E-RG, E-FMT, E-PHI, E-REV) are listed in
-ROWS. reviews/audit.json records the sha256 of the tracked drafts, order.txt, referenced images and the ledgers that
-exist; gate.py G4 and assemble.py --final refuse when any of them changed afterwards. Case reports skip E-STAT (no
+ROWS. reviews/audit.json records the sha256 of the tracked drafts, order.txt, referenced images, the ledgers that
+exist and the case or review input files (null for an input that is absent); gate.py G4 and assemble.py --final
+refuse when any of them changed, or a null input was created, afterwards. A review whose project.yaml names no review
+design is one E-FMT block (never a guessed review type). Case reports skip E-STAT (no
 register) and mask relative time for E-NUM; reviews add E-SCR (systematic and scoping) and E-GRADE.
 """
 from __future__ import annotations
@@ -53,6 +55,7 @@ ROWS_FILE = {"ledgers": "ledgers", "citations": "ledgers/references.json", "resu
 INPUT_FILES = ("01_case/facts.csv", "01_case/similar-cases.csv", "02_evidence/sr/records.csv",
                "02_evidence/sr/screening.csv", "04_data/sr/extraction.csv", "04_data/sr/rob.csv",
                "04_data/sr/charting.csv", "05_analysis/meta/grade.json")
+INPUTS_BY_DELIVERABLE = {"case-report": INPUT_FILES[:2], "review": INPUT_FILES[2:]}
 FIX = {
     "en": {"E-REF": "verify or replace the reference (verify_refs.py --write, search_lit.py); never edit its status by hand.",
            "E-NUM": "replace the typed number with its {{R-...}} placeholder, or mark it <!-- not-a-result: ... -->.",
@@ -340,14 +343,18 @@ def run(project: Path, ds: list[str], named: str | None, online: bool) -> dict:
             guarded("analysis declarations", check_stat, a, files)
         if d == "case-report":
             guarded("case report", check_case, a)
+        kind = drafts.review_kind(a.project) if d == "review" else None
         if d == "review":
-            if drafts.review_kind(a.project) in ("systematic", "scoping"):
+            if kind is None:        # never guess a review type: the checks would be silently weaker
+                a.add("sections and captions", "E-FMT", "block", "project.yaml:1", drafts.NOT_REVIEW_DESIGN)
+            if kind in ("systematic", "scoping"):
                 guarded("screening and extraction", check_screening, a)
             guarded("GRADE wording", check_grade, a, files)
         guarded("literature synthesis", check_literature, a, files)
         guarded("prose density", check_prose, a, files)
         guarded("guideline checklist", check_guideline, a, d)
-        guarded("sections and captions", check_format, a, d)
+        if d != "review" or kind is not None:
+            guarded("sections and captions", check_format, a, d)
         guarded("identifiers", check_phi, a, d, files)
         guarded("reviewer reports", check_reviews, a, d)
         for p in gate.export_files(a.project, d):
@@ -357,6 +364,8 @@ def run(project: Path, ds: list[str], named: str | None, online: bool) -> dict:
                 pass            # outside the project: gate skips it too
     hashed.update({rel: gate.sha256(a.project / rel) for rel in LEDGER_FILES if (a.project / rel).is_file()})
     hashed.update({rel: gate.sha256(a.project / rel) for rel in INPUT_FILES if (a.project / rel).is_file()})
+    # an input the audited deliverables read but that is absent now is recorded as null: creating it later closes G4
+    hashed.update({rel: None for d in ds for rel in INPUTS_BY_DELIVERABLE.get(d, ()) if rel not in hashed})
     order = {label: i for i, (label, _) in enumerate(ROWS)}
     a.findings.sort(key=lambda f: order.get(f["check"], 99))
     blocks = sum(1 for f in a.findings if f["level"] == "block")

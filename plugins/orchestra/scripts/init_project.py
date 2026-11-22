@@ -5,7 +5,8 @@
 
 Types case-report, systematic-review and review (with --design scoping-review or narrative-review) also create
 their folders (01_case/ or 02_evidence/sr/, 04_data/sr/, 05_analysis/meta/, and 06_writing/case-report/ or
-06_writing/review/).
+06_writing/review/). The pairing holds both ways: design case-report needs type case-report, systematic-review needs
+type systematic-review, scoping-review and narrative-review need type review.
 
 Exit codes: 0 = created; 2 = bad arguments, destination already has project.yaml, or cannot write.
 """
@@ -74,6 +75,9 @@ def create(dest: Path, title: str, ptype: str, design: str, output_lang: str, ch
         raise ValueError(f"design must be one of {DESIGNS}")
     if ptype in TYPE_DESIGNS and design not in TYPE_DESIGNS[ptype]:
         raise ValueError(f"type {ptype} needs --design {' or '.join(TYPE_DESIGNS[ptype])}")
+    owner = next((t for t, ds in TYPE_DESIGNS.items() if design in ds), None)
+    if owner is not None and ptype != owner:     # the other direction: these designs belong to one type
+        raise ValueError(f"design {design} needs --type {owner}")
     if output_lang not in LANGS or chat_lang not in LANGS:
         raise ValueError("languages must be 'vi' or 'en'")
     dest = Path(dest)

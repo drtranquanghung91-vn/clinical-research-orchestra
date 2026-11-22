@@ -14,6 +14,7 @@ import case_facts
 import gate
 import gate_hook
 import guideline_checklist as gc
+import init_project
 import worklog
 from crolib import drafts, reviews
 from p5_helpers import case_project, review_project
@@ -129,6 +130,8 @@ class TestCaseReportDeliverable(unittest.TestCase):
         write_reports(self.p, "case-report", "CARE", CARE_IDS)
         code, out, err = quiet(audit.main, [str(self.p), "case-report"])
         data = json.loads((self.p / "reviews" / "audit.json").read_text(encoding="utf-8"))
+        self.assertEqual(data["blocks"], 0, [f for f in data["findings"] if f["level"] == "block"])
+        self.assertEqual(code, 0, err)
         codes = {f["code"] for f in data["findings"] if f["level"] == "block"}
         self.assertNotIn("E-STAT", {f["code"] for f in data["findings"]})       # no register in a case report
         self.assertNotIn("E-NUM", codes, data["findings"])                       # "day +14" is relative time (D20)
@@ -216,3 +219,125 @@ class TestReviewDeliverable(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertRegex(out, r"drafts-digest: review [0-9a-f]{64}")
         self.assertEqual(quiet(gate.main, ["check", str(p), "G4", "--deliverable", "review"])[0], 1)
+
+
+SCREENING = "record_id,stage,decision,reason,reviewer\nr1,title-abstract,include,,Reviewer A\n"
+EXTRACTION = "study_id,field,value\ns1,n,100\n"
+ROB = "study_id,domain,judgement\ns1,D1,low\n"
+GRADE = json.dumps({"outcomes": []})
+INPUTS = {"02_evidence/sr/screening.csv": SCREENING, "04_data/sr/extraction.csv": EXTRACTION,
+          "04_data/sr/rob.csv": ROB, "05_analysis/meta/grade.json": GRADE}
+
+
+class TestReviewInputsCloseG4(unittest.TestCase):
+    """Review inputs edited, or created, after the audit close G4 (minor 3 and 7)."""
+
+    def setUp(self):
+        self.t = Path(tempfile.mkdtemp())
+        self.p = review_project(self.t)
+        (self.p / "06_writing" / "review" / "02-introduction.md").write_text("# Introduction\n\nText.\n", encoding="utf-8")
+
+    def tearDown(self):
+        shutil.rmtree(self.t, ignore_errors=True)
+
+    def open_after_audit(self) -> dict:
+        data = audit.run(self.p, ["review"], "review", False)
+        data["blocks"] = 0                          # the gate logic is under test here, not the audit's checks
+        (self.p / "reviews").mkdir(exist_ok=True)
+        (self.p / "reviews" / "audit.json").write_text(json.dumps(data), encoding="utf-8")
+        gate.open_gate(self.p, "G4", by="A")
+        self.assertEqual(gate.export_problems(self.p, "review"), [])
+        self.assertTrue(gate.check_gate(self.p, "G4", "review")[0])
+        return data
+
+    def test_editing_each_input_closes_g4(self):
+        for rel, text in INPUTS.items():
+            with self.subTest(rel=rel):
+                for r, t in INPUTS.items():
+                    (self.p / r).parent.mkdir(parents=True, exist_ok=True)
+                    (self.p / r).write_text(t, encoding="utf-8")
+                data = self.open_after_audit()
+                self.assertIsInstance(data["files"][rel], str)
+                (self.p / rel).write_text(text + ("\n" if not rel.endswith(".json") else " "), encoding="utf-8")
+                why = gate.export_problems(self.p, "review")
+                self.assertIn(f"{rel} changed since the audit", why)
+                self.assertFalse(gate.check_gate(self.p, "G4", "review")[0])
+                self.assertEqual(quiet(gate.main, ["check", str(self.p), "G4", "--deliverable", "review"])[0], 1)
+
+    def test_inputs_absent_at_audit_then_created_close_g4(self):
+        for rel in ("05_analysis/meta/grade.json", "04_data/sr/rob.csv"):
+            with self.subTest(rel=rel):
+                for r in INPUTS:
+                    (self.p / r).unlink(missing_ok=True)
+                data = self.open_after_audit()
+                self.assertIn(rel, data["files"])
+                self.assertIsNone(data["files"][rel])
+                (self.p / rel).parent.mkdir(parents=True, exist_ok=True)
+                (self.p / rel).write_text(INPUTS[rel], encoding="utf-8")
+                why = gate.export_problems(self.p, "review")
+                self.assertTrue(any(w.startswith(rel) and "since the audit" in w for w in why), why)
+                self.assertFalse(gate.check_gate(self.p, "G4", "review")[0])
+                (self.p / rel).unlink()
+                self.assertEqual(gate.export_problems(self.p, "review"), [])
+
+    def test_thesis_audit_records_no_review_inputs(self):
+        p = init_project.create(self.t / "th", "T", "thesis-masters", "cohort", "vi", "vi")
+        (p / "06_writing" / "thesis").mkdir(parents=True, exist_ok=True)
+        (p / "06_writing" / "thesis" / "ch4-discussion.md").write_text("# Bàn luận\n", encoding="utf-8")
+        data = audit.run(p, ["thesis"], "thesis", False)
+        self.assertFalse(set(audit.INPUT_FILES) & set(data["files"]))
+
+
+NOT_REVIEW = "project.yaml design is not a review design (systematic-review | scoping-review | narrative-review)"
+
+
+class TestReviewDesignGuard(unittest.TestCase):
+    """An unknown review design blocks; it never silently becomes a narrative review (important 1)."""
+
+    def setUp(self):
+        self.t = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.t, ignore_errors=True)
+
+    def edit_yaml(self, p: Path, old: str, new: str) -> None:
+        y = (p / "project.yaml").read_text(encoding="utf-8")
+        self.assertIn(old, y)
+        (p / "project.yaml").write_text(y.replace(old, new), encoding="utf-8")
+
+    def assert_blocked(self, p: Path) -> None:
+        self.assertIsNone(drafts.review_kind(p))
+        with self.assertRaises(ValueError) as cm:
+            drafts.variant(p, "review")
+        self.assertIn(NOT_REVIEW, str(cm.exception))
+        (p / "06_writing" / "review" / "02-introduction.md").write_text("# Introduction\n\nText.\n", encoding="utf-8")
+        write_reports(p, "review", "SANRA", [])
+        code, _, err = quiet(audit.main, [str(p), "review"])
+        self.assertEqual(code, 1, err)
+        data = json.loads((p / "reviews" / "audit.json").read_text(encoding="utf-8"))
+        hits = [f for f in data["findings"] if f["code"] == "E-FMT" and f["level"] == "block" and f["msg"] == NOT_REVIEW]
+        self.assertEqual(len(hits), 1, data["findings"])
+        code, out, err = quiet(assemble.main, [str(p), "review"])
+        self.assertNotEqual(code, 0)
+        self.assertIn(NOT_REVIEW, out + err)
+
+    def test_typo_design_blocks(self):
+        p = review_project(self.t, design="narrative-review")
+        self.edit_yaml(p, "design: narrative-review", "design: narative-review")
+        self.assert_blocked(p)
+
+    def test_unparseable_yaml_blocks(self):
+        p = review_project(self.t, design="scoping-review")
+        (p / "project.yaml").write_text("{type: review, design: [scoping-review\n\t- ::\n", encoding="utf-8")
+        self.assert_blocked(p)
+
+    def test_type_decides_systematic_and_review_needs_its_designs(self):
+        s = review_project(self.t / "s")
+        self.edit_yaml(s, "design: systematic-review", "design: cohort")
+        self.assertEqual(drafts.review_kind(s), "systematic")      # type: systematic-review wins
+        r = review_project(self.t / "r", design="scoping-review")
+        self.assertEqual(drafts.review_kind(r), "scoping")
+        self.edit_yaml(r, "design: scoping-review", "design: systematic-review")
+        self.assertIsNone(drafts.review_kind(r))                   # type: review takes scoping or narrative only
+        th = init_project.create(self.t / "th", "T", "thesis-masters", "cohort", "vi", "vi")
+        self.assertIsNone(drafts.review_kind(th))

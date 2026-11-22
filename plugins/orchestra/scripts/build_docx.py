@@ -14,7 +14,10 @@ defaults: Times New Roman 13 pt, 1.5 lines, 2/2/3/2 cm, A4. --template FILE.docx
 institution.template, relative to the project) replaces the styles and the page setup with the template's
 styles.xml and last w:sectPr; content still comes from the Markdown (templates/thesis/README.md).
 Approach adapted from Amelia Le's md2docx.py.
-Exit codes: 0 = written; 2 = usage or I/O error (missing input, image or template; image not PNG; output not .docx).
+A final export, <project>/out/thesis.docx (manuscript.docx, case-report.docx, review.docx) in a folder with
+project.yaml (or with --project), is refused while gate.py's export_problems lists reasons (G4 not open, audit stale).
+Exit codes: 0 = written; 1 = final export refused (reasons on stderr); 2 = usage or I/O error (missing input, image
+or template; image not PNG; output not .docx).
 """
 from __future__ import annotations
 
@@ -399,6 +402,25 @@ def build(md_text: str, settings: dict, base_dir: Path | None = None, template: 
     return buf.getvalue()
 
 
+FINAL_NAMES = ("thesis.docx", "manuscript.docx", "case-report.docx", "review.docx")
+
+
+def final_export_problems(output: Path, project: Path | None = None) -> list[str]:
+    """Reasons writing `output` is refused: it is <project>/out/<thesis|manuscript|case-report|review>.docx (trailing
+    dots and spaces ignored, as Windows does) and gate.export_problems is not empty for that deliverable. The project
+    is the folder holding out/ when it has project.yaml, and --project when given."""
+    out = Path(output).resolve()
+    name = out.name.rstrip(". ").lower()
+    if name not in FINAL_NAMES or out.parent.name.rstrip(". ").lower() != "out":
+        return []
+    import gate  # lazy: gate pulls in the drafts and audit modules
+    why: list[str] = []
+    for proj in dict.fromkeys(p.resolve() for p in (out.parent.parent, project) if p is not None):
+        if (proj / "project.yaml").is_file():
+            why += [w for w in gate.export_problems(proj, name[:-len(".docx")]) if w not in why]
+    return why
+
+
 def main(argv=None) -> int:
     for stream in (sys.stdout, sys.stderr):
         try:
@@ -417,6 +439,15 @@ def main(argv=None) -> int:
     if not output.lower().endswith(".docx"):
         print(f"build_docx: the output must end in .docx: {output}", file=sys.stderr)
         return 2
+    try:
+        why = final_export_problems(Path(output), Path(a.project) if a.project else None)
+    except (OSError, ValueError) as e:
+        why = [f"the G4 check could not run ({type(e).__name__}: {e})"]
+    if why:
+        print(f"build_docx: {output} is a final export and cannot be written: {'; '.join(why)}. Run /orchestra:audit, "
+              "fix every block, then the author opens G4 (gate.py open <project> G4 --by NAME). / Xuất bản cuối cần "
+              "cổng G4 mở.", file=sys.stderr)
+        return 1
     try:
         project = Path(a.project) if a.project else None
         template = Path(a.template) if a.template else template_from_project(project)

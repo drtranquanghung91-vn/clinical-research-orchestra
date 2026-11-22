@@ -116,6 +116,9 @@ def audit_status(project: Path) -> tuple[dict | None, list[str]]:
         f = Path(project) / rel
         if Path(rel).is_absolute() or not f.resolve().is_relative_to(root):
             why.append(f"{rel} is outside the project")
+        elif digest is None:            # an input absent at audit time
+            if f.exists():
+                why.append(f"{rel} changed since the audit (created after it)")
         elif not f.is_file():
             why.append(f"{rel} is missing since the audit")
         elif sha256(f) != digest:
@@ -136,7 +139,7 @@ def _open_g4(project: Path, by: str) -> dict:
     if why:
         raise Refused("; ".join(why))
     if not audited_deliverables(data):
-        raise Refused("reviews/audit.json names no thesis or manuscript deliverable")
+        raise Refused("reviews/audit.json names no thesis, manuscript, case-report or review deliverable")
     state = _load(project)
     old = state.get("G4") if isinstance(state.get("G4"), dict) and state["G4"].get("status") == "open" else {}
     now = dt.datetime.now().isoformat(timespec="seconds")
@@ -198,7 +201,11 @@ def check_gate(project: Path, gate: str, deliverable: str | None = None) -> tupl
     for files in groups:
         for rel, digest in files.items():
             f = project / rel
-            if not f.exists():
+            if digest is None:          # G4: an input absent at audit time must still be absent
+                if not f.exists():
+                    continue
+                msg = f"{rel} changed since the audit (created after it)"
+            elif not f.exists():
                 msg = f"{rel} is missing since the audit" if gate == "G4" else f"{rel} is missing since {gate} was locked"
             elif sha256(f) != digest:
                 msg = f"{rel} changed since the audit" if gate == "G4" else f"{rel} changed after {gate} was locked"
@@ -293,7 +300,7 @@ def check_line(project: Path, gate: str, ok: bool, why: list[str], deliverable: 
     files = entry.get("files", {})
     if gate == "G4" and deliverable:
         files = entry["deliverables"][deliverable].get("files", {})
-    n = len(files)
+    n = sum(1 for v in files.values() if v is not None)     # null = an input absent at audit time
     when = str(entry.get("at", ""))[:10]
     what = {"G3": "results locked", "G4": "approved after a clean audit"}.get(gate, "approved")
     tail = f"; {n} locked files unchanged" if n else ""

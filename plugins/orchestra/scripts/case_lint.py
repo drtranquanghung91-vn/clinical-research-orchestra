@@ -82,10 +82,28 @@ def mask_relative_time(text: str) -> str:
     return text
 
 
+FENCE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
+
+
+def _outside_fences(text: str) -> str:
+    """The text with every fenced code block (``` or ~~~) removed: an example there records nothing."""
+    keep, fence = [], None
+    for line in text.splitlines():
+        m = FENCE.match(line)
+        if fence is None:
+            if m:
+                fence = m.group(1)
+            else:
+                keep.append(line)
+        elif m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence) and not line.strip()[len(m.group(1)):].strip():
+            fence = None
+    return "\n".join(keep)
+
+
 def consent_recorded(project: Path) -> bool:
     p = Path(project) / "decisions.md"
     return p.is_file() and any(not CONSENT_PLACEHOLDER.search(m.group(1))
-                               for m in CONSENT.finditer(p.read_text(encoding="utf-8-sig")))
+                               for m in CONSENT.finditer(_outside_fences(p.read_text(encoding="utf-8-sig"))))
 
 
 def _fold(text: str) -> str:
