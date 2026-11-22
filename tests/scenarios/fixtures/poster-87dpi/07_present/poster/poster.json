@@ -1,0 +1,20 @@
+{
+  "size_cm": [90, 120],
+  "bleed_mm": 3,
+  "lang": "vi",
+  "layouts": ["editorial"],
+  "title": "HbA1c lúc nhập viện và tái nhập viện 30 ngày ở bệnh nhân đái tháo đường típ 2",
+  "authors": "Example author",
+  "affiliation": "Bệnh viện Mô phỏng (dữ liệu giả lập)",
+  "key_message": "HbA1c lúc nhập viện chưa cho thấy liên quan với tái nhập viện 30 ngày (OR {{R-A1-001.full}}).",
+  "sections": [
+    {"heading": "Đặt vấn đề", "body": "Tái nhập viện sớm làm tăng gánh nặng điều trị ở bệnh nhân đái tháo đường típ 2. HbA1c lúc nhập viện có thể giúp nhận diện người bệnh cần theo dõi sát sau xuất viện."},
+    {"heading": "Phương pháp", "body": "Thuần tập hồi cứu trên {{R-A0-001}} hồ sơ bệnh nhân. Người bệnh được nhắc tái khám qua phần mềm theo dõi sau xuất viện (Hình 1). Hồi quy logistic hiệu chỉnh theo tuổi.",
+     "figure": {"id": "F1", "caption": "**Hình 1.** Màn hình phần mềm nhắc tái khám (ảnh chụp màn hình, minh hoạ).", "alt": "Ảnh chụp màn hình phần mềm nhắc tái khám sau xuất viện"},
+     "figure_width_cm": 17.5},
+    {"heading": "Kết quả", "body": "Tỷ lệ tái nhập viện 30 ngày là {{R-A0-002}}. OR của HbA1c sau hiệu chỉnh theo tuổi là {{R-A1-001.full}}. OR tái nhập viện ở nam so với nữ là {{R-A2-001.full}}."},
+    {"heading": "Kết luận", "body": "Chưa ghi nhận mối liên quan giữa HbA1c lúc nhập viện và tái nhập viện 30 ngày trong mẫu này; khoảng tin cậy rộng, cần nghiên cứu lớn hơn."}
+  ],
+  "references": ["Tài liệu tham khảo giả lập 1.", "Tài liệu tham khảo giả lập 2."],
+  "contact": "Liên hệ: author@example.org"
+}

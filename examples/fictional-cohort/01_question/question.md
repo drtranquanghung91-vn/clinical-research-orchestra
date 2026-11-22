@@ -127,8 +127,9 @@ năm sau xuất viện ở người bệnh đái tháo đường type 2 tại Kh
    trong 1 năm của người bệnh đái tháo đường type 2 xuất viện tại Khoa Nội tiết, Bệnh viện Mô phỏng
    giai đoạn 2021–2022.
 2. Xác định mối liên quan giữa HbA1c lúc nhập viện và tái nhập viện trong 1 năm sau xuất viện, có
-   hiệu chỉnh một số yếu tố nhiễu (tuổi, giới, thời gian mắc bệnh, bệnh đồng mắc, thời gian nằm viện,
-   sử dụng insulin).
+   hiệu chỉnh một số yếu tố nhiễu (tuổi, giới, thời gian mắc bệnh, bệnh đồng mắc); thời gian nằm viện
+   và sử dụng insulin được xử lý là biến trung gian (mediator), không hiệu chỉnh trong mô hình chính
+   (xem `protocol.md` mục 2.7.2).
 
 *(Mục tiêu 1 là mô tả, mục tiêu 2 là phân tích; mỗi mục tiêu trả lời bằng đúng một bảng/phân tích
 chính trong kết quả, theo khuyến nghị của quy trình.)*

@@ -169,6 +169,20 @@ def validate_doc(doc: dict, project: Path, verify_raw: bool = False) -> list[str
     return probs
 
 
+class LockedError(Exception):
+    pass
+
+
+def _g3_locks_ledger(project: Path) -> bool:
+    """True when gates/state.json has G3 open with the results ledger among its hashed files."""
+    try:
+        state = json.loads((project / "gates" / "state.json").read_text(encoding="utf-8"))
+        g3 = state.get("G3") or {}
+        return g3.get("status") == "open" and "ledgers/results-ledger.json" in (g3.get("files") or {})
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
 def relabel_changes(old, new_results: list) -> list[str]:
     """Label/kind changes and removed ids between an existing ledger and the incoming results."""
     olds = old.get("results", []) if isinstance(old, dict) else []
@@ -193,13 +207,18 @@ def import_results(project: Path, src: Path | None = None, verify_raw: bool = Fa
     if probs:
         return 0, probs
     existing = project / "ledgers" / "results-ledger.json"
+    records = [dict(r, data_sha256=doc.get("data_sha256", ""), locked=False) for r in doc["results"]]
+    new_bytes = (json.dumps({"results": records}, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    if existing.is_file() and existing.read_bytes().replace(b"\r\n", b"\n") == new_bytes:
+        return len(records), []  # same content (any line ending): write nothing, so a G3 lock stays valid
+    if _g3_locks_ledger(project):
+        raise LockedError("G3 is locked; the ledger is unchanged — re-run only after the author re-opens "
+                          "G3 for a new analysis")
     if existing.is_file() and not accept_relabel:
         changes = relabel_changes(json.loads(existing.read_text(encoding="utf-8-sig")), doc["results"])
         if changes:
             raise RelabelError("\n".join(changes))
-    records = [dict(r, data_sha256=doc.get("data_sha256", ""), locked=False) for r in doc["results"]]
-    out = project / "ledgers" / "results-ledger.json"
-    out.write_text(json.dumps({"results": records}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    existing.write_bytes(new_bytes)  # LF only, whatever the platform
     return len(records), []
 
 
@@ -220,8 +239,16 @@ def main(argv=None) -> int:
         print(f"results_ledger: {project} has no ledgers/ folder", file=sys.stderr)
         return 2
     src = Path(a.src) if a.src else None
+    led = project / "ledgers" / "results-ledger.json"
+    try:
+        before = led.read_bytes() if led.is_file() else None
+    except OSError:
+        before = None
     try:
         n, probs = import_results(project, src, a.verify_raw, a.accept_relabel)
+    except LockedError as e:
+        print(f"results_ledger: {e}", file=sys.stderr)
+        return 1
     except RelabelError as e:
         print(str(e), file=sys.stderr)
         print("results_ledger: label/kind changed or ids removed vs the existing ledger; ledger not written "
@@ -235,7 +262,10 @@ def main(argv=None) -> int:
     if probs:
         print(f"results_ledger: {len(probs)} problems; ledger not written")
         return 1
-    print(f"results_ledger: {n} results imported")
+    if before is not None and led.is_file() and led.read_bytes() == before:
+        print(f"results_ledger: {n} results imported; ledger unchanged")
+    else:
+        print(f"results_ledger: {n} results imported")
     return 0
 
 

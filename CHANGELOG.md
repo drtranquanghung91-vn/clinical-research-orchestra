@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.4.0 (2026-11-22)
+- P3 present: research-figures (forest, Kaplan–Meier with numbers at risk, rates, STROBE/CONSORT flow
+  drawn from the locked ledger or the de-identified CSV), conference-abstract (word limit, placeholders
+  only, checks in order), research-poster (three print layouts, preflight, print note), defense-prep
+  (consistency audit before any slide, deck from a JSON spec, rehearsal questions) and prose-humanizer
+  (AI-prose patterns rewritten with per-paragraph invariants); commands `/orchestra:poster` and
+  `/orchestra:defense`; agents `committee-simulator` (thesis committee or reviewer questions with
+  answers from the project files) and `consistency-auditor` (numbers, dates and terms across
+  deliverables).
+- Scripts: `lint_prose.py` (prose patterns `P01`–`P30`, `--slides` for S17/S20/S21, `--count-words`),
+  `invariants.py` (numbers, citations, placeholders and hedges per paragraph; `--merge` reverts a
+  paragraph that changed them; `INV`), `consistency_audit.py` (`E-CONS`: same quantity across files,
+  sample size rounded up, date ranges, percentage sums, abstract vs results, terms), `figures.py`
+  (figures.json → SVG/PDF/PNG + `data.json`; document and poster profiles, font-relative layout),
+  `pptx_from_spec.py` and `check_pptx.py` (ported from grand-rounds: placeholders, native KM and forest
+  charts, poster size), `poster_build.py` (poster.json → HTML → PDF/PNG/DOM with headless Chrome/Edge,
+  plus PPTX; layouts `editorial`, `pathway`, `figure-led`), `poster_preflight.py` (`E-PRINT`: page size,
+  bleed, fonts, effective dpi, printed figure text size, overflow); shared `crolib/derived.py` (ledger
+  lookup by id and part, safe formula evaluation).
+- New finding codes: `E-CONS`, `E-PRINT`, `P01`–`P30`, `INV`; `S01`–`S21` stay the slide catalog, plus
+  `S22` (`check_pptx.py` `leftover-markup`: citation key, backtick or `{{…}}` left in slide text).
+- `figures.py` warns when a `style.colors` key matches no group label of a figure with uncoloured groups.
+- `figures.py` (SVG, `data.json`) and the `poster_build.py` DOM dump write LF on Windows too.
+- `gate.py check` prints an explicit line: "G3: open — results locked by … on …; n locked files
+  unchanged" (open means approved, never unlocked), "G3: not open — not locked yet" or "G3: closed"
+  with reasons. `results_ledger.py import` writes LF only, leaves a same-content ledger untouched and
+  refuses to rewrite a ledger locked in G3.
+- Scenarios: mzl-consistency, poster-87dpi, humanizer-invariants, vi-dense-prose (RED/GREEN, results in
+  tests/scenarios/BASELINE.md).
+- Optional dependencies: matplotlib (figures), python-pptx (slides, poster PPTX), Chrome or Edge
+  (poster PDF/PNG and preflight).
+- Example: examples/fictional-cohort carried from the locked results to four figures, a Vietnamese
+  conference abstract, a 90 × 120 cm poster in three layouts and a thesis-defence deck with committee
+  questions.
+
 ## 0.3.0 (2026-11-21)
 - P2 analyse and report results: data-preparation (codebook, audit, cleaning log, de-identified data in
   `04_data/`), statistical-analysis (run mode per the SAP analysis register; import mode for SPSS, Stata

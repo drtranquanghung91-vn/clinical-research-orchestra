@@ -1,0 +1,229 @@
+{
+  "lang": "vi",
+  "cite": "Example author. Luận văn thạc sĩ, 2026",
+  "page_numbers": true,
+  "theme": {
+    "colors": {"primary": "#1f4e79"}
+  },
+  "slides": [
+    {
+      "type": "title",
+      "title": "HbA1c lúc nhập viện và tái nhập viện trong 1 năm ở người bệnh ĐTĐ type 2",
+      "subtitle": "Bảo vệ luận văn thạc sĩ",
+      "presenter": "Example author",
+      "notes": "Kính thưa hội đồng, tôi xin trình bày luận văn. Đọc đúng tên đề tài đầy đủ như trong quyển luận văn khi giới thiệu bằng lời (slide rút gọn để vừa khung): 'HbA1c lúc nhập viện và nguy cơ tái nhập viện trong 1 năm ở người bệnh đái tháo đường type 2 xuất viện tại Bệnh viện Mô phỏng (2021–2023): một nghiên cứu đoàn hệ hồi cứu'. Nói rõ ràng, không đọc quá nhanh."
+    },
+    {
+      "type": "bullets",
+      "title": "Trình bày theo 5 phần: đặt vấn đề, phương pháp, kết quả, bàn luận, kết luận",
+      "bullets": ["Đặt vấn đề và mục tiêu", "Đối tượng và phương pháp", "Kết quả nghiên cứu", "Bàn luận", "Hạn chế, kết luận và kiến nghị"],
+      "notes": "0,5 phút. Nói nhanh: 5 phần, khoảng 18-20 phút, có slide dự phòng phía sau nếu hội đồng hỏi sâu."
+    },
+    {
+      "type": "bullets",
+      "title": "HbA1c lúc nhập viện liên quan với tái nhập viện ngắn hạn, nhưng mốc 1 năm chưa được khảo sát",
+      "bullets": [
+        "Tái nhập viện trong 1 năm là gánh nặng thường gặp ở người bệnh đái tháo đường (ĐTĐ) type 2 sau xuất viện",
+        "HbA1c lúc nhập viện liên quan với tái nhập viện 30 ngày ở một nghiên cứu tại Trung Quốc (aOR 1,15; KTC 95% 1,03–1,29; Hu và cs., 2026), nhưng cận dưới KTC rất gần 1",
+        "ADA Standards of Care-2026 mục 16 khuyến cáo kiểm soát đường huyết nội viện và chuyển tiếp chăm sóc, nhưng chưa đưa ngưỡng HbA1c cụ thể để dự báo tái nhập viện dài hạn (ADA Professional Practice Committee, 2026)",
+        "Khoảng trống: chưa có nghiên cứu nào khảo sát mốc 1 năm tại Việt Nam"
+      ],
+      "notes": "1,5 phút. Đọc đúng số liệu hu2026 (aOR 1,15; KTC 1,03–1,29) nếu được hỏi lại — đây là nghiên cứu 30 ngày, không phải 1 năm, cần phân biệt rõ khi trình bày."
+    },
+    {
+      "type": "bullets",
+      "title": "Mục tiêu nghiên cứu",
+      "bullets": [
+        "Mục tiêu 1 (mô tả): mô tả đặc điểm lâm sàng và tỷ lệ tái nhập viện trong 1 năm của người bệnh ĐTĐ type 2 xuất viện tại Khoa Nội tiết, Bệnh viện Mô phỏng, giai đoạn 2021–2022",
+        "Mục tiêu 2 (phân tích): xác định mối liên quan giữa HbA1c lúc nhập viện và tái nhập viện trong 1 năm, hiệu chỉnh theo tuổi, giới, thời gian mắc ĐTĐ, bệnh đồng mắc"
+      ],
+      "notes": "1 phút. Nói rõ: thời gian nằm viện và dùng insulin được xếp là biến trung gian, không đưa vào mô hình hiệu chỉnh chính (giải thích ở slide phương pháp) — tránh để hội đồng thấy mâu thuẫn số biến giữa slide này và slide kết quả."
+    },
+    {
+      "type": "bullets",
+      "title": "Đoàn hệ hồi cứu, lấy mẫu toàn bộ (census), không can thiệp",
+      "bullets": [
+        "Đối tượng: người bệnh ĐTĐ type 2 ≥ 18 tuổi, xuất viện từ Khoa Nội tiết, Bệnh viện Mô phỏng, 01/2021–12/2022",
+        "Theo dõi tái nhập viện mọi nguyên nhân trong 1 năm qua hệ thống thông tin bệnh viện (HIS), đến 31/12/2023",
+        "Phơi nhiễm: HbA1c lúc nhập viện, chia 3 nhóm (<7% tham chiếu, 7–9%, >9%)",
+        "Outcome chính: tái nhập viện mọi nguyên nhân trong 1 năm (nhị giá)"
+      ],
+      "notes": "1 phút. Nhấn: lấy mẫu toàn bộ (census), không phải chọn mẫu xác suất — vì quần thể khả dụng nhỏ."
+    },
+    {
+      "type": "bullets",
+      "title": "Hồi quy logistic đa biến là phân tích chính, hiệu chỉnh 4 yếu tố nhiễu",
+      "bullets": [
+        "Phân tích chính (Mục tiêu 2): hồi quy logistic đa biến, outcome = tái nhập viện 1 năm",
+        "Hiệu chỉnh: tuổi, giới, thời gian mắc ĐTĐ, ≥1 bệnh đồng mắc (tăng huyết áp/bệnh thận mạn/bệnh tim mạch)",
+        "Thời gian nằm viện và dùng insulin: xếp loại biến trung gian (đo sau cửa sổ phơi nhiễm HbA1c), không hiệu chỉnh trong mô hình chính",
+        "Phân tích phụ: HbA1c liên tục; Cox (thời gian đến tái nhập viện); tái nhập viện liên quan ĐTĐ; tử vong trong viện (mô tả). Báo cáo theo STROBE, α = 0,05 hai phía"
+      ],
+      "notes": "1,5 phút. Nếu hội đồng hỏi vì sao không hiệu chỉnh insulin/số ngày nằm viện: trả lời ngay bằng lý do biến trung gian, không phải thiếu sót."
+    },
+    {
+      "type": "bullets",
+      "title": "Cỡ mẫu đủ cho mô hình đa biến ổn định, nhưng có thể thiếu power cho so sánh nhóm cực",
+      "bullets": [
+        "Theo EPV (≥10) cho mô hình 6 biến dự kiến: cần tối thiểu 300 người bệnh toàn mẫu; mẫu nghiên cứu hiện có {{R-A0-001.n}} người bệnh",
+        "Theo kiểm định tỷ lệ đơn giản (OR giả định 1,5): cần 535 người/nhóm cực — thực tế nhóm <7% có {{R-A0-002.n}} và nhóm >9% có {{R-A0-004.n}}, thấp hơn yêu cầu",
+        "Đây là giả định rủi ro nhất đã được xác nhận ở bước thiết kế, không phải phát hiện sau khi có kết quả",
+        "Đạo đức: hồi cứu, không can thiệp; xin miễn chấp thuận tham gia cá nhân; dữ liệu khử định danh trước phân tích; nộp Hội đồng Đạo đức Bệnh viện Mô phỏng"
+      ],
+      "notes": "1,5 phút. Nói thẳng, không né: 'đủ cỡ mẫu để mô hình ổn định, nhưng có thể thiếu power cho so sánh 2 nhóm cực' — không nói 'đủ cỡ mẫu' một cách chung chung."
+    },
+    {
+      "type": "diagram",
+      "title": "{{R-A0-001.n}} người bệnh đủ tiêu chuẩn, {{R-A1-003.n}} người vào mô hình hiệu chỉnh",
+      "data": "../figures/F4.data.json",
+      "notes": "1 phút. Nói ngay, không đợi hỏi: đây là sơ đồ rút gọn, không phải STROBE đầy đủ — dữ liệu không có số liệu sàng lọc/loại trừ ban đầu. 27 người bị loại khỏi mô hình hiệu chỉnh vì thiếu dữ liệu thời gian mắc ĐTĐ (2,5%, dưới ngưỡng 5% nên dùng complete-case, không imputation)."
+    },
+    {
+      "type": "table",
+      "title": "Đặc điểm nền tương đồng giữa 3 nhóm HbA1c, trừ tỷ lệ dùng insulin",
+      "columns": ["Đặc điểm", "Chung", "<7%", "7–9%", ">9%"],
+      "rows": [
+        ["Tuổi (năm), TB ± ĐLC", "{{R-A0-001.full}}", "{{R-A0-002.full}}", "{{R-A0-003.full}}", "{{R-A0-004.full}}"],
+        ["Nữ, n (%)", "{{R-A0-009.full}}", "{{R-A0-010.full}}", "{{R-A0-011.full}}", "{{R-A0-012.full}}"],
+        ["Thời gian mắc ĐTĐ (năm)", "{{R-A0-013.full}}", "{{R-A0-014.full}}", "{{R-A0-015.full}}", "{{R-A0-016.full}}"],
+        ["≥1 bệnh đồng mắc, n (%)", "{{R-A0-045.full}}", "{{R-A0-046.full}}", "{{R-A0-047.full}}", "{{R-A0-048.full}}"],
+        ["Dùng insulin, n (%)", "{{R-A0-053.full}}", "{{R-A0-054.full}}", "{{R-A0-055.full}}", "{{R-A0-056.full}}"]
+      ],
+      "notes": "1,5 phút. Bảng 3.1 của luận văn. Đọc 1-2 hàng, không đọc hết: tuổi và bệnh đồng mắc tương đồng; dùng insulin cao hơn rõ ở nhóm >9% — đây là biến mô tả, không đưa vào mô hình hiệu chỉnh vì nghi ngờ là biến trung gian. Không so sánh p giữa 3 nhóm vì là nghiên cứu quan sát, không phải thử nghiệm ngẫu nhiên."
+    },
+    {
+      "type": "chart",
+      "chart": "bar",
+      "title": "Tỷ lệ tái nhập viện 1 năm là {{R-A0-062.value}}, {{R-A0-063.value}} và {{R-A0-064.value}} ở nhóm HbA1c <7%, 7–9% và >9%",
+      "data": "../figures/F3.data.json",
+      "notes": "1 phút. Tỷ lệ chung {{R-A0-061.value}} (KTC 95% {{R-A0-061.ci}}); từ {{R-A0-062.value}} ở nhóm <7% đến {{R-A0-064.value}} ở nhóm >9%. Nói rõ: khoảng tin cậy của 3 nhóm còn chồng lấp — đây là Mục tiêu 1, mô tả, chưa phải kiểm định mối liên quan."
+    },
+    {
+      "type": "chart",
+      "chart": "forest",
+      "title": "OR hiệu chỉnh so với <7% là {{R-A1-003.value}} (7–9%) và {{R-A1-004.value}} (>9%); cả hai khoảng tin cậy chứa 1",
+      "data": "../figures/F1.data.json",
+      "notes": "1,5 phút. Đọc đúng: nhóm 7–9% OR {{R-A1-003.value}} (KTC 95% {{R-A1-003.ci}}; p={{R-A1-003.p}}); nhóm >9% OR {{R-A1-004.value}} (KTC 95% {{R-A1-004.ci}}; p={{R-A1-004.p}}). Mô hình có AUC {{R-A1-009.value}}, EPV {{R-A1-010.value}} (đủ ổn định mô hình). Đây là Mục tiêu 2 — kết quả chính của luận văn."
+    },
+    {
+      "type": "chart",
+      "chart": "km",
+      "title": "Thời gian đến tái nhập viện: HR (Cox hiệu chỉnh) của nhóm >9% là {{R-A4-006.value}}, khoảng tin cậy chứa 1",
+      "data": "../figures/F2.data.json",
+      "notes": "1 phút. Phân tích phụ (Cox, kiểm duyệt 365 ngày): HR hiệu chỉnh nhóm >9% {{R-A4-006.value}} (KTC 95% {{R-A4-006.ci}}), nhóm 7–9% {{R-A4-005.value}} (KTC 95% {{R-A4-005.ci}}) — cùng hướng, cùng chưa đạt ý nghĩa thống kê như OR. Giả định PH không vi phạm (Schoenfeld, p tối thiểu hiệu chỉnh {{R-A4-013.value}})."
+    },
+    {
+      "type": "big_number",
+      "title": "Tóm tắt kết quả chính",
+      "numbers": [
+        {"value": "{{R-A0-001.n}}", "label": "người bệnh đưa vào mô tả"},
+        {"value": "{{R-A1-004.value}}", "label": "OR hiệu chỉnh, nhóm >9% so với <7%"},
+        {"value": "{{R-A1-004.p}}", "label": "giá trị p"}
+      ],
+      "bullets": ["KTC 95%: {{R-A1-004.ci}} — chứa giá trị 1, chưa đủ bằng chứng khẳng định mối liên quan ở cỡ mẫu này"],
+      "notes": "0,5 phút. Slide chuyển tiếp sang bàn luận — nói chậm, đây là câu quan trọng nhất của buổi bảo vệ."
+    },
+    {
+      "type": "bullets",
+      "title": "Ước lượng nhóm >9% cùng chiều với y văn ngắn hạn, nhưng khoảng tin cậy chứa 1 ở mốc 1 năm",
+      "bullets": [
+        "Nghiên cứu 30 ngày tại Trung Quốc ghi nhận liên quan với HbA1c (aOR 1,15; KTC 95% 1,03–1,29; Hu và cs., 2026); ở đây OR nhóm >9% là {{R-A1-004.value}} (KTC 95% {{R-A1-004.ci}})",
+        "Khác biệt: nghiên cứu này ở mốc 1 năm (dài hơn nhiều), khoảng tin cậy rộng hơn và chứa giá trị 1 — chưa khẳng định được mối liên quan ở cỡ mẫu hiện có",
+        "Phân tích phụ HbA1c liên tục (mỗi 1%): OR {{R-A2-002.value}} (KTC 95% {{R-A2-002.ci}}) — khoảng tin cậy hẹp quanh 1, không gợi ý liên quan tuyến tính rõ",
+        "Tái nhập viện liên quan trực tiếp ĐTĐ (phân tích phụ, khám phá): OR nhóm >9% {{R-A3-002.value}} (KTC 95% {{R-A3-002.ci}}) — mạnh hơn nhiều, cần nghiên cứu xác nhận riêng, không hiệu chỉnh đa so sánh"
+      ],
+      "notes": "2 phút. Phần dễ bị hỏi nhất: vì sao kết quả A3 mạnh mà không làm thông điệp chính — trả lời: outcome hẹp hơn, EPV thấp hơn, phân tích phụ không hiệu chỉnh đa so sánh, là giả thuyết sinh ra cần xác nhận, không phải kết luận."
+    },
+    {
+      "type": "bullets",
+      "title": "Hạn chế: cỡ mẫu nhóm cực, dữ liệu mô phỏng, thiết kế hồi cứu đơn trung tâm",
+      "bullets": [
+        "Có thể thiếu power cho so sánh 2 nhóm HbA1c cực (yêu cầu 535/nhóm, hai nhóm cực chỉ có {{R-A0-002.n}} và {{R-A0-004.n}})",
+        "Cox chính giả định censoring không mang thông tin: chỉ ghi nhận được tử vong trong viện, không ghi nhận tử vong ngoài viện — có thể sai nếu tử vong ngoài viện liên quan HbA1c",
+        "Sơ đồ chọn mẫu là bản rút gọn, không phải STROBE đầy đủ, vì dữ liệu không có số liệu sàng lọc ban đầu",
+        "Thiết kế hồi cứu, đơn trung tâm; dữ liệu mô phỏng dùng cho mục đích minh họa quy trình — kết quả không áp dụng ngoài phạm vi nghiên cứu này",
+        "Phân tích phụ (A2–A5) và hậu kiểm theo tuổi: mang tính thăm dò, không hiệu chỉnh đa so sánh"
+      ],
+      "notes": "1,5 phút. Nói từng ý rõ ràng, không gộp mơ hồ thành một câu 'có hạn chế' — hội đồng đánh giá cao việc tác giả tự nêu hạn chế trước khi bị hỏi."
+    },
+    {
+      "type": "bullets",
+      "title": "Liên quan hiệu chỉnh giữa nhóm HbA1c và tái nhập viện 1 năm chưa đạt ý nghĩa thống kê",
+      "bullets": [
+        "Mục tiêu 1: tỷ lệ tái nhập viện 1 năm chung {{R-A0-061.value}} (KTC 95% {{R-A0-061.ci}}), theo nhóm HbA1c <7%, 7–9% và >9%: {{R-A0-062.value}}, {{R-A0-063.value}} và {{R-A0-064.value}}",
+        "Mục tiêu 2: OR hiệu chỉnh nhóm >9% so với <7% là {{R-A1-004.value}} (KTC 95% {{R-A1-004.ci}}; p={{R-A1-004.p}}) — khoảng tin cậy chứa 1, chưa đủ bằng chứng khẳng định mối liên quan ở cỡ mẫu này"
+      ],
+      "notes": "1 phút. Trả lời đúng thứ tự 2 mục tiêu đã nêu ở slide 4 — không thêm kết luận nào vượt quá dữ liệu."
+    },
+    {
+      "type": "bullets",
+      "title": "Kiến nghị: xác nhận ở nghiên cứu đa trung tâm trước khi áp dụng lâm sàng",
+      "bullets": [
+        "Nghiên cứu đa trung tâm, cỡ mẫu lớn hơn (đạt ≥535 người/nhóm cực) để xác nhận mối liên quan giữa HbA1c và tái nhập viện 1 năm",
+        "Bổ sung dữ liệu tử vong ngoài viện nếu khả thi, để giảm sai lệch do giả định censoring không mang thông tin",
+        "Kiểm định lại giả thuyết tái nhập viện liên quan ĐTĐ trên một nghiên cứu độc lập trước khi dùng cho khuyến cáo lâm sàng"
+      ],
+      "notes": "1 phút. Kiến nghị chỉ xuất phát từ đúng những gì đã kết luận, không thêm đề xuất mới chưa có cơ sở từ kết quả."
+    },
+    {
+      "type": "closing",
+      "title": "Xin cảm ơn hội đồng",
+      "subtitle": "Sẵn sàng trả lời câu hỏi",
+      "notes": "Cảm ơn hội đồng, người hướng dẫn, Khoa Nội tiết. Dừng lại, chờ câu hỏi — không nói thêm sau slide này."
+    },
+    {
+      "type": "bullets",
+      "title": "Dự phòng — Cỡ mẫu: yêu cầu 535 người/nhóm cực, mẫu thực tế chỉ đạt power 55–77%",
+      "bullets": [
+        "Theo EPV (≥10, 6 biến dự kiến): cần 300 người bệnh toàn mẫu; ở EPV=20: cần 600",
+        "Theo kiểm định tỷ lệ đơn giản (OR giả định=1,5, p₁ giả định 20%): cần 535 người/nhóm cực, tổng 1.070 cho 2 nhóm",
+        "Power đạt được theo n mỗi nhóm cực (α=0,05, OR giả định=1,5): n=300 → 0,554; n=400 → 0,678; n=500 → 0,773; n=535 → 0,80",
+        "Lấy giá trị lớn hơn giữa 2 cách tính (1.070) làm cỡ mẫu yêu cầu — ước lượng thận trọng, không phải số tuyệt đối (theo kế hoạch cỡ mẫu đã duyệt)"
+      ],
+      "notes": "Dự phòng, chỉ dùng khi hội đồng hỏi sâu về cỡ mẫu. Các số trong slide này lấy nguyên văn từ sample-size.md (kế hoạch cỡ mẫu đã duyệt ở gate G2), không phải từ ledger kết quả phân tích — nói rõ nếu được hỏi tại sao không có mã R gắn kèm như các slide kết quả khác."
+    },
+    {
+      "type": "bullets",
+      "title": "Dự phòng — Định nghĩa biến số: ngưỡng HbA1c là quy ước vận hành, không phải ngưỡng guideline",
+      "bullets": [
+        "HbA1c lúc nhập viện: giá trị đầu tiên đo trong 24–48 giờ đầu nhập viện, chia 3 nhóm <7% / 7–9% / >9% (quy ước vận hành do tác giả lựa chọn, không trích trực tiếp từ ADA Standards of Care-2026)",
+        "Outcome chính: tái nhập viện mọi nguyên nhân trong 1 năm (365 ngày) kể từ ngày xuất viện của lần nhập viện chỉ số",
+        "≥1 bệnh đồng mắc: có ít nhất 1 trong tăng huyết áp, bệnh thận mạn, bệnh tim mạch",
+        "Nhiều lần xuất viện trong giai đoạn 01/2021–12/2022: chỉ lấy lần xuất viện đầu tiên làm nhập viện chỉ số"
+      ],
+      "notes": "Dự phòng. Nếu hội đồng hỏi vì sao chia 3 nhóm thay vì dùng HbA1c liên tục: trả lời vì dễ diễn giải lâm sàng theo ngưỡng kiểm soát đường huyết — đã định trước trong đề cương, không phải chọn sau khi thấy kết quả đẹp hơn."
+    },
+    {
+      "type": "table",
+      "title": "Dự phòng — Giả định mô hình: PH không vi phạm; censoring tử vong ngoài viện chưa kiểm chứng được",
+      "columns": ["Kiểm định", "Mô hình thô", "Mô hình hiệu chỉnh"],
+      "rows": [
+        ["Concordance (Cox, A4)", "{{R-A4-003.value}}", "{{R-A4-012.value}}"],
+        ["PH test (Schoenfeld), p tối thiểu", "{{R-A4-004.value}}", "{{R-A4-013.value}}"]
+      ],
+      "notes": "Dự phòng. Thiếu dữ liệu: chỉ thời gian mắc ĐTĐ thiếu 2,5% (27/1.070), dưới ngưỡng 5% định trước nên dùng complete-case, không imputation. Fine-Gray (tử vong là nguy cơ cạnh tranh) không dùng làm phân tích chính vì tử vong trong viện chỉ xảy ra sau tái nhập viện trong hệ thống này; tử vong ngoài viện (nguy cơ cạnh tranh thật) vẫn không đo được."
+    },
+    {
+      "type": "table",
+      "title": "Dự phòng — Phân tích hậu kiểm theo tuổi: không có bằng chứng hiệu ứng khác nhau",
+      "columns": ["Biến", "Tuổi <65", "Tuổi ≥65"],
+      "rows": [
+        ["OR hiệu chỉnh, >9% so với <7%", "{{R-A6-002.value}} ({{R-A6-002.ci}})", "{{R-A6-009.value}} ({{R-A6-009.ci}})"]
+      ],
+      "notes": "Dự phòng. Phân tích hậu kiểm (A6), yêu cầu sau khi đã có dữ liệu, ghi rõ POST-HOC trước khi chạy. p tương tác HbA1c × nhóm tuổi = {{R-A6-015.value}} — khoảng tin cậy cả 2 tầng tuổi đều chứa 1, không nên diễn giải riêng từng tầng như một phát hiện độc lập."
+    },
+    {
+      "type": "references",
+      "title": "Tài liệu tham khảo",
+      "items": [
+        "Hu X, Su X, Chen S, Wang Q, He F, Zhang R (2026). Predictors of 30-day readmission in young and middle-aged T2DM patients: a retrospective cohort study. Endocrine, 91(1). doi:10.1007/s12020-026-04626-3",
+        "Cao J, Shi Q, Yu Z, Xie H (2026). A nomogram incorporating nutritional risk for predicting 31-day unplanned readmission in adults with type 2 diabetes mellitus using LASSO regression. Front Nutr, 13:1863130. doi:10.3389/fnut.2026.1863130",
+        "Li L, Jiang S (2026). Dynamic evolution of readmission risk factors across short-, medium-, and long-term horizons in type 2 diabetes. Front Endocrinol (Lausanne), 17:1827506. doi:10.3389/fendo.2026.1827506",
+        "Chakraborty A, Pearson O, Schwartzkopff KM, et al. (2021). The effectiveness of in-hospital interventions on reducing hospital length of stay and readmission of patients with Type 2 Diabetes Mellitus: a systematic review. Diabetes Res Clin Pract, 174:108363. doi:10.1016/j.diabres.2020.108363",
+        "Robbins T, Sankaranarayanan S, Randeva H, Keung SNLC, Arvanitis TN (2021). Association between glycosylated haemoglobin and outcomes for patients discharged from hospital with diabetes: a health informatics approach. Digit Health, 7:20552076211007661. doi:10.1177/20552076211007661",
+        "American Diabetes Association Professional Practice Committee for Diabetes (2026). 16. Diabetes Care in the Hospital: Standards of Care in Diabetes-2026. Diabetes Care, 49(Supplement_1):S339-S355. doi:10.2337/dc26-S016"
+      ],
+      "notes": "Dự phòng, không đọc trừ khi được yêu cầu."
+    }
+  ]
+}

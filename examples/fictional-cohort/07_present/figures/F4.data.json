@@ -1,0 +1,77 @@
+{
+  "id": "F4",
+  "type": "flow",
+  "source": "Không phải sơ đồ sàng lọc STROBE đầy đủ: không có số liệu sàng lọc/loại trừ ban đầu, chỉ có n toàn đoàn hệ và n đưa vào mô hình hiệu chỉnh.",
+  "values": [
+    {
+      "label": "Toàn bộ đoàn hệ đủ tiêu chuẩn",
+      "ref": "R-A0-001.n",
+      "est": 1070.0,
+      "text": "n = 1070"
+    },
+    {
+      "label": "Đưa vào mô hình hiệu chỉnh (A1, A4)",
+      "ref": "R-A1-003.n",
+      "est": 1043.0,
+      "text": "n = 1043"
+    },
+    {
+      "label": "Loại do thiếu dữ liệu biến hiệu chỉnh",
+      "ref": "R-A0-001.n - R-A1-003.n",
+      "est": 27.0,
+      "text": "n = 27"
+    }
+  ],
+  "chart": {
+    "kind": "diagram",
+    "nodes": [
+      {
+        "id": "n1",
+        "text": "Toàn bộ đoàn hệ đủ tiêu chuẩn\nn = 1070",
+        "x": 0.08,
+        "y": 0.0,
+        "w": 0.46,
+        "h": 0.3778
+      },
+      {
+        "id": "n2",
+        "text": "Đưa vào mô hình hiệu chỉnh (A1, A4)\nn = 1043",
+        "x": 0.08,
+        "y": 0.6222,
+        "w": 0.46,
+        "h": 0.3778
+      },
+      {
+        "id": "x1",
+        "text": "Loại do thiếu dữ liệu biến hiệu chỉnh\nn = 27",
+        "x": 0.66,
+        "y": 0.3111,
+        "w": 0.32,
+        "h": 0.3778
+      }
+    ],
+    "edges": [
+      {
+        "from": "n1",
+        "to": "n2"
+      },
+      {
+        "from": "n1",
+        "to": "x1",
+        "from_side": 2,
+        "to_side": 1
+      }
+    ]
+  },
+  "render": {
+    "document": {
+      "width_cm": 16,
+      "font_pt": 9
+    },
+    "poster": {
+      "width_cm": 21,
+      "font_pt": 24,
+      "data_digest": "f283eaf52df4d9664b266832cea52d067f4ab86ce0ff3eea28e0c60d382d6053"
+    }
+  }
+}

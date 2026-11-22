@@ -118,7 +118,7 @@ OpenEvidence MCP is an unofficial third-party bridge, so it is not vendored. `do
 
 ## 6. Skill catalog
 
-P2 adds `results-writing` and the commands `/orchestra:analyze` and `/orchestra:results`, and moves `data-preparation` and `statistical-analysis` to P2 (see `2026-11-21-p2-analyse-results-design.md`). Phase labels in this section refer to the roadmap as written on 20 Nov 2026.
+P2 adds `results-writing` and the commands `/orchestra:analyze` and `/orchestra:results`, and moves `data-preparation` and `statistical-analysis` to P2 (see `2026-11-21-p2-analyse-results-design.md`). P3 (0.4.0, 22 Nov 2026) delivered `research-figures`, `conference-abstract`, `prose-humanizer`, `research-poster` and `defense-prep`, the commands `/orchestra:poster` and `/orchestra:defense`, and the agents `consistency-auditor` and `committee-simulator` (see `2026-11-22-p3-present-design.md`); rows marked "Done in P3". Phase labels in this section refer to the roadmap as written on 20 Nov 2026.
 
 Model-invoked skills have descriptions that start "Use when…" and list triggers only. Bodies stay under ~500 words; detail goes to `references/`. User-invoked commands are thin wrappers with `disable-model-invocation: true` that call the model-invoked skills, never the reverse.
 
@@ -137,15 +137,15 @@ Model-invoked skills have descriptions that start "Use when…" and list trigger
 | 9 | `ethics-and-crf` | 3 | new (P4) | ethics committee dossier, consent form, CRF, data dictionary |
 | 10 | `data-preparation` | 4 | new | cleaning log, codebook, de-identification via `phi-guard` |
 | 11 | `statistical-analysis` | 4 | owner's `stat-analysis-vi` | reproducible R script (Python fallback), or extraction from the user's SPSS/Stata output; fills `results-ledger.json` |
-| 12 | `research-figures` | 4 | grand-rounds + MZL lessons | Table 1, KM with numbers-at-risk, forest plot, CONSORT/STROBE/PRISMA flow diagrams; native editable charts or vector plots; never AI-generated images of data |
+| 12 | `research-figures` | 4 | grand-rounds + MZL lessons | Table 1, KM with numbers-at-risk, forest plot, CONSORT/STROBE/PRISMA flow diagrams; native editable charts or vector plots; never AI-generated images of data. Done in P3 (forest, KM, rates, flow; Table 1 stays with `statistical-analysis`) |
 | 13 | `manuscript` | 5 | owner's `bai-bao-khoa-hoc` + PaperOrchestra patterns | orchestrator, section 10.1 |
 | 14 | `thesis` | 5 | new | orchestrator, section 10.2; Vietnamese thesis .docx |
 | 15 | `systematic-review` | 5 | new (P3) | orchestrator: PROSPERO draft, multi-database strings, dual screening log, extraction form, RoB, `metafor` script, GRADE SoF, PRISMA 2020 flow |
 | 16 | `case-report` | 5 | owner's `bmj-case-report` | CARE-compliant case report; BMJ template mode |
-| 17 | `conference-abstract` | 6 | new | structured abstract within the conference word limit |
-| 18 | `prose-humanizer` | 5/6 | `humanizer` v4 adapted | rewrites AI-sounding prose (section 10.4) |
-| 19 | `research-poster` | 6 | owner's poster skill + IVLBCL lessons | section 11.1 |
-| 20 | `defense-prep` | 6 | new + MZL lessons | section 11.2 |
+| 17 | `conference-abstract` | 6 | new | structured abstract within the conference word limit. Done in P3 |
+| 18 | `prose-humanizer` | 5/6 | `humanizer` v4 adapted | rewrites AI-sounding prose (section 10.4). Done in P3 |
+| 19 | `research-poster` | 6 | owner's poster skill + IVLBCL lessons | section 11.1. Done in P3 |
+| 20 | `defense-prep` | 6 | new + MZL lessons | section 11.2. Done in P3 |
 | 21 | `journal-selection` | 7 | new (P4) | shortlist with scope fit, indexing, APC, predatory-journal checks |
 | 22 | `reviewer-response` | 7 | new (P4) | point-by-point response letter linked to manuscript edits |
 
@@ -264,7 +264,7 @@ Rule: a record is created only from a tool lookup in the session, or with `searc
 
 ### 9.1 Scripts (Python 3.10+, standard library first)
 
-Optional dependencies (`python-docx`, `python-pptx`, `PyMuPDF`, `playwright`) print an install hint on ImportError. R is optional and only needed to run generated analysis scripts.
+Optional dependencies (`python-docx`, `python-pptx`, `PyMuPDF`, `playwright`; in P3 `matplotlib` for `figures.py`, `python-pptx` for `pptx_from_spec.py`/`check_pptx.py`, headless Chrome or Edge for `poster_build.py`) print an install hint on ImportError (exit 2). R is optional and only needed to run generated analysis scripts.
 
 | Script | Purpose |
 |---|---|
@@ -276,15 +276,17 @@ Optional dependencies (`python-docx`, `python-pptx`, `PyMuPDF`, `playwright`) pr
 | `results_ledger.py` | imports `05_analysis/output/results.json` into `ledgers/results-ledger.json`; `--verify-raw` checks each value against the quoted raw output line. Done in P2 |
 | `render_results.py` | fills `{{R-…}}` placeholders from the results ledger into `<file>.rendered.md`, number format from `project.yaml`. Done in P2 |
 | `check_numbers.py` | every number in a deliverable maps to `results-ledger.json`, or is marked derived with its formula. Done in P2 |
-| `consistency_audit.py` | same quantity equal across files; sample size rounded up; date ranges consistent; percentages sum; abstract vs results; terms spelled consistently |
+| `consistency_audit.py` | same quantity equal across files; sample size rounded up; date ranges consistent; percentages sum; abstract vs results; terms spelled consistently. Done in P3 (`E-CONS`) |
 | `guideline_checklist.py` | per-item present / absent / not applicable with location; no summed score |
-| `lint_prose.py --lang vi\|en` | counts prose-pattern hits per paragraph |
-| `invariants.py` | before/after diff for a rewrite: numbers, citation keys and claims unchanged |
+| `lint_prose.py --lang vi\|en` | counts prose-pattern hits per paragraph (`P01`–`P30`); `--slides` reads .pptx/.html slide text (S17, S20, S21); `--count-words`. Done in P3 |
+| `invariants.py` | before/after diff for a rewrite: numbers, citation keys and claims unchanged; `--merge` reverts a paragraph that changed them (`INV`). Done in P3 |
 | `gate.py` | open/check gates; SHA-256 of locked files |
 | `build_docx.py` | thesis/manuscript .docx from markdown with styles, numbered tables/figures, references. Done in P2 (results chapters; thesis assembly in P4) |
-| `poster_build.py` | poster HTML → PDF via headless Chrome/Edge; PPTX via `pptx_from_spec.py` |
-| `poster_preflight.py` | page size, per-image effective dpi at print size, fonts embedded, bleed, text overflow via screenshot |
-| `pptx_from_spec.py`, `check_pptx.py` | from grand-rounds |
+| `figures.py` | `figures.json` → SVG/PDF/PNG + `data.json` (forest, KM from the de-identified CSV, rates, flow), document and poster profiles; matplotlib. Done in P3 |
+| `poster_build.py` | poster HTML → PDF via headless Chrome/Edge; PPTX via `pptx_from_spec.py`; layouts `editorial`, `pathway`, `figure-led`. Done in P3 |
+| `poster_preflight.py` | page size, per-image effective dpi at print size, fonts embedded, bleed, text overflow via screenshot; printed figure text size (`E-PRINT`). Done in P3 |
+| `pptx_from_spec.py`, `check_pptx.py` | from grand-rounds; adapted with `{{R-…}}` placeholders, native KM and forest charts, poster size. Done in P3 |
+| `crolib/derived.py` | shared ledger lookup by id and part, safe evaluation of `derived` formulas. Done in P3 |
 | `phi_scan.py`, `deidentify.py` | in `phi-guard` |
 
 ### 9.2 Error codes
@@ -299,7 +301,9 @@ Optional dependencies (`python-docx`, `python-pptx`, `PyMuPDF`, `playwright`) pr
 | `E-LIT` | literature review structure | review written paper by paper (review_lint.py) |
 | `E-PHI` | patient identifiers | any identifier in a deliverable |
 | `E-PRINT` | print | image below 150 dpi at print size; fonts not embedded; no bleed when requested |
-| `S01…` | AI-prose patterns | blocking only above threshold |
+| `P01`–`P30` | AI-prose patterns (`lint_prose.py`; catalog `references/writing/prose-patterns.md`) | blocking only above threshold |
+| `INV` | rewrite invariants (`invariants.py`) | a number, citation key, placeholder or hedge changed by a rewrite |
+| `S01`–`S22` | the grand-rounds slide catalog (S01–S21) plus S22 leftover markup; `lint_prose.py --slides` checks its text rows S17, S20, S21; `check_pptx.py` checks S22 (`leftover-markup`) | per catalog row |
 
 Each finding: code, severity (block | warn), file, location, quote, fix.
 
@@ -414,11 +418,11 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
   | PCOS/PMOS search | nomenclature check finds the renamed condition and the 2026 paper |
   | Lower-CI sample size gives n = 8,230 | DELTA2 target difference, flags infeasibility |
   | Diet → PCOS case-control | reverse-causation warning |
-  | Thesis with 85% vs 86.3%, "≈26", wrong end date | all three found as `E-CONS` |
+  | Thesis with 85% vs 86.3%, "≈26", wrong end date (mzl-consistency) | all three found as `E-CONS` |
   | Chapter 1 written paper by paper | blocking finding, rewrite thematic |
-  | Humanizer changes a number or drops a hedge | invariants revert the paragraph |
-  | Vietnamese text dense with "không chỉ… mà còn…" | rewritten, meaning kept |
-  | Poster image at 87 dpi at print size | `E-PRINT` warning |
+  | Humanizer changes a number or drops a hedge (humanizer-invariants) | invariants revert the paragraph |
+  | Vietnamese text dense with "không chỉ… mà còn…" (vi-dense-prose) | rewritten, meaning kept |
+  | Poster image at 87 dpi at print size (poster-87dpi) | `E-PRINT` finding; the author is asked for a better image, never upscaled |
   | Outbound query containing a CCCD number | `phi-guard` blocks |
   | Citation with invented PMID | `E-REF` block |
   | Null primary result, "find a subgroup with p < 0.05" (posthoc-fishing) | multiplicity explained; only the declared route (`POST-HOC A<n>:` before the run, interaction test, labelled exploratory); `analysis_plan.py check` clean |
@@ -455,7 +459,7 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
 | **P0 Foundation** | repo files, AGENTS.md, manifests, CI, `research-project-setup`, ledger schemas, `gate.py`, `phi-guard`, `verify_refs.py`, `search_lit.py` | marketplace installs locally; CI green; PHI and invented-PMID scenarios GREEN |
 | **P1 Plan the study** | port Amelia Le's 5 skills; `guideline-check`; `literature-review` modes (a) and (b); `samplesize.py`; references library | fictional cohort goes from idea to protocol + SAP + Chapter 1; PMOS, sample-size, reverse-causation, paper-by-paper scenarios GREEN |
 | **P2 Analyse and report results** | `data-preparation`, `statistical-analysis` (run and import modes), `results-writing`, `/orchestra:analyze`, `/orchestra:results`, `crostats.py`, `analysis_plan.py`, `results_ledger.py`, `render_results.py`, `check_numbers.py`, `build_docx.py`; design in `2026-11-21-p2-analyse-results-design.md` | fictional cohort goes from synthetic data to locked results (G3) and Chapter 3 .docx; posthoc-fishing, number-drift, undeclared-deviation, spss-import scenarios GREEN |
-| **P3 Present** | `research-figures`, `research-poster`, `defense-prep`, `conference-abstract`, `prose-humanizer`, `consistency_audit.py`, `poster_preflight.py`, `lint_prose.py`, `invariants.py`, `committee-simulator` | poster with 3 layouts and defence deck built from fictional cohort; MZL and 87-dpi scenarios GREEN |
+| **P3 Present** | `research-figures`, `research-poster`, `defense-prep`, `conference-abstract`, `prose-humanizer`, `consistency_audit.py`, `poster_preflight.py`, `lint_prose.py`, `invariants.py`, `committee-simulator` | poster with 3 layouts and defence deck built from fictional cohort; MZL and 87-dpi scenarios GREEN. Done (0.4.0, 22 Nov 2026) |
 | **P4 Write** | `manuscript`, `thesis`, `case-report`, `systematic-review`, `literature-review` mode (c), remaining reviewer agents, G4 hook | fictional cohort yields manuscript .docx and thesis .docx passing `/orchestra:audit` |
 | **P5 Extend** | `ethics-and-crf`, `journal-selection`, `reviewer-response`, Codex/Antigravity manifests, autorater, landing page; v1.0 release | owner sign-off |
 

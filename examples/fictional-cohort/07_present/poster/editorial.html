@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>HbA1c lúc nhập viện và nguy cơ tái nhập viện trong 1 năm ở người bệnh đái tháo đường type 2</title>
+<style>
+@page { size: 90.6cm 120.6cm; margin: 0 }
+/* Poster stylesheet shared by the three layouts. Flat print design: solid fills and rules only.
+   Every size scales with the poster width: --k = min(width_cm / 90, height_cm / 120), so the type sizes below are the sizes on a 90 cm poster. */
+:root {
+  --k: 1;
+  --ink: #111111;
+  --muted: #444444;
+  --accent: #1f4e79;
+  --tint: #e3ebf3;
+  --rule: #9aa8b6;
+  --flag-high: #b01e1e;
+  --flag-low: #1f4e79;
+}
+html, body { margin: 0; padding: 0; background: #ffffff; }
+body { color: var(--ink); font-family: var(--font, Arial, "Liberation Sans", sans-serif); }
+* { box-sizing: border-box; }
+
+.sheet { --u: calc(1cm * var(--k)); display: flex; flex-direction: column; overflow: hidden; position: relative;
+         width: var(--sheet-w); height: var(--sheet-h); background: #ffffff; }
+
+/* ---------- title band ---------- */
+.title-band { flex: none; background: var(--accent); color: #ffffff; overflow: hidden;
+              padding: calc(var(--bleed) + 2 * var(--u)) calc(var(--bleed) + 3 * var(--u)) calc(2 * var(--u)) calc(var(--bleed) + 3 * var(--u));
+              height: var(--title-h); display: flex; flex-direction: column; justify-content: center; }
+.title-band h1 { margin: 0; font-size: calc(92pt * var(--k)); line-height: 1.08; font-weight: 700; }
+.title-band .authors { margin: calc(1.2 * var(--u)) 0 0 0; font-size: calc(40pt * var(--k)); line-height: 1.2; font-weight: 700; }
+.title-band .affil { margin: calc(0.4 * var(--u)) 0 0 0; font-size: calc(30pt * var(--k)); line-height: 1.2; }
+.title-band .logo { position: absolute; right: calc(var(--bleed) + 3 * var(--u)); top: calc(var(--bleed) + 2 * var(--u));
+                    height: calc(10 * var(--u)); width: auto; }
+
+/* ---------- main area ---------- */
+.main { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+        padding: calc(2.5 * var(--u)) calc(var(--bleed) + 3 * var(--u)); gap: calc(2.5 * var(--u)); }
+.box { overflow: hidden; min-height: 0; }
+.cols { flex: 1 1 auto; min-height: 0; display: grid; gap: calc(3 * var(--u)); }
+.cols.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cols.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.col { display: flex; flex-direction: column; gap: calc(2.2 * var(--u)); min-height: 0; }
+
+/* ---------- text ---------- */
+h2 { margin: 0 0 calc(0.8 * var(--u)) 0; font-size: calc(50pt * var(--k)); line-height: 1.12; font-weight: 700; color: var(--accent); }
+.body { font-size: calc(var(--body-pt, 32) * 1pt * var(--k)); line-height: 1.32; }
+.body p { margin: 0 0 calc(0.7 * var(--u)) 0; }
+.body h3, .body h4, .body h5 { margin: calc(0.6 * var(--u)) 0 calc(0.3 * var(--u)) 0; font-size: calc(36pt * var(--k)); line-height: 1.2; }
+.body ul, .body ol { margin: 0 0 calc(0.7 * var(--u)) 0; padding-left: calc(1.6 * var(--u)); }
+.body li { margin: 0 0 calc(0.3 * var(--u)) 0; }
+.body table, table.lab { width: 100%; border-collapse: collapse; margin: calc(0.4 * var(--u)) 0 calc(0.8 * var(--u)) 0;
+                         font-size: calc(28pt * var(--k)); line-height: 1.2; }
+.body th, .body td, table.lab th, table.lab td { padding: calc(0.3 * var(--u)) calc(0.5 * var(--u)); text-align: left; vertical-align: top;
+                                                border-bottom: calc(0.08 * var(--u)) solid var(--rule); }
+.body th, table.lab th { border-bottom: calc(0.2 * var(--u)) solid var(--ink); font-weight: 700; }
+table.lab td.val { font-weight: 700; white-space: nowrap; }
+table.lab tr.high td.val { color: var(--flag-high); }
+table.lab tr.low td.val { color: var(--flag-low); }
+table.lab .arrow { display: inline-block; width: 1.1em; }
+ul.checklist { list-style: none; padding-left: 0; margin: calc(0.4 * var(--u)) 0 0 0; font-size: calc(var(--body-pt, 32) * 1pt * var(--k)); line-height: 1.3; }
+ul.checklist li { margin: 0 0 calc(0.4 * var(--u)) 0; padding-left: 1.5em; position: relative; }
+ul.checklist li .mark { position: absolute; left: 0; top: 0; }
+
+/* ---------- figures ---------- */
+figure.fig { margin: calc(0.8 * var(--u)) 0 calc(0.8 * var(--u)) 0; padding: 0; }
+figure.fig svg, figure.fig img { display: block; width: 100%; height: auto; max-height: var(--fig-max-h, none); }
+figure.fig img { object-fit: contain; }
+figure.fig figcaption { margin-top: calc(0.5 * var(--u)); font-size: calc(26pt * var(--k)); line-height: 1.25; color: var(--muted); }
+figure.fig figcaption b { color: var(--ink); }
+
+/* ---------- key message ---------- */
+.key { font-weight: 700; }
+.key .label { display: block; font-size: calc(28pt * var(--k)); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: calc(0.6 * var(--u)); }
+.key .text { display: block; font-size: calc(54pt * var(--k)); line-height: 1.15; }
+
+/* ---------- references strip ---------- */
+.refs { flex: none; background: var(--tint); overflow: hidden;
+        padding: calc(1.6 * var(--u)) calc(var(--bleed) + 3 * var(--u)) calc(var(--bleed) + 1.6 * var(--u)) calc(var(--bleed) + 3 * var(--u)); height: var(--foot-h); }
+.refs h2 { font-size: calc(30pt * var(--k)); margin-bottom: calc(0.4 * var(--u)); }
+.refs ol { margin: 0; padding-left: calc(1.6 * var(--u)); font-size: calc(24pt * var(--k)); line-height: 1.22; }
+.refs.cols-2 ol { columns: 2; column-gap: calc(3 * var(--u)); }
+.refs .contact { margin-top: calc(0.6 * var(--u)); font-size: calc(24pt * var(--k)); }
+
+/* ---------- editorial ---------- */
+.editorial .cols.three > .col + .col { border-left: calc(0.12 * var(--u)) solid var(--rule); padding-left: calc(3 * var(--u)); }
+.editorial .key { border-top: calc(0.5 * var(--u)) solid var(--accent); border-bottom: calc(0.15 * var(--u)) solid var(--accent); padding: calc(1 * var(--u)) 0; }
+
+/* ---------- pathway ---------- */
+.pathway .key-band { flex: none; background: var(--tint); border-left: calc(1.2 * var(--u)) solid var(--accent);
+                     padding: calc(1.6 * var(--u)) calc(2.4 * var(--u)); height: var(--key-h); display: flex; align-items: center; }
+.pathway .step { display: grid; grid-template-columns: calc(5.5 * var(--u)) minmax(0, 1fr); column-gap: calc(1.8 * var(--u)); }
+.pathway .num { background: var(--accent); color: #ffffff; font-weight: 700; font-size: calc(54pt * var(--k)); text-align: center;
+                height: calc(5.5 * var(--u)); line-height: calc(5.5 * var(--u)); }
+.pathway .step-body { border-left: calc(0.2 * var(--u)) solid var(--accent); padding-left: calc(1.8 * var(--u)); min-width: 0; }
+
+/* ---------- figure-led ---------- */
+.figure-led .hero-row { flex: none; display: grid; grid-template-columns: var(--hero-w) minmax(0, 1fr); gap: calc(3 * var(--u)); }
+.figure-led .hero-row.wide { grid-template-columns: minmax(0, 1fr); }
+.figure-led .hero-row.wide .key-side { order: -1; padding: calc(2.4 * var(--u)); }
+.figure-led .hero-row.wide .key-side .text { font-size: calc(46pt * var(--k)); }
+.figure-led .hero-figure { border: calc(0.2 * var(--u)) solid var(--accent); padding: calc(0.8 * var(--u)); overflow: hidden; }
+.figure-led .hero-figure figure.fig { margin: 0 0 calc(0.8 * var(--u)) 0; }
+.figure-led .hero-figure figure.fig svg, .figure-led .hero-figure figure.fig img { width: 100%; height: auto; max-height: none; }
+.figure-led .hero-figure .body { font-size: calc(40pt * var(--k)); line-height: 1.3; }
+.figure-led .hero-figure h2 { margin-bottom: calc(1.2 * var(--u)); }
+.figure-led .key-side { background: var(--accent); color: #ffffff; padding: calc(2.4 * var(--u)); display: flex; flex-direction: column; justify-content: center; }
+.figure-led .key-side .text { font-size: calc(58pt * var(--k)); }
+.figure-led .cols { flex: 1 1 auto; }
+.figure-led .cols.three > .col + .col { border-left: calc(0.12 * var(--u)) solid var(--rule); padding-left: calc(3 * var(--u)); }
+
+</style>
+</head>
+<body>
+<div class="sheet editorial" style="--k: 1; --bleed: 0.3cm; --sheet-w: 90.6cm; --sheet-h: 120.6cm; --title-h: 17.1cm; --foot-h: 0.3cm; --key-h: 0cm; --font: Arial, &quot;Liberation Sans&quot;, sans-serif; --fig-max-h: 31.424cm; --body-pt: 38">
+  <header class="title-band box"><h1>HbA1c lúc nhập viện và nguy cơ tái nhập viện trong 1 năm ở người bệnh đái tháo đường type 2</h1><p class="authors">Example author</p><p class="affil">Khoa Nội tiết, Bệnh viện Mô phỏng</p></header>
+  <div class="main">
+    <div class="cols three">
+      <div class="col box" data-area="col-1"><div class="key"><span class="label">Thông điệp chính</span><span class="text">HbA1c &gt;9% lúc nhập viện có thể đi kèm nguy cơ tái nhập viện trong 1 năm cao hơn (OR hiệu chỉnh 1,42, KTC 95% 0,94–2,15), nhưng cỡ mẫu chưa đủ để khẳng định.</span></div><section class="sec" id="sec-3"><h2>Đặc điểm chung và tỷ lệ tái nhập viện</h2>
+<figure class="fig" data-fig="F3" style="width:20cm;max-width:100%" data-fig-profile="poster">
+
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 623.622047 392.133333" xmlns="http://www.w3.org/2000/svg" version="1.1" class="fig-svg fig-svg-F3" role="img" aria-label="Biểu đồ thanh ngang tỷ lệ tái nhập viện 3 nhóm HbA1c kèm khoảng tin cậy 95%" data-raster="../figures/F3.poster.png">
+ 
+ <defs>
+  <style type="text/css">.fig-svg-F3 *{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="F3-figure_1">
+  <g id="F3-patch_1">
+   <path d="M 0 392.133333 
+L 623.622047 392.133333 
+L 623.622047 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="F3-axes_1">
+   <g id="F3-patch_2">
+    <path d="M 92.7528 294.933333 
+L 387.214847 294.933333 
+L 387.214847 107.733333 
+L 92.7528 107.733333 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="F3-patch_3">
+    <path d="M 92.7528 158.920833 
+L 267.245221 158.920833 
+L 267.245221 126.745833 
+L 92.7528 126.745833 
+z
+" clip-path="url(#F3-p0608a1efab)" style="fill: #1f4e79; stroke: #1f4e79; stroke-width: 2.933333; stroke-linejoin: miter"/>
+   </g>
+   <g id="F3-patch_4">
+    <path d="M 92.7528 217.420833 
+L 280.056879 217.420833 
+L 280.056879 185.245833 
+L 92.7528 185.245833 
+z
+" clip-path="url(#F3-p0608a1efab)" style="fill: #c0504d; stroke: #c0504d; stroke-width: 2.933333; stroke-linejoin: miter"/>
+   </g>
+   <g id="F3-patch_5">
+    <path d="M 92.7528 275.920833 
+L 320.469782 275.920833 
+L 320.469782 243.745833 
+L 92.7528 243.745833 
+z
+" clip-path="url(#F3-p0608a1efab)" style="fill: #8d6e2f; stroke: #8d6e2f; stroke-width: 2.933333; stroke-linejoin: miter"/>
+   </g>
+   <g id="F3-matplotlib.axis_1">
+    <g id="F3-xtick_1">
+     <g id="F3-line2d_1">
+      <defs>
+       <path id="F3-m1c13939e55" d="M 0 0 
+L 0 8 
+" style="stroke: #000000; stroke-width: 1.6"/>
+      </defs>
+      <g>
+       <use xlink:href="#F3-m1c13939e55" x="92.7528" y="294.933333" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F3-text_1">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="92.7528" y="329.739323" transform="rotate(-0 92.7528 329.739323)">0</text>
+     </g>
+    </g>
+    <g id="F3-xtick_2">
+     <g id="F3-line2d_2">
+      <g>
+       <use xlink:href="#F3-m1c13939e55" x="181.895667" y="294.933333" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F3-text_2">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="181.895667" y="329.739323" transform="rotate(-0 181.895667 329.739323)">10</text>
+     </g>
+    </g>
+    <g id="F3-xtick_3">
+     <g id="F3-line2d_3">
+      <g>
+       <use xlink:href="#F3-m1c13939e55" x="271.038535" y="294.933333" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F3-text_3">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="271.038535" y="329.739323" transform="rotate(-0 271.038535 329.739323)">20</text>
+     </g>
+    </g>
+    <g id="F3-xtick_4">
+     <g id="F3-line2d_4">
+      <g>
+       <use xlink:href="#F3-m1c13939e55" x="360.181402" y="294.933333" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F3-text_4">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="360.181402" y="329.739323" transform="rotate(-0 360.181402 329.739323)">30</text>
+     </g>
+    </g>
+    <g id="F3-text_5">
+     <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="239.983824" y="361.86276" transform="rotate(-0 239.983824 361.86276)">%</text>
+    </g>
+   </g>
+   <g id="F3-matplotlib.axis_2">
+    <g id="F3-ytick_1">
+     <g id="F3-line2d_5">
+      <defs>
+       <path id="F3-m4dd065e8b9" d="M 0 0 
+L -8 0 
+" style="stroke: #000000; stroke-width: 1.6"/>
+      </defs>
+      <g>
+       <use xlink:href="#F3-m4dd065e8b9" x="92.7528" y="142.833333" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F3-text_6">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="75.419467" y="151.569661" transform="rotate(-0 75.419467 151.569661)">&lt;7%</text>
+     </g>
+    </g>
+    <g id="F3-ytick_2">
+     <g id="F3-line2d_6">
+      <g>
+       <use xlink:href="#F3-m4dd065e8b9" x="92.7528" y="201.333333" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F3-text_7">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="75.419467" y="210.069661" transform="rotate(-0 75.419467 210.069661)">7–9%</text>
+     </g>
+    </g>
+    <g id="F3-ytick_3">
+     <g id="F3-line2d_7">
+      <g>
+       <use xlink:href="#F3-m4dd065e8b9" x="92.7528" y="259.833333" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F3-text_8">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="75.419467" y="268.569661" transform="rotate(-0 75.419467 268.569661)">&gt;9%</text>
+     </g>
+    </g>
+   </g>
+   <g id="F3-line2d_8">
+    <path d="M 226.539734 142.833333 
+L 316.675222 142.833333 
+" clip-path="url(#F3-p0608a1efab)" style="fill: none; stroke: #000000; stroke-width: 2.666667; stroke-linecap: square"/>
+   </g>
+   <g id="F3-line2d_9">
+    <path d="M 226.539734 151.023333 
+L 226.539734 134.643333 
+" clip-path="url(#F3-p0608a1efab)" style="fill: none; stroke: #000000; stroke-width: 2.666667; stroke-linecap: square"/>
+   </g>
+   <g id="F3-line2d_10">
+    <path d="M 316.675222 151.023333 
+L 316.675222 134.643333 
+" clip-path="url(#F3-p0608a1efab)" style="fill: none; stroke: #000000; stroke-width: 2.666667; stroke-linecap: square"/>
+   </g>
+   <g id="F3-line2d_11">
+    <path d="M 250.636482 201.333333 
+L 313.311162 201.333333 
+" clip-path="url(#F3-p0608a1efab)" style="fill: none; stroke: #000000; stroke-width: 2.666667; stroke-linecap: square"/>
+   </g>
+   <g id="F3-line2d_12">
+    <path d="M 250.636482 209.523333 
+L 250.636482 193.143333 
+" clip-path="url(#F3-p0608a1efab)" style="fill: none; stroke: #000000; stroke-width: 2.666667; stroke-linecap: square"/>
+   </g>
+   <g id="F3-line2d_13">
+    <path d="M 313.311162 209.523333 
+L 313.311162 193.143333 
+" clip-path="url(#F3-p0608a1efab)" style="fill: none; stroke: #000000; stroke-width: 2.666667; stroke-linecap: square"/>
+   </g>
+   <g id="F3-line2d_14">
+    <path d="M 280.692637 259.833333 
+L 365.402844 259.833333 
+" clip-path="url(#F3-p0608a1efab)" style="fill: none; stroke: #000000; stroke-width: 2.666667; stroke-linecap: square"/>
+   </g>
+   <g id="F3-line2d_15">
+    <path d="M 280.692637 268.023333 
+L 280.692637 251.643333 
+" clip-path="url(#F3-p0608a1efab)" style="fill: none; stroke: #000000; stroke-width: 2.666667; stroke-linecap: square"/>
+   </g>
+   <g id="F3-line2d_16">
+    <path d="M 365.402844 268.023333 
+L 365.402844 251.643333 
+" clip-path="url(#F3-p0608a1efab)" style="fill: none; stroke: #000000; stroke-width: 2.666667; stroke-linecap: square"/>
+   </g>
+   <g id="F3-patch_6">
+    <path d="M 92.7528 294.933333 
+L 92.7528 107.733333 
+" style="fill: none; stroke: #000000; stroke-width: 1.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="F3-patch_7">
+    <path d="M 92.7528 294.933333 
+L 387.214847 294.933333 
+" style="fill: none; stroke: #000000; stroke-width: 1.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="F3-text_9">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="406.414847" y="149.044036" transform="rotate(-0 406.414847 149.044036)">19,6% (15,0–25,1)</text>
+   </g>
+   <g id="F3-text_10">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="406.414847" y="207.544036" transform="rotate(-0 406.414847 207.544036)">21,0% (17,7–24,7)</text>
+   </g>
+   <g id="F3-text_11">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="406.414847" y="266.044036" transform="rotate(-0 406.414847 266.044036)">25,5% (21,1–30,6)</text>
+   </g>
+  </g>
+  <g id="F3-text_12">
+   <text style="font-weight: 700; font-size: 26.666667px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(19.2 28.725391)">Tỷ lệ tái nhập viện trong 1 năm theo nhóm</text>
+   <text style="font-weight: 700; font-size: 26.666667px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(19.2 57.444922)">HbA1c lúc nhập viện</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="F3-p0608a1efab">
+   <rect x="92.7528" y="107.733333" width="294.462047" height="187.2"/>
+  </clipPath>
+ </defs>
+</svg>
+<figcaption><strong>Hình 2.</strong> Tỷ lệ tái nhập viện trong 1 năm theo nhóm HbA1c.</figcaption></figure>
+<div class="body"><p>Tỷ lệ tái nhập viện 1 năm chung: 22,1% (KTC 95%: 19,7–24,6); theo nhóm HbA1c: 19,6% (&lt;7%), 21,0% (7–9%), 25,5% (&gt;9%).</p></div></section>
+<section class="sec" id="sec-7"><h2>Ghi chú về dữ liệu</h2>
+<div class="body"><p>Dữ liệu mô phỏng (dự án ví dụ): không phải số liệu bệnh nhân thật, không có giá trị lâm sàng.</p></div></section></div>
+      <div class="col box" data-area="col-2"><section class="sec" id="sec-4"><h2>Mối liên quan HbA1c và tái nhập viện</h2>
+<figure class="fig" data-fig="F1" data-fig-profile="poster">
+
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 720.0552 358.533333" xmlns="http://www.w3.org/2000/svg" version="1.1" class="fig-svg fig-svg-F1" role="img" aria-label="Biểu đồ rừng hai tỷ số chênh hiệu chỉnh, cả hai khoảng tin cậy đều cắt giá trị 1" data-raster="../figures/F1.poster.png">
+ 
+ <defs>
+  <style type="text/css">.fig-svg-F1 *{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="F1-figure_1">
+  <g id="F1-patch_1">
+   <path d="M 0 358.533333 
+L 720.0552 358.533333 
+L 720.0552 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="F1-axes_1">
+   <g id="F1-patch_2">
+    <path d="M 180.2616 261.333333 
+L 420.2616 261.333333 
+L 420.2616 136.533333 
+L 180.2616 136.533333 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="F1-matplotlib.axis_1">
+    <g id="F1-xtick_1">
+     <g id="F1-line2d_1">
+      <defs>
+       <path id="F1-m1c13939e55" d="M 0 0 
+L 0 8 
+" style="stroke: #000000; stroke-width: 1.6"/>
+      </defs>
+      <g>
+       <use xlink:href="#F1-m1c13939e55" x="180.2616" y="261.333333" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F1-text_1">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="180.2616" y="296.139323" transform="rotate(-0 180.2616 296.139323)">0,5</text>
+     </g>
+    </g>
+    <g id="F1-xtick_2">
+     <g id="F1-line2d_2">
+      <g>
+       <use xlink:href="#F1-m1c13939e55" x="290.188667" y="261.333333" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F1-text_2">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="290.188667" y="296.139323" transform="rotate(-0 290.188667 296.139323)">1</text>
+     </g>
+    </g>
+    <g id="F1-xtick_3">
+     <g id="F1-line2d_3">
+      <g>
+       <use xlink:href="#F1-m1c13939e55" x="400.115734" y="261.333333" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F1-text_3">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="400.115734" y="296.139323" transform="rotate(-0 400.115734 296.139323)">2</text>
+     </g>
+    </g>
+    <g id="F1-text_4">
+     <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="300.2616" y="328.276354" transform="rotate(-0 300.2616 328.276354)">OR (KTC 95%)</text>
+    </g>
+   </g>
+   <g id="F1-matplotlib.axis_2">
+    <g id="F1-ytick_1">
+     <g id="F1-line2d_4"/>
+     <g id="F1-text_5">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="168.2616" y="176.469661" transform="rotate(-0 168.2616 176.469661)">7–9% vs &lt;7%</text>
+     </g>
+    </g>
+    <g id="F1-ytick_2">
+     <g id="F1-line2d_5"/>
+     <g id="F1-text_6">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="168.2616" y="238.869661" transform="rotate(-0 168.2616 238.869661)">&gt;9% vs &lt;7%</text>
+     </g>
+    </g>
+   </g>
+   <g id="F1-line2d_6">
+    <path d="M 242.923244 167.733333 
+L 366.967769 167.733333 
+" clip-path="url(#F1-pbaeac1b7cc)" style="fill: none; stroke: #1f4e79; stroke-width: 2.933333"/>
+   </g>
+   <g id="F1-line2d_7">
+    <path d="M 304.945506 167.733333 
+" clip-path="url(#F1-pbaeac1b7cc)" style="fill: none; stroke: #1f4e79; stroke-width: 1.5; stroke-linecap: square"/>
+    <defs>
+     <path id="F1-m8225cf5c96" d="M -7.333333 7.333333 
+L 7.333333 7.333333 
+L 7.333333 -7.333333 
+L -7.333333 -7.333333 
+z
+" style="stroke: #1f4e79; stroke-width: 2.933333; stroke-linejoin: miter"/>
+    </defs>
+    <g clip-path="url(#F1-pbaeac1b7cc)">
+     <use xlink:href="#F1-m8225cf5c96" x="304.945506" y="167.733333" style="fill: #1f4e79; stroke: #1f4e79; stroke-width: 2.933333; stroke-linejoin: miter"/>
+    </g>
+   </g>
+   <g id="F1-line2d_8">
+    <path d="M 280.145412 230.133333 
+L 411.816916 230.133333 
+" clip-path="url(#F1-pbaeac1b7cc)" style="fill: none; stroke: #1f4e79; stroke-width: 2.933333"/>
+   </g>
+   <g id="F1-line2d_9">
+    <path d="M 345.981164 230.133333 
+" clip-path="url(#F1-pbaeac1b7cc)" style="fill: none; stroke: #1f4e79; stroke-width: 1.5; stroke-linecap: square"/>
+    <g clip-path="url(#F1-pbaeac1b7cc)">
+     <use xlink:href="#F1-m8225cf5c96" x="345.981164" y="230.133333" style="fill: #1f4e79; stroke: #1f4e79; stroke-width: 2.933333; stroke-linejoin: miter"/>
+    </g>
+   </g>
+   <g id="F1-line2d_10">
+    <path d="M 290.188667 261.333333 
+L 290.188667 136.533333 
+" clip-path="url(#F1-pbaeac1b7cc)" style="fill: none; stroke-dasharray: 7.893333,3.413333; stroke-dashoffset: 0; stroke: #555555; stroke-width: 2.133333"/>
+   </g>
+   <g id="F1-patch_3">
+    <path d="M 180.2616 261.333333 
+L 420.2616 261.333333 
+" style="fill: none; stroke: #000000; stroke-width: 1.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="F1-text_7">
+    <text style="font-weight: 700; font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="444.2616" y="131.482083" transform="rotate(-0 444.2616 131.482083)">Ước lượng (KTC 95%)</text>
+   </g>
+   <g id="F1-text_8">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="444.2616" y="173.944036" transform="rotate(-0 444.2616 173.944036)">1,10 (0,74–1,62)</text>
+   </g>
+   <g id="F1-text_9">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="444.2616" y="236.344036" transform="rotate(-0 444.2616 236.344036)">1,42 (0,94–2,15)</text>
+   </g>
+  </g>
+  <g id="F1-text_10">
+   <text style="font-weight: 700; font-size: 26.666667px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(19.2 28.900391)">OR hiệu chỉnh của HbA1c lúc nhập viện với tái</text>
+   <text style="font-weight: 700; font-size: 26.666667px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(19.2 57.269922)">nhập viện trong 1 năm (mô hình A1)</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="F1-pbaeac1b7cc">
+   <rect x="180.2616" y="136.533333" width="240" height="124.8"/>
+  </clipPath>
+ </defs>
+</svg>
+<figcaption><strong>Hình 3.</strong> OR hiệu chỉnh của HbA1c với tái nhập viện trong 1 năm (mô hình A1).</figcaption></figure>
+<div class="body"><p>Cả hai khoảng tin cậy đều chứa giá trị 1.</p>
+<table><thead><tr><th>Biến</th><th>OR hiệu chỉnh (KTC 95%)</th><th>p</th></tr></thead><tbody><tr><td>HbA1c 7–9% so với &lt;7%</td><td>1,10 (0,74–1,62)</td><td>0,641</td></tr><tr><td>HbA1c &gt;9% so với &lt;7%</td><td>1,42 (0,94–2,15)</td><td>0,097</td></tr></tbody></table></div></section>
+<section class="sec" id="sec-5"><h2>Thời gian đến lần tái nhập viện đầu tiên</h2>
+<figure class="fig" data-fig="F2" data-fig-profile="poster">
+
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 651.968504 741.5304" xmlns="http://www.w3.org/2000/svg" version="1.1" class="fig-svg fig-svg-F2" role="img" aria-label="Ba đường Kaplan-Meier theo nhóm HbA1c với bảng số người còn theo dõi" data-raster="../figures/F2.poster.png">
+ 
+ <defs>
+  <style type="text/css">.fig-svg-F2 *{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="F2-figure_1">
+  <g id="F2-patch_1">
+   <path d="M 0 741.5304 
+L 651.968504 741.5304 
+L 651.968504 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="F2-axes_1">
+   <g id="F2-patch_2">
+    <path d="M 103.222781 373.1304 
+L 624.745304 373.1304 
+L 624.745304 14.4 
+L 103.222781 14.4 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="F2-matplotlib.axis_1">
+    <g id="F2-xtick_1">
+     <g id="F2-line2d_1">
+      <defs>
+       <path id="F2-m1c13939e55" d="M 0 0 
+L 0 8 
+" style="stroke: #000000; stroke-width: 1.6"/>
+      </defs>
+      <g>
+       <use xlink:href="#F2-m1c13939e55" x="103.222781" y="373.1304" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F2-text_1">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="103.222781" y="407.93639" transform="rotate(-0 103.222781 407.93639)">0</text>
+     </g>
+    </g>
+    <g id="F2-xtick_2">
+     <g id="F2-line2d_2">
+      <g>
+       <use xlink:href="#F2-m1c13939e55" x="231.817376" y="373.1304" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F2-text_2">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="231.817376" y="407.93639" transform="rotate(-0 231.817376 407.93639)">90</text>
+     </g>
+    </g>
+    <g id="F2-xtick_3">
+     <g id="F2-line2d_3">
+      <g>
+       <use xlink:href="#F2-m1c13939e55" x="360.411971" y="373.1304" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F2-text_3">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="360.411971" y="407.93639" transform="rotate(-0 360.411971 407.93639)">180</text>
+     </g>
+    </g>
+    <g id="F2-xtick_4">
+     <g id="F2-line2d_4">
+      <g>
+       <use xlink:href="#F2-m1c13939e55" x="489.006565" y="373.1304" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F2-text_4">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="489.006565" y="407.93639" transform="rotate(-0 489.006565 407.93639)">270</text>
+     </g>
+    </g>
+    <g id="F2-xtick_5">
+     <g id="F2-line2d_5">
+      <g>
+       <use xlink:href="#F2-m1c13939e55" x="624.745304" y="373.1304" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F2-text_5">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="624.745304" y="407.93639" transform="rotate(-0 624.745304 407.93639)">365</text>
+     </g>
+    </g>
+    <g id="F2-text_6">
+     <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="363.984043" y="440.059827" transform="rotate(-0 363.984043 440.059827)">Thời gian theo dõi (ngày)</text>
+    </g>
+   </g>
+   <g id="F2-matplotlib.axis_2">
+    <g id="F2-ytick_1">
+     <g id="F2-line2d_6">
+      <defs>
+       <path id="F2-m4dd065e8b9" d="M 0 0 
+L -8 0 
+" style="stroke: #000000; stroke-width: 1.6"/>
+      </defs>
+      <g>
+       <use xlink:href="#F2-m4dd065e8b9" x="103.222781" y="373.1304" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F2-text_7">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="85.889448" y="381.866728" transform="rotate(-0 85.889448 381.866728)">0</text>
+     </g>
+    </g>
+    <g id="F2-ytick_2">
+     <g id="F2-line2d_7">
+      <g>
+       <use xlink:href="#F2-m4dd065e8b9" x="103.222781" y="302.791106" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F2-text_8">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="85.889448" y="311.527434" transform="rotate(-0 85.889448 311.527434)">0,2</text>
+     </g>
+    </g>
+    <g id="F2-ytick_3">
+     <g id="F2-line2d_8">
+      <g>
+       <use xlink:href="#F2-m4dd065e8b9" x="103.222781" y="232.451812" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F2-text_9">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="85.889448" y="241.18814" transform="rotate(-0 85.889448 241.18814)">0,4</text>
+     </g>
+    </g>
+    <g id="F2-ytick_4">
+     <g id="F2-line2d_9">
+      <g>
+       <use xlink:href="#F2-m4dd065e8b9" x="103.222781" y="162.112518" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F2-text_10">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="85.889448" y="170.848846" transform="rotate(-0 85.889448 170.848846)">0,6</text>
+     </g>
+    </g>
+    <g id="F2-ytick_5">
+     <g id="F2-line2d_10">
+      <g>
+       <use xlink:href="#F2-m4dd065e8b9" x="103.222781" y="91.773224" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F2-text_11">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="85.889448" y="100.509552" transform="rotate(-0 85.889448 100.509552)">0,8</text>
+     </g>
+    </g>
+    <g id="F2-ytick_6">
+     <g id="F2-line2d_11">
+      <g>
+       <use xlink:href="#F2-m4dd065e8b9" x="103.222781" y="21.433929" style="stroke: #000000; stroke-width: 1.6"/>
+      </g>
+     </g>
+     <g id="F2-text_12">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="85.889448" y="30.170258" transform="rotate(-0 85.889448 30.170258)">1</text>
+     </g>
+    </g>
+    <g id="F2-text_13">
+     <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="37.878198" y="193.7652" transform="rotate(-90 37.878198 193.7652)">Xác suất không tái nhập viện</text>
+    </g>
+   </g>
+   <g id="F2-line2d_12">
+    <path d="M 103.222781 21.433929 
+L 111.795754 21.433929 
+L 111.795754 22.930398 
+L 117.51107 22.930398 
+L 117.51107 24.427218 
+L 118.939898 24.427218 
+L 118.939898 25.923687 
+L 120.368727 25.923687 
+L 120.368727 27.420155 
+L 121.797556 27.420155 
+L 121.797556 28.916975 
+L 124.655214 28.916975 
+L 124.655214 30.413444 
+L 127.512871 30.413444 
+L 127.512871 31.909912 
+L 136.085844 31.909912 
+L 136.085844 36.399669 
+L 151.802961 36.399669 
+L 151.802961 39.392958 
+L 158.947106 39.392958 
+L 158.947106 42.385895 
+L 164.662421 42.385895 
+L 164.662421 43.882715 
+L 168.948907 43.882715 
+L 168.948907 45.379184 
+L 170.377736 45.379184 
+L 170.377736 46.875652 
+L 174.664223 46.875652 
+L 174.664223 48.372472 
+L 178.950709 48.372472 
+L 178.950709 49.868941 
+L 180.379538 49.868941 
+L 180.379538 51.365409 
+L 184.666025 51.365409 
+L 184.666025 52.862229 
+L 186.094853 52.862229 
+L 186.094853 54.358698 
+L 211.813772 54.358698 
+L 211.813772 57.351987 
+L 213.242601 57.351987 
+L 213.242601 58.848455 
+L 227.530889 58.848455 
+L 227.530889 60.344924 
+L 228.959718 60.344924 
+L 228.959718 61.841744 
+L 231.817376 61.841744 
+L 231.817376 63.338212 
+L 254.678637 63.338212 
+L 254.678637 64.834681 
+L 276.11107 64.834681 
+L 276.11107 66.331501 
+L 277.539898 66.331501 
+L 277.539898 67.827969 
+L 290.399358 67.827969 
+L 290.399358 69.324438 
+L 301.829989 69.324438 
+L 301.829989 70.821258 
+L 313.260619 70.821258 
+L 313.260619 72.317726 
+L 324.69125 72.317726 
+L 324.69125 73.814195 
+L 336.12188 73.814195 
+L 336.12188 75.310663 
+L 401.848007 75.310663 
+L 401.848007 76.807484 
+L 441.855214 76.807484 
+L 441.855214 78.303952 
+L 450.428187 78.303952 
+L 450.428187 79.800421 
+L 473.289448 79.800421 
+L 473.289448 81.297241 
+L 476.147106 81.297241 
+L 476.147106 82.793709 
+L 531.87143 82.793709 
+L 531.87143 84.290178 
+L 546.159718 84.290178 
+L 546.159718 85.786998 
+L 559.019178 85.786998 
+L 559.019178 87.283466 
+L 590.453412 87.283466 
+L 590.453412 88.779935 
+L 624.745304 88.779935 
+L 624.745304 90.276755 
+" clip-path="url(#F2-p096d8b8438)" style="fill: none; stroke: #1f4e79; stroke-width: 3.733333; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="F2-line2d_13">
+    <path d="M 103.222781 21.433929 
+L 106.080439 21.433929 
+L 106.080439 22.118331 
+L 107.509268 22.118331 
+L 107.509268 22.80238 
+L 108.938097 22.80238 
+L 108.938097 23.486782 
+L 111.795754 23.486782 
+L 111.795754 24.855233 
+L 116.082241 24.855233 
+L 116.082241 25.539282 
+L 117.51107 25.539282 
+L 117.51107 26.907733 
+L 118.939898 26.907733 
+L 118.939898 27.592135 
+L 120.368727 27.592135 
+L 120.368727 28.960586 
+L 123.226385 28.960586 
+L 123.226385 29.644635 
+L 124.655214 29.644635 
+L 124.655214 31.013086 
+L 126.084043 31.013086 
+L 126.084043 31.697488 
+L 131.799358 31.697488 
+L 131.799358 32.381537 
+L 134.657015 32.381537 
+L 134.657015 33.749988 
+L 137.514673 33.749988 
+L 137.514673 34.434389 
+L 143.229988 34.434389 
+L 143.229988 35.118791 
+L 144.658817 35.118791 
+L 144.658817 35.80284 
+L 146.087646 35.80284 
+L 146.087646 36.487242 
+L 150.374133 36.487242 
+L 150.374133 37.855693 
+L 151.802961 37.855693 
+L 151.802961 38.539742 
+L 153.23179 38.539742 
+L 153.23179 39.908193 
+L 154.660619 39.908193 
+L 154.660619 40.592595 
+L 164.662421 40.592595 
+L 164.662421 41.961046 
+L 167.520079 41.961046 
+L 167.520079 42.645095 
+L 171.806565 42.645095 
+L 171.806565 43.329497 
+L 176.093052 43.329497 
+L 176.093052 44.697948 
+L 177.52188 44.697948 
+L 177.52188 45.381997 
+L 178.950709 45.381997 
+L 178.950709 46.066399 
+L 188.952511 46.066399 
+L 188.952511 46.750448 
+L 190.38134 46.750448 
+L 190.38134 47.434849 
+L 191.810169 47.434849 
+L 191.810169 48.8033 
+L 193.238997 48.8033 
+L 193.238997 50.171751 
+L 194.667826 50.171751 
+L 194.667826 50.856153 
+L 198.954313 50.856153 
+L 198.954313 51.540202 
+L 200.383142 51.540202 
+L 200.383142 52.224604 
+L 201.81197 52.224604 
+L 201.81197 52.908653 
+L 203.240799 52.908653 
+L 203.240799 53.593055 
+L 206.098457 53.593055 
+L 206.098457 54.961506 
+L 208.956115 54.961506 
+L 208.956115 55.645555 
+L 216.100259 55.645555 
+L 216.100259 56.329957 
+L 218.957916 56.329957 
+L 218.957916 57.014006 
+L 221.815574 57.014006 
+L 221.815574 57.698408 
+L 226.102061 57.698408 
+L 226.102061 58.382457 
+L 230.388547 58.382457 
+L 230.388547 59.066859 
+L 246.105664 59.066859 
+L 246.105664 60.43531 
+L 250.392151 60.43531 
+L 250.392151 61.119359 
+L 254.678637 61.119359 
+L 254.678637 61.80376 
+L 258.965124 61.80376 
+L 258.965124 62.488162 
+L 264.680439 62.488162 
+L 264.680439 63.172211 
+L 266.109268 63.172211 
+L 266.109268 63.856613 
+L 267.538097 63.856613 
+L 267.538097 64.540662 
+L 274.682241 64.540662 
+L 274.682241 65.225064 
+L 283.255214 65.225064 
+L 283.255214 65.909113 
+L 284.684043 65.909113 
+L 284.684043 66.593515 
+L 287.5417 66.593515 
+L 287.5417 67.277564 
+L 301.829989 67.277564 
+L 301.829989 67.961966 
+L 313.260619 67.961966 
+L 313.260619 68.646015 
+L 316.118277 68.646015 
+L 316.118277 69.330417 
+L 323.262421 69.330417 
+L 323.262421 70.014466 
+L 330.406565 70.014466 
+L 330.406565 70.698868 
+L 331.835394 70.698868 
+L 331.835394 71.382917 
+L 336.12188 71.382917 
+L 336.12188 72.751368 
+L 344.694853 72.751368 
+L 344.694853 73.43577 
+L 348.98134 73.43577 
+L 348.98134 74.119819 
+L 360.411971 74.119819 
+L 360.411971 74.804221 
+L 363.269628 74.804221 
+L 363.269628 75.48827 
+L 370.413772 75.48827 
+L 370.413772 76.172671 
+L 376.129088 76.172671 
+L 376.129088 76.857073 
+L 377.557916 76.857073 
+L 377.557916 77.541122 
+L 380.415574 77.541122 
+L 380.415574 78.225524 
+L 381.844403 78.225524 
+L 381.844403 78.909573 
+L 387.559718 78.909573 
+L 387.559718 80.278024 
+L 411.849808 80.278024 
+L 411.849808 80.962426 
+L 420.422781 80.962426 
+L 420.422781 82.330877 
+L 427.566925 82.330877 
+L 427.566925 83.014926 
+L 430.424583 83.014926 
+L 430.424583 83.699328 
+L 454.714673 83.699328 
+L 454.714673 84.383377 
+L 469.002962 84.383377 
+L 469.002962 85.751828 
+L 484.720079 85.751828 
+L 484.720079 86.43623 
+L 486.148907 86.43623 
+L 486.148907 87.120279 
+L 496.150709 87.120279 
+L 496.150709 87.804681 
+L 507.58134 87.804681 
+L 507.58134 88.48873 
+L 526.156115 88.48873 
+L 526.156115 89.173132 
+L 571.878637 89.173132 
+L 571.878637 89.857533 
+L 576.165124 89.857533 
+L 576.165124 90.541582 
+L 624.745304 90.541582 
+L 624.745304 95.331337 
+L 624.745304 95.331337 
+" clip-path="url(#F2-p096d8b8438)" style="fill: none; stroke: #c0504d; stroke-width: 3.733333; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="F2-line2d_14">
+    <path d="M 103.222781 21.433929 
+L 107.509268 21.433929 
+L 107.509268 22.529464 
+L 110.366925 22.529464 
+L 110.366925 23.62535 
+L 111.795754 23.62535 
+L 111.795754 24.720885 
+L 116.082241 24.720885 
+L 116.082241 26.911954 
+L 117.51107 26.911954 
+L 117.51107 28.00784 
+L 120.368727 28.00784 
+L 120.368727 30.198909 
+L 121.797556 30.198909 
+L 121.797556 33.485864 
+L 124.655214 33.485864 
+L 124.655214 34.581399 
+L 126.084043 34.581399 
+L 126.084043 35.676933 
+L 127.512871 35.676933 
+L 127.512871 36.772819 
+L 128.9417 36.772819 
+L 128.9417 37.868354 
+L 131.799358 37.868354 
+L 131.799358 38.963888 
+L 136.085844 38.963888 
+L 136.085844 41.155309 
+L 137.514673 41.155309 
+L 137.514673 42.250844 
+L 140.372331 42.250844 
+L 140.372331 44.442264 
+L 141.80116 44.442264 
+L 141.80116 45.537799 
+L 148.945304 45.537799 
+L 148.945304 46.633333 
+L 154.660619 46.633333 
+L 154.660619 47.728868 
+L 157.518277 47.728868 
+L 157.518277 48.824754 
+L 158.947106 48.824754 
+L 158.947106 49.920288 
+L 160.375934 49.920288 
+L 160.375934 52.111357 
+L 164.662421 52.111357 
+L 164.662421 53.207244 
+L 167.520079 53.207244 
+L 167.520079 54.302778 
+L 170.377736 54.302778 
+L 170.377736 55.398313 
+L 171.806565 55.398313 
+L 171.806565 56.493847 
+L 176.093052 56.493847 
+L 176.093052 57.589733 
+L 180.379538 57.589733 
+L 180.379538 58.685268 
+L 181.808367 58.685268 
+L 181.808367 60.876689 
+L 184.666025 60.876689 
+L 184.666025 61.972223 
+L 190.38134 61.972223 
+L 190.38134 63.067758 
+L 196.096655 63.067758 
+L 196.096655 64.163292 
+L 201.81197 64.163292 
+L 201.81197 65.259178 
+L 206.098457 65.259178 
+L 206.098457 66.354713 
+L 216.100259 66.354713 
+L 216.100259 67.450247 
+L 220.386745 67.450247 
+L 220.386745 68.545782 
+L 224.673232 68.545782 
+L 224.673232 69.641668 
+L 227.530889 69.641668 
+L 227.530889 71.832737 
+L 231.817376 71.832737 
+L 231.817376 72.928272 
+L 254.678637 72.928272 
+L 254.678637 74.024158 
+L 257.536295 74.024158 
+L 257.536295 76.215227 
+L 263.25161 76.215227 
+L 263.25161 77.311113 
+L 267.538097 77.311113 
+L 267.538097 78.406647 
+L 270.395754 78.406647 
+L 270.395754 80.597716 
+L 278.968727 80.597716 
+L 278.968727 81.693603 
+L 283.255214 81.693603 
+L 283.255214 82.789137 
+L 296.114673 82.789137 
+L 296.114673 83.884672 
+L 343.266025 83.884672 
+L 343.266025 84.980206 
+L 347.552511 84.980206 
+L 347.552511 86.076092 
+L 353.267826 86.076092 
+L 353.267826 87.171627 
+L 354.696655 87.171627 
+L 354.696655 88.267161 
+L 357.554313 88.267161 
+L 357.554313 89.362696 
+L 366.127286 89.362696 
+L 366.127286 90.458582 
+L 373.27143 90.458582 
+L 373.27143 91.554117 
+L 380.415574 91.554117 
+L 380.415574 92.649651 
+L 397.56152 92.649651 
+L 397.56152 93.745186 
+L 421.85161 93.745186 
+L 421.85161 94.841072 
+L 424.709268 94.841072 
+L 424.709268 95.936606 
+L 427.566925 95.936606 
+L 427.566925 97.032141 
+L 484.720079 97.032141 
+L 484.720079 98.128027 
+L 494.72188 98.128027 
+L 494.72188 99.223562 
+L 499.008367 99.223562 
+L 499.008367 100.319096 
+L 507.58134 100.319096 
+L 507.58134 101.414631 
+L 534.729088 101.414631 
+L 534.729088 102.510517 
+L 536.157917 102.510517 
+L 536.157917 103.606051 
+L 547.588547 103.606051 
+L 547.588547 104.701586 
+L 551.875034 104.701586 
+L 551.875034 105.79712 
+L 570.449808 105.79712 
+L 570.449808 106.893006 
+L 624.745304 106.893006 
+L 624.745304 111.275496 
+L 624.745304 111.275496 
+" clip-path="url(#F2-p096d8b8438)" style="fill: none; stroke: #8d6e2f; stroke-width: 3.733333; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="F2-patch_3">
+    <path d="M 103.222781 373.1304 
+L 103.222781 14.4 
+" style="fill: none; stroke: #000000; stroke-width: 1.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="F2-patch_4">
+    <path d="M 103.222781 373.1304 
+L 624.745304 373.1304 
+" style="fill: none; stroke: #000000; stroke-width: 1.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="F2-legend_1">
+    <g id="F2-line2d_15">
+     <path d="M 124.822781 269.032744 
+L 148.822781 269.032744 
+L 172.822781 269.032744 
+" style="fill: none; stroke: #1f4e79; stroke-width: 3.733333; stroke-linejoin: miter; stroke-linecap: square"/>
+    </g>
+    <g id="F2-text_14">
+     <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="192.022781" y="277.432744" transform="rotate(-0 192.022781 277.432744)">&lt;7</text>
+    </g>
+    <g id="F2-line2d_16">
+     <path d="M 124.822781 303.556181 
+L 148.822781 303.556181 
+L 172.822781 303.556181 
+" style="fill: none; stroke: #c0504d; stroke-width: 3.733333; stroke-linejoin: miter; stroke-linecap: square"/>
+    </g>
+    <g id="F2-text_15">
+     <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="192.022781" y="311.956181" transform="rotate(-0 192.022781 311.956181)">7-9</text>
+    </g>
+    <g id="F2-line2d_17">
+     <path d="M 124.822781 338.079619 
+L 148.822781 338.079619 
+L 172.822781 338.079619 
+" style="fill: none; stroke: #8d6e2f; stroke-width: 3.733333; stroke-linejoin: miter; stroke-linecap: square"/>
+    </g>
+    <g id="F2-text_16">
+     <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="192.022781" y="346.479619" transform="rotate(-0 192.022781 346.479619)">&gt;9</text>
+    </g>
+   </g>
+  </g>
+  <g id="F2-axes_2">
+   <g id="F2-patch_5">
+    <path d="M 103.222781 695.9304 
+L 624.745304 695.9304 
+L 624.745304 513.5304 
+L 103.222781 513.5304 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="F2-matplotlib.axis_3">
+    <g id="F2-xtick_6">
+     <g id="F2-line2d_18"/>
+    </g>
+    <g id="F2-xtick_7">
+     <g id="F2-line2d_19"/>
+    </g>
+    <g id="F2-xtick_8">
+     <g id="F2-line2d_20"/>
+    </g>
+    <g id="F2-xtick_9">
+     <g id="F2-line2d_21"/>
+    </g>
+    <g id="F2-xtick_10">
+     <g id="F2-line2d_22"/>
+    </g>
+   </g>
+   <g id="F2-matplotlib.axis_4">
+    <g id="F2-ytick_7">
+     <g id="F2-line2d_23"/>
+     <g id="F2-text_17">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #8d6e2f" x="59.199581" y="670.466728" transform="rotate(-0 59.199581 670.466728)">&gt;9</text>
+     </g>
+    </g>
+    <g id="F2-ytick_8">
+     <g id="F2-line2d_24"/>
+     <g id="F2-text_18">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #c0504d" x="59.199581" y="613.466728" transform="rotate(-0 59.199581 613.466728)">7-9</text>
+     </g>
+    </g>
+    <g id="F2-ytick_9">
+     <g id="F2-line2d_25"/>
+     <g id="F2-text_19">
+      <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #1f4e79" x="59.199581" y="556.466728" transform="rotate(-0 59.199581 556.466728)">&lt;7</text>
+     </g>
+    </g>
+   </g>
+   <g id="F2-text_20">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="103.222781" y="667.941337" transform="rotate(-0 103.222781 667.941337)">321</text>
+   </g>
+   <g id="F2-text_21">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="231.817376" y="667.941337" transform="rotate(-0 231.817376 667.941337)">275</text>
+   </g>
+   <g id="F2-text_22">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="360.411971" y="667.941337" transform="rotate(-0 360.411971 667.941337)">259</text>
+   </g>
+   <g id="F2-text_23">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="489.006565" y="667.941337" transform="rotate(-0 489.006565 667.941337)">251</text>
+   </g>
+   <g id="F2-text_24">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="624.745304" y="667.941337" transform="rotate(-0 624.745304 667.941337)">243</text>
+   </g>
+   <g id="F2-text_25">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="103.222781" y="610.941337" transform="rotate(-0 103.222781 610.941337)">514</text>
+   </g>
+   <g id="F2-text_26">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="231.817376" y="610.941337" transform="rotate(-0 231.817376 610.941337)">459</text>
+   </g>
+   <g id="F2-text_27">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="360.411971" y="610.941337" transform="rotate(-0 360.411971 610.941337)">437</text>
+   </g>
+   <g id="F2-text_28">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="489.006565" y="610.941337" transform="rotate(-0 489.006565 610.941337)">418</text>
+   </g>
+   <g id="F2-text_29">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="624.745304" y="610.941337" transform="rotate(-0 624.745304 610.941337)">413</text>
+   </g>
+   <g id="F2-text_30">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="103.222781" y="553.941337" transform="rotate(-0 103.222781 553.941337)">235</text>
+   </g>
+   <g id="F2-text_31">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="231.817376" y="553.941337" transform="rotate(-0 231.817376 553.941337)">208</text>
+   </g>
+   <g id="F2-text_32">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="360.411971" y="553.941337" transform="rotate(-0 360.411971 553.941337)">199</text>
+   </g>
+   <g id="F2-text_33">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="489.006565" y="553.941337" transform="rotate(-0 489.006565 553.941337)">194</text>
+   </g>
+   <g id="F2-text_34">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="624.745304" y="553.941337" transform="rotate(-0 624.745304 553.941337)">190</text>
+   </g>
+  </g>
+  <g id="F2-text_35">
+   <text style="font-weight: 700; font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="103.222781" y="501.27915" transform="rotate(-0 103.222781 501.27915)">Số người còn trong theo dõi</text>
+  </g>
+  <g id="F2-text_36">
+   <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #555555" x="19.2" y="730.130048" transform="rotate(-0 19.2 730.130048)">Vẽ lại từ 04_data/cohort.deid.csv</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="F2-p096d8b8438">
+   <rect x="103.222781" y="14.4" width="521.522523" height="358.7304"/>
+  </clipPath>
+ </defs>
+</svg>
+<figcaption><strong>Hình 4.</strong> Kaplan–Meier thời gian đến lần tái nhập viện đầu tiên theo nhóm HbA1c.</figcaption></figure>
+<div class="body"><p>Phân tích Cox (kiểm duyệt 365 ngày): tỷ số nguy cơ hiệu chỉnh là 1,35 ở nhóm &gt;9% (KTC 95%: 0,94–1,93) và 1,07 ở nhóm 7–9% (KTC 95%: 0,75–1,51), so với nhóm &lt;7%.</p></div></section></div>
+      <div class="col box" data-area="col-3"><section class="sec" id="sec-1"><h2>Đặt vấn đề và mục tiêu</h2>
+<div class="body"><p>Tái nhập viện 1 năm là gánh nặng thường gặp ở người bệnh ĐTĐ type 2. Mục tiêu: xác định mối liên quan giữa HbA1c lúc nhập viện và tái nhập viện trong 1 năm.</p></div></section>
+<section class="sec" id="sec-2"><h2>Đối tượng và phương pháp</h2>
+<figure class="fig" data-fig="F4" style="width:19cm;max-width:100%" data-fig-profile="poster">
+
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 595.275591 561.816273" xmlns="http://www.w3.org/2000/svg" version="1.1" class="fig-svg fig-svg-F4" role="img" aria-label="Sơ đồ 2 ô: n=1070 toàn đoàn hệ, loại 27 người do thiếu dữ liệu biến hiệu chỉnh, còn 1043 người vào mô hình hiệu chỉnh" data-raster="../figures/F4.poster.png">
+ 
+ <defs>
+  <style type="text/css">.fig-svg-F4 *{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="F4-figure_1">
+  <g id="F4-patch_1">
+   <path d="M 0 561.816273 
+L 595.275591 561.816273 
+L 595.275591 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="F4-axes_1">
+   <g id="F4-patch_2">
+    <path d="M 57.622677 68.266667 
+L 320.496378 68.266667 
+L 320.496378 217.063613 
+L 57.622677 217.063613 
+z
+" clip-path="url(#F4-p7bcdce36e0)" style="fill: #ffffff; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="F4-patch_3">
+    <path d="M 57.622677 300.219327 
+L 320.496378 300.219327 
+L 320.496378 449.016273 
+L 57.622677 449.016273 
+z
+" clip-path="url(#F4-p7bcdce36e0)" style="fill: #ffffff; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="F4-patch_4">
+    <path d="M 389.072126 184.242997 
+L 571.940787 184.242997 
+L 571.940787 333.039943 
+L 389.072126 333.039943 
+z
+" clip-path="url(#F4-p7bcdce36e0)" style="fill: #f2f2f2; stroke: #000000; stroke-width: 2.4; stroke-linejoin: miter"/>
+   </g>
+   <g id="F4-patch_5">
+    <path d="M 189.059528 217.063613 
+Q 189.059528 258.64147 189.059528 297.536045 
+" clip-path="url(#F4-p7bcdce36e0)" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 193.326194 289.002712 
+L 189.059528 297.536045 
+L 184.792861 289.002712 
+z
+" clip-path="url(#F4-p7bcdce36e0)" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="F4-patch_6">
+    <path d="M 189.059528 258.64147 
+Q 289.065827 258.64147 386.388844 258.64147 
+" clip-path="url(#F4-p7bcdce36e0)" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+    <path d="M 377.855511 254.374803 
+L 386.388844 258.64147 
+L 377.855511 262.908136 
+z
+" clip-path="url(#F4-p7bcdce36e0)" style="stroke: #000000; stroke-width: 2.4; stroke-linecap: round"/>
+   </g>
+   <g id="F4-line2d_1">
+    <path d="M 189.059528 217.063613 
+L 189.059528 258.64147 
+" clip-path="url(#F4-p7bcdce36e0)" style="fill: none; stroke: #000000; stroke-width: 2.4; stroke-linecap: square"/>
+   </g>
+   <g id="F4-text_1">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(82.973903 123.935062)">Toàn bộ đoàn hệ đủ</text>
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(133.687028 153.283265)">tiêu chuẩn</text>
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(142.017653 177.045843)">n = 1070</text>
+   </g>
+   <g id="F4-text_2">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(96.318278 357.211472)">Đưa vào mô hình</text>
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(87.668903 381.16905)">hiệu chỉnh (A1, A4)</text>
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(142.017653 408.992878)">n = 1043</text>
+   </g>
+   <g id="F4-text_3">
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(411.787707 228.587915)">Loại do thiếu</text>
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(417.768957 254.489868)">dữ liệu biến</text>
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(425.801457 278.764321)">hiệu chỉnh</text>
+    <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(446.810832 306.1194)">n = 27</text>
+   </g>
+  </g>
+  <g id="F4-text_4">
+   <text style="font-weight: 700; font-size: 26.666667px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="19.2" y="30.677474" transform="rotate(-0 19.2 30.677474)">Sơ đồ rút gọn mẫu phân tích</text>
+  </g>
+  <g id="F4-text_5">
+   <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; fill: #555555" transform="translate(19.2 500.44014)">Không phải sơ đồ sàng lọc STROBE đầy đủ: không</text>
+   <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; fill: #555555" transform="translate(19.2 526.342093)">có số liệu sàng lọc/loại trừ ban đầu, chỉ có n toàn</text>
+   <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; fill: #555555" transform="translate(19.2 551.237171)">đoàn hệ và n đưa vào mô hình hiệu chỉnh.</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="F4-p7bcdce36e0">
+   <rect x="11.905512" y="68.266667" width="571.464567" height="380.749606"/>
+  </clipPath>
+ </defs>
+</svg>
+<figcaption><strong>Hình 1.</strong> Sơ đồ rút gọn mẫu phân tích.</figcaption></figure>
+<div class="body"><p>Đoàn hệ hồi cứu, 1070 người bệnh ĐTĐ type 2. 3 nhóm HbA1c: &lt;7% (tham chiếu), 7–9%, &gt;9%. Hồi quy logistic đa biến, hiệu chỉnh tuổi, giới, thời gian mắc ĐTĐ, bệnh đồng mắc, trên 1043 người bệnh đủ dữ liệu.</p></div></section>
+<section class="sec" id="sec-6"><h2>Kết luận và hạn chế</h2>
+<div class="body"><p>Chưa thấy liên quan có ý nghĩa thống kê giữa nhóm HbA1c và tái nhập viện 1 năm: OR hiệu chỉnh của nhóm 7–9% và &gt;9% đều có khoảng tin cậy chứa 1; cần cỡ mẫu lớn hơn. Hạn chế: đoàn hệ hồi cứu, đơn trung tâm, dữ liệu mô phỏng.</p></div></section></div>
+    </div>
+  </div>
+  
+</div>
+<script>
+/* Poster preflight: runs on load, marks the DOM for poster_build / poster_preflight.
+   - every img and inline <svg data-raster>: natural size, and the DRAWN (contained) size in cm (data-placed-w-cm / -h-cm);
+   - every .box: an attribute data-overflow set to 1 when its content is cut off, data-box-w-cm / data-box-h-cm,
+     data-font-pt (the smallest computed font size of any text in it, in pt; inline <svg> text is skipped);
+   - every .col: data-fill = content height / available height;
+   - document.body.dataset.preflight = "done". */
+(function () {
+  var PX_PER_CM = 37.7953;
+  function contained(boxW, boxH, w, h) {
+    // size of a w x h picture drawn "contain" (meet) inside boxW x boxH
+    if (!(w > 0) || !(h > 0)) { return [boxW, boxH]; }
+    var s = Math.min(boxW / w, boxH / h);
+    return [w * s, h * s];
+  }
+  function placed(el, w, h) {
+    var r = el.getBoundingClientRect();
+    var d = contained(r.width, r.height, w, h);
+    el.setAttribute("data-placed-w-cm", (d[0] / PX_PER_CM).toFixed(3));
+    el.setAttribute("data-placed-h-cm", (d[1] / PX_PER_CM).toFixed(3));
+  }
+  function natural(el, w, h) {
+    el.setAttribute("data-natural-w", String(w));
+    el.setAttribute("data-natural-h", String(h));
+  }
+  function svgAspect(svg) {
+    var vb = svg.viewBox && svg.viewBox.baseVal;
+    if (vb && vb.width > 0 && vb.height > 0) { return [vb.width, vb.height]; }
+    var r = svg.getBoundingClientRect();
+    return [r.width, r.height];
+  }
+  function minFontPt(root) {
+    var min = Infinity;
+    var all = [root].concat(Array.prototype.slice.call(root.querySelectorAll("*")));
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      if (el.closest && el.closest("svg")) { continue; }
+      var has = false;
+      for (var n = el.firstChild; n; n = n.nextSibling) {
+        if (n.nodeType === 3 && /\S/.test(n.nodeValue)) { has = true; break; }
+      }
+      if (!has) { continue; }
+      var px = parseFloat(window.getComputedStyle(el).fontSize);
+      if (px > 0 && px * 0.75 < min) { min = px * 0.75; }
+    }
+    return min === Infinity ? null : min;
+  }
+  function run() {
+    var pending = 0;
+    function finish() {
+      if (pending > 0) { return; }
+      var boxes = document.querySelectorAll(".box");
+      for (var i = 0; i < boxes.length; i++) {
+        var b = boxes[i];
+        if (b.scrollHeight > b.clientHeight + 1 || b.scrollWidth > b.clientWidth + 1) {
+          b.setAttribute("data-overflow", "1");
+        }
+        var fpt = minFontPt(b);
+        if (fpt !== null) { b.setAttribute("data-font-pt", fpt.toFixed(2)); }
+        b.setAttribute("data-box-w-cm", (b.clientWidth / PX_PER_CM).toFixed(3));
+        b.setAttribute("data-box-h-cm", (b.clientHeight / PX_PER_CM).toFixed(3));
+      }
+      var cols = document.querySelectorAll(".col");
+      for (var c = 0; c < cols.length; c++) {
+        var col = cols[c];
+        var top = col.getBoundingClientRect().top;
+        var bottom = top;
+        for (var k = 0; k < col.children.length; k++) {
+          var rb = col.children[k].getBoundingClientRect().bottom;
+          if (rb > bottom) { bottom = rb; }
+        }
+        col.setAttribute("data-fill", col.clientHeight > 0 ? ((bottom - top) / col.clientHeight).toFixed(3) : "0");
+      }
+      document.body.dataset.preflight = "done";
+    }
+    var imgs = document.querySelectorAll("img");
+    for (var i = 0; i < imgs.length; i++) {
+      (function (img) {
+        var ready = function () {
+          natural(img, img.naturalWidth || 0, img.naturalHeight || 0);
+          placed(img, img.naturalWidth, img.naturalHeight);
+        };
+        if (img.complete && img.naturalWidth) {
+          ready();
+        } else {
+          pending++;
+          var done = function () { ready(); pending--; finish(); };
+          img.addEventListener("load", done);
+          img.addEventListener("error", done);
+        }
+      })(imgs[i]);
+    }
+    var svgs = document.querySelectorAll("svg[data-raster]");
+    for (var j = 0; j < svgs.length; j++) {
+      (function (svg) {
+        var a = svgAspect(svg);
+        placed(svg, a[0], a[1]);
+        pending++;
+        var probe = new Image();
+        var done = function () { natural(svg, probe.naturalWidth || 0, probe.naturalHeight || 0); pending--; finish(); };
+        probe.onload = done;
+        probe.onerror = done;
+        probe.src = svg.getAttribute("data-raster");
+      })(svgs[j]);
+    }
+    finish();
+  }
+  if (document.readyState === "complete") { run(); } else { window.addEventListener("load", run); }
+})();
+
+</script>
+</body>
+</html>

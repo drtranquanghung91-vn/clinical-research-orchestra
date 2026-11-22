@@ -1,0 +1,504 @@
+{
+ "size_cm": [
+  90.0,
+  120.0
+ ],
+ "layout": "figure-led",
+ "items": [
+  {
+   "kind": "rect",
+   "x": 0,
+   "y": 0,
+   "w": 90.0,
+   "h": 16.8,
+   "fill": "#1f4e79",
+   "line": null
+  },
+  {
+   "kind": "text",
+   "name": "Title",
+   "x": 3.0,
+   "y": 1.5,
+   "w": 84.0,
+   "h": 13.8,
+   "paragraphs": [
+    {
+     "text": "HbA1c lúc nhập viện và nguy cơ tái nhập viện trong 1 năm ở người bệnh đái tháo đường type 2",
+     "size": 92.0,
+     "bold": true,
+     "italic": false,
+     "color": "#ffffff",
+     "bullet": null,
+     "space_after": 0.0
+    },
+    {
+     "text": "Example author",
+     "size": 40.0,
+     "bold": true,
+     "italic": false,
+     "color": "#ffffff",
+     "bullet": null,
+     "space_after": 0
+    },
+    {
+     "text": "Khoa Nội tiết, Bệnh viện Mô phỏng",
+     "size": 30.0,
+     "bold": false,
+     "italic": false,
+     "color": "#ffffff",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "rect",
+   "x": 3.0,
+   "y": 19.3,
+   "w": 36.7561455751392,
+   "h": 58.88496813673886,
+   "fill": null,
+   "line": "#1f4e79"
+  },
+  {
+   "kind": "text",
+   "name": "Heading",
+   "x": 4.0,
+   "y": 20.3,
+   "w": 34.7561455751392,
+   "h": 4.586111111111111,
+   "paragraphs": [
+    {
+     "text": "Thời gian đến lần tái nhập viện đầu tiên",
+     "size": 50.0,
+     "bold": true,
+     "italic": false,
+     "color": "#1f4e79",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "image",
+   "x": 7.563313318485752,
+   "y": 25.48611111111111,
+   "w": 27.629518938167696,
+   "h": 31.424000000000003,
+   "path": "examples\\fictional-cohort\\07_present\\figures\\F2.poster.png",
+   "alt": "Ba đường Kaplan-Meier theo nhóm HbA1c với bảng số người còn theo dõi"
+  },
+  {
+   "kind": "text",
+   "name": "Caption",
+   "x": 4.0,
+   "y": 57.31011111111111,
+   "w": 34.7561455751392,
+   "h": 2.384777777777778,
+   "paragraphs": [
+    {
+     "text": "**Hình 4.** Kaplan–Meier thời gian đến lần tái nhập viện đầu tiên theo nhóm HbA1c.",
+     "size": 26.0,
+     "bold": false,
+     "italic": false,
+     "color": "#444444",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "text",
+   "name": "Body",
+   "x": 4.0,
+   "y": 60.49488888888889,
+   "w": 34.7561455751392,
+   "h": 3.5489444444444445,
+   "paragraphs": [
+    {
+     "text": "Phân tích Cox (kiểm duyệt 365 ngày): tỷ số nguy cơ hiệu chỉnh là 1,35 ở nhóm >9% (KTC 95%: 0,94–1,93) và 1,07 ở nhóm 7–9% (KTC 95%: 0,75–1,51), so với nhóm <7%.",
+     "size": 24.0,
+     "bold": false,
+     "italic": false,
+     "color": "#111111",
+     "bullet": null,
+     "space_after": 7.0
+    }
+   ]
+  },
+  {
+   "kind": "rect",
+   "x": 42.7561455751392,
+   "y": 19.3,
+   "w": 44.2438544248608,
+   "h": 58.88496813673886,
+   "fill": "#1f4e79",
+   "line": null
+  },
+  {
+   "kind": "text",
+   "name": "Key message",
+   "x": 45.1561455751392,
+   "y": 21.7,
+   "w": 39.4438544248608,
+   "h": 54.084968136738865,
+   "paragraphs": [
+    {
+     "text": "THÔNG ĐIỆP CHÍNH",
+     "size": 28.0,
+     "bold": true,
+     "italic": false,
+     "color": "#ffffff",
+     "bullet": null,
+     "space_after": 6.0
+    },
+    {
+     "text": "HbA1c >9% lúc nhập viện có thể đi kèm nguy cơ tái nhập viện trong 1 năm cao hơn (OR hiệu chỉnh 1,42, KTC 95% 0,94–2,15), nhưng cỡ mẫu chưa đủ để khẳng định.",
+     "size": 58.0,
+     "bold": true,
+     "italic": false,
+     "color": "#ffffff",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "text",
+   "name": "Heading",
+   "x": 3.0,
+   "y": 80.68496813673886,
+   "w": 26.0,
+   "h": 2.2930555555555556,
+   "paragraphs": [
+    {
+     "text": "Đặt vấn đề và mục tiêu",
+     "size": 50.0,
+     "bold": true,
+     "italic": false,
+     "color": "#1f4e79",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "text",
+   "name": "Body",
+   "x": 3.0,
+   "y": 83.57802369229441,
+   "w": 26.0,
+   "h": 3.5489444444444445,
+   "paragraphs": [
+    {
+     "text": "Tái nhập viện 1 năm là gánh nặng thường gặp ở người bệnh ĐTĐ type 2. Mục tiêu: xác định mối liên quan giữa HbA1c lúc nhập viện và tái nhập viện trong 1 năm.",
+     "size": 24.0,
+     "bold": false,
+     "italic": false,
+     "color": "#111111",
+     "bullet": null,
+     "space_after": 7.0
+    }
+   ]
+  },
+  {
+   "kind": "text",
+   "name": "Heading",
+   "x": 3.0,
+   "y": 89.82696813673886,
+   "w": 26.0,
+   "h": 4.586111111111111,
+   "paragraphs": [
+    {
+     "text": "Đặc điểm chung và tỷ lệ tái nhập viện",
+     "size": 50.0,
+     "bold": true,
+     "italic": false,
+     "color": "#1f4e79",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "image",
+   "x": 6.0,
+   "y": 95.01307924784997,
+   "w": 20.0,
+   "h": 12.571208622016936,
+   "path": "examples\\fictional-cohort\\07_present\\figures\\F3.poster.png",
+   "alt": "Biểu đồ thanh ngang tỷ lệ tái nhập viện 3 nhóm HbA1c kèm khoảng tin cậy 95%"
+  },
+  {
+   "kind": "text",
+   "name": "Caption",
+   "x": 3.0,
+   "y": 107.9842878698669,
+   "w": 26.0,
+   "h": 2.384777777777778,
+   "paragraphs": [
+    {
+     "text": "**Hình 2.** Tỷ lệ tái nhập viện trong 1 năm theo nhóm HbA1c.",
+     "size": 26.0,
+     "bold": false,
+     "italic": false,
+     "color": "#444444",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "text",
+   "name": "Body",
+   "x": 3.0,
+   "y": 111.16906564764469,
+   "w": 26.0,
+   "h": 2.4482777777777778,
+   "paragraphs": [
+    {
+     "text": "Tỷ lệ tái nhập viện 1 năm chung: 22,1% (KTC 95%: 19,7–24,6); theo nhóm HbA1c: 19,6% (<7%), 21,0% (7–9%), 25,5% (>9%).",
+     "size": 24.0,
+     "bold": false,
+     "italic": false,
+     "color": "#111111",
+     "bullet": null,
+     "space_after": 7.0
+    }
+   ]
+  },
+  {
+   "kind": "text",
+   "name": "Heading",
+   "x": 32.0,
+   "y": 80.68496813673886,
+   "w": 26.0,
+   "h": 4.586111111111111,
+   "paragraphs": [
+    {
+     "text": "Mối liên quan HbA1c và tái nhập viện",
+     "size": 50.0,
+     "bold": true,
+     "italic": false,
+     "color": "#1f4e79",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "image",
+   "x": 32.0,
+   "y": 85.87107924784998,
+   "w": 26.0,
+   "h": 12.939333333333332,
+   "path": "examples\\fictional-cohort\\07_present\\figures\\F1.poster.png",
+   "alt": "Biểu đồ rừng hai tỷ số chênh hiệu chỉnh, cả hai khoảng tin cậy đều cắt giá trị 1"
+  },
+  {
+   "kind": "text",
+   "name": "Caption",
+   "x": 32.0,
+   "y": 99.2104125811833,
+   "w": 26.0,
+   "h": 2.384777777777778,
+   "paragraphs": [
+    {
+     "text": "**Hình 3.** OR hiệu chỉnh của HbA1c với tái nhập viện trong 1 năm (mô hình A1).",
+     "size": 26.0,
+     "bold": false,
+     "italic": false,
+     "color": "#444444",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "text",
+   "name": "Body",
+   "x": 32.0,
+   "y": 102.39519035896109,
+   "w": 26.0,
+   "h": 1.347611111111111,
+   "paragraphs": [
+    {
+     "text": "Cả hai khoảng tin cậy đều chứa giá trị 1.",
+     "size": 24.0,
+     "bold": false,
+     "italic": false,
+     "color": "#111111",
+     "bullet": null,
+     "space_after": 7.0
+    }
+   ]
+  },
+  {
+   "kind": "table",
+   "x": 32.0,
+   "y": 104.2428014700722,
+   "w": 26.0,
+   "h": 5.630333333333333,
+   "columns": [
+    "Biến",
+    "OR hiệu chỉnh (KTC 95%)",
+    "p"
+   ],
+   "rows": [
+    [
+     "HbA1c 7–9% so với <7%",
+     "1,10 (0,74–1,62)",
+     "0,641"
+    ],
+    [
+     "HbA1c >9% so với <7%",
+     "1,42 (0,94–2,15)",
+     "0,097"
+    ]
+   ],
+   "size": 28.0
+  },
+  {
+   "kind": "text",
+   "name": "Heading",
+   "x": 32.0,
+   "y": 112.87313480340553,
+   "w": 26.0,
+   "h": 2.2930555555555556,
+   "paragraphs": [
+    {
+     "text": "Ghi chú về dữ liệu",
+     "size": 50.0,
+     "bold": true,
+     "italic": false,
+     "color": "#1f4e79",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "text",
+   "name": "Body",
+   "x": 32.0,
+   "y": 115.7661903589611,
+   "w": 26.0,
+   "h": 2.4482777777777778,
+   "paragraphs": [
+    {
+     "text": "Dữ liệu mô phỏng (dự án ví dụ): không phải số liệu bệnh nhân thật, không có giá trị lâm sàng.",
+     "size": 24.0,
+     "bold": false,
+     "italic": false,
+     "color": "#111111",
+     "bullet": null,
+     "space_after": 7.0
+    }
+   ]
+  },
+  {
+   "kind": "text",
+   "name": "Heading",
+   "x": 61.0,
+   "y": 80.68496813673886,
+   "w": 26.0,
+   "h": 2.2930555555555556,
+   "paragraphs": [
+    {
+     "text": "Đối tượng và phương pháp",
+     "size": 50.0,
+     "bold": true,
+     "italic": false,
+     "color": "#1f4e79",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "image",
+   "x": 64.5,
+   "y": 83.57802369229441,
+   "w": 19.0,
+   "h": 17.92741935483871,
+   "path": "examples\\fictional-cohort\\07_present\\figures\\F4.poster.png",
+   "alt": "Sơ đồ 2 ô: n=1070 toàn đoàn hệ, loại 27 người do thiếu dữ liệu biến hiệu chỉnh, còn 1043 người vào mô hình hiệu chỉnh"
+  },
+  {
+   "kind": "text",
+   "name": "Caption",
+   "x": 61.0,
+   "y": 101.90544304713312,
+   "w": 26.0,
+   "h": 1.192388888888889,
+   "paragraphs": [
+    {
+     "text": "**Hình 1.** Sơ đồ rút gọn mẫu phân tích.",
+     "size": 26.0,
+     "bold": false,
+     "italic": false,
+     "color": "#444444",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "text",
+   "name": "Body",
+   "x": 61.0,
+   "y": 103.897831936022,
+   "w": 26.0,
+   "h": 4.649611111111112,
+   "paragraphs": [
+    {
+     "text": "Đoàn hệ hồi cứu, 1070 người bệnh ĐTĐ type 2. 3 nhóm HbA1c: <7% (tham chiếu), 7–9%, >9%. Hồi quy logistic đa biến, hiệu chỉnh tuổi, giới, thời gian mắc ĐTĐ, bệnh đồng mắc, trên 1043 người bệnh đủ dữ liệu.",
+     "size": 24.0,
+     "bold": false,
+     "italic": false,
+     "color": "#111111",
+     "bullet": null,
+     "space_after": 7.0
+    }
+   ]
+  },
+  {
+   "kind": "text",
+   "name": "Heading",
+   "x": 61.0,
+   "y": 111.24744304713312,
+   "w": 26.0,
+   "h": 2.2930555555555556,
+   "paragraphs": [
+    {
+     "text": "Kết luận và hạn chế",
+     "size": 50.0,
+     "bold": true,
+     "italic": false,
+     "color": "#1f4e79",
+     "bullet": null,
+     "space_after": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "text",
+   "name": "Body",
+   "x": 61.0,
+   "y": 114.14049860268867,
+   "w": 26.0,
+   "h": 4.649611111111112,
+   "paragraphs": [
+    {
+     "text": "Chưa thấy liên quan có ý nghĩa thống kê giữa nhóm HbA1c và tái nhập viện 1 năm: OR hiệu chỉnh của nhóm 7–9% và >9% đều có khoảng tin cậy chứa 1; cần cỡ mẫu lớn hơn. Hạn chế: đoàn hệ hồi cứu, đơn trung tâm, dữ liệu mô phỏng.",
+     "size": 24.0,
+     "bold": false,
+     "italic": false,
+     "color": "#111111",
+     "bullet": null,
+     "space_after": 7.0
+    }
+   ]
+  }
+ ]
+}

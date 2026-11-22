@@ -1,0 +1,5 @@
+A0 n = 300
+A0 readmit = 45 (15.0 %)
+A0 no readmit = 255 (85.0 %)
+A1 OR hba1c = 0.99 (95% CI 0.74 to 1.34), p = 0.972
+A2 OR male vs female = 1.71 (95% CI 0.89 to 3.28), p = 0.105

@@ -1,4 +1,4 @@
-# Fictional cohort: a simulated project (P1 plan, P2 analyse and report)
+# Fictional cohort: a simulated project (P1 plan, P2 analyse and report, P3 present)
 
 **Everything in this folder is simulated for demonstration.** The author ("Example author"), the
 site ("Bệnh viện Mô phỏng", a fictional provincial hospital), the study period and the expected
@@ -56,8 +56,8 @@ agent.
 | `python plugins/orchestra/scripts/crolib/ledgers.py check examples/fictional-cohort` | 0 | `ledgers: 0 problems` |
 | `python plugins/orchestra/scripts/verify_refs.py examples/fictional-cohort --cite examples/fictional-cohort/06_writing/thesis/ch1-literature-review.md` | 0 | 6 references, all VERIFIED, 0 citation findings |
 | `python plugins/orchestra/scripts/review_lint.py examples/fictional-cohort/06_writing/thesis/ch1-literature-review.md` | 0 | 0/20 paragraphs written paper by paper |
-| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G1` | 0 | G1: open |
-| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G2` | 0 | G2: open |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G1` | 0 | G1: open — approved by … |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G2` | 0 | G2: open — approved by … |
 | `python plugins/phi-guard/scripts/phi_scan.py --file examples/fictional-cohort/01_question/question.md examples/fictional-cohort/03_protocol/protocol.md` | 0 | warnings only: "full date" on the study-period dates (01/01/2021, 31/12/2022, 31/12/2023); no strong identifier |
 
 Sample size recomputed with the script, same n as `03_protocol/sample-size.md`:
@@ -162,7 +162,7 @@ exploratory.
 | `python plugins/orchestra/scripts/crolib/ledgers.py check examples/fictional-cohort` | 0 | `ledgers: 0 problems` |
 | `python plugins/orchestra/scripts/analysis_plan.py check examples/fictional-cohort --text examples/fictional-cohort/06_writing/thesis/ch3-results.md` | 0 | 0 block, 0 warn |
 | `python plugins/orchestra/scripts/results_ledger.py import examples/fictional-cohort --verify-raw` | 0 | 127 results imported; the locked ledger's SHA-256 is unchanged |
-| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3` | 0 | G3: open (locked hashes match) |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3` | 0 | G3: open — results locked by … ; n locked files unchanged |
 | `python plugins/orchestra/scripts/check_numbers.py examples/fictional-cohort examples/fictional-cohort/06_writing/thesis/ch3-results.rendered.md` | 0 | 0 findings |
 | `python plugins/phi-guard/scripts/phi_scan.py --file examples/fictional-cohort/04_data/codebook.md examples/fictional-cohort/06_writing/thesis/ch3-results.rendered.md` | 0 | no finding |
 
@@ -216,3 +216,102 @@ wave added `order=`) plus its one-line header. G2 and G3 were locked before the 
   results-writing updated row 6 only. Fixed by hand (see above).
 - **eGFR.** The task plan named eGFR among the simulated variables, but `variables.md` has none;
   kidney disease enters as the `ckd` flag of the comorbidity confounder.
+
+## P3: present (22 November 2026)
+
+### How it was run
+
+Same recipe as P2 with `Agent` added to `--allowedTools` (the presenting skills call the
+`consistency-auditor` and `committee-simulator` agents), in a fresh folder outside the repository with a
+fresh memory folder; this README was left out of the run folder. Stage 1 opened a new conversation,
+stages 2–5 used `--continue`. Claude Code 2.1.226, model `claude-sonnet-5`, plugins `orchestra` and
+`phi-guard`, `mcp_servers: []` in every init event (`summarize_run.py`), no phi-guard or permission
+denials. `gate.py check . G3` exited 0 after every stage; no locked file was touched. Five stages, no
+re-runs: 332 turns, about 100 minutes and USD 44 in total.
+
+| Stage | Prompt (short form) | Skill or agent used | Turns, minutes, USD | Files written |
+|---|---|---|---|---|
+| 1 | G3 is locked; draw four figures, plan already approved: forest of the A1 adjusted ORs, Kaplan–Meier of A4 from `04_data/cohort.deid.csv` (`time_to_readmit_days`, `readmit_1y`, `hba1c_group`, order `<7`, `7-9`, `>9`, 365 days), A0 readmission rates, STROBE flow; tell me if a number is not in the ledger | research-figures | 34, 4.5, 1.54 | `07_present/figures/figures.json`, F1–F3 (`.svg`, `.pdf`, `.png`, `.data.json`); F4 stopped: the project has no screening or exclusion counts, three options given to the author |
+| 2 | F4: option (a), a minimal diagram from the two ledger counts, labelled as not a full STROBE flow, limitation in `decisions.md`; then a conference abstract in Vietnamese, at most 300 words, structured (Đặt vấn đề và mục tiêu, Phương pháp, Kết quả, Kết luận), no .docx | research-figures, conference-abstract | 50, 8.3, 3.20 | F4; `07_present/abstract.md` and `abstract.rendered.md` (274 words) |
+| 3 | poster 90 × 120 cm portrait, Vietnamese, all three layouts, no logo, default colours; key message given by the author; make it print-ready, report anything that fails | research-poster | 117, 36, 12.87 | `07_present/poster/poster.json`, `F<n>.poster.*`, per layout `.html`, `.dom.html`, `.pdf`, `.png`, `.pptx`, `.spec.json`, `.build.json`; preflight 0 block, KM text at 15.7 pt reported as a warning |
+| 4 | the author looked at the PNGs: keep the OR in the key message, print pathway; the KM is small and flat, give it room without lowering any threshold; the "simulated data" note is not a reference; then rehearsal questions | research-poster (continued), committee-simulator | 64, 27, 11.02 | three layouts rebuilt (KM full column width, hero in figure-led), "Ghi chú về dữ liệu" section; `reviews/committee-poster.md` |
+| 5 | thesis defence: 20 minutes, about 18 slides, 18–20 minutes, default template, speaker notes; then committee questions with suggested answers and weak points | defense-prep, consistency-auditor, committee-simulator | 67, 24, 15.65 | `reviews/consistency.md` (one finding, see known issues), `01_question/question.md` objective 2 aligned with the protocol, `07_present/defense/deck.json`, `deck.pptx` (18 slides + 5 backup), `reviews/committee-defense.md` (22 questions, 8 weak points) |
+
+`decisions.md` gained one entry per stage, appended in order; `STATUS.md` row 7 is `doing` (Chapters 2,
+4 and 5 are not written yet; that is P4).
+
+### P3 checks (run from the repository root)
+
+| Command | Exit | Result |
+|---|---|---|
+| `python plugins/orchestra/scripts/consistency_audit.py examples/fictional-cohort` | 0 | `consistency_audit: 0 block, 0 warn` |
+| `python plugins/orchestra/scripts/poster_preflight.py examples/fictional-cohort` | 0 | editorial 0 block, 4 warn; pathway 0 block, 2 warn; figure-led 0 block, 3 warn (every warn: a figure's text prints at 21.6–23.9 pt, below 24 pt); all figures vector |
+| `python plugins/orchestra/scripts/check_numbers.py examples/fictional-cohort examples/fictional-cohort/07_present/abstract.rendered.md` | 0 | 0 findings |
+| `python plugins/orchestra/scripts/lint_prose.py examples/fictional-cohort/07_present/abstract.rendered.md` | 0 | 4 paragraphs, 0 hits; `--count-words`: 268 |
+| `python plugins/orchestra/scripts/check_pptx.py examples/fictional-cohort/07_present/defense/deck.pptx` | 0 | 23 slides, 0 issues, including the new `leftover-markup` (S22) check (`--render` with PowerPoint: 23 PNGs, looked at; `lint_prose.py --slides`: 0 findings) |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3` | 0 | G3: open — results locked by Example author on 2026-11-21; 5 locked files unchanged |
+
+### P3 edits made by hand
+
+File placement: the 23 slide PNGs the skill rendered for its own look (`07_present/defense/render/`)
+and the run transcripts were left out; `01_question/question.md` was copied back because stage 5
+changed it. Poster previews are 1502 × 2000 px.
+
+Controller edits after the run (the skill rules and checks that would have prevented them were added
+at the same time: `check_pptx.py` `leftover-markup`, the `figures.py` colour-key warning, and the
+citation, trend and no-ledger-id rules in defense-prep, research-poster, conference-abstract and
+research-figures):
+
+- `07_present/defense/deck.json`: `[@hu2026]` → "Hu và cs., 2026" and `[@american2026]` → "ADA
+  Professional Practice Committee, 2026" (first author and year from `ledgers/references.json`);
+  the backtick path and the two `samplesize.py` command names on backup slide 19 removed ("theo kế
+  hoạch cỡ mẫu đã duyệt"); trend titles and bullets rewritten to give the group values and say the
+  CIs include 1 (slides 10, 11, 12, 14, 16); slide 3 title "có thể là yếu tố nguy cơ" → "liên quan
+  với tái nhập viện ngắn hạn". `deck.pptx` rebuilt with `pptx_from_spec.py … --project`.
+- `07_present/abstract.md`: "tăng dần theo nhóm HbA1c" and the "xu hướng tăng" conclusion replaced by
+  the group values and a no-association statement; `abstract.rendered.md` re-rendered with
+  `render_results.py` (268 words).
+- `07_present/poster/poster.json`: conclusion "Tái nhập viện tăng theo HbA1c…" → no trend claim, both
+  CIs include 1; all three layouts rebuilt with `poster_build.py`.
+- `07_present/figures/figures.json`: `source` "Bảng 3.2"/"Bảng 3.3" removed from F3 and F1; ledger ids
+  removed from the F4 note; colour keys `<7%`, `7–9%`, `>9%` added so F3 matches F2. All four
+  figures redrawn with `figures.py` in both profiles (document, then `--profile poster`), which also
+  replaces the stale document copy of F1; F2 changes only in line endings (`figures.py` and the
+  `poster_build.py` DOM dump now write LF on Windows too).
+- `deck.pptx` rebuilt once more after `pptx_from_spec.py` learnt to set the KM time-axis ticks to the
+  at-risk step when only the last step is longer (0, 90, 180, 270, 365): ticks and at-risk columns now
+  line up on slide 12.
+
+### P3 known issues (found by looking at every poster PNG and the rendered deck)
+
+- **F4 is not a STROBE flow.** The simulated data start at the analysed cohort, so there are no
+  screening or exclusion counts. The author chose a two-box diagram (1070 → 1043, 27 without the
+  adjustment variables).
+- **No check for a stale document figure.** Stage 4 redrew only the poster profile of F1, leaving the
+  document copy with old labels (fixed by hand, see above); no check compares a figure's files with
+  its `data.json`.
+- **Poster rehearsal and type size.** In stage 3 research-poster offered `committee-simulator` instead
+  of calling it, and left the KM at 15.7 pt as a warning; both were done in stage 4 when the author
+  asked. Three figures still print at 21.6–21.8 pt in some layouts.
+- **Poster layout.** Editorial puts Đặt vấn đề and Phương pháp in the third column after the results
+  and leaves the lower part of every column empty; the figure-led key-message panel is mostly empty
+  navy; figure numbers follow the section order, not the reading position (the figure-led hero is
+  Hình 4); the data note became numbered section 7 in pathway. The poster also added the OR and its
+  CI to the author's key-message sentence (the author kept it).
+- **Trend wording is not checked by a script.** The run wrote trend claims no test supports (fixed by
+  hand, see above); the skills now forbid them, but `analysis_plan.py` checks causal verbs only.
+- **Deck defects that `check_pptx.py` and `lint_prose.py --slides` do not catch.** The KM slide 12
+  prints the figure's fixed provenance line with a file path ("Vẽ lại từ 04_data/cohort.deid.csv");
+  the sample-size figures on slides 7 and 19 (300, 535, 0,554…) are typed
+  from `03_protocol/sample-size.md`, which no check reads; KM slide 12 has a flat plot and a > 9 line close
+  in colour to < 7 (the slide uses the deck palette, not the figure's colour keys); value labels
+  collide with the whiskers on slide 10; the forest axis on slide 11 runs 0,1–10, which squeezes the
+  intervals; backup tables (slides 21–22) fill a quarter of the slide and most text slides leave the
+  lower half empty.
+- **Self-check claims.** Stage 5 said it opened every rendered slide; the transcript shows 8 of 23.
+- **Objective changed without the author.** defense-prep fixed objective 2 in `01_question/question.md`
+  (six adjustment factors → the protocol's four, length of stay and insulin as mediators) on the
+  consistency-auditor's finding without asking, in a non-interactive run. The change matches the
+  protocol and is recorded in `decisions.md`; it was kept. defense-prep now says to report such a
+  mismatch and ask the author.
+- **Abstract.** The group rates in Kết quả have no CI (the overall rate and the ORs do).

@@ -20,7 +20,6 @@ Exit codes: 0 = clean (warnings allowed); 1 = E-NUM block findings (listed); 2 =
 from __future__ import annotations
 
 import argparse
-import ast
 import json
 import re
 import sys
@@ -28,7 +27,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from crolib import numfmt, projectcfg  # noqa: E402
+from crolib import derived, numfmt, projectcfg  # noqa: E402
 
 PLACEHOLDER = re.compile(r"\{\{R-A\d+-\d{3}(?:\.\w+)?\}\}")
 DERIVED = re.compile(r"-?\d+(?:[.,]\d+)?%?\s*<!--\s*derived:.*?-->")
@@ -45,46 +44,9 @@ PSMALL = re.compile(r"[<≤]\s*0[.,]001")
 
 
 DERIVED_FULL = re.compile(r"(-?\d+(?:[.,]\d+)?)(%?)\s*<!--\s*derived:(.*?)-->", re.DOTALL)
-PARTS = ("value", "n", "count", "p", "lo", "hi")
-RID = re.compile(r"R-A\d+-\d{3}(?:\.(?:value|n|count|p|lo|hi)\b)?")
-ID_PART = re.compile(r"R-A\d+-\d{3}\.([A-Za-z_]\w*)")
 DERIVED_OPEN = re.compile(r"<!--\s*derived:")
-PURE = re.compile(r"[\d\s+\-*/().]*")
-
-
-def _id_value(by_id: dict, ref: str) -> Decimal:
-    rid, _, part = ref.partition(".")
-    rec = by_id.get(rid)
-    if rec is None:
-        raise KeyError(f"unknown result id {rid}")
-    if part in ("lo", "hi"):
-        ci = rec.get("ci")
-        v = ci[0 if part == "lo" else 1] if isinstance(ci, list) and len(ci) == 2 else None
-    else:
-        v = rec.get(part or "value")
-    if isinstance(v, bool) or not isinstance(v, (int, float)):
-        raise KeyError(f"{ref} has no numeric {part or 'value'} in the ledger")
-    return Decimal(str(v))
-
-
-def _eval(expr: str) -> Decimal:
-    def go(node):
-        if isinstance(node, ast.Expression):
-            return go(node.body)
-        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)) and not isinstance(node.value, bool):
-            return Decimal(str(node.value))
-        if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
-            v = go(node.operand)
-            return -v if isinstance(node.op, ast.USub) else v
-        if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div)):
-            a, b = go(node.left), go(node.right)
-            if isinstance(node.op, ast.Add):
-                return a + b
-            if isinstance(node.op, ast.Sub):
-                return a - b
-            return a * b if isinstance(node.op, ast.Mult) else a / b
-        raise ValueError("not a pure formula")
-    return go(ast.parse(expr.strip(), mode="eval"))
+PARTS, RID, ID_PART, PURE = derived.PARTS, derived.RID, derived.ID_PART, derived.PURE
+_id_value, _eval = derived.value_of, derived.eval_pure
 
 
 def check_derived(text: str, ledger_results: list[dict]) -> list[tuple[int, str, str]]:
