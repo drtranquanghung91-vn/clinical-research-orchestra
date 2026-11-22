@@ -824,7 +824,7 @@ def run_browser(browser: str, html_path: Path, out_base: Path, geo: dict, output
             except OSError as e:
                 raise PosterError(f"cannot run browser {browser}: {e}")
             if capture and code == 0 and so:
-                target.write_bytes(so)
+                target.write_bytes(so.replace(b"\r\n", b"\n"))  # the DOM dump is CRLF on Windows; LF on every OS
             if code != 0 or not target.is_file() or target.stat().st_size == 0:
                 tail = se.decode("utf-8", "replace").strip().splitlines()[-3:]
                 raise PosterError(f"browser failed for {target.name} (exit {code}) {' | '.join(tail)}")

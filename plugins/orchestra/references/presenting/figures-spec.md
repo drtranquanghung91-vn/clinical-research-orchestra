@@ -60,7 +60,8 @@ no text leaves the canvas or overlaps another.
    "exclusions": [{"text": "Loại trừ", "n": "R-A0-001.n - R-A0-002.n", "after": 1}]}]}
 ```
 
-- `style`: `colors` (group label to colour; unlisted groups take the default palette), `font` (default Arial, with
+- `style`: `colors` (group label to colour, matched exactly: `<7` does not colour `<7%`; unlisted groups take the
+  default palette, and a figure with an uncoloured group warns on stderr naming the unmatched keys), `font` (default Arial, with
   DejaVu Sans as fallback), `font_size` (pt, default 9), `width_cm` (default 16; a figure may override it).
 - `id`: letters, digits, `-`, `_`; unique. Output names are `<id>.*`.
 - `forest`: rows need a whole result id with `value` and `ci`. Log x-axis when `log_scale`. Null line at `null` (default 1).

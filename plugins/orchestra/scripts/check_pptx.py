@@ -3,18 +3,20 @@
 
 Checks per slide: shapes outside the slide; text likely to overflow its box (estimated
 from characters, font size and box area); text below the size floor; pictures without
-alt text; missing speaker notes.
+alt text; missing speaker notes; leftover source markup in slide text (S22: a pandoc citation key
+[@key] or @key, a markdown backtick, an unrendered {{...}} placeholder; speaker notes are not read).
 --poster scales the size floors by the slide width (24 pt body at 90 cm wide) and skips the
 notes check. --render DIR exports PNGs via PowerPoint (Windows) or LibreOffice + PyMuPDF.
 
 Usage: python check_pptx.py talk.pptx [--min-body 18] [--min-any 10] [--poster] [--render build/render]
-Exit codes: 0 no serious issue (off-slide, may-overflow, tiny-text); 1 serious issues listed;
+Exit codes: 0 no serious issue (off-slide, may-overflow, tiny-text, leftover-markup); 1 serious issues listed;
 2 usage error, unreadable file or missing python-pptx.
 Adapted from grand-rounds 0.2.0 (check_pptx.py, MIT, same owner). Requires python-pptx.
 """
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 import subprocess
 import sys
@@ -53,6 +55,24 @@ def est_overflow(shape) -> float:
         lines = 1 if nowrap else -(-chars // per_line)
         total += lines * size * 1.2 + (p.space_after.pt if p.space_after else 0)
     return total / h_pt
+
+
+# Leftover source markup on a slide (S22): a pandoc citation key ([@key] or narrative @key),
+# a markdown backtick, an unrendered {{...}} placeholder. Emails (a@b.org) are not keys.
+MARKUP = re.compile(r"\[[^\]]*(?<![\w.])@\w[^\]]*\]|(?<![\w.@])@[A-Za-z_][\w:.#$%&+?<>~/-]*\w|`|\{\{[^}]*\}\}")
+
+
+def text_frames(shapes):
+    """Every text frame on the slide: text boxes, placeholders, table cells, shapes inside groups."""
+    for shp in shapes:
+        if shp.shape_type == 6:  # group
+            yield from text_frames(shp.shapes)
+        elif getattr(shp, "has_table", False) and shp.has_table:
+            for row in shp.table.rows:
+                for cell in row.cells:
+                    yield shp.name, cell.text_frame
+        elif shp.has_text_frame:
+            yield shp.name, shp.text_frame
 
 
 def render(path: Path, rdir: Path, size_emu=None) -> str:
@@ -128,6 +148,10 @@ def main(argv=None) -> int:
                 descr = shp._element.nvPicPr.cNvPr.get("descr")
                 if not descr:
                     issues.append((i, "no-alt-text", name))
+        for name, tf in text_frames(slide.shapes):
+            found = sorted({m.group(0) for m in MARKUP.finditer(tf.text)})
+            if found:
+                issues.append((i, "leftover-markup", f"{name}: {' '.join(found)}"))
         if not a.poster and not (slide.has_notes_slide and slide.notes_slide.notes_text_frame.text.strip()):
             issues.append((i, "no-notes", ""))
     print(f"# check_pptx: {Path(a.pptx).name}, {len(prs.slides)} slides, {len(issues)} issue(s)")
@@ -135,7 +159,7 @@ def main(argv=None) -> int:
         print(f"- slide {s}: {kind} {what}")
     if a.render:
         print(render(Path(a.pptx), Path(a.render), (W, H)))
-    serious = [x for x in issues if x[1] in ("off-slide", "may-overflow", "tiny-text")]
+    serious = [x for x in issues if x[1] in ("off-slide", "may-overflow", "tiny-text", "leftover-markup")]
     return 1 if serious else 0
 
 

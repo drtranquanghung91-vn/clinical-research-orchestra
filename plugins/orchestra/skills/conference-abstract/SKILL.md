@@ -22,7 +22,9 @@ Results, Conclusion. The venue's limit wins. Record the answers in `decisions.md
 
 ## 4. Write
 `07_present/abstract.md` with placeholders only. The primary result comes first; every estimate has its
-CI; the conclusion answers the objective and goes no further than the data.
+CI; the conclusion answers the objective and goes no further than the data. Describe an ordered trend
+("tăng dần theo", "increases with", "dose-response") only when the results ledger holds a trend test
+supporting it; otherwise give the group values and say the CIs include 1.
 
 ## 5. Checks
 Scripts in `${CLAUDE_PLUGIN_ROOT}/scripts/`, from the project folder, in order; fix every block:

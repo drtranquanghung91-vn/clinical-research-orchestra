@@ -303,7 +303,7 @@ Optional dependencies (`python-docx`, `python-pptx`, `PyMuPDF`, `playwright`; in
 | `E-PRINT` | print | image below 150 dpi at print size; fonts not embedded; no bleed when requested |
 | `P01`–`P30` | AI-prose patterns (`lint_prose.py`; catalog `references/writing/prose-patterns.md`) | blocking only above threshold |
 | `INV` | rewrite invariants (`invariants.py`) | a number, citation key, placeholder or hedge changed by a rewrite |
-| `S01`–`S21` | the grand-rounds slide catalog; `lint_prose.py --slides` checks its text rows S17, S20, S21 | per catalog row |
+| `S01`–`S22` | the grand-rounds slide catalog (S01–S21) plus S22 leftover markup; `lint_prose.py --slides` checks its text rows S17, S20, S21; `check_pptx.py` checks S22 (`leftover-markup`) | per catalog row |
 
 Each finding: code, severity (block | warn), file, location, quote, fix.
 

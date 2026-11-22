@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="720.0552pt" height="399.333333pt" viewBox="0 0 720.0552 399.333333" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="720.0552pt" height="358.533333pt" viewBox="0 0 720.0552 358.533333" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
@@ -20,8 +20,8 @@
  </defs>
  <g id="figure_1">
   <g id="patch_1">
-   <path d="M 0 399.333333 
-L 720.0552 399.333333 
+   <path d="M 0 358.533333 
+L 720.0552 358.533333 
 L 720.0552 0 
 L 0 0 
 z
@@ -93,11 +93,11 @@ L 0 8
    <g id="line2d_6">
     <path d="M 242.923244 167.733333 
 L 366.967769 167.733333 
-" clip-path="url(#p2baa0c2fb1)" style="fill: none; stroke: #1f4e79; stroke-width: 2.933333"/>
+" clip-path="url(#pbaeac1b7cc)" style="fill: none; stroke: #1f4e79; stroke-width: 2.933333"/>
    </g>
    <g id="line2d_7">
     <path d="M 304.945506 167.733333 
-" clip-path="url(#p2baa0c2fb1)" style="fill: none; stroke: #1f4e79; stroke-width: 1.5; stroke-linecap: square"/>
+" clip-path="url(#pbaeac1b7cc)" style="fill: none; stroke: #1f4e79; stroke-width: 1.5; stroke-linecap: square"/>
     <defs>
      <path id="m8225cf5c96" d="M -7.333333 7.333333 
 L 7.333333 7.333333 
@@ -106,26 +106,26 @@ L -7.333333 -7.333333
 z
 " style="stroke: #1f4e79; stroke-width: 2.933333; stroke-linejoin: miter"/>
     </defs>
-    <g clip-path="url(#p2baa0c2fb1)">
+    <g clip-path="url(#pbaeac1b7cc)">
      <use xlink:href="#m8225cf5c96" x="304.945506" y="167.733333" style="fill: #1f4e79; stroke: #1f4e79; stroke-width: 2.933333; stroke-linejoin: miter"/>
     </g>
    </g>
    <g id="line2d_8">
     <path d="M 280.145412 230.133333 
 L 411.816916 230.133333 
-" clip-path="url(#p2baa0c2fb1)" style="fill: none; stroke: #1f4e79; stroke-width: 2.933333"/>
+" clip-path="url(#pbaeac1b7cc)" style="fill: none; stroke: #1f4e79; stroke-width: 2.933333"/>
    </g>
    <g id="line2d_9">
     <path d="M 345.981164 230.133333 
-" clip-path="url(#p2baa0c2fb1)" style="fill: none; stroke: #1f4e79; stroke-width: 1.5; stroke-linecap: square"/>
-    <g clip-path="url(#p2baa0c2fb1)">
+" clip-path="url(#pbaeac1b7cc)" style="fill: none; stroke: #1f4e79; stroke-width: 1.5; stroke-linecap: square"/>
+    <g clip-path="url(#pbaeac1b7cc)">
      <use xlink:href="#m8225cf5c96" x="345.981164" y="230.133333" style="fill: #1f4e79; stroke: #1f4e79; stroke-width: 2.933333; stroke-linejoin: miter"/>
     </g>
    </g>
    <g id="line2d_10">
     <path d="M 290.188667 261.333333 
 L 290.188667 136.533333 
-" clip-path="url(#p2baa0c2fb1)" style="fill: none; stroke-dasharray: 7.893333,3.413333; stroke-dashoffset: 0; stroke: #555555; stroke-width: 2.133333"/>
+" clip-path="url(#pbaeac1b7cc)" style="fill: none; stroke-dasharray: 7.893333,3.413333; stroke-dashoffset: 0; stroke: #555555; stroke-width: 2.133333"/>
    </g>
    <g id="patch_3">
     <path d="M 180.2616 261.333333 
@@ -146,12 +146,9 @@ L 420.2616 261.333333
    <text style="font-weight: 700; font-size: 26.666667px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(19.2 28.900391)">OR hiệu chỉnh của HbA1c lúc nhập viện với tái</text>
    <text style="font-weight: 700; font-size: 26.666667px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(19.2 57.269922)">nhập viện trong 1 năm (mô hình A1)</text>
   </g>
-  <g id="text_11">
-   <text style="font-size: 24px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #555555" x="19.2" y="388.133607" transform="rotate(-0 19.2 388.133607)">Bảng 3.3</text>
-  </g>
  </g>
  <defs>
-  <clipPath id="p2baa0c2fb1">
+  <clipPath id="pbaeac1b7cc">
    <rect x="180.2616" y="136.533333" width="240" height="124.8"/>
   </clipPath>
  </defs>

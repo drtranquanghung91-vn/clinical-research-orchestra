@@ -21,11 +21,11 @@
     },
     {
       "type": "bullets",
-      "title": "HbA1c lúc nhập viện có thể là yếu tố nguy cơ tái nhập viện chưa được khảo sát ở mốc 1 năm",
+      "title": "HbA1c lúc nhập viện liên quan với tái nhập viện ngắn hạn, nhưng mốc 1 năm chưa được khảo sát",
       "bullets": [
         "Tái nhập viện trong 1 năm là gánh nặng thường gặp ở người bệnh đái tháo đường (ĐTĐ) type 2 sau xuất viện",
-        "HbA1c lúc nhập viện liên quan với tái nhập viện 30 ngày ở một nghiên cứu tại Trung Quốc (aOR 1,15; KTC 95% 1,03–1,29) [@hu2026], nhưng cận dưới KTC rất gần 1",
-        "ADA Standards of Care-2026 mục 16 khuyến cáo kiểm soát đường huyết nội viện và chuyển tiếp chăm sóc, nhưng chưa đưa ngưỡng HbA1c cụ thể để dự báo tái nhập viện dài hạn [@american2026]",
+        "HbA1c lúc nhập viện liên quan với tái nhập viện 30 ngày ở một nghiên cứu tại Trung Quốc (aOR 1,15; KTC 95% 1,03–1,29; Hu và cs., 2026), nhưng cận dưới KTC rất gần 1",
+        "ADA Standards of Care-2026 mục 16 khuyến cáo kiểm soát đường huyết nội viện và chuyển tiếp chăm sóc, nhưng chưa đưa ngưỡng HbA1c cụ thể để dự báo tái nhập viện dài hạn (ADA Professional Practice Committee, 2026)",
         "Khoảng trống: chưa có nghiên cứu nào khảo sát mốc 1 năm tại Việt Nam"
       ],
       "notes": "1,5 phút. Đọc đúng số liệu hu2026 (aOR 1,15; KTC 1,03–1,29) nếu được hỏi lại — đây là nghiên cứu 30 ngày, không phải 1 năm, cần phân biệt rõ khi trình bày."
@@ -94,21 +94,21 @@
     {
       "type": "chart",
       "chart": "bar",
-      "title": "Tỷ lệ tái nhập viện trong 1 năm tăng dần theo nhóm HbA1c",
+      "title": "Tỷ lệ tái nhập viện 1 năm là {{R-A0-062.value}}, {{R-A0-063.value}} và {{R-A0-064.value}} ở nhóm HbA1c <7%, 7–9% và >9%",
       "data": "../figures/F3.data.json",
       "notes": "1 phút. Tỷ lệ chung {{R-A0-061.value}} (KTC 95% {{R-A0-061.ci}}); từ {{R-A0-062.value}} ở nhóm <7% đến {{R-A0-064.value}} ở nhóm >9%. Nói rõ: khoảng tin cậy của 3 nhóm còn chồng lấp — đây là Mục tiêu 1, mô tả, chưa phải kiểm định mối liên quan."
     },
     {
       "type": "chart",
       "chart": "forest",
-      "title": "OR hiệu chỉnh tăng theo nhóm HbA1c nhưng khoảng tin cậy còn chứa giá trị 1",
+      "title": "OR hiệu chỉnh so với <7% là {{R-A1-003.value}} (7–9%) và {{R-A1-004.value}} (>9%); cả hai khoảng tin cậy chứa 1",
       "data": "../figures/F1.data.json",
       "notes": "1,5 phút. Đọc đúng: nhóm 7–9% OR {{R-A1-003.value}} (KTC 95% {{R-A1-003.ci}}; p={{R-A1-003.p}}); nhóm >9% OR {{R-A1-004.value}} (KTC 95% {{R-A1-004.ci}}; p={{R-A1-004.p}}). Mô hình có AUC {{R-A1-009.value}}, EPV {{R-A1-010.value}} (đủ ổn định mô hình). Đây là Mục tiêu 2 — kết quả chính của luận văn."
     },
     {
       "type": "chart",
       "chart": "km",
-      "title": "Thời gian đến tái nhập viện đầu tiên ngắn hơn ở nhóm HbA1c cao, cùng hướng với OR",
+      "title": "Thời gian đến tái nhập viện: HR (Cox hiệu chỉnh) của nhóm >9% là {{R-A4-006.value}}, khoảng tin cậy chứa 1",
       "data": "../figures/F2.data.json",
       "notes": "1 phút. Phân tích phụ (Cox, kiểm duyệt 365 ngày): HR hiệu chỉnh nhóm >9% {{R-A4-006.value}} (KTC 95% {{R-A4-006.ci}}), nhóm 7–9% {{R-A4-005.value}} (KTC 95% {{R-A4-005.ci}}) — cùng hướng, cùng chưa đạt ý nghĩa thống kê như OR. Giả định PH không vi phạm (Schoenfeld, p tối thiểu hiệu chỉnh {{R-A4-013.value}})."
     },
@@ -125,9 +125,9 @@
     },
     {
       "type": "bullets",
-      "title": "Hướng kết quả phù hợp với y văn ngắn hạn, nhưng khoảng tin cậy rộng hơn và dài hạn hơn",
+      "title": "Ước lượng nhóm >9% cùng chiều với y văn ngắn hạn, nhưng khoảng tin cậy chứa 1 ở mốc 1 năm",
       "bullets": [
-        "Hướng kết quả (HbA1c cao hơn, nguy cơ tái nhập viện cao hơn) phù hợp với nghiên cứu 30 ngày tại Trung Quốc (aOR 1,15; KTC 95% 1,03–1,29) [@hu2026]",
+        "Nghiên cứu 30 ngày tại Trung Quốc ghi nhận liên quan với HbA1c (aOR 1,15; KTC 95% 1,03–1,29; Hu và cs., 2026); ở đây OR nhóm >9% là {{R-A1-004.value}} (KTC 95% {{R-A1-004.ci}})",
         "Khác biệt: nghiên cứu này ở mốc 1 năm (dài hơn nhiều), khoảng tin cậy rộng hơn và chứa giá trị 1 — chưa khẳng định được mối liên quan ở cỡ mẫu hiện có",
         "Phân tích phụ HbA1c liên tục (mỗi 1%): OR {{R-A2-002.value}} (KTC 95% {{R-A2-002.ci}}) — khoảng tin cậy hẹp quanh 1, không gợi ý liên quan tuyến tính rõ",
         "Tái nhập viện liên quan trực tiếp ĐTĐ (phân tích phụ, khám phá): OR nhóm >9% {{R-A3-002.value}} (KTC 95% {{R-A3-002.ci}}) — mạnh hơn nhiều, cần nghiên cứu xác nhận riêng, không hiệu chỉnh đa so sánh"
@@ -148,10 +148,10 @@
     },
     {
       "type": "bullets",
-      "title": "Tỷ lệ tái nhập viện tăng theo HbA1c nhưng liên quan hiệu chỉnh chưa đạt ý nghĩa thống kê",
+      "title": "Liên quan hiệu chỉnh giữa nhóm HbA1c và tái nhập viện 1 năm chưa đạt ý nghĩa thống kê",
       "bullets": [
-        "Mục tiêu 1: tỷ lệ tái nhập viện 1 năm chung {{R-A0-061.value}} (KTC 95% {{R-A0-061.ci}}), tăng dần theo nhóm HbA1c từ {{R-A0-062.value}} đến {{R-A0-064.value}}",
-        "Mục tiêu 2: OR hiệu chỉnh nhóm >9% so với <7% là {{R-A1-004.value}} (KTC 95% {{R-A1-004.ci}}; p={{R-A1-004.p}}) — xu hướng tăng nhưng chưa đủ bằng chứng khẳng định mối liên quan ở cỡ mẫu này"
+        "Mục tiêu 1: tỷ lệ tái nhập viện 1 năm chung {{R-A0-061.value}} (KTC 95% {{R-A0-061.ci}}), theo nhóm HbA1c <7%, 7–9% và >9%: {{R-A0-062.value}}, {{R-A0-063.value}} và {{R-A0-064.value}}",
+        "Mục tiêu 2: OR hiệu chỉnh nhóm >9% so với <7% là {{R-A1-004.value}} (KTC 95% {{R-A1-004.ci}}; p={{R-A1-004.p}}) — khoảng tin cậy chứa 1, chưa đủ bằng chứng khẳng định mối liên quan ở cỡ mẫu này"
       ],
       "notes": "1 phút. Trả lời đúng thứ tự 2 mục tiêu đã nêu ở slide 4 — không thêm kết luận nào vượt quá dữ liệu."
     },
@@ -175,10 +175,10 @@
       "type": "bullets",
       "title": "Dự phòng — Cỡ mẫu: yêu cầu 535 người/nhóm cực, mẫu thực tế chỉ đạt power 55–77%",
       "bullets": [
-        "Theo EPV (≥10, 6 biến dự kiến): cần 300 người bệnh toàn mẫu; ở EPV=20: cần 600 (samplesize.py regression-epv)",
-        "Theo kiểm định tỷ lệ đơn giản (OR giả định=1,5, p₁ giả định 20%): cần 535 người/nhóm cực, tổng 1.070 cho 2 nhóm (samplesize.py two-props)",
+        "Theo EPV (≥10, 6 biến dự kiến): cần 300 người bệnh toàn mẫu; ở EPV=20: cần 600",
+        "Theo kiểm định tỷ lệ đơn giản (OR giả định=1,5, p₁ giả định 20%): cần 535 người/nhóm cực, tổng 1.070 cho 2 nhóm",
         "Power đạt được theo n mỗi nhóm cực (α=0,05, OR giả định=1,5): n=300 → 0,554; n=400 → 0,678; n=500 → 0,773; n=535 → 0,80",
-        "Lấy giá trị lớn hơn giữa 2 cách tính (1.070) làm cỡ mẫu yêu cầu — ước lượng thận trọng, không phải số tuyệt đối (xem `03_protocol/sample-size.md`)"
+        "Lấy giá trị lớn hơn giữa 2 cách tính (1.070) làm cỡ mẫu yêu cầu — ước lượng thận trọng, không phải số tuyệt đối (theo kế hoạch cỡ mẫu đã duyệt)"
       ],
       "notes": "Dự phòng, chỉ dùng khi hội đồng hỏi sâu về cỡ mẫu. Các số trong slide này lấy nguyên văn từ sample-size.md (kế hoạch cỡ mẫu đã duyệt ở gate G2), không phải từ ledger kết quả phân tích — nói rõ nếu được hỏi tại sao không có mã R gắn kèm như các slide kết quả khác."
     },

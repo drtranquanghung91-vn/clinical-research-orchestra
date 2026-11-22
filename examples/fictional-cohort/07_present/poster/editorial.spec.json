@@ -112,15 +112,15 @@
    "x": 6.0,
    "y": 52.32161111111111,
    "w": 20.0,
-   "h": 13.879907621247114,
-   "path": "07_present\\figures\\F3.poster.png",
+   "h": 12.571208622016936,
+   "path": "examples\\fictional-cohort\\07_present\\figures\\F3.poster.png",
    "alt": "Biểu đồ thanh ngang tỷ lệ tái nhập viện 3 nhóm HbA1c kèm khoảng tin cậy 95%"
   },
   {
    "kind": "text",
    "name": "Caption",
    "x": 3.0,
-   "y": 66.60151873235823,
+   "y": 65.29281973312804,
    "w": 26.0,
    "h": 2.384777777777778,
    "paragraphs": [
@@ -139,7 +139,7 @@
    "kind": "text",
    "name": "Body",
    "x": 3.0,
-   "y": 69.78629651013601,
+   "y": 68.47759751090582,
    "w": 26.0,
    "h": 7.217833333333334,
    "paragraphs": [
@@ -158,7 +158,7 @@
    "kind": "text",
    "name": "Heading",
    "x": 3.0,
-   "y": 79.70412984346935,
+   "y": 78.39543084423916,
    "w": 26.0,
    "h": 2.2930555555555556,
    "paragraphs": [
@@ -177,7 +177,7 @@
    "kind": "text",
    "name": "Body",
    "x": 3.0,
-   "y": 82.59718539902491,
+   "y": 81.28848639979472,
    "w": 26.0,
    "h": 5.4751111111111115,
    "paragraphs": [
@@ -225,15 +225,15 @@
    "x": 32.0,
    "y": 24.48611111111111,
    "w": 26.0,
-   "h": 14.412666666666667,
-   "path": "07_present\\figures\\F1.poster.png",
+   "h": 12.939333333333332,
+   "path": "examples\\fictional-cohort\\07_present\\figures\\F1.poster.png",
    "alt": "Biểu đồ rừng hai tỷ số chênh hiệu chỉnh, cả hai khoảng tin cậy đều cắt giá trị 1"
   },
   {
    "kind": "text",
    "name": "Caption",
    "x": 32.0,
-   "y": 39.29877777777778,
+   "y": 37.82544444444444,
    "w": 26.0,
    "h": 2.384777777777778,
    "paragraphs": [
@@ -252,7 +252,7 @@
    "kind": "text",
    "name": "Body",
    "x": 32.0,
-   "y": 42.483555555555554,
+   "y": 41.01022222222222,
    "w": 26.0,
    "h": 3.732388888888889,
    "paragraphs": [
@@ -270,7 +270,7 @@
   {
    "kind": "table",
    "x": 32.0,
-   "y": 46.715944444444446,
+   "y": 45.24261111111111,
    "w": 26.0,
    "h": 5.630333333333333,
    "columns": [
@@ -296,7 +296,7 @@
    "kind": "text",
    "name": "Heading",
    "x": 32.0,
-   "y": 55.34627777777778,
+   "y": 53.87294444444444,
    "w": 26.0,
    "h": 4.586111111111111,
    "paragraphs": [
@@ -314,17 +314,17 @@
   {
    "kind": "image",
    "x": 32.0,
-   "y": 60.53238888888889,
+   "y": 59.05905555555555,
    "w": 26.0,
    "h": 29.570692194403534,
-   "path": "07_present\\figures\\F2.poster.png",
+   "path": "examples\\fictional-cohort\\07_present\\figures\\F2.poster.png",
    "alt": "Ba đường Kaplan-Meier theo nhóm HbA1c với bảng số người còn theo dõi"
   },
   {
    "kind": "text",
    "name": "Caption",
    "x": 32.0,
-   "y": 90.50308108329241,
+   "y": 89.02974774995909,
    "w": 26.0,
    "h": 2.384777777777778,
    "paragraphs": [
@@ -343,7 +343,7 @@
    "kind": "text",
    "name": "Body",
    "x": 32.0,
-   "y": 93.6878588610702,
+   "y": 92.21452552773687,
    "w": 26.0,
    "h": 8.960555555555556,
    "paragraphs": [
@@ -429,15 +429,15 @@
    "x": 64.5,
    "y": 36.74666666666667,
    "w": 19.0,
-   "h": 18.923387096774192,
-   "path": "07_present\\figures\\F4.poster.png",
+   "h": 17.92741935483871,
+   "path": "examples\\fictional-cohort\\07_present\\figures\\F4.poster.png",
    "alt": "Sơ đồ 2 ô: n=1070 toàn đoàn hệ, loại 27 người do thiếu dữ liệu biến hiệu chỉnh, còn 1043 người vào mô hình hiệu chỉnh"
   },
   {
    "kind": "text",
    "name": "Caption",
    "x": 61.0,
-   "y": 56.07005376344086,
+   "y": 55.07408602150538,
    "w": 26.0,
    "h": 1.192388888888889,
    "paragraphs": [
@@ -456,7 +456,7 @@
    "kind": "text",
    "name": "Body",
    "x": 61.0,
-   "y": 58.06244265232975,
+   "y": 57.06647491039427,
    "w": 26.0,
    "h": 10.703277777777778,
    "paragraphs": [
@@ -475,7 +475,7 @@
    "kind": "text",
    "name": "Heading",
    "x": 61.0,
-   "y": 71.46572043010754,
+   "y": 70.46975268817205,
    "w": 26.0,
    "h": 2.2930555555555556,
    "paragraphs": [
@@ -494,12 +494,12 @@
    "kind": "text",
    "name": "Body",
    "x": 61.0,
-   "y": 74.3587759856631,
+   "y": 73.36280824372761,
    "w": 26.0,
-   "h": 7.217833333333334,
+   "h": 12.446,
    "paragraphs": [
     {
-     "text": "Tái nhập viện tăng theo HbA1c nhưng chưa có ý nghĩa thống kê; cần cỡ mẫu lớn hơn. Hạn chế: đoàn hệ hồi cứu, đơn trung tâm, dữ liệu mô phỏng.",
+     "text": "Chưa thấy liên quan có ý nghĩa thống kê giữa nhóm HbA1c và tái nhập viện 1 năm: OR hiệu chỉnh của nhóm 7–9% và >9% đều có khoảng tin cậy chứa 1; cần cỡ mẫu lớn hơn. Hạn chế: đoàn hệ hồi cứu, đơn trung tâm, dữ liệu mô phỏng.",
      "size": 38.0,
      "bold": false,
      "italic": false,

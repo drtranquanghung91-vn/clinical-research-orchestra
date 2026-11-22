@@ -200,9 +200,23 @@ class Ctx:
         self.s = self.size / 9.0  # scale for line widths, markers, tick lengths
         self._scratch = None
         self._cache: dict = {}
+        self.labels: list[str] = []  # group/series labels this figure looked up a colour for
 
-    def color(self, key: str, i: int = 0) -> str:
+    def color(self, key: str, i: int = 0, label: bool = True) -> str:
+        if label and key not in self.labels:
+            self.labels.append(key)
         return self.colors.get(key) or PALETTE[i % len(PALETTE)]
+
+    def colour_warning(self, fid: str) -> str | None:
+        """Warn when a style.colors key matches none of this figure's labels while some label has no colour
+        (a likely key typo, e.g. '<7' for '<7%'); figures without group labels (forest, flow) never warn."""
+        uncoloured = [lb for lb in self.labels if lb not in self.colors]
+        unused = [k for k in self.colors if k not in self.labels and k != "forest"]
+        if not (uncoloured and unused):
+            return None
+        q = ", ".join
+        return (f"{fid}: style.colors key(s) {q(repr(k) for k in unused)} match no group label of this figure "
+                f"(labels: {q(repr(lb) for lb in self.labels)}); {q(repr(lb) for lb in uncoloured)} take the default palette")
 
     def figure(self, height_cm: float, width_cm: float | None = None):
         self.plt.rcParams["font.size"] = self.size
@@ -318,7 +332,10 @@ def _save(ctx: Ctx, f, outdir: Path, fid: str, suffix: str = "") -> None:
             kw["metadata"] = {"Date": None}
         elif ext == "pdf":
             kw["metadata"] = {"CreationDate": None, "Creator": "figures.py"}
-        f.savefig(outdir / f"{fid}{suffix}.{ext}", format=ext, **kw)
+        out = outdir / f"{fid}{suffix}.{ext}"
+        f.savefig(out, format=ext, **kw)
+        if ext == "svg":  # matplotlib writes SVG in text mode: CRLF on Windows; keep LF on every OS
+            out.write_bytes(out.read_bytes().replace(b"\r\n", b"\n"))
     ctx.plt.close(f)
 
 
@@ -340,7 +357,7 @@ def _draw_forest(ctx: Ctx, fig: dict, rows: list[dict]):
     ax = f.add_axes([left / width, (fr.bottom0 + xblock) / height, axes_w / width, axes_h / height])
     null = fig.get("null", 1)
     ys = list(range(n, 0, -1))
-    col = ctx.color("forest", 0)
+    col = ctx.color("forest", 0, label=False)
     for y, r in zip(ys, rows):
         ax.plot([r["lo"], r["hi"]], [y, y], color=col, lw=1.1 * s, solid_capstyle="butt")
         ax.plot([r["est"]], [y], marker="s", ms=5.5 * s, color=col, mfc=col if r["filled"] else "white", mew=1.1 * s)
@@ -759,7 +776,7 @@ def _record_poster_render(path: Path, render: dict) -> None:
         return
     rec = dict(render, data_digest=content_digest(data))
     data.setdefault("render", {})["poster"] = rec
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def _run(project: Path, args, plt, matplotlib) -> int:
@@ -809,6 +826,9 @@ def _run(project: Path, args, plt, matplotlib) -> int:
                 raise FigureError(f"{fid}: cannot read the results ledger: {e}") from e
         ctx = _ctx_for(plt, ctx_style, lang, args.dpi, fig, args.profile)
         f, source, data = BUILDERS[fig["type"]](ctx, fig, by_id=by_id, lang=lang, project=project)
+        warn = ctx.colour_warning(fid)
+        if warn:
+            print(f"figures.py: {warn}", file=sys.stderr)
         render = {"width_cm": round(float(f.get_figwidth()) * 2.54, 2), "font_pt": ctx.size}
         for k in ("width_cm", "font_pt"):
             if render[k] == int(render[k]):
@@ -825,7 +845,7 @@ def _run(project: Path, args, plt, matplotlib) -> int:
                 out[k] = data[k]
         out["chart"] = data["chart"]
         out["render"] = {"document": render}
-        (outdir / f"{fid}.data.json").write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        (outdir / f"{fid}.data.json").write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
         print(f"{fid} {fig['type']} → {OUT_REL}/{fid}.{{svg,pdf,png}}")
     return 0
 

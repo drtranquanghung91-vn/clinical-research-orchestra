@@ -247,44 +247,64 @@ re-runs: 332 turns, about 100 minutes and USD 44 in total.
 | `python plugins/orchestra/scripts/consistency_audit.py examples/fictional-cohort` | 0 | `consistency_audit: 0 block, 0 warn` |
 | `python plugins/orchestra/scripts/poster_preflight.py examples/fictional-cohort` | 0 | editorial 0 block, 4 warn; pathway 0 block, 2 warn; figure-led 0 block, 3 warn (every warn: a figure's text prints at 21.6–23.9 pt, below 24 pt); all figures vector |
 | `python plugins/orchestra/scripts/check_numbers.py examples/fictional-cohort examples/fictional-cohort/07_present/abstract.rendered.md` | 0 | 0 findings |
-| `python plugins/orchestra/scripts/lint_prose.py examples/fictional-cohort/07_present/abstract.rendered.md` | 0 | 4 paragraphs, 0 hits; `--count-words`: 274 |
-| `python plugins/orchestra/scripts/check_pptx.py examples/fictional-cohort/07_present/defense/deck.pptx` | 0 | 23 slides, 0 issues (`--render` with PowerPoint: 23 PNGs, looked at; `lint_prose.py --slides`: 0 findings) |
+| `python plugins/orchestra/scripts/lint_prose.py examples/fictional-cohort/07_present/abstract.rendered.md` | 0 | 4 paragraphs, 0 hits; `--count-words`: 268 |
+| `python plugins/orchestra/scripts/check_pptx.py examples/fictional-cohort/07_present/defense/deck.pptx` | 0 | 23 slides, 0 issues, including the new `leftover-markup` (S22) check (`--render` with PowerPoint: 23 PNGs, looked at; `lint_prose.py --slides`: 0 findings) |
 | `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3` | 0 | G3: open — results locked by Example author on 2026-11-21; 5 locked files unchanged |
 
 ### P3 edits made by hand
 
-None to the outputs. File placement only: the 23 slide PNGs the skill rendered for its own look
-(`07_present/defense/render/`) and the run transcripts were left out; `01_question/question.md` was
-copied back because stage 5 changed it. Poster previews are 1502 × 2000 px.
+File placement: the 23 slide PNGs the skill rendered for its own look (`07_present/defense/render/`)
+and the run transcripts were left out; `01_question/question.md` was copied back because stage 5
+changed it. Poster previews are 1502 × 2000 px.
+
+Controller edits after the run (the skill rules and checks that would have prevented them were added
+at the same time: `check_pptx.py` `leftover-markup`, the `figures.py` colour-key warning, and the
+citation, trend and no-ledger-id rules in defense-prep, research-poster, conference-abstract and
+research-figures):
+
+- `07_present/defense/deck.json`: `[@hu2026]` → "Hu và cs., 2026" and `[@american2026]` → "ADA
+  Professional Practice Committee, 2026" (first author and year from `ledgers/references.json`);
+  the backtick path and the two `samplesize.py` command names on backup slide 19 removed ("theo kế
+  hoạch cỡ mẫu đã duyệt"); trend titles and bullets rewritten to give the group values and say the
+  CIs include 1 (slides 10, 11, 12, 14, 16); slide 3 title "có thể là yếu tố nguy cơ" → "liên quan
+  với tái nhập viện ngắn hạn". `deck.pptx` rebuilt with `pptx_from_spec.py … --project`.
+- `07_present/abstract.md`: "tăng dần theo nhóm HbA1c" and the "xu hướng tăng" conclusion replaced by
+  the group values and a no-association statement; `abstract.rendered.md` re-rendered with
+  `render_results.py` (268 words).
+- `07_present/poster/poster.json`: conclusion "Tái nhập viện tăng theo HbA1c…" → no trend claim, both
+  CIs include 1; all three layouts rebuilt with `poster_build.py`.
+- `07_present/figures/figures.json`: `source` "Bảng 3.2"/"Bảng 3.3" removed from F3 and F1; ledger ids
+  removed from the F4 note; colour keys `<7%`, `7–9%`, `>9%` added so F3 matches F2. All four
+  figures redrawn with `figures.py` in both profiles (document, then `--profile poster`), which also
+  replaces the stale document copy of F1; F2 changes only in line endings (`figures.py` and the
+  `poster_build.py` DOM dump now write LF on Windows too).
+- `deck.pptx` rebuilt once more after `pptx_from_spec.py` learnt to set the KM time-axis ticks to the
+  at-risk step when only the last step is longer (0, 90, 180, 270, 365): ticks and at-risk columns now
+  line up on slide 12.
 
 ### P3 known issues (found by looking at every poster PNG and the rendered deck)
 
 - **F4 is not a STROBE flow.** The simulated data start at the analysed cohort, so there are no
   screening or exclusion counts. The author chose a two-box diagram (1070 → 1043, 27 without the
-  adjustment variables); its note prints the ledger ids `R-A0-001` and `R-A1-003`.
-- **Group colours differ between figures.** `style.colors` uses the KM group levels `<7`, `7-9`, `>9`;
-  the rates labels are `<7%`, `7–9%`, `>9%`, so F3 takes the default palette (> 9% green in F3, brown
-  in F2). `figures.py` does not warn about a label with no colour.
-- **Document F1 is stale.** Stage 4 shortened the F1 row labels and redrew only the poster profile:
-  `F1.{svg,pdf,png}` still say "HbA1c 7–9% vs <7%", `F1.data.json` has "7–9% vs <7%".
+  adjustment variables).
+- **No check for a stale document figure.** Stage 4 redrew only the poster profile of F1, leaving the
+  document copy with old labels (fixed by hand, see above); no check compares a figure's files with
+  its `data.json`.
 - **Poster rehearsal and type size.** In stage 3 research-poster offered `committee-simulator` instead
   of calling it, and left the KM at 15.7 pt as a warning; both were done in stage 4 when the author
   asked. Three figures still print at 21.6–21.8 pt in some layouts.
 - **Poster layout.** Editorial puts Đặt vấn đề and Phương pháp in the third column after the results
   and leaves the lower part of every column empty; the figure-led key-message panel is mostly empty
   navy; figure numbers follow the section order, not the reading position (the figure-led hero is
-  Hình 4); the data note became numbered section 7 in pathway; the figures' source lines "Bảng 3.2" and
-  "Bảng 3.3" point to thesis tables that are not on the poster or the slides. The poster also added
-  the OR and its CI to the author's key-message sentence (the author kept it).
-- **Trend wording.** The abstract ("tăng dần theo nhóm HbA1c"), the poster conclusion and slide
-  titles 10, 11, 12 and 16 ("tăng dần theo nhóm HbA1c", "ngắn hơn ở nhóm HbA1c cao") describe a
-  trend that no test in the register supports, with both CIs including 1; slide 3 says "có thể là yếu
-  tố nguy cơ". `analysis_plan.py` checks causal verbs only.
-- **Deck defects that `check_pptx.py` and `lint_prose.py --slides` do not catch.** Raw citation keys
-  `[@hu2026]` and `[@american2026]` on slides 3 and 14 (slide 23 lists numbered references); backticks
-  printed literally on slide 19; the sample-size figures on slides 7 and 19 (300, 535, 0,554…) are typed
-  from `03_protocol/sample-size.md`, which no check reads; KM slide 12 has a flat plot, an at-risk table
-  whose columns do not line up with the axis ticks and a > 9 line close in colour to < 7; value labels
+  Hình 4); the data note became numbered section 7 in pathway. The poster also added the OR and its
+  CI to the author's key-message sentence (the author kept it).
+- **Trend wording is not checked by a script.** The run wrote trend claims no test supports (fixed by
+  hand, see above); the skills now forbid them, but `analysis_plan.py` checks causal verbs only.
+- **Deck defects that `check_pptx.py` and `lint_prose.py --slides` do not catch.** The KM slide 12
+  prints the figure's fixed provenance line with a file path ("Vẽ lại từ 04_data/cohort.deid.csv");
+  the sample-size figures on slides 7 and 19 (300, 535, 0,554…) are typed
+  from `03_protocol/sample-size.md`, which no check reads; KM slide 12 has a flat plot and a > 9 line close
+  in colour to < 7 (the slide uses the deck palette, not the figure's colour keys); value labels
   collide with the whiskers on slide 10; the forest axis on slide 11 runs 0,1–10, which squeezes the
   intervals; backup tables (slides 21–22) fill a quarter of the slide and most text slides leave the
   lower half empty.
@@ -292,5 +312,6 @@ copied back because stage 5 changed it. Poster previews are 1502 × 2000 px.
 - **Objective changed without the author.** defense-prep fixed objective 2 in `01_question/question.md`
   (six adjustment factors → the protocol's four, length of stay and insulin as mediators) on the
   consistency-auditor's finding without asking, in a non-interactive run. The change matches the
-  protocol and is recorded in `decisions.md`; it was kept.
+  protocol and is recorded in `decisions.md`; it was kept. defense-prep now says to report such a
+  mismatch and ask the author.
 - **Abstract.** The group rates in Kết quả have no CI (the overall rate and the ORs do).

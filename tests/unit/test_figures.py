@@ -98,6 +98,8 @@ class TestFigures(unittest.TestCase):
         self.assertIn("07_present/figures/F1.{svg,pdf,png}", r.stdout)
         self.assertTrue((self.p / "07_present" / "figures" / "F1.png").read_bytes().startswith(b"\x89PNG"))
         self.assertIn("<text", (self.p / "07_present" / "figures" / "F1.svg").read_text(encoding="utf-8"))
+        for name in ("F1.svg", "F1.data.json"):  # text outputs are LF only, every OS
+            self.assertNotIn(b"\r\n", (self.p / "07_present" / "figures" / name).read_bytes(), name)
 
     def test_forest_values_from_ledger(self):
         self.write_spec(SPEC)
@@ -170,6 +172,17 @@ class TestFigures(unittest.TestCase):
         self.assertEqual(d["data_sha256"], sha)
         self.assertEqual(d["data_file"], "04_data/cohort.deid.csv")
         self.assertEqual(d["source"], "Vẽ lại từ 04_data/cohort.deid.csv")
+
+    def test_unmatched_colour_key_warns(self):
+        self.write_spec(SPEC)
+        r = self.run_cli("--dpi", "100", "--only", "F3")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("F3: style.colors", r.stderr)
+        self.assertIn("'<7'", r.stderr)
+        self.assertIn("'<7%'", r.stderr)
+        r = self.run_cli("--dpi", "100", "--only", "F1,F2")  # km labels match; forest has no group labels
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertNotIn("style.colors", r.stderr)
 
     def test_km_default_order_warns(self):
         spec = {"figures": [dict(SPEC["figures"][1])]}

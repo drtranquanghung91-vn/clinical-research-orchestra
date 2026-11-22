@@ -95,8 +95,8 @@ L 144.045354 89.379528
    <text style="font-weight: 700; font-size: 10px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="7.2" y="11.504053" transform="rotate(-0 7.2 11.504053)">Sơ đồ rút gọn mẫu phân tích</text>
   </g>
   <g id="text_5">
-   <text style="font-size: 7.65px; font-family: 'Arial', 'DejaVu Sans', sans-serif; fill: #555555" transform="translate(7.2 168.67166)">Không phải sơ đồ sàng lọc STROBE đầy đủ: không có số liệu sàng lọc/loại trừ ban đầu, chỉ có n toàn đoàn hệ (R-A0-001)</text>
-   <text style="font-size: 7.65px; font-family: 'Arial', 'DejaVu Sans', sans-serif; fill: #555555" transform="translate(7.2 176.409142)">và n mô hình hiệu chỉnh (R-A1-003).</text>
+   <text style="font-size: 7.65px; font-family: 'Arial', 'DejaVu Sans', sans-serif; fill: #555555" transform="translate(7.2 168.67166)">Không phải sơ đồ sàng lọc STROBE đầy đủ: không có số liệu sàng lọc/loại trừ ban đầu, chỉ có n toàn đoàn hệ và n đưa</text>
+   <text style="font-size: 7.65px; font-family: 'Arial', 'DejaVu Sans', sans-serif; fill: #555555" transform="translate(7.2 176.606966)">vào mô hình hiệu chỉnh.</text>
   </g>
  </g>
  <defs>

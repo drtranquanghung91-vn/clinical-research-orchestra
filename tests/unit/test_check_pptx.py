@@ -61,6 +61,45 @@ class TestCheck(unittest.TestCase):
         self.assertEqual(rc, 0, out)
         self.assertIn("0 issue(s)", out)
 
+    def test_leftover_markup_in_slide_text(self):
+        for text in ("Nguy cơ cao hơn [@hu2026]", "@hu2026 thấy nguy cơ cao hơn",
+                     "Xem `05_analysis/plan.md`", "Tỉ lệ {{R-A0-001}}"):
+            with self.subTest(text=text):
+                deck(self.tmp / "m.pptx", boxes=[(1, 1, 8, 1, text, 24, "Body")])
+                rc, out = run([str(self.tmp / "m.pptx")])
+                self.assertEqual(rc, 1, out)
+                self.assertIn("leftover-markup", out)
+
+    def test_email_and_plain_text_not_markup(self):
+        deck(self.tmp / "e.pptx", boxes=[(1, 1, 8, 1, "Liên hệ [ab@example.org]; Hu và cs., 2026", 24, "Body")])
+        rc, out = run([str(self.tmp / "e.pptx")])
+        self.assertEqual(rc, 0, out)
+        self.assertNotIn("leftover-markup", out)
+
+    def test_leftover_markup_in_table_and_group(self):
+        prs = Presentation()
+        s = prs.slides.add_slide(prs.slide_layouts[6])
+        tbl = s.shapes.add_table(2, 2, Inches(1), Inches(1), Inches(6), Inches(2)).table
+        tbl.cell(1, 1).text = "OR 1,8 [@american2026]"
+        grp = s.shapes.add_group_shape()
+        tb = grp.shapes.add_textbox(Inches(1), Inches(4), Inches(6), Inches(1))
+        tb.text_frame.text = "Nguồn: `ledger`"
+        s.notes_slide.notes_text_frame.text = "note"
+        prs.save(str(self.tmp / "t.pptx"))
+        rc, out = run([str(self.tmp / "t.pptx")])
+        self.assertEqual(rc, 1, out)
+        self.assertEqual(out.count("leftover-markup"), 2, out)
+        self.assertIn("[@american2026]", out)
+
+    def test_markup_in_notes_ignored(self):
+        deck(self.tmp / "n.pptx", boxes=[(1, 1, 8, 1, "Hello", 24, "Body")])
+        prs = Presentation(str(self.tmp / "n.pptx"))
+        prs.slides[0].notes_slide.notes_text_frame.text = "Đọc [@hu2026] và `plan.md` {{R-A0-001}}"
+        prs.save(str(self.tmp / "n.pptx"))
+        rc, out = run([str(self.tmp / "n.pptx")])
+        self.assertEqual(rc, 0, out)
+        self.assertNotIn("leftover-markup", out)
+
     def test_off_slide_flagged(self):
         deck(self.tmp / "a.pptx", boxes=[(12, 1, 4, 1, "Hello", 24, "Body")])
         rc, out = run([str(self.tmp / "a.pptx")])

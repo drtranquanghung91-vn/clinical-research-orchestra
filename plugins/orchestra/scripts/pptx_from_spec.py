@@ -641,8 +641,10 @@ class Builder:
         ca.has_major_gridlines = False
         if len(times) > 1:
             step = times[1] - times[0]
-            if step > 0 and all(abs((b - a) - step) < 1e-9 for a, b in zip(times, times[1:])):
-                ca.major_unit = step  # ticks line up with the at-risk columns
+            steps = [b - a for a, b in zip(times, times[1:])]
+            # ticks line up with the at-risk columns; a last step up to a quarter longer (90 ... 270, 365) still counts
+            if step > 0 and all(abs(d - step) < 1e-9 for d in steps[:-1]) and step - 1e-9 <= steps[-1] <= step * 1.25:
+                ca.major_unit = step
         self.axis_title(ca, s.get("x_label") or ch.get("x_label"))
         self.axis_title(va, s.get("y_label") or ch.get("y_label") or LABELS[self.lang]["event_free"], self.tp("small") - 2)
         if tbl_h:

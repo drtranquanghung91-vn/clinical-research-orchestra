@@ -51,6 +51,10 @@ stay when the author means it.
 
 Speaker notes are never read.
 
+| Code | Check | Heuristic |
+|---|---|---|
+| S22 | Leftover source markup on a slide (`check_pptx.py`, finding `leftover-markup`, serious) | A pandoc citation key `[@key]` or `@key`, a markdown backtick, or an unrendered `{{…}}` placeholder in a title, body, table or group; emails are not keys; speaker notes are not read |
+
 ## Academic exceptions (never counted)
 
 The linter has no pattern for any of these, and a new pattern must not catch them:

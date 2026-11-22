@@ -20,6 +20,12 @@ Ask once: poster size, orientation, language, logo and colours, conference rules
 the one sentence a passer-by remembers (test in poster-rules.md). Then `07_present/poster/poster.json` in
 the format of `${CLAUDE_PLUGIN_ROOT}/references/presenting/poster-spec.md`.
 
+Poster text: print a citation as short text resolved from the project's reference library ("Hu và cs.,
+2026" / "Hu et al., 2026"), never `[@key]`. Never print file paths, backticks, ledger ids (`R-…`) or
+thesis table numbers ("Bảng 3.2") that are not on the poster. Describe an ordered trend ("tăng dần
+theo", "increases with", "dose-response") only when the results ledger holds a trend test supporting
+it; otherwise give the group values and say the CIs include 1.
+
 ## 4. Figures
 Use the Skill tool with `research-figures`, then run
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/figures.py" . --profile poster` before every build.

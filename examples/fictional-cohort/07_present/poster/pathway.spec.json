@@ -215,15 +215,15 @@
    "x": 17.400000000000002,
    "y": 44.910222222222224,
    "w": 19.0,
-   "h": 18.923387096774192,
-   "path": "07_present\\figures\\F4.poster.png",
+   "h": 17.92741935483871,
+   "path": "examples\\fictional-cohort\\07_present\\figures\\F4.poster.png",
    "alt": "Sơ đồ 2 ô: n=1070 toàn đoàn hệ, loại 27 người do thiếu dữ liệu biến hiệu chỉnh, còn 1043 người vào mô hình hiệu chỉnh"
   },
   {
    "kind": "text",
    "name": "Caption",
    "x": 10.3,
-   "y": 64.23360931899641,
+   "y": 63.237641577060934,
    "w": 33.2,
    "h": 1.192388888888889,
    "paragraphs": [
@@ -242,7 +242,7 @@
    "kind": "text",
    "name": "Body",
    "x": 10.3,
-   "y": 66.2259982078853,
+   "y": 65.23003046594982,
    "w": 33.2,
    "h": 3.824111111111111,
    "paragraphs": [
@@ -260,7 +260,7 @@
   {
    "kind": "rect",
    "x": 3.0,
-   "y": 72.75010931899641,
+   "y": 71.75414157706093,
    "w": 5.5,
    "h": 5.5,
    "fill": "#1f4e79",
@@ -270,7 +270,7 @@
    "kind": "text",
    "name": "Step number",
    "x": 3.0,
-   "y": 72.75010931899641,
+   "y": 71.75414157706093,
    "w": 5.5,
    "h": 5.5,
    "paragraphs": [
@@ -289,7 +289,7 @@
    "kind": "text",
    "name": "Heading",
    "x": 10.3,
-   "y": 72.75010931899641,
+   "y": 71.75414157706093,
    "w": 33.2,
    "h": 4.586111111111111,
    "paragraphs": [
@@ -307,17 +307,17 @@
   {
    "kind": "image",
    "x": 16.900000000000002,
-   "y": 77.93622043010753,
+   "y": 76.94025268817205,
    "w": 20.0,
-   "h": 13.879907621247114,
-   "path": "07_present\\figures\\F3.poster.png",
+   "h": 12.571208622016936,
+   "path": "examples\\fictional-cohort\\07_present\\figures\\F3.poster.png",
    "alt": "Biểu đồ thanh ngang tỷ lệ tái nhập viện 3 nhóm HbA1c kèm khoảng tin cậy 95%"
   },
   {
    "kind": "text",
    "name": "Caption",
    "x": 10.3,
-   "y": 92.21612805135464,
+   "y": 89.91146131018898,
    "w": 33.2,
    "h": 1.192388888888889,
    "paragraphs": [
@@ -336,7 +336,7 @@
    "kind": "text",
    "name": "Body",
    "x": 10.3,
-   "y": 94.20851694024353,
+   "y": 91.90385019907787,
    "w": 33.2,
    "h": 2.6317222222222223,
    "paragraphs": [
@@ -354,7 +354,7 @@
   {
    "kind": "rect",
    "x": 3.0,
-   "y": 99.54023916246575,
+   "y": 97.23557242130009,
    "w": 5.5,
    "h": 5.5,
    "fill": "#1f4e79",
@@ -364,7 +364,7 @@
    "kind": "text",
    "name": "Step number",
    "x": 3.0,
-   "y": 99.54023916246575,
+   "y": 97.23557242130009,
    "w": 5.5,
    "h": 5.5,
    "paragraphs": [
@@ -383,7 +383,7 @@
    "kind": "text",
    "name": "Heading",
    "x": 10.3,
-   "y": 99.54023916246575,
+   "y": 97.23557242130009,
    "w": 33.2,
    "h": 2.2930555555555556,
    "paragraphs": [
@@ -402,12 +402,12 @@
    "kind": "text",
    "name": "Body",
    "x": 10.3,
-   "y": 102.4332947180213,
+   "y": 100.12862797685565,
    "w": 33.2,
-   "h": 3.824111111111111,
+   "h": 5.016500000000001,
    "paragraphs": [
     {
-     "text": "Tái nhập viện tăng theo HbA1c nhưng chưa có ý nghĩa thống kê; cần cỡ mẫu lớn hơn. Hạn chế: đoàn hệ hồi cứu, đơn trung tâm, dữ liệu mô phỏng.",
+     "text": "Chưa thấy liên quan có ý nghĩa thống kê giữa nhóm HbA1c và tái nhập viện 1 năm: OR hiệu chỉnh của nhóm 7–9% và >9% đều có khoảng tin cậy chứa 1; cần cỡ mẫu lớn hơn. Hạn chế: đoàn hệ hồi cứu, đơn trung tâm, dữ liệu mô phỏng.",
      "size": 26.0,
      "bold": false,
      "italic": false,
@@ -420,7 +420,7 @@
   {
    "kind": "rect",
    "x": 3.0,
-   "y": 108.95740582913241,
+   "y": 107.84512797685566,
    "w": 5.5,
    "h": 5.5,
    "fill": "#1f4e79",
@@ -430,7 +430,7 @@
    "kind": "text",
    "name": "Step number",
    "x": 3.0,
-   "y": 108.95740582913241,
+   "y": 107.84512797685566,
    "w": 5.5,
    "h": 5.5,
    "paragraphs": [
@@ -449,7 +449,7 @@
    "kind": "text",
    "name": "Heading",
    "x": 10.3,
-   "y": 108.95740582913241,
+   "y": 107.84512797685566,
    "w": 33.2,
    "h": 2.2930555555555556,
    "paragraphs": [
@@ -468,7 +468,7 @@
    "kind": "text",
    "name": "Body",
    "x": 10.3,
-   "y": 111.85046138468797,
+   "y": 110.73818353241123,
    "w": 33.2,
    "h": 2.6317222222222223,
    "paragraphs": [
@@ -535,15 +535,15 @@
    "x": 53.8,
    "y": 37.78611111111111,
    "w": 33.2,
-   "h": 18.40386666666667,
-   "path": "07_present\\figures\\F1.poster.png",
+   "h": 16.522533333333335,
+   "path": "examples\\fictional-cohort\\07_present\\figures\\F1.poster.png",
    "alt": "Biểu đồ rừng hai tỷ số chênh hiệu chỉnh, cả hai khoảng tin cậy đều cắt giá trị 1"
   },
   {
    "kind": "text",
    "name": "Caption",
    "x": 53.8,
-   "y": 56.589977777777776,
+   "y": 54.708644444444445,
    "w": 33.2,
    "h": 2.384777777777778,
    "paragraphs": [
@@ -562,7 +562,7 @@
    "kind": "text",
    "name": "Body",
    "x": 53.8,
-   "y": 59.77475555555555,
+   "y": 57.89342222222222,
    "w": 33.2,
    "h": 1.4393333333333334,
    "paragraphs": [
@@ -580,7 +580,7 @@
   {
    "kind": "table",
    "x": 53.8,
-   "y": 61.71408888888888,
+   "y": 59.83275555555555,
    "w": 33.2,
    "h": 5.630333333333333,
    "columns": [
@@ -605,7 +605,7 @@
   {
    "kind": "rect",
    "x": 46.5,
-   "y": 70.34442222222222,
+   "y": 68.46308888888889,
    "w": 5.5,
    "h": 5.5,
    "fill": "#1f4e79",
@@ -615,7 +615,7 @@
    "kind": "text",
    "name": "Step number",
    "x": 46.5,
-   "y": 70.34442222222222,
+   "y": 68.46308888888889,
    "w": 5.5,
    "h": 5.5,
    "paragraphs": [
@@ -634,7 +634,7 @@
    "kind": "text",
    "name": "Heading",
    "x": 53.8,
-   "y": 70.34442222222222,
+   "y": 68.46308888888889,
    "w": 33.2,
    "h": 4.586111111111111,
    "paragraphs": [
@@ -652,17 +652,17 @@
   {
    "kind": "image",
    "x": 56.58524053091615,
-   "y": 75.53053333333334,
+   "y": 73.64920000000001,
    "w": 27.629518938167696,
    "h": 31.424000000000003,
-   "path": "07_present\\figures\\F2.poster.png",
+   "path": "examples\\fictional-cohort\\07_present\\figures\\F2.poster.png",
    "alt": "Ba đường Kaplan-Meier theo nhóm HbA1c với bảng số người còn theo dõi"
   },
   {
    "kind": "text",
    "name": "Caption",
    "x": 53.8,
-   "y": 107.35453333333334,
+   "y": 105.4732,
    "w": 33.2,
    "h": 2.384777777777778,
    "paragraphs": [
@@ -681,7 +681,7 @@
    "kind": "text",
    "name": "Body",
    "x": 53.8,
-   "y": 110.53931111111112,
+   "y": 108.65797777777779,
    "w": 33.2,
    "h": 3.824111111111111,
    "paragraphs": [

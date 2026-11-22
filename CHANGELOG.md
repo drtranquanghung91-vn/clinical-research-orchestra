@@ -19,7 +19,10 @@
   plus PPTX; layouts `editorial`, `pathway`, `figure-led`), `poster_preflight.py` (`E-PRINT`: page size,
   bleed, fonts, effective dpi, printed figure text size, overflow); shared `crolib/derived.py` (ledger
   lookup by id and part, safe formula evaluation).
-- New finding codes: `E-CONS`, `E-PRINT`, `P01`–`P30`, `INV`; `S01`–`S21` stay the slide catalog.
+- New finding codes: `E-CONS`, `E-PRINT`, `P01`–`P30`, `INV`; `S01`–`S21` stay the slide catalog, plus
+  `S22` (`check_pptx.py` `leftover-markup`: citation key, backtick or `{{…}}` left in slide text).
+- `figures.py` warns when a `style.colors` key matches no group label of a figure with uncoloured groups.
+- `figures.py` (SVG, `data.json`) and the `poster_build.py` DOM dump write LF on Windows too.
 - `gate.py check` prints an explicit line: "G3: open — results locked by … on …; n locked files
   unchanged" (open means approved, never unlocked), "G3: not open — not locked yet" or "G3: closed"
   with reasons. `results_ledger.py import` writes LF only, leaves a same-content ledger untouched and
