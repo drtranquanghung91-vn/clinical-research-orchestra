@@ -1,3 +1,7 @@
+import contextlib
+import io
+import json
+import shutil
 import struct
 import subprocess
 import sys
@@ -11,6 +15,8 @@ from pathlib import Path
 import _paths  # noqa: F401
 from _paths import ORCH_SCRIPTS
 import build_docx
+import gate
+import init_project
 
 SCRIPT = ORCH_SCRIPTS / "build_docx.py"
 MD = """# Chương 3. Kết quả
@@ -327,3 +333,58 @@ class TestBuildDocxReviewFixes(unittest.TestCase):
             styles = z.read("word/styles.xml").decode("utf-8")
         for lvl in range(4):
             self.assertIn(f'<w:outlineLvl w:val="{lvl}"/>', styles)
+
+
+class TestFinalExportRefused(unittest.TestCase):
+    """build_docx.py refuses out/<final name>.docx while gate.export_problems says no (important 2)."""
+
+    def setUp(self):
+        self.t = Path(tempfile.mkdtemp())
+        self.p = init_project.create(self.t / "p", "T", "thesis-masters", "cohort", "vi", "vi")
+        self.md = self.p / "06_writing" / "thesis" / "thesis.assembled.md"
+        self.md.parent.mkdir(parents=True, exist_ok=True)
+        self.md.write_text("# Chương 1\n\nVăn bản.\n", encoding="utf-8")
+
+    def tearDown(self):
+        shutil.rmtree(self.t, ignore_errors=True)
+
+    def main(self, *argv):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = build_docx.main([str(a) for a in argv])
+        return code, out.getvalue(), err.getvalue()
+
+    def test_refused_while_g4_closed(self):
+        for name in ("thesis.docx", "manuscript.docx", "case-report.docx", "review.docx", "THESIS.DOCX"):
+            with self.subTest(name=name):
+                dest = self.p / "out" / name
+                code, _, err = self.main(self.md, dest)
+                self.assertEqual(code, 1, err)
+                self.assertIn("G4", err)
+                self.assertFalse(dest.exists())
+        r = subprocess.run([sys.executable, str(SCRIPT), str(self.md), str(self.p / "out" / "thesis.docx")],
+                           capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(r.returncode, 1, r.stderr)
+        self.assertIn("final export", r.stderr)
+        other = self.t / "elsewhere" / "out"                       # --project names the project
+        other.mkdir(parents=True)
+        self.assertEqual(self.main(self.md, other / "thesis.docx", "--project", self.p)[0], 1)
+        self.assertFalse((other / "thesis.docx").exists())
+
+    def test_other_names_and_non_projects_still_build(self):
+        for dest in (self.p / "out" / "ch3-results.docx", self.p / "reviews" / "thesis.docx", self.t / "out" / "thesis.docx"):
+            with self.subTest(dest=dest):
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                code, _, err = self.main(self.md, dest)
+                self.assertEqual(code, 0, err)
+                self.assertTrue(dest.is_file())
+
+    def test_allowed_once_export_problems_is_empty(self):
+        (self.p / "decisions.md").write_text("# Decisions\n\nWAIVE G4: internal report, 2026-11-23\n", encoding="utf-8")
+        (self.p / "reviews" / "audit.json").write_text(json.dumps(
+            {"deliverable": "thesis", "at": "t", "blocks": 0, "warns": 0,
+             "files": {"06_writing/thesis/thesis.assembled.md": gate.sha256(self.md)}}), encoding="utf-8")
+        self.assertEqual(gate.export_problems(self.p, "thesis"), [])
+        code, _, err = self.main(self.md, self.p / "out" / "thesis.docx", "--project", self.p)
+        self.assertEqual(code, 0, err)
+        self.assertTrue((self.p / "out" / "thesis.docx").is_file())
