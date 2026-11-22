@@ -6,7 +6,7 @@ description: 'Use when the user wants a journal article written, reviewed or ass
 # Manuscript writing
 
 Writes a journal manuscript from locked results; read-only agents review it; export only through gate G4.
-See `${CLAUDE_PLUGIN_ROOT}/references/workflows/manuscript.md` and `references/writing/manuscript.md`.
+See `${CLAUDE_PLUGIN_ROOT}/references/workflows/manuscript.md` and `${CLAUDE_PLUGIN_ROOT}/references/writing/manuscript.md`.
 
 ## 1. Gate
 Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" check . G3`. Not `G3: open` → stop: draft nothing, explain

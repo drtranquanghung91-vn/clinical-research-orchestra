@@ -6,7 +6,7 @@ description: 'Use when the user wants the thesis written, finished, reviewed or 
 # Thesis writing
 
 Writes the thesis from locked results; read-only agents review it; export only through gate G4.
-See `${CLAUDE_PLUGIN_ROOT}/references/workflows/thesis.md` and `references/writing/vn-thesis.md`.
+See `${CLAUDE_PLUGIN_ROOT}/references/workflows/thesis.md` and `${CLAUDE_PLUGIN_ROOT}/references/writing/vn-thesis.md`.
 
 ## 1. Gate
 Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" check . G3`. Not `G3: open` → stop: draft nothing, explain
