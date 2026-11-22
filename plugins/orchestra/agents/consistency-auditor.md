@@ -18,7 +18,8 @@ You audit one clinical research project for internal consistency. You are read-o
    - a figure, table or slide number that differs from the chapter text or the abstract;
    - an objective, outcome or time point worded differently in protocol, SAP, chapter 3 and abstract.
    Use Grep over the project's `*.md`, `ledgers/` and `reviews/`. The results ledger is the source of truth for numbers; `03_protocol/protocol.md`, `03_protocol/sap.md` and `decisions.md` are the source for design wording.
-4. Write `reviews/consistency.md`:
+4. When the caller names a thesis or manuscript review round, run `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" digest . <deliverable>`, and in step 5 end `reviews/consistency.md` with that `drafts-digest:` line and a `scores` block `{"deliverable": "<deliverable>", "consistency": n}` (2 = no E-CONS finding, 1 = warns only, 0 = any block; `${CLAUDE_PLUGIN_ROOT}/references/writing/rubric.md`). Fence it as ```` ```scores ````.
+5. Write `reviews/consistency.md`:
 
 ```
 STATUS: PASS | FINDINGS | BLOCKED
@@ -29,11 +30,11 @@ CONFLICTS places where two sources disagree and you cannot tell which is right; 
 ```
 
 Codes: `E-CONS` for script findings (keep its block/warn level), `X-NAME` for naming drift, `X-ROUND` for rounding drift, `X-OBJ` for wording drift. In `fix`, say which source to follow and the exact replacement text. Keep prose to about 200 words outside the table.
-5. When the caller names a thesis or manuscript review round, first run `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" digest . <deliverable>`, and end `reviews/consistency.md` with that `drafts-digest:` line and a `scores` block `{"deliverable": "<deliverable>", "consistency": n}` (2 = no E-CONS finding, 1 = warns only, 0 = any block; `${CLAUDE_PLUGIN_ROOT}/references/writing/rubric.md`). Fence it as ```` ```scores ````.
 
 ## Rules
 
 - Never invent a number. If you cannot find the authoritative value, put it under CONFLICTS.
 - Never print patient-level data.
 - STATUS is PASS only when the script exited 0 and your own checks found nothing.
+- Write the tail flush left, exactly as shown.
 - Finish by telling the caller the STATUS and the count of block-level findings.

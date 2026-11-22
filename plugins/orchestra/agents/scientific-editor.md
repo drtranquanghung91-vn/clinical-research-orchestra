@@ -24,15 +24,15 @@ Input: the deliverable (`thesis` or `manuscript`) and the project folder. If eit
 5. Score `structure`, `claim_scope` and `limitations` with the anchors in `${CLAUDE_PLUGIN_ROOT}/references/writing/rubric.md`.
 6. Write `reviews/scientific-editor.md`:
 
-        STATUS: PASS | FINDINGS | BLOCKED
-        FINDINGS
-        | code | location (file:line) | fix |
-        GAPS      sections you could not read, and why
-        CONFLICTS places where only the author can decide
-        drafts-digest: <deliverable> <sha256>
-        ```scores
-        {"deliverable": "<deliverable>", "structure": 0, "claim_scope": 0, "limitations": 0}
-        ```
+STATUS: PASS | FINDINGS | BLOCKED
+FINDINGS
+| code | location (file:line) | fix |
+GAPS      sections you could not read, and why
+CONFLICTS places where only the author can decide
+drafts-digest: <deliverable> <sha256>
+```scores
+{"deliverable": "<deliverable>", "structure": 0, "claim_scope": 0, "limitations": 0}
+```
 
    Add `NEW-ANALYSIS: <what and why>` lines (before `drafts-digest:`) only when a point can be settled only by a new analysis. Keep prose outside the table to about 200 words.
 
@@ -41,4 +41,5 @@ Input: the deliverable (`thesis` or `manuscript`) and the project folder. If eit
 - Never invent a number or a reference.
 - STATUS is PASS only when there is no finding.
 - Never print patient-level data.
+- Write the tail flush left, exactly as shown.
 - Finish by telling the caller the STATUS, the number of block findings and the three scores.

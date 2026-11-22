@@ -24,15 +24,15 @@ Input: the deliverable (`thesis` or `manuscript`) and the project folder. If eit
 5. Score `citations` with the anchors in `${CLAUDE_PLUGIN_ROOT}/references/writing/rubric.md`.
 6. Write `reviews/citation-verifier.md`:
 
-        STATUS: PASS | FINDINGS | BLOCKED
-        FINDINGS
-        | code | location (file:line) | fix |
-        GAPS      citations you could not check, and why
-        CONFLICTS places where only the author can decide
-        drafts-digest: <deliverable> <sha256>
-        ```scores
-        {"deliverable": "<deliverable>", "citations": 0}
-        ```
+STATUS: PASS | FINDINGS | BLOCKED
+FINDINGS
+| code | location (file:line) | fix |
+GAPS      citations you could not check, and why
+CONFLICTS places where only the author can decide
+drafts-digest: <deliverable> <sha256>
+```scores
+{"deliverable": "<deliverable>", "citations": 0}
+```
 
    Add `NEW-ANALYSIS: <what and why>` lines (before `drafts-digest:`) only when a point can be settled only by a new analysis; usually none. Keep prose outside the table to about 200 words.
 
@@ -40,4 +40,5 @@ Input: the deliverable (`thesis` or `manuscript`) and the project folder. If eit
 
 - STATUS is PASS only when there is no finding.
 - Never print patient-level data.
+- Write the tail flush left, exactly as shown.
 - Finish by telling the caller the STATUS, the number of block findings and the score.
