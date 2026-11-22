@@ -1,6 +1,6 @@
 # Audit: thesis, manuscript
 
-Date: 2026-11-22T19:50:44 · mode: offline (stored ledger statuses) · blocks: 0 · warns: 32
+Date: 2026-11-22T20:44:03 · mode: offline (stored ledger statuses) · blocks: 0 · warns: 32
 
 | Check | Code | Block | Warn |
 |---|---|---|---|

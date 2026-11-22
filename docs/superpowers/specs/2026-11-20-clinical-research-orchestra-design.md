@@ -304,7 +304,7 @@ Optional dependencies (`python-docx`, `python-pptx`, `PyMuPDF`, `playwright`; in
 | `E-STAT` | statistics | test not in SAP; causal language from observational design |
 | `E-LIT` | literature review structure | review written paper by paper (review_lint.py) |
 | `E-PHI` | patient identifiers | any identifier in a deliverable (`audit.py`, P4) |
-| `E-FMT` | format | required section missing, caption numbering gap or duplicate, missing or non-PNG image, unfilled `[[TÁC GIẢ: …]]` / `[[AUTHOR: …]]` (P4) |
+| `E-FMT` | format | required section missing, caption numbering gap or duplicate, missing or non-PNG image, unfilled `[[TÁC GIẢ: …]]` / `[[AUTHOR: …]]`, also wrapped over lines (P4) |
 | `E-REV` | reviews | a reviewer report missing, or written about other drafts than the current ones (P4) |
 | `E-PRINT` | print | image below 150 dpi at print size; fonts not embedded; no bleed when requested |
 | `P01`–`P30` | AI-prose patterns (`lint_prose.py`; catalog `references/writing/prose-patterns.md`) | blocking only above threshold |

@@ -357,30 +357,45 @@ STROBE 13a–13c (no screening counts, see P3), 14b and 14c in the manuscript; E
 
 - Four text files came out of the run with CRLF line endings (`ledgers/outline.json`,
   `06_writing/manuscript/04-results.md` and its `.rendered.md`, the manuscript round-3 checklist). They were
-  converted to LF in the run folder. Because `04-results.md` is hashed by G4, the author then ran, outside the
-  agent, `audit.py .` (0 block, 32 warn), `gate.py open . G4 --by "Example author"` and both `--final`
-  exports; both `.docx` were byte-identical to the earlier exports. `gates/state.json` and
-  `ledgers/results-ledger.json` stay CRLF as committed in P2 (the G3 hashes are over those bytes).
+  converted to LF in the run folder. Because `04-results.md` is hashed by G4, the controller, acting as the
+  scripted Example author outside the agent, then ran `audit.py .` (0 block, 32 warn),
+  `gate.py open . G4 --by "Example author"` and both `--final` exports; both `.docx` were byte-identical to
+  the earlier exports. `gates/state.json` and `ledgers/results-ledger.json` stay CRLF as committed in P2
+  (the G3 hashes are over the ledger bytes; `state.json` was last written by the older `gate.py`).
 - Rounds 1 and 2 of both revise loops were not copied back.
+- After the review fix wave (one guideline checklist per deliverable, see below), again as the scripted
+  Example author: the live checklists were renamed `reviews/guideline-checklist-thesis.json` and
+  `reviews/guideline-checklist-manuscript.json` (content unchanged). The round-3 snapshot checklists, which
+  the stage 3 agent had overwritten, were restored byte for byte from the checker's own writes in the run
+  transcripts (the same extraction reproduces the untouched round-2 snapshots exactly, and the restored files
+  give the absent counts recorded in `reviews/worklog.json`: 2 for the thesis, 1 for the manuscript).
+  `worklog.py decisions .` was rerun with the fixed script, and the author's decisions already recorded in
+  `decisions.md` (no new analysis for STROBE 13a/13b, 14b and 14c) were written into
+  `out/author-decisions.md`; the 12e request has no separate author decision and stays open. `audit.py .`
+  then gave 0 block and 32 warn, G4 stayed open (the checklists are not among the audited hashes), and both
+  `--final` exports were byte-identical to the committed `.docx`.
 
 ### P4 known issues
 
-- **Multi-line author placeholders are not found.** `assemble.py` (and so `audit.py`) looks for
-  `[[TÁC GIẢ: …]]` line by line. The three placeholders in Chương 2 were wrapped over two or three lines and
-  the stage 1 audit did not report them. The author filled them; the gap in the script remains.
-- **One checklist file for two deliverables.** `reviews/guideline-checklist.json` holds one deliverable. The
-  manuscript reviews overwrote the thesis checklist refreshed after the Tóm tắt was added, so the first
-  `audit.py .` fell back to the thesis round-3 snapshot and blocked on 1a/1b. In stage 3 the agent reran the
-  guideline checker for the thesis and copied the current checklists into the round-3 snapshots
-  (`reviews/rounds/<d>/r3/reviews/`). That edits the round record; the checklists themselves are the
-  checker's own output on the current drafts.
-- **CRLF writes on Windows.** `gate.py` rewrites `gates/state.json` with CRLF, and some files written during
-  the run came out CRLF (see the hand edits).
+- **Fixed after the run: multi-line author placeholders.** `assemble.py` (and so `audit.py`) looked for
+  `[[TÁC GIẢ: …]]` line by line, so the three placeholders in Chương 2, wrapped over two or three lines,
+  were not reported by the stage 1 audit (the author filled them). The check now reads the whole section.
+- **Fixed after the run: one checklist file for two deliverables.** The single
+  `reviews/guideline-checklist.json` held one deliverable: the manuscript reviews overwrote the thesis
+  checklist refreshed after the Tóm tắt was added, so the first `audit.py .` fell back to the thesis
+  round-3 snapshot and blocked on 1a/1b. In stage 3 the agent reran the checker for the thesis and copied
+  the current checklists into the round-3 snapshots, editing the round record. The checker now writes
+  `reviews/guideline-checklist-<deliverable>.json`, and the snapshots were restored (see the hand edits).
+- **Fixed after the run: CRLF writes on Windows.** `gate.py` wrote `gates/state.json` with CRLF; it now
+  writes LF. Some files written by the agent during the run came out CRLF (see the hand edits).
 - **Humanizer.** In both loops the humanizer step made one mechanical change (bold labels removed in Chương 2
   and on the title page) instead of paragraph rewrites checked by `invariants.py`. The Tóm tắt was written
   after that step and was not humanized.
-- **"NEW-ANALYSIS: none".** A thesis reviewer wrote that line, so `out/author-decisions.md` lists "none" as a
-  request.
+- **Fixed after the run: "NEW-ANALYSIS: none — …".** A thesis reviewer wrote
+  `NEW-ANALYSIS: none — all findings are wording/structure fixes, not missing analyses.`; the parser took the
+  comment after "none" for a request and listed it in `out/author-decisions.md`. "none" followed by a comment
+  is now no request, the reviewer agents are told to write `NEW-ANALYSIS: none` alone, and the regenerated
+  `out/author-decisions.md` no longer lists it.
 - **Stale Chapter 3 .docx.** `out/ch3-results.docx` (P2) predates the author's two sentence changes in
   Chương 3; `out/thesis.docx` has them.
 - **Row added to STATUS.** In stage 2 the agent added a row "8 Manuscript"; on the author's instruction it was

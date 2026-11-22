@@ -22,12 +22,13 @@
   `out/author-decisions.md`), shared `crolib/drafts.py` and `crolib/reviews.py`. `build_docx.py` takes
   several inputs, lists, PNG images, a table of contents, a footer and an institution template, and
   writes a deterministic zip. `gate.py` opens G4 only from a clean, current audit, with one lock per
-  deliverable.
+  deliverable, and writes `gates/state.json` with LF on every platform (as `save_references` does for
+  `references.json`). A reviewer's `NEW-ANALYSIS: none` followed by a comment is no request.
 - Hook: `gate_hook.py` (PreToolUse on Bash, PowerShell, Agent, Task) denies `assemble.py … --final` or a
   `build_docx.py` write of `out/thesis.docx`/`out/manuscript.docx` while G4 is closed for that
   deliverable, and an Agent prompt carrying `orchestra-role:` while G3 is not open.
 - New finding codes: `E-FMT` (required sections, caption numbering, images, unfilled `[[TÁC GIẢ: …]]` /
-  `[[AUTHOR: …]]`), `E-REV` (reviewer report missing or not about the current drafts); `E-RG` and
+  `[[AUTHOR: …]]`, also when wrapped over lines), `E-REV` (reviewer report missing or not about the current drafts); `E-RG` and
   `E-PHI` get their first scripts.
 - Plan decisions: D1 model skills `thesis-writing`/`manuscript-writing`, command skills `thesis`,
   `manuscript`, `audit`; D2 G4 keeps one lock per deliverable, so opening it for the manuscript keeps the

@@ -2,39 +2,216 @@
   "guideline": "STROBE",
   "deliverable": "thesis",
   "items": {
-    "1a": {"status": "present", "file": "06_writing/thesis/00-tom-tat.md", "line": 14, "quote": "Nghiên cứu đoàn hệ hồi cứu, đơn trung tâm, trên {{R-A0-001.n}} người bệnh ĐTĐ type 2 xuất viện tại"},
-    "1b": {"status": "present", "file": "06_writing/thesis/00-tom-tat.md", "line": 23, "quote": "Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm chung của mẫu là {{R-A0-061.full}}. Mô hình hồi quy"},
-    "2": {"status": "present", "file": "06_writing/thesis/00-dat-van-de.md", "line": 9, "quote": "xem là một dấu hiệu của bệnh nền chưa ổn định và có thể liên quan với nguy cơ tái nhập viện cao hơn"},
-    "3": {"status": "present", "file": "06_writing/thesis/00-dat-van-de.md", "line": 51, "quote": "**Mục tiêu tổng quát:** Xác định mối liên quan giữa HbA1c lúc nhập viện và tái nhập viện trong 1 năm"},
-    "4": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 49, "quote": "Nghiên cứu đoàn hệ hồi cứu (retrospective cohort study), đơn trung tâm, không can thiệp, không phân"},
-    "5": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 40, "quote": "- Giai đoạn chọn mẫu (nhập viện chỉ số): người bệnh xuất viện từ 01/01/2021 đến 31/12/2022."},
-    "6a": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 13, "quote": "Người bệnh được đưa vào nghiên cứu nếu thỏa cả 4 tiêu chuẩn sau:"},
-    "6b": {"status": "na", "file": "06_writing/thesis/ch2-methods.md", "line": 66, "quote": "Phương pháp chọn mẫu: lấy mẫu toàn bộ (census) — toàn bộ người bệnh thỏa tiêu chuẩn lựa chọn", "reason": "Đoàn hệ lấy mẫu toàn bộ (census), không ghép cặp; không có tiêu chí ghép cặp hay quy tắc chọn mẫu đặc biệt nào để báo cáo cho mục 6b."},
-    "7": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 74, "quote": "Kết cục chính là tái nhập viện do mọi nguyên nhân trong vòng 365"},
-    "8": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 101, "quote": "Dữ liệu được trích xuất từ hồ sơ bệnh án điện tử (EMR) và hệ thống thông tin bệnh viện (HIS) của Bệnh"},
-    "9": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 112, "quote": "Hồi quy đa biến hiệu chỉnh các yếu tố nhiễu định trước (mục 2.3.3); không chọn biến theo kết quả kiểm định đơn biến"},
-    "10": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 55, "quote": "Cỡ mẫu được tính trước khi trích xuất dữ liệu cho kết cục chính là tái nhập viện mọi nguyên nhân"},
-    "11": {"status": "present", "file": "06_writing/thesis/ch1-literature-review.md", "line": 58, "quote": "mục 6) là quy ước vận hành do tác giả lựa chọn và đã được xác nhận, không"},
-    "12a": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 128, "quote": "nhị giá \"tái nhập viện mọi nguyên nhân trong 1 năm\", biến độc lập chính là nhóm HbA1c (nhóm < 7% tham chiếu)"},
-    "12b": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 158, "quote": "dùng cùng biến hiệu chỉnh như Mục tiêu 2 trong từng nhóm tuổi, cộng kiểm định tương tác (nhóm HbA1c"},
-    "12c": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 141, "quote": "chính, phân tích ca đầy đủ (complete-case) được áp dụng cho các mô hình hiệu chỉnh (không dùng"},
-    "12d": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 34, "quote": "Không áp dụng tiêu chuẩn dừng/rút lui vì đây là nghiên cứu hồi cứu trên dữ liệu đã có, không có theo"},
-    "12e": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 162, "quote": "**Phân tích độ nhạy:** ngoài việc bỏ Fine-Gray (xem trên) và phân tích ca đầy đủ cho biến nhiễu thiếu"},
-    "13a": {"status": "partial", "file": "06_writing/thesis/ch3-results.md", "line": 11, "quote": "Biểu đồ 3.1. Sơ đồ rút gọn số lượng đối tượng nghiên cứu. *Đây không phải sơ đồ luồng STROBE đầy đủ:*", "reason": "Chỉ có 2 mốc số liệu (đủ tiêu chuẩn chọn mẫu và số đưa vào mô hình hiệu chỉnh); không có số liệu sàng lọc/loại trừ ban đầu theo từng tiêu chuẩn vì dữ liệu mô phỏng không ghi nhận các mốc đó."},
-    "13b": {"status": "partial", "file": "06_writing/thesis/ch3-results.md", "line": 13, "quote": "người (thời gian mắc đái tháo đường không ghi nhận) được xử lý theo nguyên tắc phân tích ca đầy đủ", "reason": "Chỉ giải thích lý do loại khỏi mô hình hiệu chỉnh (thiếu biến nhiễu); không có lý do loại ở giai đoạn sàng lọc/đủ tiêu chuẩn ban đầu vì số liệu đó không được ghi nhận trong dữ liệu mô phỏng."},
-    "13c": {"status": "partial", "file": "06_writing/thesis/ch3-results.md", "line": 9, "quote": "![Sơ đồ rút gọn số lượng đối tượng nghiên cứu](../../07_present/figures/F4.png)", "reason": "Có hình nhưng tác giả tự ghi rõ đây là sơ đồ rút gọn, không phải lưu đồ STROBE đầy đủ (dòng 11 cùng file)."},
-    "14a": {"status": "present", "file": "06_writing/thesis/ch3-results.md", "line": 15, "quote": "Bảng 3.1. Đặc điểm chung của đối tượng nghiên cứu theo nhóm HbA1c lúc nhập viện (n = {{R-A0-001.n}})"},
-    "14b": {"status": "present", "file": "06_writing/thesis/ch3-results.md", "line": 13, "quote": "người (thời gian mắc đái tháo đường không ghi nhận) được xử lý theo nguyên tắc phân tích ca đầy đủ"},
-    "14c": {"status": "present", "file": "06_writing/thesis/ch3-results.md", "line": 7, "quote": "theo dõi 1 năm sau xuất viện."},
-    "15": {"status": "present", "file": "06_writing/thesis/ch3-results.md", "line": 32, "quote": "Bảng 3.2. Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm, chung và theo nhóm HbA1c"},
-    "16a": {"status": "present", "file": "06_writing/thesis/ch3-results.md", "line": 52, "quote": "Bảng 3.3. Tái nhập viện mọi nguyên nhân trong 1 năm theo nhóm HbA1c: tỷ số chênh thô và hiệu chỉnh"},
-    "16b": {"status": "present", "file": "06_writing/thesis/90-phu-luc.md", "line": 61, "quote": "< 7% / 7–9% / > 9% (nhóm < 7% tham chiếu)"},
-    "16c": {"status": "present", "file": "06_writing/thesis/ch4-discussion.md", "line": 31, "quote": "Theo số đo tuyệt đối đã nêu ở mục 4.1, tỷ lệ tái nhập viện quan sát được là"},
-    "17": {"status": "present", "file": "06_writing/thesis/ch3-results.md", "line": 68, "quote": "### 3.3.1 HbA1c liên tục thay cho 3 nhóm"},
-    "18": {"status": "present", "file": "06_writing/thesis/ch4-discussion.md", "line": 11, "quote": "Trong mẫu nghiên cứu gồm {{R-A0-001.n}} người bệnh đái tháo đường (ĐTĐ) type 2, phân bố tuổi, giới và"},
-    "19": {"status": "present", "file": "06_writing/thesis/ch4-discussion.md", "line": 113, "quote": "bị loại khỏi các mô hình hiệu chỉnh theo quy tắc phân tích ca đầy đủ đã định trước; tỷ lệ này thấp"},
-    "20": {"status": "present", "file": "06_writing/thesis/ch4-discussion.md", "line": 154, "quote": "Trong phạm vi quần thể và cỡ mẫu đã khảo sát, chưa có đủ bằng chứng để khẳng định HbA1c lúc nhập viện"},
-    "21": {"status": "present", "file": "06_writing/thesis/ch4-discussion.md", "line": 148, "quote": "**Khả năng ngoại suy:** kết quả chỉ áp dụng cho người bệnh ĐTĐ type 2 xuất viện tại một khoa của một"},
-    "22": {"status": "present", "file": "06_writing/thesis/ch2-methods.md", "line": 169, "quote": "Nghiên cứu không nhận tài trợ từ bất kỳ tổ chức nào; đây là dự án minh hoạ với dữ liệu mô phỏng."}
+    "1a": {
+      "status": "absent",
+      "file": "",
+      "line": 0,
+      "quote": "",
+      "reason": "No title page or abstract draft (e.g. 00-tom-tat.md) exists in 06_writing/thesis/; left as an open item for the author per decisions.md 2026-11-22 entry (out of this round's requested scope)."
+    },
+    "1b": {
+      "status": "absent",
+      "file": "",
+      "line": 0,
+      "quote": "",
+      "reason": "Same missing abstract draft as 1a; left as an open item for the author per decisions.md."
+    },
+    "2": {
+      "status": "present",
+      "file": "06_writing/thesis/00-dat-van-de.md",
+      "line": 5,
+      "quote": "Ở người bệnh đái tháo đường (ĐTĐ) type 2, tái nhập viện sau xuất viện là một chỉ số thường được dùng"
+    },
+    "3": {
+      "status": "present",
+      "file": "06_writing/thesis/00-dat-van-de.md",
+      "line": 51,
+      "quote": "**Mục tiêu tổng quát:** Xác định mối liên quan giữa HbA1c lúc nhập viện và tái nhập viện trong 1 năm"
+    },
+    "4": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 49,
+      "quote": "Nghiên cứu đoàn hệ hồi cứu (retrospective cohort study), đơn trung tâm, không can thiệp, không phân"
+    },
+    "5": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 40,
+      "quote": "**Giai đoạn chọn mẫu (nhập viện chỉ số):** người bệnh xuất viện từ 01/01/2021 đến 31/12/2022."
+    },
+    "6a": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 13,
+      "quote": "Người bệnh được đưa vào nghiên cứu nếu thỏa cả 4 tiêu chuẩn sau:"
+    },
+    "6b": {
+      "status": "na",
+      "file": "",
+      "line": 0,
+      "quote": "",
+      "reason": "Unmatched cohort with census sampling (ch2-methods.md line 66: lấy mẫu toàn bộ); no matching design was used, so matching criteria do not apply."
+    },
+    "7": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 74,
+      "quote": "tái nhập viện do mọi nguyên nhân trong vòng 365"
+    },
+    "8": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 101,
+      "quote": "Dữ liệu được trích xuất từ hồ sơ bệnh án điện tử (EMR) và hệ thống thông tin bệnh viện (HIS) của Bệnh"
+    },
+    "9": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 112,
+      "quote": "Hồi quy đa biến hiệu chỉnh các yếu tố nhiễu định trước (mục 2.3.3); không chọn biến theo kết quả kiểm định đơn biến"
+    },
+    "10": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 55,
+      "quote": "Cỡ mẫu được tính trước khi trích xuất dữ liệu cho kết cục chính là tái nhập viện mọi nguyên nhân"
+    },
+    "11": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 71,
+      "quote": "**Phơi nhiễm chính:** HbA1c đo trong 24–48 giờ đầu nhập viện, phân tích chính theo 3 nhóm < 7% /"
+    },
+    "12a": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 123,
+      "quote": "Dữ liệu được quản lý và phân tích bằng Python (pandas, statsmodels)"
+    },
+    "12b": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 154,
+      "quote": "Sau khi xem xét Chương 3 (kết quả đã khoá), tác giả yêu cầu bổ sung một phân tích hậu kiểm"
+    },
+    "12c": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 141,
+      "quote": "chính, phân tích ca đầy đủ (complete-case) được áp dụng cho các mô hình hiệu chỉnh (không dùng"
+    },
+    "12d": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 34,
+      "quote": "Không áp dụng tiêu chuẩn dừng/rút lui vì đây là nghiên cứu hồi cứu trên dữ liệu đã có, không có theo"
+    },
+    "12e": {
+      "status": "present",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 162,
+      "quote": "**Phân tích độ nhạy:** ngoài việc bỏ Fine-Gray (xem trên) và phân tích ca đầy đủ cho biến nhiễu thiếu"
+    },
+    "13a": {
+      "status": "partial",
+      "file": "06_writing/thesis/ch3-results.md",
+      "line": 11,
+      "quote": "toàn bộ đoàn hệ hồi cứu đủ tiêu chuẩn chọn mẫu ({{R-A0-001.n}}) và số đưa vào mô hình hồi quy",
+      "reason": "Flow numbers only cover eligible-cohort-to-analysed-model; no counts are given for the initial pool before the four eligibility/exclusion criteria in ch2-methods.md section 2.1 were applied. Deliberately left unfixed this round (decisions.md 2026-11-22: author-accepted limitation of this simulated dataset, no pre-exclusion screening counts ever recorded)."
+    },
+    "13b": {
+      "status": "partial",
+      "file": "06_writing/thesis/ch3-results.md",
+      "line": 11,
+      "quote": "với một ô loại trừ do thiếu dữ liệu biến hiệu chỉnh (tuổi, giới, thời gian mắc ĐTĐ, bệnh đồng mắc).",
+      "reason": "Only one reason for exclusion is quantified (missing confounder data for the adjusted model); reasons/counts for each of the four eligibility and exclusion criteria in ch2-methods.md section 2.1 are not reported. Deliberately left unfixed this round, same root cause as 13a (decisions.md 2026-11-22)."
+    },
+    "13c": {
+      "status": "partial",
+      "file": "06_writing/thesis/ch3-results.md",
+      "line": 11,
+      "quote": "*Đây không phải sơ đồ luồng STROBE đầy đủ:* dữ liệu của đề tài không ghi nhận số liệu sàng lọc/đủ tiêu chuẩn ban đầu",
+      "reason": "A simplified figure (Biểu đồ 3.1) exists but is explicitly labelled by the authors as not a full STROBE flow diagram, missing initial screening numbers. Deliberately left unfixed this round, same root cause as 13a/13b (decisions.md 2026-11-22: author chose the minimal 2-box diagram option)."
+    },
+    "14a": {
+      "status": "present",
+      "file": "06_writing/thesis/ch3-results.md",
+      "line": 15,
+      "quote": "Bảng 3.1. Đặc điểm chung của đối tượng nghiên cứu theo nhóm HbA1c lúc nhập viện (n = {{R-A0-001.n}})"
+    },
+    "14b": {
+      "status": "present",
+      "file": "06_writing/thesis/ch3-results.md",
+      "line": 13,
+      "quote": "người (thời gian mắc đái tháo đường không ghi nhận) được xử lý theo nguyên tắc phân tích ca đầy đủ"
+    },
+    "14c": {
+      "status": "present",
+      "file": "06_writing/thesis/ch3-results.md",
+      "line": 7,
+      "quote": "theo dõi 1 năm sau xuất viện."
+    },
+    "15": {
+      "status": "present",
+      "file": "06_writing/thesis/ch3-results.md",
+      "line": 32,
+      "quote": "Bảng 3.2. Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm, chung và theo nhóm HbA1c"
+    },
+    "16a": {
+      "status": "present",
+      "file": "06_writing/thesis/ch3-results.md",
+      "line": 52,
+      "quote": "Bảng 3.3. Tái nhập viện mọi nguyên nhân trong 1 năm theo nhóm HbA1c: tỷ số chênh thô và hiệu chỉnh"
+    },
+    "16b": {
+      "status": "present",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "line": 57,
+      "quote": "Phân nhóm HbA1c lúc nhập viện dùng trong phân tích chính của đề tài (< 7% / 7–9% / > 9%, xem"
+    },
+    "16c": {
+      "status": "present",
+      "file": "06_writing/thesis/ch4-discussion.md",
+      "line": 31,
+      "quote": "rằng không có liên quan. Theo số đo tuyệt đối đã nêu ở mục 4.1, tỷ lệ tái nhập viện quan sát được là"
+    },
+    "17": {
+      "status": "present",
+      "file": "06_writing/thesis/ch3-results.md",
+      "line": 66,
+      "quote": "## 3.3 Kết quả các phân tích phụ"
+    },
+    "18": {
+      "status": "present",
+      "file": "06_writing/thesis/ch4-discussion.md",
+      "line": 9,
+      "quote": "## 4.1. Đặc điểm chung và tỷ lệ tái nhập viện (Mục tiêu 1)"
+    },
+    "19": {
+      "status": "present",
+      "file": "06_writing/thesis/ch4-discussion.md",
+      "line": 111,
+      "quote": "## 4.8. Hạn chế của nghiên cứu"
+    },
+    "20": {
+      "status": "present",
+      "file": "06_writing/thesis/ch4-discussion.md",
+      "line": 154,
+      "quote": "Trong phạm vi quần thể và cỡ mẫu đã khảo sát, chưa có đủ bằng chứng để khẳng định HbA1c lúc nhập viện"
+    },
+    "21": {
+      "status": "present",
+      "file": "06_writing/thesis/ch4-discussion.md",
+      "line": 148,
+      "quote": "**Khả năng ngoại suy:** kết quả chỉ áp dụng cho người bệnh ĐTĐ type 2 xuất viện tại một khoa của một"
+    },
+    "22": {
+      "status": "partial",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 169,
+      "quote": "**Tài trợ:** [[TÁC GIẢ: ghi rõ nguồn tài trợ cho nghiên cứu này, nếu có; nếu không có tài trợ bên",
+      "reason": "A labelled funding subsection now exists, but the actual funding source and funder's role are still an unfilled author placeholder ([[TÁC GIẢ: ...]]), not a reported statement; STROBE item 22 is not yet satisfied until the author fills it in."
+    }
   }
 }
