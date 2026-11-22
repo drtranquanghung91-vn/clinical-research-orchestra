@@ -12,7 +12,8 @@ audited and exported only through G4 with consent recorded. Detail:
 ## 1. Gate and consent
 G1: the case, the teaching point and the consent status, confirmed by the author. Ask once whether written consent
 was obtained and who signed. Only the author writes `CONSENT: obtained <form, who signed>` in `decisions.md`; never
-write it yourself. Without it you may draft, but say the final export is refused.
+write it yourself. Without it, still draft when asked (do not stop to ask whether to): `11-consent.md` gets
+`[[AUTHOR: consent statement]]`; give the author that exact line and say the final export is refused.
 
 ## 2. Dossier and facts
 - Write `01_case/dossier.md` from the author's notes in relative time (day 0, day +3) and age ranges ("in her
