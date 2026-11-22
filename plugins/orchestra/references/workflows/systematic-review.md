@@ -14,7 +14,8 @@
 7. Each reviewer: `python "${CLAUDE_PLUGIN_ROOT}/scripts/screening.py" . sheet --stage ta --reviewer "<name>"`, fills it,
    `python "${CLAUDE_PLUGIN_ROOT}/scripts/screening.py" . decide --stage ta --reviewer "<name>" --file <sheet>`.
    Conflicts: `python "${CLAUDE_PLUGIN_ROOT}/scripts/screening.py" . conflicts --stage ta`, resolved with
-   `--reviewer consensus`. Same for `--stage ft` (exclusion reasons from the protocol). Agreement:
+   `--reviewer consensus`; a consensus row counts only after both human reviewers have decided that record, and two
+   humans who agree on exclude with different reasons, or on include with different study ids, also need one. Same for `--stage ft` (exclusion reasons from the protocol). Agreement:
    `python "${CLAUDE_PLUGIN_ROOT}/scripts/screening.py" . kappa --stage ta`.
 8. `python "${CLAUDE_PLUGIN_ROOT}/scripts/screening.py" . counts` → PRISMA counts in the ledger.
 9. Extraction by two reviewers (`04_data/sr/extraction-<slug>.csv`), consensus `04_data/sr/extraction.csv`; risk of

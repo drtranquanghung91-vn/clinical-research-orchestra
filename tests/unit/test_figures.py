@@ -495,6 +495,15 @@ class TestP5Figures(unittest.TestCase):
         self.assertEqual(r.returncode, 2)
         self.assertIn("assessed", r.stderr)
 
+    def test_prisma_refuses_typed_numbers(self):
+        for typed in ("R-A0-001.value + 40", "40", "R-A0-001 + 5", "R-A0-001.value * 2"):
+            spec = {"figures": [dict(P5_SPEC["figures"][1], identified=typed)]}
+            r = self.run_spec(spec)
+            self.assertEqual(r.returncode, 2, typed)
+            self.assertIn("typed numbers are not allowed", r.stderr)
+        spec = {"figures": [dict(P5_SPEC["figures"][1], identified="R-A0-001 + R-A0-002")]}
+        self.assertEqual(self.run_spec(spec).returncode, 0)
+
     def test_rob_traffic_light(self):
         self.assertEqual(self.run_spec(P5_SPEC, "--only", "F7").returncode, 0)
         d = self.data("F7")

@@ -33,7 +33,7 @@ Before each part read its role brief: `${CLAUDE_PLUGIN_ROOT}/references/writing/
 `${CLAUDE_PLUGIN_ROOT}/references/writing/roles/case-discussion.md` (a subagent gets the whole brief first; its first
 line is how the hook checks G3). Files `06_writing/case-report/NN-*.md`; BMJ mode (`target.journal_style: bmj`)
 uses BMJ headings and 3–5 learning points. Values only as `{{R-A0-…}}`; citations only `[@id]`; author-only facts as
-`[[AUTHOR: …]]`.
+`[[AUTHOR: …]]`; ask the author to fill each `[[AUTHOR: …]]`/`[[TÁC GIẢ: …]]`, never fill them yourself.
 
 ## 5. Review, assemble, audit, export
 - Reviewer agents in parallel (deliverable `case-report`), then
@@ -41,6 +41,7 @@ uses BMJ headings and 3–5 learning points. Values only as `{{R-A0-…}}`; cita
   and STOP as in `thesis-writing`).
 - `python "${CLAUDE_PLUGIN_ROOT}/scripts/assemble.py" . case-report`, then
   `python "${CLAUDE_PLUGIN_ROOT}/scripts/audit.py" . case-report`; report each block, fix mechanical ones.
+  E-REF is the author's call: verify, replace or record manually; never delete or reword the citing sentence, nor edit a reference status or ledger to pass.
 - With 0 blocks and consent recorded, only the author opens G4 (`gate.py open . G4 --by "<name>"`); then
   `python "${CLAUDE_PLUGIN_ROOT}/scripts/assemble.py" . case-report --final` writes `out/case-report.docx`.
 - Draft `out/ai-use-disclosure.md` from `${CLAUDE_PLUGIN_ROOT}/references/writing/ai-disclosure.md` (never marked

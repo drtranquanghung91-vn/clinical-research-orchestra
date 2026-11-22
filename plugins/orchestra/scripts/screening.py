@@ -67,7 +67,10 @@ STAGES = ("ta", "ft")
 DECISIONS = ("include", "exclude", "maybe")
 NOT_RETRIEVED = "not retrieved"
 CONSENSUS = "consensus"
-AI_NAME = re.compile(r"(?i)\b(?:ai|claude|gpt|chatgpt|assistant|model|llm|bot)\b")
+AI_NAME = re.compile(r"(?i)\b(?:ai|assistant|model|llm|bot|openai|gemini|copilot|llama|mistral|deepseek|grok|bard|perplexity)\b"
+                     r"|(?<![a-z])(?:gpt|claude|chatgpt)[a-z0-9_]*")
+AI_HINT = ("a human whose name collides with an AI word (for example the Vietnamese given name Ai) "
+           "can be written surname-first or as initials")
 REASONS_HEAD = re.compile(r"(?im)^#{2,3}\s*(?:full-text exclusion reasons|lý do loại trừ (?:ở bước )?toàn văn)\s*$")
 REGISTER_NAME = re.compile(r"(?i)regist|clinicaltrials|ictrp")
 RIS_TAG = re.compile(r"^([A-Z][A-Z0-9])  -\s?(.*)$")
@@ -181,6 +184,11 @@ def parse_nbib(text: str) -> list[dict]:
             cur[last][-1] += " " + line.strip()
             continue
         m = NB_TAG.match(line)
+        if m and m.group(1) == "ER":
+            if cur:
+                recs.append(cur)
+            cur, last = {}, None
+            continue
         if m:
             last = m.group(1)
             cur.setdefault(last, []).append(m.group(2).strip())
@@ -230,7 +238,7 @@ def hits_findings(project: Path, rows: list[dict]) -> list[tuple[str, str, str]]
 def import_file(project: Path, path: Path, database: str) -> tuple[int, list]:
     suffix = path.suffix.lower()
     text = path.read_text(encoding="utf-8-sig")
-    if suffix == ".ris":
+    if suffix == ".ris" or re.search(r"(?m)^TY  -", text):
         recs = parse_ris(text)
     elif suffix in (".nbib", ".txt"):
         recs = parse_nbib(text)
@@ -274,8 +282,9 @@ def dedupe(project: Path) -> tuple[int, int]:
         if r.get("pmid"):
             keys.append("pmid:" + r["pmid"].strip())
         t = norm(r.get("title", ""))
-        if t and r.get("year"):
-            keys.append(f"t:{t}|{r['year']}|{first_author(r.get('authors', ''))}")
+        fa = first_author(r.get("authors", ""))
+        if t and r.get("year") and fa:
+            keys.append(f"t:{t}|{r['year']}|{fa}")
         orig = next((seen[k] for k in keys if k in seen), None)
         r["duplicate_of"] = orig or ""
         marked += bool(orig)
@@ -337,18 +346,28 @@ def resolve(project: Path) -> dict[str, dict[str, dict]]:
         for rid in reached:
             rows = {rv: lat[(stage, rid, rv)] for rv in humans + [CONSENSUS] if (stage, rid, rv) in lat}
             e = {"rows": rows, "final": None, "why": ""}
-            if CONSENSUS in rows:
+            if len(humans) < 2:
+                e["why"] = f"two human reviewers are needed (review.reviewers lists {len(humans)})"
+            elif CONSENSUS in rows and any(h not in rows for h in humans):
+                e["why"] = "consensus without both human decisions (not decided by " + ", ".join(h for h in humans if h not in rows) + ")"
+            elif CONSENSUS in rows:
                 d = rows[CONSENSUS].get("decision")
                 e["final"], e["why"] = (d, "consensus") if d in ("include", "exclude") else (None, "consensus row says maybe")
-            elif len(humans) < 2:
-                e["why"] = f"two human reviewers are needed (review.reviewers lists {len(humans)})"
             else:
                 missing = [h for h in humans if h not in rows]
                 ds = [rows[h]["decision"] for h in humans if h in rows]
                 if missing:
                     e["why"] = "not decided by " + ", ".join(missing)
                 elif len(set(ds)) == 1 and ds[0] in ("include", "exclude"):
-                    e["final"] = ds[0]
+                    field = "reason" if (stage == "ft" and ds[0] == "exclude") else "study" if (stage == "ft" and ds[0] == "include") else ""
+                    vals = {(rows[h].get(field) or "").strip().casefold(): (rows[h].get(field) or "").strip()
+                            for h in humans} if field else {}
+                    vals.pop("", None)
+                    if len(vals) > 1:
+                        e["why"] = f"conflict: the reviewers gave different {field}s (" + "; ".join(
+                            f"{h}: {(rows[h].get(field) or '').strip() or '-'}" for h in humans) + "); a consensus row must settle it"
+                    else:
+                        e["final"] = ds[0]
                 else:
                     e["why"] = "conflict: " + ", ".join(f"{h} {rows[h]['decision']}" for h in humans)
             out[stage][rid] = e
@@ -362,13 +381,14 @@ def decide(project: Path, stage: str, reviewer: str, rows_in: list[dict]) -> int
                       "(gate.py open . G2 --by NAME --files 03_protocol/sr-protocol.md …): " + "; ".join(why))
     if AI_NAME.search(reviewer):
         raise Refused(f"{reviewer!r} looks like an AI; only the human reviewers named in project.yaml review.reviewers "
-                      "record decisions (AI suggestions go to ai-suggestions.csv)")
+                      "record decisions (AI suggestions go to ai-suggestions.csv); " + AI_HINT)
     allowed = human_reviewers(project)
     if reviewer != CONSENSUS and reviewer not in allowed:
         raise Refused(f"reviewer {reviewer!r} is not in project.yaml review.reviewers ({', '.join(allowed) or 'empty'})")
     recs, reasons = records(project), protocol_reasons(project)
     state = resolve(project) if stage == "ft" else None
     probs = []
+    lat = latest(project) if reviewer == CONSENSUS else {}
     for r in rows_in:
         rid = (r.get("rec_id") or "").strip()
         dec = (r.get("decision") or "").strip().casefold()
@@ -381,6 +401,12 @@ def decide(project: Path, stage: str, reviewer: str, rows_in: list[dict]) -> int
             continue
         if dec not in DECISIONS:
             raise ValueError(f"{rid}: decision {dec!r} must be include, exclude or maybe")
+        if reviewer == CONSENSUS:
+            gone = [h for h in allowed if (stage, rid, h) not in lat]
+            if len(allowed) < 2 or gone:
+                probs.append(f"{rid}: consensus is refused until both human reviewers have decided this record"
+                             + (f" (missing: {', '.join(gone)})" if gone else ""))
+                continue
         if stage == "ft" and state["ta"].get(rid, {}).get("final") != "include":
             probs.append(f"{rid}: did not pass title/abstract screening")
         if stage == "ft" and dec == "exclude":
@@ -511,7 +537,7 @@ def check(project: Path) -> list[tuple[str, str, str]]:
     names = reviewers(project)
     for name in names:
         if AI_NAME.search(name):
-            found.append(("block", "project.yaml:1", f"{name!r} in review.reviewers looks like an AI; AI never counts as a reviewer"))
+            found.append(("block", "project.yaml:1", f"{name!r} in review.reviewers looks like an AI; AI never counts as a reviewer ({AI_HINT})"))
     humans = human_reviewers(project)
     if len(humans) < 2:
         found.append(("block", "project.yaml:1", f"review.reviewers lists {len(humans)} human reviewer(s); two are needed"))

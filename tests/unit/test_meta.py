@@ -325,6 +325,33 @@ class TestMetaCli(unittest.TestCase):
         self.assertEqual(plan[0], "key,measure,model,hksj")
         self.assertIn("A1,RR,RE-REML,no", plan)
 
+    def test_bad_input_numbers_exit_2_with_a_message(self):
+        ex = self.p / "04_data" / "sr" / "extraction.csv"
+        for old, new, msg in (("3.1,1.2,,,rct", "3.1,0,,,rct", "sd must be greater than 0"),
+                              ("S01,pain,6 weeks,drug,50,", "S01,pain,6 weeks,drug,0,", "n of at least 1")):
+            ex.write_text(EXTRACTION.replace(old, new), encoding="utf-8")
+            code, out, err = cli(self.p, "run")
+            self.assertEqual(code, 2, out + err)
+            self.assertIn(msg, out + err)
+        reg = self.p / "03_protocol" / "sr-protocol.md"
+        reg.write_text(REGISTER.replace("| MD | RE-DL", "| SMD | RE-DL"), encoding="utf-8")
+        ex.write_text(EXTRACTION.replace("S01,pain,6 weeks,drug,50,,3.1,1.2", "S01,pain,6 weeks,drug,2,,3.1,1.2")
+                      .replace("S01,pain,6 weeks,placebo,50", "S01,pain,6 weeks,placebo,1"), encoding="utf-8")
+        code, out, err = cli(self.p, "run")
+        self.assertEqual(code, 2, out + err)
+        self.assertIn("SMD needs n1 + n2 greater than 3", out + err)
+
+    def test_generic_inverse_variance_needs_positive_se(self):
+        a = {"id": "A9", "outcome": "o", "timepoint": "t", "measure": "GEN", "experimental": "x", "comparator": "", "factor": ""}
+        rows = [{"outcome": "o", "timepoint": "t", "study_id": "S1", "group": "x", "es": "0.2", "se": "0", "n": ""}]
+        with self.assertRaises(ValueError) as cm:
+            meta.studies_for(rows, a)
+        self.assertIn("se must be greater than 0", str(cm.exception))
+
+    def test_hksj_with_zero_se_gives_no_p(self):
+        r = meta.pool([0.5, 0.5, 0.5], [0.04, 0.04, 0.04], "CE-IV", True)
+        self.assertIsNone(r["p"])
+
     def test_usage_errors(self):
         (self.p / "04_data" / "sr" / "extraction.csv").unlink()
         self.assertEqual(cli(self.p, "run")[0], 2)
@@ -357,6 +384,13 @@ class TestRDiscovery(unittest.TestCase):
         pf = self.fake("pf", "R", "R-4.4.0", "bin", "Rscript.exe")
         got = meta.find_rscript(self.p, env={"ProgramFiles": str(self.t / "pf")}, system="Windows", which=lambda n: None)
         self.assertEqual(got, pf)
+
+    def test_relative_config_path_is_relative_to_the_project(self):
+        rel = self.fake("p", "tools", "Rscript")
+        with open(self.p / "project.yaml", "a", encoding="utf-8") as fh:
+            fh.write('tools:\n  rscript: "tools/Rscript"\n')
+        got = meta.find_rscript(self.p, env={}, system="Linux", which=lambda n: None)
+        self.assertEqual(got, self.p / "tools" / "Rscript")
 
     def test_order_config_path_r_home(self):
         cfg = self.fake("cfg", "Rscript")

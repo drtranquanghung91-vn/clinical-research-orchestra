@@ -19,3 +19,7 @@
 11. The author opens G4 (`gate.py open . G4 --by "<name>"`), then
     `python "${CLAUDE_PLUGIN_ROOT}/scripts/assemble.py" . case-report --final` → `out/case-report.docx`.
 12. Disclosure draft and `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" decisions .`.
+
+E-REF findings are the author's call: verify, replace or record manually; never delete or reword the citing
+sentence, nor edit a reference status or ledger to pass. Every `[[AUTHOR: …]]`/`[[TÁC GIẢ: …]]` is filled by the
+author, never by Claude.

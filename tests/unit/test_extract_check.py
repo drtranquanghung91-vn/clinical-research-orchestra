@@ -96,6 +96,26 @@ class TestExtractCheck(unittest.TestCase):
         self.w("rob.csv", rows + 'S02,mortality,ROBINS-I,overall,serious,"q",Reviewer A; Reviewer B\n')
         self.assertEqual(self.msgs("block"), [])
 
+    def test_extraction_csv_without_two_extractor_files_blocks(self):
+        self.w("extraction.csv", HEAD.rstrip("\n") + ",consensus_note\nS01,mortality,30 days,drug,50,6,,,,,\n")
+        self.assertTrue(any("two extraction-<reviewer>.csv" in m for m in self.msgs("block")), self.msgs())
+        self.w("extraction-reviewer-a.csv", A)
+        self.assertTrue(any("two extraction files" in m for m in self.msgs("block")))
+
+    def test_study_missing_from_consensus_blocks(self):
+        self.w("extraction-reviewer-a.csv", A)
+        self.w("extraction-reviewer-b.csv", A)
+        cons = HEAD.rstrip("\n") + ",consensus_note\n"
+        self.w("extraction.csv", cons + "S01,mortality,30 days,drug,50,5,,,,,\nS01,mortality,30 days,placebo,50,9,,,,,\n")
+        blocks = self.msgs("block")
+        self.assertTrue(any("S02 / mortality / 30 days / drug" in m and "missing from extraction.csv" in m for m in blocks), blocks)
+
+    def test_robins_i_overall_no_information_allowed(self):
+        rows = ROB_HEAD + "".join(f'S02,mortality,ROBINS-I,D{i},{j},"q",Reviewer A; Reviewer B\n'
+                                  for i, j in enumerate(["low", "serious", "low", "moderate", "no information", "low", "low"], 1))
+        self.w("rob.csv", rows + 'S02,mortality,ROBINS-I,overall,no information,"q",Reviewer A; Reviewer B\n')
+        self.assertEqual(self.msgs("block"), [])
+
     def test_scoping_charting(self):
         shutil.rmtree(self.t / "p")
         self.p = review_project(self.t, design="scoping-review")
