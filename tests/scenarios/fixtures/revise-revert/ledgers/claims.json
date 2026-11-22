@@ -1,0 +1,132 @@
+{
+  "claims": [
+    {
+      "id": "ch1-1.5.1-chakraborty2021",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "Cac can thiep trong benh vien nham giam thoi gian nam vien/tai nhap vien o DTD type 2 da duoc tong hop trong 1 SR, nhung khong co so lieu gop ro va nhieu tieu chi AMSTAR 2 trong yeu khong xac dinh duoc tu abstract.",
+      "kind": "background",
+      "status": "verified-abstract",
+      "refs": ["chakraborty2021"]
+    },
+    {
+      "id": "ch1-1.5.2-hu2026-cao2026",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "HbA1c luc nhap vien cao hon co the lien quan voi tang nguy co tai nhap vien trong 30-31 ngay o DTD type 2 (aOR 1,15 moi 1% HbA1c, KTC 95% 1,03-1,29; HbA1c la 1 trong 6 bien du bao trong mot nomogram khac); bang chung giai tiep vi moc thoi gian ngan hon 1 nam.",
+      "kind": "background",
+      "status": "verified-abstract",
+      "refs": ["hu2026", "cao2026"]
+    },
+    {
+      "id": "ch1-1.5.3-hu2026-robbins2021",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "Chua ro lieu chieu huong lien quan giua HbA1c va tai nhap vien co phu thuoc vao thoi diem do HbA1c (luc nhap vien vs sau xuat vien) hay khong; HbA1c sau xuat vien thap hon lai lien quan tang tai nhap vien trong mot nghien cuu khac (Cohen's D 0,28, hieu ung nho).",
+      "kind": "background",
+      "status": "verified-abstract",
+      "refs": ["hu2026", "robbins2021"]
+    },
+    {
+      "id": "ch1-1.5.4-li2026",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "O moc 365 ngay, yeu to du bao tai nhap vien o DTD type 2 co the chuyen tu yeu to cap tinh sang bien chung man tinh dac hieu DTD theo mot mo hinh hoc may (SHAP); mo hinh nay khong tach rieng hieu ung doc lap cua HbA1c.",
+      "kind": "background",
+      "status": "verified-abstract",
+      "refs": ["li2026"]
+    },
+    {
+      "id": "ch1-1.5.5-grade-very-low",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "Chua co nghien cuu do dung phoi nhiem (HbA1c luc nhap vien) + dung outcome (tai nhap vien moi nguyen nhan) + dung moc thoi gian (1 nam) o DTD type 2 noi chung; muc do tin cay GRADE so bo = rat thap (very low).",
+      "kind": "derived",
+      "status": "verified-abstract",
+      "refs": ["hu2026", "cao2026", "li2026", "robbins2021"]
+    },
+    {
+      "id": "ch1-1.4-guideline-american2026",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "ADA Standards of Care in Diabetes-2026, muc 16, khuyen cao kiem soat duong huyet noi vien va lap ke hoach xuat vien/chuyen tiep cham soc noi chung; khong doc full-text nen khong trich mot nguong HbA1c cu the tu guideline nay.",
+      "kind": "background",
+      "status": "verified-abstract",
+      "refs": ["american2026"]
+    },
+    {
+      "id": "ch1-1.6-vietnam-not-found",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "text": "Chua tim thay nghien cuu thuc hien tai Viet Nam ve HbA1c luc nhap vien va tai nhap vien o DTD type 2 trong phien tim kiem PubMed da thuc hien; tap chi tieng Viet chua duoc tim trong phien nay (han che, khong phai ket luan 'khong co').",
+      "kind": "background",
+      "status": "unverified",
+      "refs": []
+    },
+    {
+      "id": "ch3-3.1-table1-nhanxet",
+      "file": "06_writing/thesis/ch3-results.md",
+      "location": "3.1, Nhận xét sau Bảng 3.1",
+      "text": "Tuổi trung bình của {{R-A0-001}} người bệnh là {{R-A0-001.full}} năm, tương đồng giữa 3 nhóm HbA1c; tỷ lệ nữ là {{R-A0-009.full}}. Nhóm HbA1c >9% có tỷ lệ dùng insulin khi nằm viện ({{R-A0-056.full}}) cao hơn rõ so với nhóm <7% ({{R-A0-054.full}}).",
+      "kind": "observed", "refs": [],
+      "results": ["R-A0-001", "R-A0-009", "R-A0-056", "R-A0-054"], "status": "unverified"
+    },
+    {
+      "id": "ch3-3.1-readmit-nhanxet",
+      "file": "06_writing/thesis/ch3-results.md",
+      "location": "3.1, Nhận xét sau Bảng 3.2",
+      "text": "Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm chung là {{R-A0-061.value}} (KTC 95%: {{R-A0-061.ci}}); tăng dần theo nhóm HbA1c, từ {{R-A0-062.value}} ở nhóm <7% đến {{R-A0-064.value}} ở nhóm >9%.",
+      "kind": "observed", "refs": [],
+      "results": ["R-A0-061", "R-A0-062", "R-A0-064"], "status": "unverified"
+    },
+    {
+      "id": "ch3-3.2.1-a1-crude",
+      "file": "06_writing/thesis/ch3-results.md",
+      "location": "3.2.1, Phân tích thô",
+      "text": "Tỷ số chênh thô của tái nhập viện so với nhóm HbA1c <7% là {{R-A1-001}} (KTC 95%: {{R-A1-001.ci}}) ở nhóm 7–9% và {{R-A1-002}} (KTC 95%: {{R-A1-002.ci}}) ở nhóm >9%.",
+      "kind": "observed", "refs": [],
+      "results": ["R-A1-001", "R-A1-002"], "status": "unverified"
+    },
+    {
+      "id": "ch3-3.2.2-a1-adjusted",
+      "file": "06_writing/thesis/ch3-results.md",
+      "location": "3.2.2, Nhận xét sau Bảng 3.3",
+      "text": "Sau hiệu chỉnh, tỷ số chênh tái nhập viện là {{R-A1-004}} ở nhóm HbA1c >9% (KTC 95%: {{R-A1-004.ci}}; p = {{R-A1-004.p}}) và {{R-A1-003}} ở nhóm 7–9% (KTC 95%: {{R-A1-003.ci}}; p = {{R-A1-003.p}}) so với nhóm <7%; AUC = {{R-A1-009}}, EPV = {{R-A1-010}}.",
+      "kind": "observed", "refs": [],
+      "results": ["R-A1-003", "R-A1-004", "R-A1-009", "R-A1-010"], "status": "unverified"
+    },
+    {
+      "id": "ch3-3.3.1-a2",
+      "file": "06_writing/thesis/ch3-results.md",
+      "location": "3.3.1, Nhận xét sau Bảng 3.4",
+      "text": "Mỗi 1% HbA1c tăng thêm liên quan với tỷ số chênh tái nhập viện hiệu chỉnh là {{R-A2-002}} (KTC 95%: {{R-A2-002.ci}}; p = {{R-A2-002.p}}).",
+      "kind": "observed", "refs": [],
+      "results": ["R-A2-002"], "status": "unverified"
+    },
+    {
+      "id": "ch3-3.3.2-a3",
+      "file": "06_writing/thesis/ch3-results.md",
+      "location": "3.3.2, Nhận xét sau Bảng 3.5",
+      "text": "OR hiệu chỉnh của tái nhập viện liên quan ĐTĐ là {{R-A3-001}} (KTC 95%: {{R-A3-001.ci}}; p = {{R-A3-001.p}}) ở nhóm 7–9% và {{R-A3-002}} (KTC 95%: {{R-A3-002.ci}}; p {{R-A3-002.p}}) ở nhóm >9%, so với nhóm <7%.",
+      "kind": "observed", "refs": [],
+      "results": ["R-A3-001", "R-A3-002"], "status": "unverified"
+    },
+    {
+      "id": "ch3-3.3.3-a4",
+      "file": "06_writing/thesis/ch3-results.md",
+      "location": "3.3.3, Nhận xét sau Bảng 3.6",
+      "text": "HR hiệu chỉnh của thời gian đến lần tái nhập viện đầu tiên là {{R-A4-006}} ở nhóm >9% (KTC 95%: {{R-A4-006.ci}}; p = {{R-A4-006.p}}) và {{R-A4-005}} ở nhóm 7–9% (KTC 95%: {{R-A4-005.ci}}; p = {{R-A4-005.p}}), so với nhóm <7%.",
+      "kind": "observed", "refs": [],
+      "results": ["R-A4-005", "R-A4-006"], "status": "unverified"
+    },
+    {
+      "id": "ch3-3.3.4-a5",
+      "file": "06_writing/thesis/ch3-results.md",
+      "location": "3.3.4, Nhận xét sau Bảng 3.7",
+      "text": "Tỷ lệ tử vong trong viện trong 1 năm là {{R-A5-002}} ở nhóm <7% và {{R-A5-004}} ở nhóm >9% (chung: {{R-A5-001}}).",
+      "kind": "observed", "refs": [],
+      "results": ["R-A5-001", "R-A5-002", "R-A5-004"], "status": "unverified"
+    },
+    {
+      "id": "ch3-3.4-a6-posthoc",
+      "file": "06_writing/thesis/ch3-results.md",
+      "location": "3.4, Phân tích thăm dò (hậu kiểm), sau Bảng 3.8",
+      "text": "OR hiệu chỉnh của nhóm HbA1c >9% so với <7% là {{R-A6-002}} ở người <65 tuổi và {{R-A6-009}} ở người ≥65 tuổi; p tương tác nhóm HbA1c × nhóm tuổi là {{R-A6-015}} (hậu kiểm, POST-HOC A6, decisions.md).",
+      "kind": "observed", "refs": [],
+      "results": ["R-A6-002", "R-A6-009", "R-A6-015"], "status": "unverified"
+    }
+  ]
+}
