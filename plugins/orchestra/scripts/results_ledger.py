@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Import an analysis's results.json into the project's results ledger.
 
-  python results_ledger.py import <project> [--from FILE] [--verify-raw] [--accept-relabel]
+  python results_ledger.py import <project> [--from FILE] [--verify-raw] [--accept-relabel] [--merge]
 
 FILE defaults to <project>/05_analysis/output/results.json. --verify-raw checks that each record's `raw`
 text is found at its `locator` in `source_file` ("line N" for text/CSV, "Sheet!A1" for .xlsx) and that
@@ -10,6 +10,9 @@ its `value`, each `ci` bound and its `p` appear in `raw` at the printed precisio
 The ledger is written only when every record is valid. When a ledger already exists, a changed `label` or
 `kind` for an id, or a removed id, is listed on stderr and refused (exit 1) unless --accept-relabel is
 given; new ids are always fine.
+--merge replaces only the records whose source_file is one of the incoming document's source files and keeps the
+rest (an id owned by another source is refused); records are then sorted by id (plan P5 D1). `observed`
+(recorded data such as case facts and PRISMA counts) is valid only for A0.
 Exit codes: 0 = imported; 1 = invalid records or refused relabel (listed, nothing written); 2 = usage or
 I/O error.
 """
@@ -29,7 +32,9 @@ from crolib import numfmt  # noqa: E402
 
 STRING_FIELDS = ("id", "analysis_id", "status", "kind", "source_file", "locator", "raw")
 REQUIRED = ("id", "analysis_id", "status", "label", "value", "kind", "source_file", "locator", "raw")
-STATUSES = ("prespecified", "posthoc", "deviation")
+STATUSES = ("prespecified", "posthoc", "deviation", "observed")
+DATA_FILES = ("01_case/facts.csv", "02_evidence/sr/screening.csv", "04_data/sr/extraction.csv",
+              "05_analysis/meta/grade.json")
 NS = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 RNS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"
 
@@ -102,8 +107,10 @@ def validate_doc(doc: dict, project: Path, verify_raw: bool = False) -> list[str
     if not isinstance(doc.get("results"), list) or not isinstance(doc.get("tables", []), list):
         return ["document: needs 'results' and 'tables' lists"]
     data_file = doc.get("data_file", "")
-    if not (isinstance(data_file, str) and data_file.startswith("04_data/") and data_file.endswith(".deid.csv")):
-        probs.append("document: data_file must be a de-identified 04_data/*.deid.csv file")
+    p2 = isinstance(data_file, str) and data_file.startswith("04_data/") and data_file.endswith(".deid.csv")
+    if not (p2 or data_file in DATA_FILES):
+        probs.append("document: data_file must be a de-identified 04_data/*.deid.csv file or one of "
+                     + ", ".join(DATA_FILES))
     seen: set[str] = set()
     root = project.resolve()
     for n, rec in enumerate(doc["results"], start=1):
@@ -128,6 +135,11 @@ def validate_doc(doc: dict, project: Path, verify_raw: bool = False) -> list[str
         seen.add(rid)
         if rec["status"] not in STATUSES:
             probs.append(f"{rid}: status '{rec['status']}' not in {STATUSES}")
+        if rec["status"] == "observed" and rec["analysis_id"] != "A0":
+            probs.append(f"{rid}: status 'observed' is only for A0 (recorded data, not an analysis)")
+        dec = rec.get("decimals")
+        if dec is not None and not (isinstance(dec, int) and not isinstance(dec, bool) and 0 <= dec <= 4):
+            probs.append(f"{rid}: decimals must be an integer from 0 to 4")
         if rec["kind"] not in numfmt.KINDS:
             probs.append(f"{rid}: kind '{rec['kind']}' not allowed")
         if not _num(rec["value"]):
@@ -199,27 +211,44 @@ def relabel_changes(old, new_results: list) -> list[str]:
     return out
 
 
+def _order_key(rid) -> tuple:
+    m = re.fullmatch(r"R-A(\d+)-(\d{3})", rid or "")
+    return (int(m.group(1)), int(m.group(2))) if m else (10 ** 9, 0)
+
+
 def import_results(project: Path, src: Path | None = None, verify_raw: bool = False,
-                   accept_relabel: bool = False) -> tuple[int, list[str]]:
+                   accept_relabel: bool = False, merge: bool = False) -> tuple[int, list[str]]:
     src = src or project / "05_analysis" / "output" / "results.json"
     doc = json.loads(src.read_text(encoding="utf-8"))
     probs = validate_doc(doc, project, verify_raw)
     if probs:
         return 0, probs
     existing = project / "ledgers" / "results-ledger.json"
-    records = [dict(r, data_sha256=doc.get("data_sha256", ""), locked=False) for r in doc["results"]]
+    incoming = [dict(r, data_sha256=doc.get("data_sha256", ""), locked=False) for r in doc["results"]]
+    old = json.loads(existing.read_text(encoding="utf-8-sig")) if existing.is_file() else {"results": []}
+    old_results = [r for r in (old.get("results", []) if isinstance(old, dict) else []) if isinstance(r, dict)]
+    if merge:
+        sources = {r["source_file"] for r in incoming}
+        kept = [r for r in old_results if r.get("source_file") not in sources]
+        clash = sorted({r.get("id") for r in kept} & {r["id"] for r in incoming})
+        if clash:
+            return 0, [f"{rid}: already in the ledger from another source file; not merged" for rid in clash]
+        records = sorted(kept + incoming, key=lambda r: _order_key(r.get("id")))
+        compare = {"results": [r for r in old_results if r.get("source_file") in sources]}
+    else:
+        records, compare = incoming, old
     new_bytes = (json.dumps({"results": records}, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     if existing.is_file() and existing.read_bytes().replace(b"\r\n", b"\n") == new_bytes:
-        return len(records), []  # same content (any line ending): write nothing, so a G3 lock stays valid
+        return len(incoming), []  # same content (any line ending): write nothing, so a G3 lock stays valid
     if _g3_locks_ledger(project):
         raise LockedError("G3 is locked; the ledger is unchanged — re-run only after the author re-opens "
                           "G3 for a new analysis")
     if existing.is_file() and not accept_relabel:
-        changes = relabel_changes(json.loads(existing.read_text(encoding="utf-8-sig")), doc["results"])
+        changes = relabel_changes(compare, doc["results"])
         if changes:
             raise RelabelError("\n".join(changes))
     existing.write_bytes(new_bytes)  # LF only, whatever the platform
-    return len(records), []
+    return len(incoming), []
 
 
 def main(argv=None) -> int:
@@ -233,6 +262,7 @@ def main(argv=None) -> int:
     ap.add_argument("--from", dest="src")
     ap.add_argument("--verify-raw", action="store_true")
     ap.add_argument("--accept-relabel", action="store_true")
+    ap.add_argument("--merge", action="store_true")
     a = ap.parse_args(argv)
     project = Path(a.project)
     if not (project / "ledgers").is_dir():
@@ -245,7 +275,7 @@ def main(argv=None) -> int:
     except OSError:
         before = None
     try:
-        n, probs = import_results(project, src, a.verify_raw, a.accept_relabel)
+        n, probs = import_results(project, src, a.verify_raw, a.accept_relabel, a.merge)
     except LockedError as e:
         print(f"results_ledger: {e}", file=sys.stderr)
         return 1

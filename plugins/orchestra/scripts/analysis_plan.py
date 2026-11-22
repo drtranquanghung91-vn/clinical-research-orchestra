@@ -4,9 +4,10 @@
   python analysis_plan.py register <project>
   python analysis_plan.py check <project> [--text FILE ...]
 
-check compares 05_analysis/output/results.json with the "Analysis register" table in 03_protocol/sap.md
-and with POST-HOC / DEVIATION lines in decisions.md; --text also checks that post-hoc results are labelled
+check compares the results with the "Analysis register" table and with POST-HOC / DEVIATION lines in decisions.md; --text also checks that post-hoc results are labelled
 in a results document and warns on causal wording with an observational design.
+The register is 03_protocol/sap.md or, for a review, 03_protocol/sr-protocol.md; results come from results.json
+or, without it, from the results ledger; `observed` records (A0) are counted as reported and otherwise skipped.
 Exit codes: 0 = clean (warnings allowed); 1 = block findings, or register missing/invalid; 2 = usage or I/O.
 """
 from __future__ import annotations
@@ -119,9 +120,25 @@ def _load_results(path: Path) -> list:
     return results
 
 
+def register_path(project: Path) -> Path:
+    """03_protocol/sap.md, else the review protocol 03_protocol/sr-protocol.md (P5 D3)."""
+    sap = Path(project) / "03_protocol" / "sap.md"
+    srp = Path(project) / "03_protocol" / "sr-protocol.md"
+    return srp if not sap.is_file() and srp.is_file() else sap
+
+
+def results_records(project: Path) -> list:
+    """05_analysis/output/results.json, else ledgers/results-ledger.json (reviews and case reports)."""
+    rj = Path(project) / "05_analysis" / "output" / "results.json"
+    led = Path(project) / "ledgers" / "results-ledger.json"
+    return _load_results(led if not rj.is_file() and led.is_file() else rj)
+
+
 def check(project: Path, text_files: list[Path]) -> list[tuple[str, str, str]]:
-    reg_ids = {r["id"] for r in parse_register((project / "03_protocol" / "sap.md").read_text(encoding="utf-8-sig"))}
-    results = _load_results(project / "05_analysis" / "output" / "results.json")
+    reg_file = register_path(project)
+    reg_rel = reg_file.relative_to(project).as_posix()
+    reg_ids = {r["id"] for r in parse_register(reg_file.read_text(encoding="utf-8-sig"))}
+    results = results_records(project)
     dec_path = project / "decisions.md"
     found: list[tuple[str, str, str]] = []
     dec = declared(dec_path.read_text(encoding="utf-8-sig") if dec_path.is_file() else "", found)
@@ -134,6 +151,10 @@ def check(project: Path, text_files: list[Path]) -> list[tuple[str, str, str]]:
             continue
         rid, aid, status = r.get("id"), r.get("analysis_id"), r.get("status")
         reported.add(aid)
+        if status == "observed":
+            if aid != "A0":
+                found.append(("block", "results.json", f"{rid}: status observed is only for A0 (recorded data)"))
+            continue
         if status == "prespecified" and aid != "A0" and aid not in reg_ids:
             found.append(("block", "results.json", f"{rid}: prespecified result for {aid}, which is not in the analysis register"))
         if status in ("posthoc", "deviation"):
@@ -141,7 +162,7 @@ def check(project: Path, text_files: list[Path]) -> list[tuple[str, str, str]]:
             if aid not in dec[key]:
                 found.append(("block", "results.json", f'{rid}: {status} result for {aid} has no "{key} {aid}:" line in decisions.md'))
     for aid in sorted(reg_ids - reported - dec["DEVIATION"], key=lambda a: int(a[1:])):
-        found.append(("block", "03_protocol/sap.md",
+        found.append(("block", reg_rel,
                       f'{aid} is in the register but has no result and no "DEVIATION {aid}:" line (selective reporting)'))
     status_of = {r.get("id"): r.get("status") for r in results if isinstance(r, dict)}
     observational = projectcfg.read_project_yaml(project).get("design") in OBSERVATIONAL
@@ -177,7 +198,7 @@ def main(argv=None) -> int:
     project = Path(a.project)
     try:
         if a.cmd == "register":
-            sap = (project / "03_protocol" / "sap.md").read_text(encoding="utf-8-sig")
+            sap = register_path(project).read_text(encoding="utf-8-sig")
             try:
                 print(json.dumps(parse_register(sap), ensure_ascii=False, indent=2))
             except ValueError as e:
