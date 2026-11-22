@@ -1,0 +1,3 @@
+R-A1-901 tử vong mọi nguyên nhân (30 ngày): assumed comparator risk per 1000: value=180
+R-A1-902 tử vong mọi nguyên nhân (30 ngày): risk with intervention per 1000: value=117.960959 ci=82.30727885,169.0590194
+R-A1-903 tử vong mọi nguyên nhân (30 ngày): difference per 1000: value=-62.03904097 ci=-97.69272115,-10.94098056

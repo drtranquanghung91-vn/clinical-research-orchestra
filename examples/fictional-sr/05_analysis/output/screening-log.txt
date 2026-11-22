@@ -1,0 +1,14 @@
+R-A0-001 records identified from databases: value=24
+R-A0-002 records identified from registers: value=0
+R-A0-003 duplicate records removed: value=4
+R-A0-004 records screened: value=20
+R-A0-005 records excluded at title and abstract: value=13
+R-A0-006 reports sought for retrieval: value=7
+R-A0-007 reports not retrieved: value=0
+R-A0-008 reports assessed for eligibility: value=7
+R-A0-009 reports excluded at full text: value=2
+R-A0-010 studies included: value=5
+R-A0-011 reports included: value=5
+R-A0-021 records identified: Simulated database: value=24
+R-A0-051 reports excluded: không báo cáo tử vong trong 30 ngày: value=1
+R-A0-052 reports excluded: thiết kế không phải thử nghiệm ngẫu nhiên có đối chứng: value=1

@@ -1,0 +1,221 @@
+{
+  "id": "F-PRISMA",
+  "type": "prisma",
+  "source": "05_analysis/output/screening-log.txt",
+  "values": [
+    {
+      "label": "Bản ghi từ cơ sở dữ liệu",
+      "ref": "R-A0-001.value",
+      "est": 24.0,
+      "text": "n = 24"
+    },
+    {
+      "label": "Bản ghi được sàng lọc",
+      "ref": "R-A0-004.value",
+      "est": 20.0,
+      "text": "n = 20"
+    },
+    {
+      "label": "Báo cáo cần tìm toàn văn",
+      "ref": "R-A0-006.value",
+      "est": 7.0,
+      "text": "n = 7"
+    },
+    {
+      "label": "Báo cáo được đánh giá tính phù hợp",
+      "ref": "R-A0-008.value",
+      "est": 7.0,
+      "text": "n = 7"
+    },
+    {
+      "label": "Nghiên cứu được đưa vào\nBáo cáo của các nghiên cứu (n = 5)",
+      "ref": "R-A0-010.value",
+      "est": 5.0,
+      "text": "n = 5"
+    },
+    {
+      "label": "Bản ghi trùng lặp bị loại",
+      "ref": "R-A0-003.value",
+      "est": 4.0,
+      "text": "n = 4"
+    },
+    {
+      "label": "Bản ghi bị loại",
+      "ref": "R-A0-005.value",
+      "est": 13.0,
+      "text": "n = 13"
+    },
+    {
+      "label": "Báo cáo không tìm được",
+      "ref": "R-A0-007.value",
+      "est": 0.0,
+      "text": "n = 0"
+    },
+    {
+      "label": "Báo cáo bị loại\nthiết kế không phải thử nghiệm ngẫu nhiên có đối chứng (n = 1)\nkhông báo cáo tử vong trong 30 ngày (n = 1)",
+      "ref": "R-A0-009.value",
+      "est": 2.0,
+      "text": "n = 2"
+    },
+    {
+      "label": "thiết kế không phải thử nghiệm ngẫu nhiên có đối chứng",
+      "ref": "R-A0-052.value",
+      "est": 1.0,
+      "text": "n = 1"
+    },
+    {
+      "label": "không báo cáo tử vong trong 30 ngày",
+      "ref": "R-A0-051.value",
+      "est": 1.0,
+      "text": "n = 1"
+    },
+    {
+      "label": "reports",
+      "ref": "R-A0-011.value",
+      "est": 5.0,
+      "text": "n = 5"
+    }
+  ],
+  "chart": {
+    "kind": "diagram",
+    "nodes": [
+      {
+        "id": "n1",
+        "text": "Bản ghi từ cơ sở dữ liệu\nn = 24",
+        "x": 0.08,
+        "y": 0.0,
+        "w": 0.46,
+        "h": 0.1569
+      },
+      {
+        "id": "n2",
+        "text": "Bản ghi được sàng lọc\nn = 20",
+        "x": 0.08,
+        "y": 0.2108,
+        "w": 0.46,
+        "h": 0.1569
+      },
+      {
+        "id": "n3",
+        "text": "Báo cáo cần tìm toàn văn\nn = 7",
+        "x": 0.08,
+        "y": 0.4215,
+        "w": 0.46,
+        "h": 0.1569
+      },
+      {
+        "id": "n4",
+        "text": "Báo cáo được đánh giá tính phù hợp\nn = 7",
+        "x": 0.08,
+        "y": 0.6323,
+        "w": 0.46,
+        "h": 0.1569
+      },
+      {
+        "id": "n5",
+        "text": "Nghiên cứu được đưa vào\nBáo cáo của các nghiên cứu (n = 5)\nn = 5",
+        "x": 0.08,
+        "y": 0.8431,
+        "w": 0.46,
+        "h": 0.1569
+      },
+      {
+        "id": "x1",
+        "text": "Bản ghi trùng lặp bị loại\nn = 4",
+        "x": 0.66,
+        "y": 0.1054,
+        "w": 0.32,
+        "h": 0.1569
+      },
+      {
+        "id": "x2",
+        "text": "Bản ghi bị loại\nn = 13",
+        "x": 0.66,
+        "y": 0.3161,
+        "w": 0.32,
+        "h": 0.1569
+      },
+      {
+        "id": "x3",
+        "text": "Báo cáo không tìm được\nn = 0",
+        "x": 0.66,
+        "y": 0.5269,
+        "w": 0.32,
+        "h": 0.1569
+      },
+      {
+        "id": "x4",
+        "text": "Báo cáo bị loại\nthiết kế không phải thử nghiệm ngẫu nhiên có đối chứng (n = 1)\nkhông báo cáo tử vong trong 30 ngày (n = 1)\nn = 2",
+        "x": 0.66,
+        "y": 0.7377,
+        "w": 0.32,
+        "h": 0.1569
+      }
+    ],
+    "edges": [
+      {
+        "from": "n1",
+        "to": "n2"
+      },
+      {
+        "from": "n2",
+        "to": "n3"
+      },
+      {
+        "from": "n3",
+        "to": "n4"
+      },
+      {
+        "from": "n4",
+        "to": "n5"
+      },
+      {
+        "from": "n1",
+        "to": "x1",
+        "from_side": 2,
+        "to_side": 1
+      },
+      {
+        "from": "n2",
+        "to": "x2",
+        "from_side": 2,
+        "to_side": 1
+      },
+      {
+        "from": "n3",
+        "to": "x3",
+        "from_side": 2,
+        "to_side": 1
+      },
+      {
+        "from": "n4",
+        "to": "x4",
+        "from_side": 2,
+        "to_side": 1
+      }
+    ],
+    "stages": [
+      {
+        "label": "Nhận diện",
+        "from": "n1",
+        "to": "n1"
+      },
+      {
+        "label": "Sàng lọc",
+        "from": "n2",
+        "to": "n4"
+      },
+      {
+        "label": "Đưa vào",
+        "from": "n5",
+        "to": "n5"
+      }
+    ]
+  },
+  "render": {
+    "document": {
+      "width_cm": 16,
+      "font_pt": 9
+    }
+  }
+}

@@ -1,0 +1,11 @@
+study_id,outcome,timepoint,group,n,events,rob_overall,population,notes
+varrow2017,tử vong mọi nguyên nhân,30 ngày,thuốc X,150,18,low,người lớn nhập viện vì viêm phổi cộng đồng,số liệu hư cấu
+varrow2017,tử vong mọi nguyên nhân,30 ngày,giả dược,148,27,low,người lớn nhập viện vì viêm phổi cộng đồng,số liệu hư cấu
+quellin2019,tử vong mọi nguyên nhân,30 ngày,thuốc X,220,30,low,người lớn nhập viện vì suy tim cấp,số liệu hư cấu
+quellin2019,tử vong mọi nguyên nhân,30 ngày,giả dược,218,33,low,người lớn nhập viện vì suy tim cấp,số liệu hư cấu
+tamsett2020,tử vong mọi nguyên nhân,30 ngày,thuốc X,95,10,some concerns,người lớn nhập viện vì nhiễm khuẩn huyết,số liệu hư cấu
+tamsett2020,tử vong mọi nguyên nhân,30 ngày,giả dược,97,25,some concerns,người lớn nhập viện vì nhiễm khuẩn huyết,số liệu hư cấu
+orbeck2021,tử vong mọi nguyên nhân,30 ngày,thuốc X,310,41,low,người từ 65 tuổi nhập khoa nội,số liệu hư cấu
+orbeck2021,tử vong mọi nguyên nhân,30 ngày,giả dược,305,44,low,người từ 65 tuổi nhập khoa nội,số liệu hư cấu
+lindqvar2022,tử vong mọi nguyên nhân,30 ngày,thuốc X,120,8,some concerns,người lớn nhập viện vì cúm nặng,số liệu hư cấu
+lindqvar2022,tử vong mọi nguyên nhân,30 ngày,giả dược,122,22,some concerns,người lớn nhập viện vì cúm nặng,số liệu hư cấu

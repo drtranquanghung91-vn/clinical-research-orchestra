@@ -1,0 +1,360 @@
+{
+  "engine": "meta.py; Python 3.14.5",
+  "data_file": "04_data/sr/extraction.csv",
+  "data_sha256": "56f839a4d5683e2cb44ff49e39346ef069a3f2da446586c0b931f05eea455c46",
+  "run_at": "2026-11-23T01:47:58",
+  "results": [
+    {
+      "id": "R-A1-011",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "varrow2017 RR",
+      "value": 0.6577777777777778,
+      "ci": [
+        0.37894526034665194,
+        1.1417786424943588
+      ],
+      "n": 298,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 1",
+      "raw": "R-A1-011 varrow2017 RR: value=0.6577777778 ci=0.3789452603,1.141778642 n=298"
+    },
+    {
+      "id": "R-A1-012",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "quellin2019 RR",
+      "value": 0.9008264462809916,
+      "ci": [
+        0.5700583145342812,
+        1.423518025488672
+      ],
+      "n": 438,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 2",
+      "raw": "R-A1-012 quellin2019 RR: value=0.9008264463 ci=0.5700583145,1.423518025 n=438"
+    },
+    {
+      "id": "R-A1-013",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "tamsett2020 RR",
+      "value": 0.39271255060728744,
+      "ci": [
+        0.2005124118951209,
+        0.7691451414247041
+      ],
+      "n": 192,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 3",
+      "raw": "R-A1-013 tamsett2020 RR: value=0.3927125506 ci=0.2005124119,0.7691451414 n=192"
+    },
+    {
+      "id": "R-A1-014",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "orbeck2021 RR",
+      "value": 0.9167888563049853,
+      "ci": [
+        0.6176315388870843,
+        1.3608466441974618
+      ],
+      "n": 615,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 4",
+      "raw": "R-A1-014 orbeck2021 RR: value=0.9167888563 ci=0.6176315389,1.360846644 n=615"
+    },
+    {
+      "id": "R-A1-015",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "lindqvar2022 RR",
+      "value": 0.3696969696969697,
+      "ci": [
+        0.1713531870860915,
+        0.7976265380722289
+      ],
+      "n": 242,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 5",
+      "raw": "R-A1-015 lindqvar2022 RR: value=0.3696969697 ci=0.1713531871,0.7976265381 n=242"
+    },
+    {
+      "id": "R-A1-001",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "pooled RR (random effects, REML, 5 studies)",
+      "value": 0.6553386612772341,
+      "ci": [
+        0.4572626602725195,
+        0.9392167746841221
+      ],
+      "p": 0.02136487548545734,
+      "n": 1785,
+      "count": 5,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 6",
+      "raw": "R-A1-001 pooled RR (random effects, REML, 5 studies): value=0.6553386613 ci=0.4572626603,0.9392167747 p=0.02136487549 n=1785 count=5"
+    },
+    {
+      "id": "R-A1-002",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "tau² (between-study variance, log scale)",
+      "value": 0.08860914592670598,
+      "unit": "",
+      "kind": "tau2",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 7",
+      "raw": "R-A1-002 tau² (between-study variance, log scale): value=0.08860914593"
+    },
+    {
+      "id": "R-A1-003",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "I² (heterogeneity)",
+      "value": 54.17251700428277,
+      "unit": "",
+      "kind": "percent",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 8",
+      "raw": "R-A1-003 I² (heterogeneity): value=54.172517"
+    },
+    {
+      "id": "R-A1-004",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "Q (heterogeneity)",
+      "value": 8.467724670883873,
+      "p": 0.07587160056837487,
+      "unit": "",
+      "kind": "other",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 9",
+      "raw": "R-A1-004 Q (heterogeneity): value=8.467724671 p=0.07587160057"
+    },
+    {
+      "id": "R-A1-005",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "95% prediction interval",
+      "value": 0.6553386612772341,
+      "ci": [
+        0.2153113295580693,
+        1.9946407922245908
+      ],
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 10",
+      "raw": "R-A1-005 95% prediction interval: value=0.6553386613 ci=0.2153113296,1.994640792"
+    },
+    {
+      "id": "R-A2-011",
+      "analysis_id": "A2",
+      "status": "prespecified",
+      "label": "pooled RR in rob_overall = low (3 studies)",
+      "value": 0.845270709143642,
+      "ci": [
+        0.649893237650696,
+        1.0993845301714231
+      ],
+      "p": 0.2100436380575601,
+      "n": 1351,
+      "count": 3,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 11",
+      "raw": "R-A2-011 pooled RR in rob_overall = low (3 studies): value=0.8452707091 ci=0.6498932377,1.09938453 p=0.2100436381 n=1351 count=3"
+    },
+    {
+      "id": "R-A2-012",
+      "analysis_id": "A2",
+      "status": "prespecified",
+      "label": "tau² (between-study variance, log scale) in rob_overall = low",
+      "value": 0.0,
+      "unit": "",
+      "kind": "tau2",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 12",
+      "raw": "R-A2-012 tau² (between-study variance, log scale) in rob_overall = low: value=0"
+    },
+    {
+      "id": "R-A2-013",
+      "analysis_id": "A2",
+      "status": "prespecified",
+      "label": "I² (heterogeneity) in rob_overall = low",
+      "value": 0.0,
+      "unit": "",
+      "kind": "percent",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 13",
+      "raw": "R-A2-013 I² (heterogeneity) in rob_overall = low: value=0"
+    },
+    {
+      "id": "R-A2-021",
+      "analysis_id": "A2",
+      "status": "prespecified",
+      "label": "pooled RR in rob_overall = some concerns (2 studies)",
+      "value": 0.38257216009758105,
+      "ci": [
+        0.2306327682239616,
+        0.6346082510686483
+      ],
+      "p": 0.0001983659404692725,
+      "n": 434,
+      "count": 2,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 14",
+      "raw": "R-A2-021 pooled RR in rob_overall = some concerns (2 studies): value=0.3825721601 ci=0.2306327682,0.6346082511 p=0.0001983659405 n=434 count=2"
+    },
+    {
+      "id": "R-A2-022",
+      "analysis_id": "A2",
+      "status": "prespecified",
+      "label": "tau² (between-study variance, log scale) in rob_overall = some concerns",
+      "value": 0.0,
+      "unit": "",
+      "kind": "tau2",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 15",
+      "raw": "R-A2-022 tau² (between-study variance, log scale) in rob_overall = some concerns: value=0"
+    },
+    {
+      "id": "R-A2-023",
+      "analysis_id": "A2",
+      "status": "prespecified",
+      "label": "I² (heterogeneity) in rob_overall = some concerns",
+      "value": 0.0,
+      "unit": "",
+      "kind": "percent",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 16",
+      "raw": "R-A2-023 I² (heterogeneity) in rob_overall = some concerns: value=0"
+    },
+    {
+      "id": "R-A2-001",
+      "analysis_id": "A2",
+      "status": "prespecified",
+      "label": "test for subgroup differences (rob_overall, Q between)",
+      "value": 7.42307482739359,
+      "p": 0.006439268255874969,
+      "unit": "",
+      "kind": "other",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 17",
+      "raw": "R-A2-001 test for subgroup differences (rob_overall, Q between): value=7.423074827 p=0.006439268256"
+    },
+    {
+      "id": "R-A3-001",
+      "analysis_id": "A3",
+      "status": "prespecified",
+      "label": "pooled RR without varrow2017",
+      "value": 0.6361971984635804,
+      "ci": [
+        0.39423514525334097,
+        1.026663604719494
+      ],
+      "p": 0.06399815493080815,
+      "n": 1487,
+      "count": 4,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 18",
+      "raw": "R-A3-001 pooled RR without varrow2017: value=0.6361971985 ci=0.3942351453,1.026663605 p=0.06399815493 n=1487 count=4"
+    },
+    {
+      "id": "R-A3-002",
+      "analysis_id": "A3",
+      "status": "prespecified",
+      "label": "pooled RR without quellin2019",
+      "value": 0.5871095721596833,
+      "ci": [
+        0.37703019432669116,
+        0.9142441504906393
+      ],
+      "p": 0.018436252254749517,
+      "n": 1347,
+      "count": 4,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 19",
+      "raw": "R-A3-002 pooled RR without quellin2019: value=0.5871095722 ci=0.3770301943,0.9142441505 p=0.01843625225 n=1347 count=4"
+    },
+    {
+      "id": "R-A3-003",
+      "analysis_id": "A3",
+      "status": "prespecified",
+      "label": "pooled RR without tamsett2020",
+      "value": 0.7505936157553357,
+      "ci": [
+        0.5536888579822733,
+        1.0175223284531143
+      ],
+      "p": 0.06459254350760153,
+      "n": 1593,
+      "count": 4,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 20",
+      "raw": "R-A3-003 pooled RR without tamsett2020: value=0.7505936158 ci=0.553688858,1.017522328 p=0.06459254351 n=1593 count=4"
+    },
+    {
+      "id": "R-A3-004",
+      "analysis_id": "A3",
+      "status": "prespecified",
+      "label": "pooled RR without orbeck2021",
+      "value": 0.5803182534405371,
+      "ci": [
+        0.37822436941093707,
+        0.8903954967279724
+      ],
+      "p": 0.012721621903685662,
+      "n": 1170,
+      "count": 4,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 21",
+      "raw": "R-A3-004 pooled RR without orbeck2021: value=0.5803182534 ci=0.3782243694,0.8903954967 p=0.0127216219 n=1170 count=4"
+    },
+    {
+      "id": "R-A3-005",
+      "analysis_id": "A3",
+      "status": "prespecified",
+      "label": "pooled RR without lindqvar2022",
+      "value": 0.7320867478428866,
+      "ci": [
+        0.5271088953943748,
+        1.0167747329822314
+      ],
+      "p": 0.06278558557508107,
+      "n": 1543,
+      "count": 4,
+      "unit": "",
+      "kind": "rr",
+      "source_file": "05_analysis/output/meta-log.txt",
+      "locator": "line 22",
+      "raw": "R-A3-005 pooled RR without lindqvar2022: value=0.7320867478 ci=0.5271088954,1.016774733 p=0.06278558558 n=1543 count=4"
+    }
+  ],
+  "tables": []
+}

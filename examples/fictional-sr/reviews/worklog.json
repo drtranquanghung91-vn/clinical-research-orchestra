@@ -1,0 +1,50 @@
+{
+  "rounds": [
+    {
+      "deliverable": "review",
+      "round": 1,
+      "at": "2026-11-23T03:10:37",
+      "scores": {
+        "citations": 1,
+        "statistics": 1,
+        "guideline": 1,
+        "structure": 2,
+        "claim_scope": 2,
+        "limitations": 2,
+        "consistency": 2,
+        "prose": 2
+      },
+      "total": 13,
+      "max": 16,
+      "decision": "KEEP",
+      "kept": true,
+      "compared_with": null,
+      "compared_total": null,
+      "drafts_digest": "f97145f453e6a4d170cab9c7038c97c7c27a490bbe6b61ade01123dd564914d0",
+      "files_changed": [
+        "00-title.md",
+        "01-abstract.md",
+        "02-introduction.md",
+        "03-methods.md",
+        "04-results.md",
+        "05-discussion.md",
+        "06-conclusion.md",
+        "07-other-information.md",
+        "sof.md"
+      ],
+      "requests": [
+        {
+          "agent": "statistical-reviewer",
+          "text": "re-run meta.py for the A2 rob_overall=low subgroup (k=3) to add the 95% prediction interval that sr-protocol.md §3.8 appears to require, feeding 04-results.md:57, sof.md and the abstract — contingent on resolving the CONFLICTS entry above."
+        }
+      ],
+      "notes": [
+        "guideline 1: 1 absent item(s)",
+        "consistency 2: 0 E-CONS block, 0 warn",
+        "prose 2: 5 pattern hits in 4592 words"
+      ]
+    }
+  ],
+  "events": [],
+  "decisions_sha256": "e9fc1430c87d21e517a4989c4144ef85480b3750e6ccb7819175e4ede3fca1a1"
+}

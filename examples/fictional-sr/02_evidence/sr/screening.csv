@@ -1,0 +1,57 @@
+stage,rec_id,reviewer,decision,reason,study,at
+ta,rec-0001,Reviewer A,include,,,2026-11-23
+ta,rec-0002,Reviewer A,include,,,2026-11-23
+ta,rec-0003,Reviewer A,include,,,2026-11-23
+ta,rec-0004,Reviewer A,include,,,2026-11-23
+ta,rec-0005,Reviewer A,include,,,2026-11-23
+ta,rec-0006,Reviewer A,include,,,2026-11-23
+ta,rec-0007,Reviewer A,include,,,2026-11-23
+ta,rec-0008,Reviewer A,exclude,không phải nghiên cứu gốc,,2026-11-23
+ta,rec-0009,Reviewer A,exclude,không phải thuốc X,,2026-11-23
+ta,rec-0010,Reviewer A,exclude,nghiên cứu trên động vật,,2026-11-23
+ta,rec-0011,Reviewer A,include,,,2026-11-23
+ta,rec-0012,Reviewer A,exclude,báo cáo ca,,2026-11-23
+ta,rec-0013,Reviewer A,exclude,người tình nguyện khỏe mạnh,,2026-11-23
+ta,rec-0014,Reviewer A,exclude,trẻ em,,2026-11-23
+ta,rec-0015,Reviewer A,exclude,mô hình kinh tế,,2026-11-23
+ta,rec-0016,Reviewer A,exclude,khảo sát,,2026-11-23
+ta,rec-0017,Reviewer A,exclude,xã luận,,2026-11-23
+ta,rec-0018,Reviewer A,exclude,nhóm chứng không phải giả dược,,2026-11-23
+ta,rec-0019,Reviewer A,exclude,"đề cương, chưa có kết quả",,2026-11-23
+ta,rec-0020,Reviewer A,exclude,nghiên cứu in vitro,,2026-11-23
+ta,rec-0001,Reviewer B,include,,,2026-11-23
+ta,rec-0002,Reviewer B,include,,,2026-11-23
+ta,rec-0003,Reviewer B,include,,,2026-11-23
+ta,rec-0004,Reviewer B,include,,,2026-11-23
+ta,rec-0005,Reviewer B,include,,,2026-11-23
+ta,rec-0006,Reviewer B,include,,,2026-11-23
+ta,rec-0007,Reviewer B,include,,,2026-11-23
+ta,rec-0008,Reviewer B,exclude,không phải nghiên cứu gốc,,2026-11-23
+ta,rec-0009,Reviewer B,exclude,không phải thuốc X,,2026-11-23
+ta,rec-0010,Reviewer B,exclude,nghiên cứu trên động vật,,2026-11-23
+ta,rec-0011,Reviewer B,exclude,người bệnh ngoại trú,,2026-11-23
+ta,rec-0012,Reviewer B,exclude,báo cáo ca,,2026-11-23
+ta,rec-0013,Reviewer B,exclude,người tình nguyện khỏe mạnh,,2026-11-23
+ta,rec-0014,Reviewer B,exclude,trẻ em,,2026-11-23
+ta,rec-0015,Reviewer B,exclude,mô hình kinh tế,,2026-11-23
+ta,rec-0016,Reviewer B,exclude,khảo sát,,2026-11-23
+ta,rec-0017,Reviewer B,exclude,xã luận,,2026-11-23
+ta,rec-0018,Reviewer B,exclude,nhóm chứng không phải giả dược,,2026-11-23
+ta,rec-0019,Reviewer B,exclude,"đề cương, chưa có kết quả",,2026-11-23
+ta,rec-0020,Reviewer B,exclude,nghiên cứu in vitro,,2026-11-23
+ta,rec-0011,consensus,exclude,người bệnh ngoại trú (thống nhất sau thảo luận),,2026-11-23
+ft,rec-0001,Reviewer A,include,,varrow2017,2026-11-23
+ft,rec-0002,Reviewer A,include,,quellin2019,2026-11-23
+ft,rec-0003,Reviewer A,include,,tamsett2020,2026-11-23
+ft,rec-0004,Reviewer A,include,,orbeck2021,2026-11-23
+ft,rec-0005,Reviewer A,include,,lindqvar2022,2026-11-23
+ft,rec-0006,Reviewer A,exclude,thiết kế không phải thử nghiệm ngẫu nhiên có đối chứng,,2026-11-23
+ft,rec-0007,Reviewer A,include,,corvell2020,2026-11-23
+ft,rec-0001,Reviewer B,include,,varrow2017,2026-11-23
+ft,rec-0002,Reviewer B,include,,quellin2019,2026-11-23
+ft,rec-0003,Reviewer B,include,,tamsett2020,2026-11-23
+ft,rec-0004,Reviewer B,include,,orbeck2021,2026-11-23
+ft,rec-0005,Reviewer B,include,,lindqvar2022,2026-11-23
+ft,rec-0006,Reviewer B,exclude,thiết kế không phải thử nghiệm ngẫu nhiên có đối chứng,,2026-11-23
+ft,rec-0007,Reviewer B,exclude,không báo cáo tử vong trong 30 ngày,,2026-11-23
+ft,rec-0007,consensus,exclude,không báo cáo tử vong trong 30 ngày,,2026-11-23

@@ -1,0 +1,31 @@
+study_id,outcome,tool,domain,judgement,support,reviewer
+varrow2017,tử vong mọi nguyên nhân,RoB 2,D1,low,"Báo cáo (hư cấu): danh sách ngẫu nhiên bằng máy tính, phân bổ qua hệ thống trung tâm",Reviewer A; Reviewer B
+varrow2017,tử vong mọi nguyên nhân,RoB 2,D2,low,"Báo cáo (hư cấu): mù đôi, phân tích theo ý định điều trị",Reviewer A; Reviewer B
+varrow2017,tử vong mọi nguyên nhân,RoB 2,D3,low,Báo cáo (hư cấu): theo dõi đủ 30 ngày cho trên 98% người tham gia,Reviewer A; Reviewer B
+varrow2017,tử vong mọi nguyên nhân,RoB 2,D4,low,Báo cáo (hư cấu): tử vong là kết cục khách quan,Reviewer A; Reviewer B
+varrow2017,tử vong mọi nguyên nhân,RoB 2,D5,low,Báo cáo (hư cấu): kết cục và phân tích khớp với đề cương đăng ký trước,Reviewer A; Reviewer B
+varrow2017,tử vong mọi nguyên nhân,RoB 2,overall,low,Theo thuật toán RoB 2 (mức xấu nhất trong các miền),Reviewer A; Reviewer B
+quellin2019,tử vong mọi nguyên nhân,RoB 2,D1,low,"Báo cáo (hư cấu): danh sách ngẫu nhiên bằng máy tính, phân bổ qua hệ thống trung tâm",Reviewer A; Reviewer B
+quellin2019,tử vong mọi nguyên nhân,RoB 2,D2,low,"Báo cáo (hư cấu): mù đôi, phân tích theo ý định điều trị",Reviewer A; Reviewer B
+quellin2019,tử vong mọi nguyên nhân,RoB 2,D3,low,Báo cáo (hư cấu): theo dõi đủ 30 ngày cho trên 98% người tham gia,Reviewer A; Reviewer B
+quellin2019,tử vong mọi nguyên nhân,RoB 2,D4,low,Báo cáo (hư cấu): tử vong là kết cục khách quan,Reviewer A; Reviewer B
+quellin2019,tử vong mọi nguyên nhân,RoB 2,D5,low,Báo cáo (hư cấu): kết cục và phân tích khớp với đề cương đăng ký trước,Reviewer A; Reviewer B
+quellin2019,tử vong mọi nguyên nhân,RoB 2,overall,low,Theo thuật toán RoB 2 (mức xấu nhất trong các miền),Reviewer A; Reviewer B
+tamsett2020,tử vong mọi nguyên nhân,RoB 2,D1,low,"Báo cáo (hư cấu): danh sách ngẫu nhiên bằng máy tính, phân bổ qua hệ thống trung tâm",Reviewer A; Reviewer B
+tamsett2020,tử vong mọi nguyên nhân,RoB 2,D2,some concerns,"Báo cáo (hư cấu): nhãn mở, không nêu phân tích theo ý định điều trị cho 3 người bỏ thuốc",Reviewer A; Reviewer B
+tamsett2020,tử vong mọi nguyên nhân,RoB 2,D3,low,Báo cáo (hư cấu): theo dõi đủ 30 ngày cho trên 98% người tham gia,Reviewer A; Reviewer B
+tamsett2020,tử vong mọi nguyên nhân,RoB 2,D4,low,Báo cáo (hư cấu): tử vong là kết cục khách quan,Reviewer A; Reviewer B
+tamsett2020,tử vong mọi nguyên nhân,RoB 2,D5,low,Báo cáo (hư cấu): kết cục và phân tích khớp với đề cương đăng ký trước,Reviewer A; Reviewer B
+tamsett2020,tử vong mọi nguyên nhân,RoB 2,overall,some concerns,Theo thuật toán RoB 2 (mức xấu nhất trong các miền),Reviewer A; Reviewer B
+orbeck2021,tử vong mọi nguyên nhân,RoB 2,D1,low,"Báo cáo (hư cấu): danh sách ngẫu nhiên bằng máy tính, phân bổ qua hệ thống trung tâm",Reviewer A; Reviewer B
+orbeck2021,tử vong mọi nguyên nhân,RoB 2,D2,low,"Báo cáo (hư cấu): mù đôi, phân tích theo ý định điều trị",Reviewer A; Reviewer B
+orbeck2021,tử vong mọi nguyên nhân,RoB 2,D3,low,Báo cáo (hư cấu): theo dõi đủ 30 ngày cho trên 98% người tham gia,Reviewer A; Reviewer B
+orbeck2021,tử vong mọi nguyên nhân,RoB 2,D4,low,Báo cáo (hư cấu): tử vong là kết cục khách quan,Reviewer A; Reviewer B
+orbeck2021,tử vong mọi nguyên nhân,RoB 2,D5,low,Báo cáo (hư cấu): kết cục và phân tích khớp với đề cương đăng ký trước,Reviewer A; Reviewer B
+orbeck2021,tử vong mọi nguyên nhân,RoB 2,overall,low,Theo thuật toán RoB 2 (mức xấu nhất trong các miền),Reviewer A; Reviewer B
+lindqvar2022,tử vong mọi nguyên nhân,RoB 2,D1,some concerns,Báo cáo (hư cấu): không mô tả cách che giấu phân bổ; nhóm thuốc X ít bệnh nặng hơn lúc đầu,Reviewer A; Reviewer B
+lindqvar2022,tử vong mọi nguyên nhân,RoB 2,D2,low,"Báo cáo (hư cấu): mù đôi, phân tích theo ý định điều trị",Reviewer A; Reviewer B
+lindqvar2022,tử vong mọi nguyên nhân,RoB 2,D3,low,Báo cáo (hư cấu): theo dõi đủ 30 ngày cho trên 98% người tham gia,Reviewer A; Reviewer B
+lindqvar2022,tử vong mọi nguyên nhân,RoB 2,D4,low,Báo cáo (hư cấu): tử vong là kết cục khách quan,Reviewer A; Reviewer B
+lindqvar2022,tử vong mọi nguyên nhân,RoB 2,D5,low,Báo cáo (hư cấu): kết cục và phân tích khớp với đề cương đăng ký trước,Reviewer A; Reviewer B
+lindqvar2022,tử vong mọi nguyên nhân,RoB 2,overall,some concerns,Theo thuật toán RoB 2 (mức xấu nhất trong các miền),Reviewer A; Reviewer B

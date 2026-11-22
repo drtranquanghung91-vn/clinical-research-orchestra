@@ -1,0 +1,53 @@
+{
+  "engine": "grade.py; Python 3.14.5",
+  "data_file": "05_analysis/meta/grade.json",
+  "data_sha256": "5aaa5031ae6880963f1c8d09efdf66c5bedb874b4f71eef3536b9f23bdb3a6f4",
+  "run_at": "2026-11-23T02:12:27",
+  "results": [
+    {
+      "id": "R-A1-901",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "tử vong mọi nguyên nhân (30 ngày): assumed comparator risk per 1000",
+      "value": 180,
+      "unit": "",
+      "kind": "absolute",
+      "source_file": "05_analysis/output/grade-log.txt",
+      "locator": "line 1",
+      "raw": "R-A1-901 tử vong mọi nguyên nhân (30 ngày): assumed comparator risk per 1000: value=180"
+    },
+    {
+      "id": "R-A1-902",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "tử vong mọi nguyên nhân (30 ngày): risk with intervention per 1000",
+      "value": 117.96095902990213,
+      "ci": [
+        82.3072788490535,
+        169.05901944314198
+      ],
+      "unit": "",
+      "kind": "absolute",
+      "source_file": "05_analysis/output/grade-log.txt",
+      "locator": "line 2",
+      "raw": "R-A1-902 tử vong mọi nguyên nhân (30 ngày): risk with intervention per 1000: value=117.960959 ci=82.30727885,169.0590194"
+    },
+    {
+      "id": "R-A1-903",
+      "analysis_id": "A1",
+      "status": "prespecified",
+      "label": "tử vong mọi nguyên nhân (30 ngày): difference per 1000",
+      "value": -62.03904097009787,
+      "ci": [
+        -97.6927211509465,
+        -10.940980556858023
+      ],
+      "unit": "",
+      "kind": "absolute",
+      "source_file": "05_analysis/output/grade-log.txt",
+      "locator": "line 3",
+      "raw": "R-A1-903 tử vong mọi nguyên nhân (30 ngày): difference per 1000: value=-62.03904097 ci=-97.69272115,-10.94098056"
+    }
+  ],
+  "tables": []
+}

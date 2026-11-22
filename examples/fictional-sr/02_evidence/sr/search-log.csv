@@ -1,0 +1,2 @@
+database,platform,date_run,string_id,hits,export_file
+Simulated database,fictional,2026-11-23,S1,24,exports/simulated-export.ris
