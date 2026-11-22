@@ -14,7 +14,7 @@ Every claim about the literature traces to a PMID or DOI that a tool returned in
 ## 2. Scope
 A structured narrative or scoping evidence synthesis, not a systematic review. A true systematic
 review needs a PROSPERO protocol, two independent screeners and PRISMA 2020: say so, and point to
-`systematic-review` (phase P3).
+the Skill tool with `systematic-review`.
 
 ## 3. Steps
 Inputs: `01_question/question.md` (PICO/PECO). Detail for every step is in the workflow file.

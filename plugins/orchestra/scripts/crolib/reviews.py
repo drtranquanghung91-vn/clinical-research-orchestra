@@ -14,7 +14,7 @@ REVIEWERS = {
 }
 CRITERIA = ("citations", "statistics", "guideline", "structure", "claim_scope", "limitations", "consistency", "prose")
 SCORES = re.compile(r"^```scores[ \t]*\r?\n(.*?)\r?\n```[ \t]*$", re.M | re.S)
-DIGEST = re.compile(r"^drafts-digest:[ \t]*(thesis|manuscript)[ \t]+([0-9a-f]{64})[ \t]*$", re.M)
+DIGEST = re.compile(r"^drafts-digest:[ \t]*(thesis|manuscript|case-report|review)[ \t]+([0-9a-f]{64})[ \t]*$", re.M)
 REQUEST = re.compile(r"^[ \t]*(?:[-*][ \t]*)?NEW-ANALYSIS:[ \t]*(\S.*?)[ \t]*$", re.M)
 NONE = {"none", "không có", "không", "n/a", "-"}
 NONE_SPLIT = re.compile(r"\s*[—–;:,(]|\s+-\s+")

@@ -1,0 +1,7 @@
+study_id,outcome,timepoint,group,n,events,mean,sd,es,se,consensus_note
+S01,mortality,30 days,drug,30,2,,,,,fictional
+S01,mortality,30 days,placebo,30,12,,,,,fictional
+S02,mortality,30 days,drug,30,15,,,,,fictional
+S02,mortality,30 days,placebo,30,5,,,,,fictional
+S03,mortality,30 days,drug,30,6,,,,,fictional
+S03,mortality,30 days,placebo,30,6,,,,,fictional

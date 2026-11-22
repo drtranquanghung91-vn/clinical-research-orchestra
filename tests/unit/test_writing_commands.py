@@ -11,7 +11,12 @@ import _paths
 ORCH = _paths.ROOT / "plugins" / "orchestra"
 FILES = [ORCH / "skills" / "thesis-writing" / "SKILL.md", ORCH / "skills" / "manuscript-writing" / "SKILL.md",
          ORCH / "skills" / "thesis" / "SKILL.md", ORCH / "skills" / "manuscript" / "SKILL.md",
-         ORCH / "references" / "workflows" / "thesis.md", ORCH / "references" / "workflows" / "manuscript.md"]
+         ORCH / "references" / "workflows" / "thesis.md", ORCH / "references" / "workflows" / "manuscript.md",
+         ORCH / "skills" / "case-report" / "SKILL.md", ORCH / "skills" / "systematic-review" / "SKILL.md",
+         ORCH / "skills" / "case" / "SKILL.md", ORCH / "skills" / "sr" / "SKILL.md",
+         ORCH / "skills" / "literature-review" / "SKILL.md", ORCH / "skills" / "review" / "SKILL.md",
+         ORCH / "references" / "workflows" / "case-report.md", ORCH / "references" / "workflows" / "systematic-review.md",
+         ORCH / "references" / "workflows" / "scoping-review.md"]
 MENTION = re.compile(r"(?:scripts/)?\b([a-z_]+)\.py\b\"?([^`\n]*)")
 _help_cache: dict[str, str] = {}
 
@@ -99,6 +104,46 @@ class TestWritingCommands(unittest.TestCase):
                             self.assertNotEqual(r.returncode, 2, r.stderr)
                     n += 1
         self.assertGreaterEqual(n, 4)
+
+
+class TestP5Skills(unittest.TestCase):
+    def text(self, name):
+        return (ORCH / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+
+    def test_p5_scripts_are_cited(self):
+        found = set()
+        for f in FILES:
+            found |= {m.group(1) for m in MENTION.finditer(f.read_text(encoding="utf-8"))}
+        for name in ("case_facts", "case_lint", "screening", "extract_check", "meta", "grade", "figures"):
+            self.assertIn(name, found)
+
+    def test_frontmatter_and_rules(self):
+        import lint_skills
+        for name, command in (("case-report", False), ("systematic-review", False), ("case", True), ("sr", True)):
+            fm, body = lint_skills.parse_frontmatter(self.text(name))
+            with self.subTest(skill=name):
+                self.assertEqual(fm["name"], name)
+                self.assertEqual(fm.get("disable-model-invocation", "") == "true", command)
+                self.assertLessEqual(len(body.split()), 500)
+                if not command:
+                    self.assertTrue(fm["description"].startswith("Use when"))
+                    self.assertRegex(fm["description"], r"[àáảãạăâđèéêìíòóôơùúưỳý]")   # a Vietnamese trigger
+        case = self.text("case-report")
+        for s in ("CONSENT: obtained", "relative time", "case_lint.py", "case_facts.py", "case-front.md", "--final",
+                  "Never lock it yourself"):
+            self.assertIn(s, case)
+        sr = self.text("systematic-review")
+        for s in ("never a reviewer", "screen-suggest.md", "review.reviewers", "prediction interval", "DEVIATION",
+                  "r-status", "never install", "swim.md", "statistician"):
+            self.assertIn(s, sr)
+        lr = self.text("literature-review")
+        for s in ("**c. Narrative or scoping review**", "review-narrative.md", "scoping-review.md", "`systematic-review`",
+                  "chart, not pool"):
+            self.assertIn(s, lr)
+        self.assertIn("`case-report`", self.text("case"))
+        self.assertIn("`systematic-review`", self.text("sr"))
+        self.assertIn("(c)", self.text("review"))
+        self.assertNotIn("phase P3", self.text("literature-search"))
 
 
 if __name__ == "__main__":

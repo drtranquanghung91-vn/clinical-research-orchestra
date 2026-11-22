@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """E-RG: verify the reporting-guideline checklist written by the reporting-guideline-checker agent.
 
-  python guideline_checklist.py <project> [--guideline CODE] [--deliverable thesis|manuscript] [--table] [--json]
+  python guideline_checklist.py <project> [--guideline CODE] [--deliverable thesis|manuscript|case-report|review] [--table] [--json]
 
 Item lists: references/reporting-guidelines/items/<CODE>.json ({"code", "version", "items": [{"id", "section",
 "text"}]}; text paraphrased, never copied). Checklist: <project>/reviews/guideline-checklist-<deliverable>.json
@@ -31,12 +31,12 @@ for _s in (sys.stdout, sys.stderr):
         pass
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from crolib import projectcfg  # noqa: E402
+from crolib import drafts, projectcfg  # noqa: E402
 import render_results  # noqa: E402
 
 ITEMS_DIR = Path(__file__).resolve().parents[1] / "references" / "reporting-guidelines" / "items"
 CHECKLIST = "reviews/guideline-checklist.json"  # legacy single checklist (read only as a fallback)
-DELIVERABLES = ("thesis", "manuscript")
+DELIVERABLES = drafts.DELIVERABLES
 STATUSES = ("present", "partial", "absent", "na")
 WINDOW = 3
 STATUS_VI = {"present": "có", "partial": "một phần", "absent": "không có", "na": "không áp dụng"}
@@ -115,7 +115,7 @@ def default_path(project: Path, deliverable: str | None = None) -> Path:
     project = Path(project)
     present = [project / deliverable_rel(d) for d in DELIVERABLES if (project / deliverable_rel(d)).is_file()]
     if len(present) > 1:
-        raise InputError("there is a checklist for the thesis and one for the manuscript: pass --deliverable")
+        raise InputError("checklists exist for more than one deliverable: pass --deliverable")
     if present:
         return present[0]
     return project / CHECKLIST

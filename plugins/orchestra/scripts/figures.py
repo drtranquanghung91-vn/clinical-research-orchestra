@@ -3,7 +3,8 @@
 
   python figures.py <project> [--only F1,F2] [--dpi 300] [--profile document|poster]
 
-Types: forest, km (Kaplan-Meier from the de-identified CSV), rates, flow. Every plotted estimate comes
+Types: forest (optional pooled diamond and prediction-interval bar), km (Kaplan-Meier from the de-identified CSV), rates, flow,
+prisma (PRISMA 2020 flow from ledger ids), rob (risk-of-bias traffic light from 04_data/sr/rob.csv). Every plotted estimate comes
 from the results ledger by id; nothing is typed. Writes F<n>.svg, .pdf, .png and F<n>.data.json (every number
 drawn plus the native-chart series slides use) into 07_present/figures/. --profile poster writes
 F<n>.poster.{svg,pdf,png} at poster_width_cm / font_pt instead (no data.json). Format: references/presenting/figures-spec.md.
@@ -32,7 +33,16 @@ from crolib import derived, numfmt, projectcfg  # noqa: E402
 
 SPEC_REL = "07_present/figures/figures.json"
 OUT_REL = "07_present/figures"
-TYPES = ("forest", "km", "rates", "flow")
+TYPES = ("forest", "km", "rates", "flow", "prisma", "rob")
+ROB_REL = "04_data/sr/rob.csv"
+ROB_STYLE = {"low": ("#4f9a4f", "+"), "some concerns": ("#e6b800", "−"), "moderate": ("#e6b800", "−"),
+             "high": ("#c0504d", "×"), "serious": ("#c0504d", "×"), "critical": ("#7a1f1f", "!"),
+             "no information": ("#bfbfbf", "?")}
+ROB_NAME = {"en": {k: k for k in ROB_STYLE},
+            "vi": {"low": "thấp", "some concerns": "một số lo ngại", "moderate": "trung bình", "high": "cao",
+                   "serious": "nghiêm trọng", "critical": "rất nghiêm trọng", "no information": "không có thông tin"}}
+PRISMA_REQUIRED = ("identified", "duplicates", "screened", "excluded", "sought", "not_retrieved", "assessed",
+                   "reports_excluded", "studies")
 PROFILES = ("document", "poster")
 POSTER_WIDTH_CM, POSTER_FONT_PT = 30.0, 24.0
 ID_OK = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*\Z")
@@ -339,13 +349,15 @@ def _save(ctx: Ctx, f, outdir: Path, fid: str, suffix: str = "") -> None:
     ctx.plt.close(f)
 
 
-def _draw_forest(ctx: Ctx, fig: dict, rows: list[dict]):
+def _draw_forest(ctx: Ctx, fig: dict, rows: list[dict], pooled: dict | None = None):
+    from matplotlib.patches import Polygon
     from matplotlib.transforms import blended_transform_factory
-    n, em, s = len(rows), ctx.em, ctx.s
+    every = rows + ([pooled] if pooled else [])
+    n, em, s = len(every), ctx.em, ctx.s
     row_h = 2.6 * em
     hdr = _lang_text(ctx.lang, "Ước lượng (KTC 95%)", "Estimate (95% CI)")
-    left = 0.8 * em + max(ctx.width(r["label"]) for r in rows) + 0.5 * em
-    right = 1.0 * em + max([ctx.width(hdr, bold=True)] + [ctx.width(r["text"]) for r in rows]) + 0.8 * em
+    left = 0.8 * em + max(ctx.width(r["label"]) for r in every) + 0.5 * em
+    right = 1.0 * em + max([ctx.width(hdr, bold=True)] + [ctx.width(r["text"]) for r in every]) + 0.8 * em
     width = max(ctx.width_cm, left + right + MIN_AXES_EM * em)
     axes_w = width - left - right
     fr = Frame(ctx, fig, fig.get("source"), width)
@@ -361,17 +373,30 @@ def _draw_forest(ctx: Ctx, fig: dict, rows: list[dict]):
     for y, r in zip(ys, rows):
         ax.plot([r["lo"], r["hi"]], [y, y], color=col, lw=1.1 * s, solid_capstyle="butt")
         ax.plot([r["est"]], [y], marker="s", ms=5.5 * s, color=col, mfc=col if r["filled"] else "white", mew=1.1 * s)
+    lows, highs = [r["lo"] for r in every] + [null], [r["hi"] for r in every] + [null]
+    if pooled:
+        if pooled.get("pi"):
+            ax.plot(list(pooled["pi"]), [1, 1], color=GREY, lw=2.0 * s, solid_capstyle="butt", zorder=1)
+            lows.append(pooled["pi"][0])
+            highs.append(pooled["pi"][1])
+        h = 0.3
+        ax.add_patch(Polygon([(pooled["lo"], 1), (pooled["est"], 1 + h), (pooled["hi"], 1), (pooled["est"], 1 - h)],
+                             closed=True, facecolor=col, edgecolor=col, zorder=2))
+        ax.axhline(1.5, color=GREY, lw=0.6 * s)
     ax.axvline(null, color=GREY, lw=0.8 * s, ls="--")
     if fig.get("log_scale"):
         ax.set_xscale("log")
-        lo, hi = min(r["lo"] for r in rows + [{"lo": null}]), max(r["hi"] for r in rows + [{"hi": null}])
+        lo, hi = min(lows), max(highs)
         ticks = [t for t in (0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50) if lo / 1.6 <= t <= hi * 1.6]
         if ticks:
             ax.set_xticks(ticks)
         ax.set_xticklabels([ctx.fmt_axis(t) for t in ticks])
         ax.minorticks_off()
+    elif pooled:
+        pad = 0.05 * (max(highs) - min(lows) or 1)
+        ax.set_xlim(min(lows) - pad, max(highs) + pad)
     ax.set_yticks(ys)
-    ax.set_yticklabels([_esc(r["label"]) for r in rows])
+    ax.set_yticklabels([_esc(r["label"]) for r in every])
     ax.set_ylim(0.5, n + 0.5)
     ax.set_xlabel(_esc(xlab), fontsize=ctx.size, labelpad=0.4 * ctx.size)
     _style_axes(ctx, ax)
@@ -381,8 +406,9 @@ def _draw_forest(ctx: Ctx, fig: dict, rows: list[dict]):
     x_text = (left + axes_w + 1.0 * em) / width
     ax.text(x_text, n + 0.5, hdr, transform=tr, ha="left", va="bottom", fontsize=ctx.size, fontweight="bold",
             clip_on=False)
-    for y, r in zip(ys, rows):
-        ax.text(x_text, y, _esc(r["text"]), transform=tr, ha="left", va="center", fontsize=ctx.size, clip_on=False)
+    for y, r in zip(ys, every):
+        ax.text(x_text, y, _esc(r["text"]), transform=tr, ha="left", va="center", fontsize=ctx.size, clip_on=False,
+                fontweight="bold" if r is pooled else "normal")
     fr.finish(f, height)
     return f
 
@@ -533,13 +559,30 @@ def _draw_flow(ctx: Ctx, fig: dict, nodes: list[dict], edges: list[dict], conten
 # ---------------------------------------------------------------- figure builders (data + drawing)
 
 def build_forest(ctx: Ctx, fig: dict, by_id: dict, lang: str, **_):
+    fid = fig["id"]
     rows = _rows(fig, by_id, lang, need_ci=True)
-    f = _draw_forest(ctx, fig, rows)
+    pooled = None
+    if fig.get("pooled"):
+        rec = _record(fid, by_id, fig["pooled"], need_ci=True)
+        pooled = {"label": fig.get("pooled_label") or _lang_text(lang, "Ước lượng gộp", "Pooled estimate"),
+                  "ref": fig["pooled"], "est": _num(rec["value"]), "lo": _num(rec["ci"][0]), "hi": _num(rec["ci"][1]),
+                  "text": _est_text(rec, lang), "filled": True, "pi": None}
+        if fig.get("prediction"):
+            prec = _record(fid, by_id, fig["prediction"], need_ci=True)
+            pooled["pi"] = (_num(prec["ci"][0]), _num(prec["ci"][1]))
+            pooled["text"] += _lang_text(lang, "; KDB 95% ", "; 95% PI ") + numfmt.render(prec, "ci", lang)
+    elif fig.get("prediction"):
+        raise FigureError(f"{fid}: 'prediction' needs 'pooled'")
+    f = _draw_forest(ctx, fig, rows, pooled)
     log = bool(fig.get("log_scale"))
     null = fig.get("null", 1)
-    data = {"values": [{k: r[k] for k in ("label", "ref", "est", "lo", "hi", "text")} for r in rows],
+    every = rows + ([pooled] if pooled else [])
+    data = {"values": [{k: r[k] for k in ("label", "ref", "est", "lo", "hi", "text")} for r in every],
             "chart": {"kind": "forest", "log": log, "null": null, "x_label": fig.get("x_label", ""),
                       "rows": [{k: r[k] for k in ("label", "est", "lo", "hi")} for r in rows]}}
+    if pooled:
+        data["chart"]["pooled"] = {k: pooled[k] for k in ("label", "est", "lo", "hi")}
+        data["chart"]["prediction"] = list(pooled["pi"]) if pooled["pi"] else None
     return f, fig.get("source", ""), data
 
 
@@ -651,7 +694,140 @@ def build_flow(ctx: Ctx, fig: dict, by_id: dict, lang: str, **_):
                                        "chart": {"kind": "diagram", "nodes": nodes, "edges": edges}}
 
 
-BUILDERS = {"forest": build_forest, "rates": build_rates, "km": build_km, "flow": build_flow}
+def _prisma_ref(fid: str, item: dict, key: str) -> str:
+    v = item.get(key)
+    terms = [t.strip() for t in v.split("+")] if isinstance(v, str) else []
+    if not terms or not all(re.fullmatch(r"R-A\d+-\d{3}(\.(value|n))?", t) for t in terms):
+        raise FigureError(f"{fid}: prisma '{key}' must be a ledger id such as R-A0-001, or ids added with + "
+                          "(typed numbers are not allowed)")
+    return " + ".join(t if "." in t else f"{t}.value" for t in terms)
+
+
+def build_prisma(ctx: Ctx, fig: dict, by_id: dict, lang: str, **_):
+    fid = fig["id"]
+    missing = [k for k in PRISMA_REQUIRED if k not in fig]
+    if missing:
+        raise FigureError(f"{fid}: prisma needs ledger ids for {', '.join(missing)}")
+    t = lambda vi, en: _lang_text(lang, vi, en)  # noqa: E731
+    extra: list[dict] = []
+
+    def shown(item: dict, key: str, label: str) -> str:
+        ref = _prisma_ref(fid, item, key)
+        est, txt = _n_of(fid, by_id, ref, lang)
+        extra.append({"label": label, "ref": ref, "est": est, "text": f"n = {txt}"})
+        return txt
+
+    ident = t("Bản ghi từ cơ sở dữ liệu", "Records identified from databases")
+    if "registers" in fig:
+        ident += "\n" + t("và sổ đăng ký", "and registers") + f" (n = {shown(fig, 'registers', 'registers')})"
+    reasons = fig.get("reasons") or []
+    if not isinstance(reasons, list):
+        raise FigureError(f"{fid}: 'reasons' must be a list of {{text, n}}")
+    excl = t("Báo cáo bị loại", "Reports excluded")
+    for r in reasons:
+        if not isinstance(r, dict) or not isinstance(r.get("text"), str):
+            raise FigureError(f"{fid}: every reason needs 'text' and 'n'")
+        excl += f"\n{r['text']} (n = {shown(r, 'n', r['text'])})"
+    included = t("Nghiên cứu được đưa vào", "Studies included in review")
+    if "reports" in fig:
+        included += "\n" + t("Báo cáo của các nghiên cứu", "Reports of included studies") + \
+            f" (n = {shown(fig, 'reports', 'reports')})"
+    ref = lambda k: _prisma_ref(fid, fig, k)  # noqa: E731
+    flow = {"id": fid, "title": fig.get("title"), "source": fig.get("source"),
+            "boxes": [{"text": ident, "n": ref("identified")},
+                      {"text": t("Bản ghi được sàng lọc", "Records screened"), "n": ref("screened")},
+                      {"text": t("Báo cáo cần tìm toàn văn", "Reports sought for retrieval"), "n": ref("sought")},
+                      {"text": t("Báo cáo được đánh giá tính phù hợp", "Reports assessed for eligibility"), "n": ref("assessed")},
+                      {"text": included, "n": ref("studies")}],
+            "exclusions": [{"text": t("Bản ghi trùng lặp bị loại", "Duplicate records removed"), "n": ref("duplicates"), "after": 1},
+                           {"text": t("Bản ghi bị loại", "Records excluded"), "n": ref("excluded"), "after": 2},
+                           {"text": t("Báo cáo không tìm được", "Reports not retrieved"), "n": ref("not_retrieved"), "after": 3},
+                           {"text": excl, "n": ref("reports_excluded"), "after": 4}]}
+    f, source, data = build_flow(ctx, flow, by_id, lang)
+    ax = f.axes[0]
+    nodes = {n["id"]: n for n in data["chart"]["nodes"]}
+    stages = [(t("Nhận diện", "Identification"), "n1", "n1"), (t("Sàng lọc", "Screening"), "n2", "n4"),
+              (t("Đưa vào", "Included"), "n5", "n5")]
+    for label, a, b in stages:
+        mid = (nodes[a]["y"] + nodes[b]["y"] + nodes[b]["h"]) / 2
+        ax.text(0.035, mid, _esc(label), rotation=90, ha="center", va="center", fontsize=ctx.size, fontweight="bold")
+    data["values"] += extra
+    data["chart"]["stages"] = [{"label": lab, "from": a, "to": b} for lab, a, b in stages]
+    return f, source, data
+
+
+def _read_rob(project: Path, fig: dict) -> tuple[list, list, dict, str]:
+    fid = fig["id"]
+    for k in ("outcome", "tool"):
+        if not isinstance(fig.get(k), str) or not fig[k].strip():
+            raise FigureError(f"{fid}: rob needs '{k}'")
+    try:
+        raw = (project / ROB_REL).read_bytes()
+    except OSError as e:
+        raise FigureError(f"{fid}: cannot read {ROB_REL}: {e}") from e
+    cells: dict[tuple, str] = {}
+    for r in csv.DictReader(raw.decode("utf-8-sig").splitlines()):
+        if (r.get("outcome") or "").strip() != fig["outcome"] or (r.get("tool") or "").strip() != fig["tool"]:
+            continue
+        j = (r.get("judgement") or "").strip().casefold()
+        if j not in ROB_STYLE:
+            raise FigureError(f"{fid}: judgement {j!r} is not one of {', '.join(ROB_STYLE)}")
+        cells[((r.get("study_id") or "").strip(), (r.get("domain") or "").strip())] = j
+    if not cells:
+        raise FigureError(f"{fid}: no rows for outcome {fig['outcome']!r} and tool {fig['tool']!r} in {ROB_REL}")
+    studies = sorted({st for st, _ in cells})
+    doms = sorted({d for _, d in cells if d != "overall"}, key=lambda d: (int(d[1:]) if d[1:].isdigit() else 99, d))
+    if any(d == "overall" for _, d in cells):
+        doms.append("overall")
+    return studies, doms, cells, hashlib.sha256(raw).hexdigest()
+
+
+def _draw_rob(ctx: Ctx, fig: dict, studies: list, domains: list, cells: dict):
+    from matplotlib.patches import Circle
+    em, s = ctx.em, ctx.s
+    heads = [_lang_text(ctx.lang, "Tổng thể", "Overall") if d == "overall" else d for d in domains]
+    cell = 2.2 * em
+    left = 0.8 * em + max(ctx.width(x) for x in studies) + 0.6 * em
+    width = max(ctx.width_cm, left + cell * len(domains) + 1.0 * em)
+    fr = Frame(ctx, fig, fig.get("source"), width)
+    used = [j for j in ROB_STYLE if j in set(cells.values())]
+    legend = ctx.wrap("   ".join(f"{ROB_STYLE[j][1]} {ROB_NAME[ctx.lang if ctx.lang in ROB_NAME else 'en'][j]}" for j in used),
+                      width - 2 * fr.margin)
+    legend_h = ctx.lines_h(legend) + 0.8 * em
+    hdr_h, grid_h = 1.6 * em, len(studies) * cell
+    height = fr.top + hdr_h + grid_h + legend_h + fr.bottom0
+    f = ctx.figure(height, width)
+    ax = f.add_axes([left / width, (fr.bottom0 + legend_h) / height, cell * len(domains) / width, grid_h / height])
+    ax.set_xlim(0, len(domains))
+    ax.set_ylim(len(studies), 0)
+    ax.axis("off")
+    for i, st in enumerate(studies):
+        ax.text(-0.25, i + 0.5, _esc(st), ha="right", va="center", fontsize=ctx.size, clip_on=False)
+        for j, d in enumerate(domains):
+            colour, sym = ROB_STYLE.get(cells.get((st, d)), ("white", ""))
+            ax.add_patch(Circle((j + 0.5, i + 0.5), 0.38, facecolor=colour, edgecolor="black", linewidth=0.6 * s))
+            ax.text(j + 0.5, i + 0.5, sym, ha="center", va="center", fontsize=ctx.size, fontweight="bold")
+    for j, h in enumerate(heads):
+        ax.text(j + 0.5, -0.2, _esc(h), ha="center", va="bottom", fontsize=ctx.size, fontweight="bold", clip_on=False)
+    f.text(fr.margin / width, (fr.bottom0 + legend_h - 0.3 * em) / height, _esc(legend), ha="left", va="top",
+           fontsize=ctx.size, linespacing=1.2)
+    fr.finish(f, height)
+    return f
+
+
+def build_rob(ctx: Ctx, fig: dict, project: Path, lang: str, **_):
+    studies, domains, cells, sha = _read_rob(Path(project), fig)
+    f = _draw_rob(ctx, fig, studies, domains, cells)
+    values = [{"label": f"{st} {d}", "ref": ROB_REL, "text": cells[(st, d)]}
+              for st in studies for d in domains if (st, d) in cells]
+    return f, fig.get("source", ""), {"values": values, "data_file": ROB_REL, "data_sha256": sha,
+                                       "chart": {"kind": "rob", "tool": fig["tool"], "studies": studies,
+                                                 "domains": domains,
+                                                 "cells": [[cells.get((st, d), "") for d in domains] for st in studies]}}
+
+
+BUILDERS = {"forest": build_forest, "rates": build_rates, "km": build_km, "flow": build_flow, "prisma": build_prisma,
+            "rob": build_rob}
 
 
 def _num_key(fid: str, fig: dict, key: str, default: float) -> float:
@@ -695,7 +871,7 @@ def render_figure(project: Path, fig: dict, *, width_cm: float, font_pt: float, 
     _configure(matplotlib, style)
     lang = lang or projectcfg.output_lang(project)
     ctx = Ctx(plt, style, lang, dpi, size=font_pt, width_cm=width_cm)
-    by_id = None if fig["type"] == "km" else derived.ledger_by_id(project)
+    by_id = None if fig["type"] in ("km", "rob") else derived.ledger_by_id(project)
     return BUILDERS[fig["type"]](ctx, fig, by_id=by_id, lang=lang, project=project)
 
 
@@ -819,7 +995,7 @@ def _run(project: Path, args, plt, matplotlib) -> int:
         fid = fig["id"]
         if only and fid not in only:
             continue
-        if fig["type"] != "km" and by_id is None:
+        if fig["type"] not in ("km", "rob") and by_id is None:
             try:
                 by_id = derived.ledger_by_id(project)
             except (OSError, ValueError) as e:

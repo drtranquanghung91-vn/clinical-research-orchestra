@@ -1,0 +1,30 @@
+title: "Drug reaction with eosinophilia after a urate-lowering drug: a case report (fictional)"
+type: case-report
+design: case-report
+reporting_guideline: CARE
+language:
+  chat: vi
+  output: en
+institution:
+  name: "Bệnh viện Đa khoa Thiên Phúc"
+  city: "Phố Lam"
+  template: ""
+citation_style: vancouver
+target:
+  journal: ""
+  journal_style: null
+  conference: ""
+  word_limit: null
+  text_words: null
+  poster_size_cm: [90, 120]
+evidence_sources: [openevidence, pubmed, europepmc, crossref]
+docx:
+  font: "Times New Roman"
+  size_pt: 13
+  line_spacing: 1.5
+  margins_cm: [2, 2, 3, 2]
+review:
+  reviewers: []
+  registration: null
+tools:
+  rscript: null

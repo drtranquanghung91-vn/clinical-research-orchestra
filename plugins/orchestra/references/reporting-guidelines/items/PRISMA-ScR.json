@@ -1,0 +1,28 @@
+{
+  "code": "PRISMA-ScR",
+  "version": "2018",
+  "items": [
+    {"id": "1", "section": "Title", "text": "The title states that this is a scoping review."},
+    {"id": "2", "section": "Abstract", "text": "Structured summary from background through conclusions."},
+    {"id": "3", "section": "Introduction", "text": "Rationale in light of what is known; why a scoping review."},
+    {"id": "4", "section": "Introduction", "text": "Questions and objectives framed by population, concept and context."},
+    {"id": "5", "section": "Methods", "text": "Whether a protocol exists, where, and registration details."},
+    {"id": "6", "section": "Methods", "text": "Eligibility criteria for sources of evidence, with rationale."},
+    {"id": "7", "section": "Methods", "text": "Information sources searched, coverage dates and last search date."},
+    {"id": "8", "section": "Methods", "text": "Full electronic search strategy for at least one database."},
+    {"id": "9", "section": "Methods", "text": "Process for screening and selecting sources of evidence."},
+    {"id": "10", "section": "Methods", "text": "Data charting methods, independence, and confirmation with investigators."},
+    {"id": "11", "section": "Methods", "text": "Variables charted, with assumptions and simplifications."},
+    {"id": "12", "section": "Methods", "text": "If done, rationale and methods of critical appraisal and its use."},
+    {"id": "13", "section": "Methods", "text": "Methods for handling and summarising the charted data."},
+    {"id": "14", "section": "Results", "text": "Numbers screened, assessed and included, with reasons, ideally in a flow diagram."},
+    {"id": "15", "section": "Results", "text": "Characteristics of each source of evidence, with citations."},
+    {"id": "16", "section": "Results", "text": "If done, critical appraisal data within sources of evidence."},
+    {"id": "17", "section": "Results", "text": "Charted data for each included source of evidence."},
+    {"id": "18", "section": "Results", "text": "Charting results summarised against the review questions."},
+    {"id": "19", "section": "Discussion", "text": "Main results, linked to the questions, and relevance to key groups."},
+    {"id": "20", "section": "Discussion", "text": "Limitations of the scoping review process."},
+    {"id": "21", "section": "Discussion", "text": "General interpretation, implications and next steps."},
+    {"id": "22", "section": "Funding", "text": "Funding of the included sources and of the review, and funder role."}
+  ]
+}

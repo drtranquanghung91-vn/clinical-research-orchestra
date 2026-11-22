@@ -61,7 +61,7 @@ except ImportError as e:  # pragma: no cover - exercised only without the depend
 # Number formatting identical to crolib/numfmt.py, inlined so that a project can vendor this single file
 # (tests/unit/test_crostats.py checks that the two agree).
 KINDS = frozenset({"n", "percent", "mean", "sd", "median", "iqr", "md", "or", "rr", "hr", "rd", "beta", "auc",
-                   "p", "other"})
+                   "p", "other", "smd", "tau2", "absolute", "measure"})
 EN_DASH = "–"
 
 

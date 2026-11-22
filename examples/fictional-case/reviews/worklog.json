@@ -1,0 +1,48 @@
+{
+  "rounds": [
+    {
+      "deliverable": "case-report",
+      "round": 1,
+      "at": "2026-11-23T02:08:34",
+      "scores": {
+        "citations": 2,
+        "statistics": 2,
+        "guideline": 2,
+        "structure": 2,
+        "claim_scope": 2,
+        "limitations": 2,
+        "consistency": 2,
+        "prose": 2
+      },
+      "total": 16,
+      "max": 16,
+      "decision": "STOP",
+      "kept": true,
+      "compared_with": null,
+      "compared_total": null,
+      "drafts_digest": "8c1fd8e2c08fb6dd06585198591da69a69d60ad6c255fd30d28ffd55837ac0b3",
+      "files_changed": [
+        "00-title.md",
+        "01-abstract.md",
+        "02-introduction.md",
+        "03-patient-information.md",
+        "04-clinical-findings.md",
+        "05-timeline.md",
+        "06-diagnostic-assessment.md",
+        "07-therapeutic-intervention.md",
+        "08-follow-up.md",
+        "09-discussion.md",
+        "10-patient-perspective.md",
+        "11-consent.md"
+      ],
+      "requests": [],
+      "notes": [
+        "guideline 2: 0 absent item(s)",
+        "consistency 2: 0 E-CONS block, 0 warn",
+        "prose 2: 0 pattern hits in 2033 words"
+      ]
+    }
+  ],
+  "events": [],
+  "decisions_sha256": "49c935ba6b23f846cb24b6178679671b3f4e6b482d55d9ae8021ff8b1428005d"
+}

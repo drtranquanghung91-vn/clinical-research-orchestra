@@ -118,7 +118,7 @@ OpenEvidence MCP is an unofficial third-party bridge, so it is not vendored. `do
 
 ## 6. Skill catalog
 
-P2 adds `results-writing` and the commands `/orchestra:analyze` and `/orchestra:results`, and moves `data-preparation` and `statistical-analysis` to P2 (see `2026-11-21-p2-analyse-results-design.md`). P3 (0.4.0, 22 Nov 2026) delivered `research-figures`, `conference-abstract`, `prose-humanizer`, `research-poster` and `defense-prep`, the commands `/orchestra:poster` and `/orchestra:defense`, and the agents `consistency-auditor` and `committee-simulator` (see `2026-11-22-p3-present-design.md`); rows marked "Done in P3". P4 (0.5.0, 22 Nov 2026) delivered the writing orchestrators as the model skills `thesis-writing` and `manuscript-writing` with the commands `/orchestra:thesis`, `/orchestra:manuscript` and `/orchestra:audit`, and the agents `citation-verifier`, `statistical-reviewer`, `reporting-guideline-checker` and `scientific-editor` (see `2026-11-22-p4-write-design.md`); rows marked "Done in P4". `case-report`, `systematic-review` and `literature-review` mode (c) moved to the new P5 Reviews and case reports; the skills labelled P4 or P5 below (`ethics-and-crf`, `journal-selection`, `reviewer-response`) are in P6 Extend. Phase labels in this section refer to the roadmap as written on 20 Nov 2026.
+P2 adds `results-writing` and the commands `/orchestra:analyze` and `/orchestra:results`, and moves `data-preparation` and `statistical-analysis` to P2 (see `2026-11-21-p2-analyse-results-design.md`). P3 (0.4.0, 22 Nov 2026) delivered `research-figures`, `conference-abstract`, `prose-humanizer`, `research-poster` and `defense-prep`, the commands `/orchestra:poster` and `/orchestra:defense`, and the agents `consistency-auditor` and `committee-simulator` (see `2026-11-22-p3-present-design.md`); rows marked "Done in P3". P4 (0.5.0, 22 Nov 2026) delivered the writing orchestrators as the model skills `thesis-writing` and `manuscript-writing` with the commands `/orchestra:thesis`, `/orchestra:manuscript` and `/orchestra:audit`, and the agents `citation-verifier`, `statistical-reviewer`, `reporting-guideline-checker` and `scientific-editor` (see `2026-11-22-p4-write-design.md`); rows marked "Done in P4". P5 (0.6.0, 23 Nov 2026) delivered `case-report`, `systematic-review` and `literature-review` mode (c), the commands `/orchestra:case` and `/orchestra:sr`, and the scripts `case_facts.py`, `case_lint.py`, `screening.py`, `extract_check.py`, `meta.py` and `grade.py` (see `2026-11-22-p5-reviews-case-reports-design.md`); rows marked "Done in P5". The skills labelled P4 or P5 below (`ethics-and-crf`, `journal-selection`, `reviewer-response`) are in P6 Extend. Phase labels in this section refer to the roadmap as written on 20 Nov 2026.
 
 Model-invoked skills have descriptions that start "Use when…" and list triggers only. Bodies stay under ~500 words; detail goes to `references/`. User-invoked commands are thin wrappers with `disable-model-invocation: true` that call the model-invoked skills, never the reverse.
 
@@ -131,7 +131,7 @@ Model-invoked skills have descriptions that start "Use when…" and list trigger
 | 3 | `literature-search` | 2 | Amelia Le | nomenclature check, search strategy (PRISMA-S fields), verified `references.json`, evidence table and map with RoB column, research gaps → `02_evidence/` |
 | 4 | `critical-appraisal` | 2 | Amelia Le | per-study appraisal by real design (design tree), tool by design, "three questions" verdict; standalone mode for journal club (.docx) |
 | 5 | `guideline-check` | 2 | new (Amelia Le's request) | current clinical guidelines and reporting guidelines for the topic and design, each with version and date checked → `02_evidence/guidelines.md`; flags outdated ones cited elsewhere in the project |
-| 6 | `literature-review` | 2/5 | new, from owner's review skills | synthesised prose in three modes: (a) thesis Chapter 1 *Tổng quan tài liệu*, (b) manuscript background/introduction, (c) standalone narrative or scoping review (PRISMA-ScR). Modes (a) and (b) done in P1; mode (c) moved to P5 |
+| 6 | `literature-review` | 2/5 | new, from owner's review skills | synthesised prose in three modes: (a) thesis Chapter 1 *Tổng quan tài liệu*, (b) manuscript background/introduction, (c) standalone narrative or scoping review (PRISMA-ScR). Modes (a) and (b) done in P1; mode (c) done in P5 |
 | 7 | `protocol-design` | 3 | Amelia Le | design choice with trade-offs, eligibility, variables table, bias and confounding, SPIRIT 2025 map → `03_protocol/` |
 | 8 | `sample-size-sap` | 3 | Amelia Le | sample size with sensitivity table via `samplesize.py`, every parameter sourced, SAP → `03_protocol/` |
 | 9 | `ethics-and-crf` | 3 | new (P4) | ethics committee dossier, consent form, CRF, data dictionary |
@@ -140,8 +140,8 @@ Model-invoked skills have descriptions that start "Use when…" and list trigger
 | 12 | `research-figures` | 4 | grand-rounds + MZL lessons | Table 1, KM with numbers-at-risk, forest plot, CONSORT/STROBE/PRISMA flow diagrams; native editable charts or vector plots; never AI-generated images of data. Done in P3 (forest, KM, rates, flow; Table 1 stays with `statistical-analysis`) |
 | 13 | `manuscript-writing` | 5 | owner's `bai-bao-khoa-hoc` + PaperOrchestra patterns | orchestrator, section 10.1. Done in P4 (plan decision D1: the command is `/orchestra:manuscript`) |
 | 14 | `thesis-writing` | 5 | new | orchestrator, section 10.2; Vietnamese thesis .docx. Done in P4 (the command is `/orchestra:thesis`) |
-| 15 | `systematic-review` | 5 | new (P5) | orchestrator: PROSPERO draft, multi-database strings, dual screening log, extraction form, RoB, `metafor` script, GRADE SoF, PRISMA 2020 flow |
-| 16 | `case-report` | 5 | owner's `bmj-case-report` (P5) | CARE-compliant case report; BMJ template mode |
+| 15 | `systematic-review` | 5 | new (P5, done) | orchestrator: PROSPERO draft, multi-database strings, dual screening log, extraction form, RoB, `metafor` script, GRADE SoF, PRISMA 2020 flow |
+| 16 | `case-report` | 5 | owner's `bmj-case-report` (P5, done) | CARE-compliant case report; BMJ template mode |
 | 17 | `conference-abstract` | 6 | new | structured abstract within the conference word limit. Done in P3 |
 | 18 | `prose-humanizer` | 5/6 | `humanizer` v4 adapted | rewrites AI-sounding prose (section 10.4). Done in P3 |
 | 19 | `research-poster` | 6 | owner's poster skill + IVLBCL lessons | section 11.1. Done in P3 |
@@ -159,6 +159,7 @@ Model-invoked skills have descriptions that start "Use when…" and list trigger
 | `/orchestra:manuscript` | `manuscript-writing` orchestrator (P4) |
 | `/orchestra:thesis` | `thesis-writing` orchestrator (P4) |
 | `/orchestra:sr` | `systematic-review` orchestrator (P5) |
+| `/orchestra:case` | `case-report` orchestrator (P5) |
 | `/orchestra:poster` | `research-poster` |
 | `/orchestra:defense` | `defense-prep` |
 | `/orchestra:audit` | every checker in section 9 over the project; writes `reviews/audit.md` and `reviews/audit.json` (P4) |
@@ -290,6 +291,9 @@ Optional dependencies (`python-docx`, `python-pptx`, `PyMuPDF`, `playwright`; in
 | `poster_build.py` | poster HTML → PDF via headless Chrome/Edge; PPTX via `pptx_from_spec.py`; layouts `editorial`, `pathway`, `figure-led`. Done in P3 |
 | `poster_preflight.py` | page size, per-image effective dpi at print size, fonts embedded, bleed, text overflow via screenshot; printed figure text size (`E-PRINT`). Done in P3 |
 | `pptx_from_spec.py`, `check_pptx.py` | from grand-rounds; adapted with `{{R-…}}` placeholders, native KM and forest charts, poster size. Done in P3 |
+| `case_facts.py`, `case_lint.py` | case facts locked as `observed` ledger records; anonymisation, consent and structure (`E-CASE`; `--strict` refuses the final export without recorded consent). Done in P5 |
+| `screening.py`, `extract_check.py` | dual screening log, kappa and PRISMA counts; double extraction, consensus, risk of bias and charting checks (`E-SCR`). Done in P5 |
+| `meta.py`, `grade.py` | pooled estimates with tau-squared, I-squared and prediction interval, optional `metafor` cross-check (`E-META`); GRADE summary of findings (`E-GRADE`). Done in P5 |
 | `crolib/derived.py` | shared ledger lookup by id and part, safe evaluation of `derived` formulas. Done in P3 |
 | `phi_scan.py`, `deidentify.py` | in `phi-guard` |
 
@@ -305,6 +309,10 @@ Optional dependencies (`python-docx`, `python-pptx`, `PyMuPDF`, `playwright`; in
 | `E-LIT` | literature review structure | review written paper by paper (review_lint.py) |
 | `E-PHI` | patient identifiers | any identifier in a deliverable (`audit.py`, P4) |
 | `E-FMT` | format | required section missing, caption numbering gap or duplicate, missing or non-PNG image, unfilled `[[TÁC GIẢ: …]]` / `[[AUTHOR: …]]`, also wrapped over lines (P4) |
+| `E-CASE` | case report | identifier in the case text or notes, consent not recorded for the final export, required CARE section missing (P5) |
+| `E-SCR` | screening and extraction | a record without two human decisions, a consensus cell that differs from both extractors, search-log counts that do not match (P5) |
+| `E-GRADE` | claim vs certainty | warn: a pooled result of low or very low certainty stated without hedging (P5) |
+| `E-META` | Python vs `metafor` | warn: a pooled estimate that differs from the R result beyond tolerance (P5) |
 | `E-REV` | reviews | a reviewer report missing, or written about other drafts than the current ones (P4) |
 | `E-PRINT` | print | image below 150 dpi at print size; fonts not embedded; no bleed when requested |
 | `P01`–`P30` | AI-prose patterns (`lint_prose.py`; catalog `references/writing/prose-patterns.md`) | blocking only above threshold |
@@ -315,7 +323,7 @@ Each finding: code, severity (block | warn), file, location, quote, fix.
 
 ## 10. Writing pipelines
 
-Built in P4 (0.5.0) as `thesis-writing` and `manuscript-writing`; the implemented design, which refines this section (one engine for both, reused accepted chapters, `worklog.py` scoring, `assemble.py`, `audit.py`), is `2026-11-22-p4-write-design.md`. G4 is per deliverable: one `reviews/audit.json` can cover both, and opening G4 for the manuscript keeps the thesis lock (plan decision D2). The "prepare in parallel" workers of step 1 below are earlier stages in practice (literature search, protocol, results ledger), not part of the writing run.
+Built in P4 (0.5.0) as `thesis-writing` and `manuscript-writing`; the implemented design, which refines this section (one engine for both, reused accepted chapters, `worklog.py` scoring, `assemble.py`, `audit.py`), is `2026-11-22-p4-write-design.md`. G4 is per deliverable: one `reviews/audit.json` can cover both, and opening G4 for the manuscript keeps the thesis lock (plan decision D2). P5 adds the deliverables `case-report` and `review` (systematic, scoping or narrative) to the same engine, G4 and hook; the design is `2026-11-22-p5-reviews-case-reports-design.md`. Screening and review-work briefs run after G2, before G3 (section 12). The "prepare in parallel" workers of step 1 below are earlier stages in practice (literature search, protocol, results ledger), not part of the writing run.
 
 ### 10.1 Manuscript (`/orchestra:manuscript`)
 
@@ -412,7 +420,7 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
 | G3 Results lock | `gate.py lock` records SHA-256 of ledger and outputs | manuscript/thesis writing; later changes to locked files are reported |
 | G4 Release | `/orchestra:audit` has no blocking finding | export of final deliverables |
 
-- Enforced by a `PreToolUse` hook in `orchestra` that intercepts dispatch of writer roles and final export scripts. Implemented in P4 (`hooks/hooks.json`, `scripts/gate_hook.py`, on Bash, PowerShell, Agent and Task): an Agent/Task prompt carrying `orchestra-role:` (the first line of every writer role brief) is denied unless G3 is open; `assemble.py … --final`, or `build_docx.py` writing `out/thesis.docx` or `out/manuscript.docx`, is denied unless G4 is open for that deliverable.
+- Enforced by a `PreToolUse` hook in `orchestra` that intercepts dispatch of writer roles and final export scripts. P5 adds the marker `orchestra-prep:` (the first line of the `screen-suggest`, `extract-draft` and `rob-draft` briefs), denied unless G2 is open, and the deliverables `case-report` and `review`; the final export of a case report also needs recorded consent (`case_lint.py --strict`). Implemented in P4 (`hooks/hooks.json`, `scripts/gate_hook.py`, on Bash, PowerShell, Agent and Task): an Agent/Task prompt carrying `orchestra-role:` (the first line of every writer role brief) is denied unless G3 is open; `assemble.py … --final`, or `build_docx.py` writing `out/thesis.docx` or `out/manuscript.docx`, is denied unless G4 is open for that deliverable.
 - G4 is bound to the audit: `gate.py open . G4 --by NAME` succeeds only when `reviews/audit.json` has 0 blocks and every hash it recorded (drafts, `order.txt`, images, ledgers) still matches; the lock is kept per deliverable, and a later change to any of those files closes G4 for it again.
 - Gates are per project and can be waived only by an explicit author entry in `decisions.md`, which the hook reads. Example: a poster from an already-published paper waives G1–G2.
 - "Just do it" requests follow Amelia Le's rule: proceed, open with a **Giả định / Assumptions** box, record it in `decisions.md`.
@@ -470,8 +478,8 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
 | **P2 Analyse and report results** | `data-preparation`, `statistical-analysis` (run and import modes), `results-writing`, `/orchestra:analyze`, `/orchestra:results`, `crostats.py`, `analysis_plan.py`, `results_ledger.py`, `render_results.py`, `check_numbers.py`, `build_docx.py`; design in `2026-11-21-p2-analyse-results-design.md` | fictional cohort goes from synthetic data to locked results (G3) and Chapter 3 .docx; posthoc-fishing, number-drift, undeclared-deviation, spss-import scenarios GREEN |
 | **P3 Present** | `research-figures`, `research-poster`, `defense-prep`, `conference-abstract`, `prose-humanizer`, `consistency_audit.py`, `poster_preflight.py`, `lint_prose.py`, `invariants.py`, `committee-simulator` | poster with 3 layouts and defence deck built from fictional cohort; MZL and 87-dpi scenarios GREEN. Done (0.4.0, 22 Nov 2026) |
 | **P4 Write** | `thesis-writing`, `manuscript-writing`, `/orchestra:audit`, remaining reviewer agents, revise loop, G4 hook; design in `2026-11-22-p4-write-design.md` | fictional cohort yields manuscript .docx and thesis .docx passing `/orchestra:audit`; thesis-g3-closed, discussion-overclaim, g4-export-blocked, revise-revert scenarios GREEN. Done (0.5.0, 22 Nov 2026) |
-| **P5 Reviews and case reports** | `case-report` (CARE), `systematic-review` with `/orchestra:sr` (PRISMA 2020), `literature-review` mode (c) | to be set in its own design spec |
-| **P6 Extend** | `ethics-and-crf`, `journal-selection`, `reviewer-response`, Codex/Antigravity manifests, autorater, landing page; v1.0 release | owner sign-off |
+| **P5 Reviews and case reports** | `case-report` (CARE), `systematic-review` with `/orchestra:sr` (PRISMA 2020), `literature-review` mode (c) | fictional case and fictional systematic review pass `/orchestra:audit` and reach G4; case-identifiers, case-consent-missing, sr-single-screener, sr-pool-heterogeneous, scoping-asks-pooling scenarios GREEN; design in `2026-11-22-p5-reviews-case-reports-design.md`. Done (0.6.0, 23 Nov 2026) |
+| **P6 Extend** | `ethics-and-crf`, `journal-selection`, `reviewer-response`, Codex/Antigravity manifests, autorater, landing page; v1.0 release | owner sign-off. Next |
 
 Each phase gets its own implementation plan in `docs/superpowers/plans/`. Phases were re-ordered on 21 Nov 2026 (statistical analysis moved from P3 to a new P2; old P2–P4 became P3–P5) and on 22 Nov 2026 (case report, systematic review and literature-review mode (c) moved out of P4 into a new P5; old P5 Extend became P6).
 

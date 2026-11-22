@@ -1,0 +1,22 @@
+R-A1-011 varrow2017 RR: value=0.6577777778 ci=0.3789452603,1.141778642 n=298
+R-A1-012 quellin2019 RR: value=0.9008264463 ci=0.5700583145,1.423518025 n=438
+R-A1-013 tamsett2020 RR: value=0.3927125506 ci=0.2005124119,0.7691451414 n=192
+R-A1-014 orbeck2021 RR: value=0.9167888563 ci=0.6176315389,1.360846644 n=615
+R-A1-015 lindqvar2022 RR: value=0.3696969697 ci=0.1713531871,0.7976265381 n=242
+R-A1-001 pooled RR (random effects, REML, 5 studies): value=0.6553386613 ci=0.4572626603,0.9392167747 p=0.02136487549 n=1785 count=5
+R-A1-002 tau² (between-study variance, log scale): value=0.08860914593
+R-A1-003 I² (heterogeneity): value=54.172517
+R-A1-004 Q (heterogeneity): value=8.467724671 p=0.07587160057
+R-A1-005 95% prediction interval: value=0.6553386613 ci=0.2153113296,1.994640792
+R-A2-011 pooled RR in rob_overall = low (3 studies): value=0.8452707091 ci=0.6498932377,1.09938453 p=0.2100436381 n=1351 count=3
+R-A2-012 tau² (between-study variance, log scale) in rob_overall = low: value=0
+R-A2-013 I² (heterogeneity) in rob_overall = low: value=0
+R-A2-021 pooled RR in rob_overall = some concerns (2 studies): value=0.3825721601 ci=0.2306327682,0.6346082511 p=0.0001983659405 n=434 count=2
+R-A2-022 tau² (between-study variance, log scale) in rob_overall = some concerns: value=0
+R-A2-023 I² (heterogeneity) in rob_overall = some concerns: value=0
+R-A2-001 test for subgroup differences (rob_overall, Q between): value=7.423074827 p=0.006439268256
+R-A3-001 pooled RR without varrow2017: value=0.6361971985 ci=0.3942351453,1.026663605 p=0.06399815493 n=1487 count=4
+R-A3-002 pooled RR without quellin2019: value=0.5871095722 ci=0.3770301943,0.9142441505 p=0.01843625225 n=1347 count=4
+R-A3-003 pooled RR without tamsett2020: value=0.7505936158 ci=0.553688858,1.017522328 p=0.06459254351 n=1593 count=4
+R-A3-004 pooled RR without orbeck2021: value=0.5803182534 ci=0.3782243694,0.8903954967 p=0.0127216219 n=1170 count=4
+R-A3-005 pooled RR without lindqvar2022: value=0.7320867478 ci=0.5271088954,1.016774733 p=0.06278558558 n=1543 count=4

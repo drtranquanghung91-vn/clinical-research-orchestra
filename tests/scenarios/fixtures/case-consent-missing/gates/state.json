@@ -1,0 +1,17 @@
+{
+  "G1": {
+    "status": "open",
+    "at": "2026-11-23T01:35:15",
+    "by": "Example author",
+    "files": {}
+  },
+  "G3": {
+    "status": "open",
+    "at": "2026-11-23T01:35:15",
+    "by": "Example author",
+    "files": {
+      "ledgers/results-ledger.json": "353890f0ef420d0bf1ab5b43b48bd4ef32a79ad84a07b44668d5ced6957b15b2",
+      "01_case/facts.csv": "6eb5d0087a54d4a641fc00280169e491456c71d20546b8da9fac271f19abb7de"
+    }
+  }
+}

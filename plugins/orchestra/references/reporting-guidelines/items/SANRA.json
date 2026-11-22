@@ -1,0 +1,12 @@
+{
+  "code": "SANRA",
+  "version": "2019",
+  "items": [
+    {"id": "1", "section": "Quality item", "text": "Why the topic matters to the intended readers is argued."},
+    {"id": "2", "section": "Quality item", "text": "Concrete statement of the aims or questions."},
+    {"id": "3", "section": "Quality item", "text": "The search for literature is described."},
+    {"id": "4", "section": "Quality item", "text": "Referencing: key statements are backed by references."},
+    {"id": "5", "section": "Quality item", "text": "Scientific reasoning: appropriate evidence levels are presented."},
+    {"id": "6", "section": "Quality item", "text": "Appropriate presentation of relevant endpoint data."}
+  ]
+}

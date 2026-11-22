@@ -1,4 +1,4 @@
-"""Revise loop for the thesis / manuscript drafts: scores reviewer reports, decides KEEP / REVERT / STOP,
+"""Revise loop for the drafts of a deliverable (thesis, manuscript, case-report, review): scores reviewer reports, decides KEEP / REVERT / STOP,
 snapshots each round, restores a kept round, and drafts out/author-decisions.md. Standard library only.
 
 Commands
@@ -69,13 +69,15 @@ TEXT = {
                    "công cụ không quyết định thay tác giả.",
            "req": "## 1. Yêu cầu phân tích mới (chưa đưa vào bài)", "ask": "Quyết định của tác giả: …",
            "ass": "## 2. Giả định / Assumptions", "waive": "## 3. Miễn cổng (WAIVE)", "none": "- Không có.",
-           "round": "vòng", "thesis": "luận văn", "manuscript": "bài báo"},
+           "round": "vòng", "thesis": "luận văn", "manuscript": "bài báo",
+           "case-report": "báo cáo ca bệnh", "review": "bài tổng quan"},
     "en": {"title": "# Author decisions",
            "note": "> Draft written by `worklog.py decisions`. The author records each decision and is responsible "
                    "for it; the tool decides nothing.",
            "req": "## 1. Requests for new analyses (not in the text)", "ask": "Author's decision: …",
            "ass": "## 2. Assumptions (Giả định / Assumptions)", "waive": "## 3. Gate waivers (WAIVE)", "none": "- None.",
-           "round": "round", "thesis": "thesis", "manuscript": "manuscript"},
+           "round": "round", "thesis": "thesis", "manuscript": "manuscript",
+           "case-report": "case report", "review": "review"},
 }
 
 
@@ -414,7 +416,7 @@ def main(argv=None) -> int:
         return 2
     try:
         if a.cmd != "decisions" and not a.deliverable:
-            raise UsageError(f"{a.cmd} needs thesis or manuscript")
+            raise UsageError(f"{a.cmd} needs a deliverable ({', '.join(drafts.DELIVERABLES)})")
         if a.cmd == "digest":
             if not drafts.draft_files(project, a.deliverable):
                 raise UsageError(f"no drafts in 06_writing/{a.deliverable}/")

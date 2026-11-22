@@ -86,6 +86,62 @@ class TestReferenceLibrary(unittest.TestCase):
         for s in ("ICMJE", "not an author", "không phải là tác giả", "STATUS.md", "decisions.md", "never marked final"):
             self.assertIn(s, dis)
 
+    def test_p5_role_briefs_and_markers(self):
+        roles = REF / "writing" / "roles"
+        want = {
+            "case-front": ("{{R-A0-", "[@id]", "keywords", "rare", "first", "BMJ"),
+            "case-presentation": ("{{R-A0-", "relative time", "age range", "Timeline", "CARE", "01_case/facts.csv"),
+            "case-discussion": ("[@id]", "similar-cases", "Learning points", "3–5", "consent", "[[AUTHOR:"),
+            "review-systematic": ("{{R-A0-", "{{R-A1-", "[@id]", "PRISMA 2020", "prediction interval", "τ²", "I²",
+                                  "sof.md", "GRADE", "kappa", "SWiM"),
+            "review-scoping": ("{{R-A0-", "[@id]", "PRISMA-ScR", "charting", "no risk of bias", "no pooled"),
+            "review-narrative": ("[@id]", "SANRA", "theme", "search approach", "not a systematic review"),
+        }
+        for name, needles in want.items():
+            text = (roles / f"{name}.md").read_text(encoding="utf-8")
+            with self.subTest(role=name):
+                self.assertEqual(text.splitlines()[0], f"orchestra-role: {name}")
+                for s in needles:
+                    self.assertIn(s, text)
+        prep = REF / "review" / "roles"
+        for name, needles in {"screen-suggest": ("ai-suggestions", "never", "screening.csv", "maybe"),
+                              "extract-draft": ("extraction-draft.csv", "never", "page", "extraction-<reviewer>.csv"),
+                              "rob-draft": ("rob-draft.csv", "AI draft", "RoB 2", "ROBINS-I", "never a summed score")}.items():
+            text = (prep / f"{name}.md").read_text(encoding="utf-8")
+            with self.subTest(prep=name):
+                self.assertEqual(text.splitlines()[0], f"orchestra-prep: {name}")
+                for s in needles:
+                    self.assertIn(s, text)
+
+    def test_p5_review_references(self):
+        r = REF / "review"
+        proto = (r / "sr-protocol-template.md").read_text(encoding="utf-8")
+        for s in ("PRISMA-P", "## Full-text exclusion reasons", "## Analysis register",
+                  "| ID | Type | Outcome | Timepoint | Measure | Model | HKSJ | Experimental | Comparator | Factor |",
+                  "RE-REML", "DEVIATION A<n>:", "PCC", "never a summed score"):
+            self.assertIn(s, proto)
+        import analysis_plan
+        self.assertEqual([x["id"] for x in analysis_plan.parse_register(proto)], ["A0", "A1"])
+        for f, needles in {"prospero-fields.md": ("not registered", "review.registration", "draft"),
+                           "search-strings.md": ("search-log.csv", "PRISMA-S", "Embase", "CENTRAL", "never run",
+                                                 "literature-search"),
+                           "swim.md": ("SWiM", "vote counting", "Grouping")}.items():
+            text = (r / f).read_text(encoding="utf-8")
+            for s in needles:
+                with self.subTest(file=f, needle=s):
+                    self.assertIn(s, text)
+        dis = (REF / "writing" / "ai-disclosure.md").read_text(encoding="utf-8")
+        for s in ("ai-suggestions.csv", "screen-suggest", "confirmed by", "CONSENT: obtained", "never marked final"):
+            self.assertIn(s, dis)
+        for wf in ("case-report", "systematic-review", "scoping-review"):
+            text = (REF / "workflows" / f"{wf}.md").read_text(encoding="utf-8")
+            self.assertIn("gate.py", text)
+            self.assertIn("audit.py", text)
+
+    def test_p5_grade_wording(self):
+        text = (REF / "review" / "grade-wording.md").read_text(encoding="utf-8")
+        for s in ("## vi", "## en"):
+            self.assertIn(s, text)
 
 
 if __name__ == "__main__":

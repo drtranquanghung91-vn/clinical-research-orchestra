@@ -8,7 +8,8 @@ import re
 from decimal import ROUND_HALF_UP, Decimal
 
 PRECISION = {"n": 0, "count": 0, "percent": 1, "mean": 1, "sd": 1, "median": 1, "iqr": 1,
-             "md": 2, "or": 2, "rr": 2, "hr": 2, "rd": 2, "beta": 2, "auc": 3, "p": 3, "other": 2}
+             "md": 2, "or": 2, "rr": 2, "hr": 2, "rd": 2, "beta": 2, "auc": 3, "p": 3, "other": 2,
+             "smd": 2, "tau2": 3, "absolute": 0, "measure": 1}
 KINDS = frozenset(k for k in PRECISION if k != "count")
 EN_DASH = "–"
 _TOKEN = {
@@ -44,9 +45,17 @@ def _precision(kind: str) -> int:
     return PRECISION.get(kind, 2)
 
 
+def _decimals(rec: dict, kind: str) -> int:
+    """A record's own `decimals` (int 0-4, case facts) wins over the kind's precision."""
+    d = rec.get("decimals")
+    if isinstance(d, int) and not isinstance(d, bool) and 0 <= d <= 4:
+        return d
+    return _precision(kind)
+
+
 def render(rec: dict, part: str, lang: str) -> str:
     kind = rec.get("kind") or "other"
-    d = _precision(kind)
+    d = _decimals(rec, kind)
     if part == "value":
         if kind == "p":
             return fmt_p(rec["value"], lang)

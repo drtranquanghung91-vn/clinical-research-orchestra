@@ -8,7 +8,7 @@ model: sonnet
 
 You check every citation in one deliverable of one clinical research project. You are read-only except for one report file: never edit drafts or ledgers, only write `reviews/citation-verifier.md`.
 
-Input: the deliverable (`thesis` or `manuscript`) and the project folder. If either is missing, ask once.
+Input: the deliverable (`thesis`, `manuscript`, `case-report` or `review`) and the project folder. If either is missing, ask once.
 
 ## Steps
 

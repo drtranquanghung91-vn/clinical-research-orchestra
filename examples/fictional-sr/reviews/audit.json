@@ -1,0 +1,155 @@
+{
+  "deliverable": "review",
+  "deliverables": [
+    "review"
+  ],
+  "at": "2026-11-23T03:21:11",
+  "blocks": 0,
+  "warns": 15,
+  "online": false,
+  "files": {
+    "06_writing/review/00-title.md": "a366e01d3a59fdc957e28fd07a6ae26500a6c54310d557d048a369cc0c2a9cbf",
+    "06_writing/review/01-abstract.md": "46c7d9005c585a6910164f705f005aa83ce06ca84daca605fbc72914a84f7ba7",
+    "06_writing/review/02-introduction.md": "ef8953d33e30d7cb645ec0a5c6036d33600290b03e763c8583451709ae064b81",
+    "06_writing/review/03-methods.md": "0d1eb42a45ed5e603839e0774a0daa5ccd4f10aed2f8c740ba774273a997a178",
+    "06_writing/review/04-results.md": "b92f39e87a3512b7affcbdb47dd41482c63d2f4d8deabf8885b871cfe98bb707",
+    "06_writing/review/05-discussion.md": "04506b1c5769393d69e7bab1bada5c098c20fc40636b3c28d1faaaa3c81b5f03",
+    "06_writing/review/06-conclusion.md": "d4e5c3ac9441336c9645a859ee4d5d9847b87ed2b491022663e79ac3c088d2da",
+    "06_writing/review/07-other-information.md": "c61086832622cd92f827ca50e8e59a5b0256066763afecf7f0c07d19495c3e19",
+    "06_writing/review/sof.md": "fa8f859839010f55e0440b8692d209d5bdae8e3efe23346e17639526b78bfbfb",
+    "07_present/figures/F-PRISMA.png": "1b9edab6853bf126584908f96f0bc3b599eac446bf4082ebe9d739488eb1b455",
+    "07_present/figures/F-ROB.png": "d9e6433be428861c98ff06372abe987960a7b460b94013bba817bd34f89ebb7c",
+    "07_present/figures/F-A1.png": "40d2e9151be8fbf21b4705babb17c9849f3b44cdc538a51068010f3098fd8277",
+    "ledgers/references.json": "1413bff63667834aa0a920adfc2ec00f8d45fcd3f77cdc360e41a3734b832eee",
+    "ledgers/results-ledger.json": "c68fe39dac75b02ffd03fe4cbef3281ecac7d1a5d1b60b2a80dc44a0651d7d51",
+    "ledgers/claims.json": "3874259b03f259e4aef8750b018008aa3a1bcda33a25aff0a8bf0a299c279324",
+    "02_evidence/sr/records.csv": "76b2727edf394c2513a4c4530da4816e8ce5563c8a5a5b2d08882731346c81c2",
+    "02_evidence/sr/screening.csv": "f4b41d9fc9e4b03bae74bc2758a232d26a99d17d5521379b5c1d0a0838a6be20",
+    "04_data/sr/extraction.csv": "56f839a4d5683e2cb44ff49e39346ef069a3f2da446586c0b931f05eea455c46",
+    "04_data/sr/rob.csv": "910985488174edd65e7a6659e0821ad225316da0a35dde7bfdf020378b5a36b8",
+    "05_analysis/meta/grade.json": "5aaa5031ae6880963f1c8d09efdf66c5bedb874b4f71eef3536b9f23bdb3a6f4",
+    "04_data/sr/charting.csv": null
+  },
+  "findings": [
+    {
+      "check": "screening and extraction",
+      "code": "E-SCR",
+      "level": "warn",
+      "file": "04_data/sr/extraction-reviewer-a.csv",
+      "line": 7,
+      "msg": "tamsett2020 / tử vong mọi nguyên nhân / 30 ngày / giả dược: events Reviewer A=26, Reviewer B=25"
+    },
+    {
+      "check": "GRADE wording",
+      "code": "E-GRADE",
+      "level": "warn",
+      "file": "06_writing/review/01-abstract.md",
+      "line": 14,
+      "msg": "R-A1-001 has low certainty (GRADE); hedge the claim ('có thể', 'độ tin cậy thấp', 'mức chắc chắn thấp', …)"
+    },
+    {
+      "check": "GRADE wording",
+      "code": "E-GRADE",
+      "level": "warn",
+      "file": "06_writing/review/04-results.md",
+      "line": 45,
+      "msg": "R-A1-001 has low certainty (GRADE); hedge the claim ('có thể', 'độ tin cậy thấp', 'mức chắc chắn thấp', …)"
+    },
+    {
+      "check": "GRADE wording",
+      "code": "E-GRADE",
+      "level": "warn",
+      "file": "06_writing/review/04-results.md",
+      "line": 72,
+      "msg": "R-A1-001 has low certainty (GRADE); hedge the claim ('có thể', 'độ tin cậy thấp', 'mức chắc chắn thấp', …)"
+    },
+    {
+      "check": "GRADE wording",
+      "code": "E-GRADE",
+      "level": "warn",
+      "file": "06_writing/review/sof.md",
+      "line": 1,
+      "msg": "R-A1-001 has low certainty (GRADE); hedge the claim ('có thể', 'độ tin cậy thấp', 'mức chắc chắn thấp', …)"
+    },
+    {
+      "check": "guideline checklist",
+      "code": "E-RG",
+      "level": "warn",
+      "file": "06_writing/review/01-abstract.md",
+      "line": 9,
+      "msg": "item 2 is only partly reported: Abstract names the information source and gives a limitations statement, closing the two gaps flagged previously. Still missing the date the source was last searched (required by the PRISMA 2020 for Abstracts checklist); the date is given in Methods (03-methods.md:27, 23/11/2026) but not repeated in the abstract."
+    },
+    {
+      "check": "guideline checklist",
+      "code": "E-RG",
+      "level": "warn",
+      "file": "06_writing/review/02-introduction.md",
+      "line": 13,
+      "msg": "item 3 is only partly reported: Author deliberately omits rationale in light of existing disease-burden evidence because the intervention is fictional; author has reviewed this gap and chosen to keep the fictional framing as-is (final decision, not re-flagged as newly broken)."
+    },
+    {
+      "check": "guideline checklist",
+      "code": "E-RG",
+      "level": "warn",
+      "file": "06_writing/review/03-methods.md",
+      "line": 27,
+      "msg": "item 7 is only partly reported: The full search strategy is referenced only in an external appendix file (02_evidence/sr/strings.md) rather than reproduced in the manuscript; author has reviewed this gap and chosen to keep the external-appendix approach as-is (final decision, not re-flagged as newly broken)."
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/review/03-methods.md",
+      "line": 27,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/review/review.assembled.md",
+      "line": 99,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/citation-verifier.md",
+      "line": 1,
+      "msg": "citation-verifier reviewed an earlier version of the review drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/statistical-reviewer.md",
+      "line": 1,
+      "msg": "statistical-reviewer reviewed an earlier version of the review drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/reporting-guideline-checker.md",
+      "line": 1,
+      "msg": "reporting-guideline-checker reviewed an earlier version of the review drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/scientific-editor.md",
+      "line": 1,
+      "msg": "scientific-editor reviewed an earlier version of the review drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/consistency.md",
+      "line": 1,
+      "msg": "consistency-auditor reviewed an earlier version of the review drafts (digest differs); rerun it if the content changed"
+    }
+  ]
+}

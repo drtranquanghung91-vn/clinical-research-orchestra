@@ -30,6 +30,10 @@ Notes on the item counts:
 - GRAMMS: item count not confirmed. The 2008 abstract in the record does not state a count, so it is left empty
   rather than filled from memory.
 - Version/year for guidelines without a year in the title is the publication year of the cited record.
+- Item lists read by `guideline_checklist.py`: `items/STROBE.json`, `items/CARE.json`, `items/PRISMA-2020.json`,
+  `items/PRISMA-ScR.json` and `items/SANRA.json`. Item texts are our own paraphrases; ids and order follow the
+  official checklist (CARE has 13 numbered items and 30 lettered sub-items; PRISMA 2020 has 27 items and 42 ids;
+  PRISMA-ScR has 22). SANRA is a quality scale: record each item as present, partial or absent, and never sum it.
 
 ## How to use
 - The reporting guideline is chosen from the design in `project.yaml` (`reporting_guideline` holds the code above).

@@ -1,0 +1,5 @@
+source_id,design,intervention,outcomes_reported,extracted_by,verified_by
+F01,trial,app,HbA1c,Reviewer A,Reviewer B
+F02,cohort,text messages,adherence,Reviewer A,Reviewer B
+F03,qualitative,app,acceptability,Reviewer A,Reviewer B
+F04,trial,text messages,HbA1c,Reviewer A,Reviewer B

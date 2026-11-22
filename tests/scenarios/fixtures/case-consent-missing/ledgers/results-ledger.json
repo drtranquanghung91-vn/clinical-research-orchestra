@@ -1,0 +1,52 @@
+{
+  "results": [
+    {
+      "id": "R-A0-001",
+      "analysis_id": "A0",
+      "status": "observed",
+      "label": "haemoglobin at admission [C01]",
+      "value": 98.0,
+      "unit": "g/L",
+      "kind": "measure",
+      "decimals": 0,
+      "day": 0,
+      "source_file": "05_analysis/output/case-facts-log.txt",
+      "locator": "line 1",
+      "raw": "R-A0-001 haemoglobin at admission [C01]: value=98",
+      "data_sha256": "6eb5d0087a54d4a641fc00280169e491456c71d20546b8da9fac271f19abb7de",
+      "locked": false
+    },
+    {
+      "id": "R-A0-002",
+      "analysis_id": "A0",
+      "status": "observed",
+      "label": "C-reactive protein at admission [C02]",
+      "value": 85.0,
+      "unit": "mg/L",
+      "kind": "measure",
+      "decimals": 0,
+      "day": 0,
+      "source_file": "05_analysis/output/case-facts-log.txt",
+      "locator": "line 2",
+      "raw": "R-A0-002 C-reactive protein at admission [C02]: value=85",
+      "data_sha256": "6eb5d0087a54d4a641fc00280169e491456c71d20546b8da9fac271f19abb7de",
+      "locked": false
+    },
+    {
+      "id": "R-A0-003",
+      "analysis_id": "A0",
+      "status": "observed",
+      "label": "eosinophil count [C03]",
+      "value": 2.1,
+      "unit": "G/L",
+      "kind": "measure",
+      "decimals": 1,
+      "day": 3,
+      "source_file": "05_analysis/output/case-facts-log.txt",
+      "locator": "line 3",
+      "raw": "R-A0-003 eosinophil count [C03]: value=2.1",
+      "data_sha256": "6eb5d0087a54d4a641fc00280169e491456c71d20546b8da9fac271f19abb7de",
+      "locked": false
+    }
+  ]
+}

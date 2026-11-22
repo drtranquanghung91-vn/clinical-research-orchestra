@@ -1,0 +1,44 @@
+id,label,value,unit,day,source
+URATE-PRE,Serum uric acid before urate-lowering treatment,612,umol/L,-28,outpatient rheumatology visit
+ALLO-DOSE,Allopurinol starting dose,300,mg/day,-28,outpatient rheumatology visit
+ONSET-DAYS,Days of allopurinol use before fever and rash onset,25,days,-3,history of present illness
+TEMP-D0,Temperature at admission,39.2,degC,0,admission examination
+HR-D0,Heart rate at admission,104,bpm,0,admission examination
+BSA-D0,Body surface area involved by rash at admission,60,%,0,admission examination
+WBC-D0,White-cell count,14.6,10^9/L,0,day 0 haematology
+EOS-D0,Eosinophil count,2.9,10^9/L,0,day 0 haematology
+ATYPLY-D0,Atypical lymphocytes,8,%,0,day 0 blood film
+ALT-D0,ALT,312,U/L,0,day 0 biochemistry
+AST-D0,AST,241,U/L,0,day 0 biochemistry
+BILI-D0,Total bilirubin,18,umol/L,0,day 0 biochemistry
+CREA-D0,Creatinine,196,umol/L,0,day 0 biochemistry
+CRP-D0,CRP,86,mg/L,0,day 0 biochemistry
+REGISCAR,RegiSCAR score,7,points,0,DRESS diagnostic assessment
+MP-DOSE,Intravenous methylprednisolone dose,70,mg/day,0,treatment day 0 to +6
+MP-DOSE-PERKG,Intravenous methylprednisolone dose per body weight,1,mg/kg/day,0,treatment day 0 to +6
+WEIGHT,Body weight used for weight-based dosing,70,kg,0,admission record
+WBC-D4,White-cell count,16.2,10^9/L,4,day 4 haematology
+EOS-D4,Eosinophil count,3.4,10^9/L,4,day 4 haematology
+ATYPLY-D4,Atypical lymphocytes,6,%,4,day 4 blood film
+ALT-D4,ALT,486,U/L,4,day 4 biochemistry
+AST-D4,AST,355,U/L,4,day 4 biochemistry
+BILI-D4,Total bilirubin,22,umol/L,4,day 4 biochemistry
+CREA-D4,Creatinine,214,umol/L,4,day 4 biochemistry
+CRP-D4,CRP,64,mg/L,4,day 4 biochemistry
+HHV6-D4,HHV-6 blood PCR viral load,4200,copies/mL,4,day 4 PCR
+PRED-DOSE,Oral prednisolone starting dose,60,mg/day,6,treatment taper from day +6
+TAPER-WEEKS,Duration of oral corticosteroid taper,8,weeks,6,treatment taper
+WBC-D18,White-cell count,9.8,10^9/L,18,discharge haematology
+EOS-D18,Eosinophil count,0.6,10^9/L,18,discharge haematology
+ATYPLY-D18,Atypical lymphocytes,0,%,18,discharge blood film
+ALT-D18,ALT,98,U/L,18,discharge biochemistry
+AST-D18,AST,61,U/L,18,discharge biochemistry
+BILI-D18,Total bilirubin,14,umol/L,18,discharge biochemistry
+CREA-D18,Creatinine,142,umol/L,18,discharge biochemistry
+CRP-D18,CRP,9,mg/L,18,discharge biochemistry
+LOS,Length of hospital stay,18,days,18,admission to discharge
+WBC-D43,White-cell count,7.4,10^9/L,43,follow-up haematology
+EOS-D43,Eosinophil count,0.3,10^9/L,43,follow-up haematology
+CREA-D43,Creatinine,124,umol/L,43,follow-up biochemistry
+CREA-BASELINE,Pre-illness baseline creatinine,118,umol/L,,pre-existing chronic kidney disease record
+EGFR-BASELINE,Pre-illness baseline eGFR,58,mL/min/1.73m2,,pre-existing chronic kidney disease record

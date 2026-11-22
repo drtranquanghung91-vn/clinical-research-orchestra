@@ -312,8 +312,27 @@ class TestGateG4Review(unittest.TestCase):
             audit["deliverables"] = ["all"]
             (p / "reviews" / "audit.json").write_text(json.dumps(audit), encoding="utf-8")
             self.assertEqual(gate.audited_deliverables(audit), [])
-            with self.assertRaises(gate.Refused):
+            with self.assertRaises(gate.Refused) as cm:
                 gate.open_gate(p, "G4", by="A")
+            for d in ("thesis", "manuscript", "case-report", "review"):
+                self.assertIn(d, str(cm.exception))
+
+    def test_null_input_digest_means_absent_at_audit(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            audited(p)
+            data = json.loads((p / "reviews" / "audit.json").read_text(encoding="utf-8"))
+            data["files"]["04_data/sr/rob.csv"] = None
+            (p / "reviews" / "audit.json").write_text(json.dumps(data), encoding="utf-8")
+            gate.open_gate(p, "G4", by="A")
+            self.assertTrue(gate.check_gate(p, "G4", "thesis")[0])
+            self.assertEqual(gate.export_problems(p, "thesis"), [])
+            (p / "04_data" / "sr").mkdir(parents=True, exist_ok=True)
+            (p / "04_data" / "sr" / "rob.csv").write_text("study_id\n", encoding="utf-8")
+            ok, why = gate.check_gate(p, "G4", "thesis")
+            self.assertFalse(ok)
+            self.assertEqual(why, ["04_data/sr/rob.csv changed since the audit (created after it)"])
+            self.assertEqual(gate.export_problems(p, "thesis"), why)
 
     def test_export_problems(self):
         with tempfile.TemporaryDirectory() as t:

@@ -33,6 +33,17 @@ Do not quote the recommendation and do not type a citation for it from memory.
 - No patient-identifiable data was sent to an AI tool: data were de-identified (phi-guard).
 - The model name and version come from `STATUS.md`, `decisions.md` or the author. Never guess them.
 
+## Reviews and case reports (P5)
+- Screening suggestions: "AI suggested include/exclude for N records (role `screen-suggest`, stored in
+  `02_evidence/sr/ai-suggestions.csv`); every decision was made by the two named reviewers, independently, and
+  conflicts were resolved by consensus." N comes from the file; if no suggestion was made, say so.
+- Draft extraction or risk of bias: "An AI draft was produced (`extract-draft` / `rob-draft`); each value and
+  judgement was confirmed by <reviewer names>." Name the reviewers as in `project.yaml → review.reviewers`.
+- Meta-analysis: computed by `meta.py` (Python); if `meta.py r-check` ran, the R and metafor versions it reported.
+- Case report: the consent statement copies the `CONSENT: obtained …` line of `decisions.md`; the de-identification
+  (relative time, age ranges) was checked by `case_lint.py` and phi-guard.
+The disclosure stays a draft: never marked final by Claude.
+
 ## Where it goes
 - Manuscript: methods or acknowledgements, per the journal.
 - Thesis: after Lời cam đoan, or in Phụ lục, per the institution.

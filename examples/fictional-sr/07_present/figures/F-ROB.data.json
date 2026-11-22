@@ -1,0 +1,226 @@
+{
+  "id": "F-ROB",
+  "type": "rob",
+  "source": "04_data/sr/rob.csv",
+  "values": [
+    {
+      "label": "lindqvar2022 D1",
+      "ref": "04_data/sr/rob.csv",
+      "text": "some concerns"
+    },
+    {
+      "label": "lindqvar2022 D2",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "lindqvar2022 D3",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "lindqvar2022 D4",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "lindqvar2022 D5",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "lindqvar2022 overall",
+      "ref": "04_data/sr/rob.csv",
+      "text": "some concerns"
+    },
+    {
+      "label": "orbeck2021 D1",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "orbeck2021 D2",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "orbeck2021 D3",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "orbeck2021 D4",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "orbeck2021 D5",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "orbeck2021 overall",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "quellin2019 D1",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "quellin2019 D2",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "quellin2019 D3",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "quellin2019 D4",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "quellin2019 D5",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "quellin2019 overall",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "tamsett2020 D1",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "tamsett2020 D2",
+      "ref": "04_data/sr/rob.csv",
+      "text": "some concerns"
+    },
+    {
+      "label": "tamsett2020 D3",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "tamsett2020 D4",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "tamsett2020 D5",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "tamsett2020 overall",
+      "ref": "04_data/sr/rob.csv",
+      "text": "some concerns"
+    },
+    {
+      "label": "varrow2017 D1",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "varrow2017 D2",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "varrow2017 D3",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "varrow2017 D4",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "varrow2017 D5",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    },
+    {
+      "label": "varrow2017 overall",
+      "ref": "04_data/sr/rob.csv",
+      "text": "low"
+    }
+  ],
+  "data_file": "04_data/sr/rob.csv",
+  "data_sha256": "910985488174edd65e7a6659e0821ad225316da0a35dde7bfdf020378b5a36b8",
+  "chart": {
+    "kind": "rob",
+    "tool": "RoB 2",
+    "studies": [
+      "lindqvar2022",
+      "orbeck2021",
+      "quellin2019",
+      "tamsett2020",
+      "varrow2017"
+    ],
+    "domains": [
+      "D1",
+      "D2",
+      "D3",
+      "D4",
+      "D5",
+      "overall"
+    ],
+    "cells": [
+      [
+        "some concerns",
+        "low",
+        "low",
+        "low",
+        "low",
+        "some concerns"
+      ],
+      [
+        "low",
+        "low",
+        "low",
+        "low",
+        "low",
+        "low"
+      ],
+      [
+        "low",
+        "low",
+        "low",
+        "low",
+        "low",
+        "low"
+      ],
+      [
+        "low",
+        "some concerns",
+        "low",
+        "low",
+        "low",
+        "some concerns"
+      ],
+      [
+        "low",
+        "low",
+        "low",
+        "low",
+        "low",
+        "low"
+      ]
+    ]
+  },
+  "render": {
+    "document": {
+      "width_cm": 16,
+      "font_pt": 9
+    }
+  }
+}
