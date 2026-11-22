@@ -182,7 +182,7 @@ table with fewer than 3 rows, no timeline table. `audit.py` runs it for the `cas
 - R is optional, never required. The Python engine is the reference for the ledger, so a user without R
   gets every result, figure and check. When R is present, `meta.py r-status` reports it (Rscript found via
   `project.yaml → tools.rscript`, `PATH`, `R_HOME`, or the standard Windows locations such as
-  `%LOCALAPPDATA%\Programs\R\R-*in` and `%ProgramFiles%\R\R-*in`; `metafor` installed or not), and
+  `%LOCALAPPDATA%\Programs\R\R-*\bin` and `%ProgramFiles%\R\R-*\bin`; `metafor` installed or not), and
   `meta.py r-check` runs `metafor.R` and compares every pooled estimate, CI, τ², I² and prediction interval
   with the Python values (relative tolerance 1e-4); a mismatch is a `E-META` warn in the report, never a
   silent switch of engine. `r-check` without R or `metafor` exits 2 with an install hint; the skill only
