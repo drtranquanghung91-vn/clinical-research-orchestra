@@ -52,6 +52,17 @@ class TestAgents(unittest.TestCase):
         self.assertIn("abstract", self.load("citation-verifier")[1])
         self.assertIn("limitations", self.load("scientific-editor")[1].lower())
 
+    def test_p5_duties(self):
+        stat = self.load("statistical-reviewer")[1]
+        for s in ("meta.py", "prediction interval", "I²", "τ²", "Egger", "k ≥ 10", "S-HET", "S-META", "S-SMALL",
+                  "DEVIATION", "sr-protocol.md"):
+            self.assertIn(s, stat)
+        rg = self.load("reporting-guideline-checker")
+        for s in ("CARE", "PRISMA-2020", "PRISMA-ScR", "SANRA"):
+            self.assertIn(s, rg[1])
+        for name in ("citation-verifier", "statistical-reviewer", "reporting-guideline-checker", "scientific-editor"):
+            self.assertIn("`case-report` or `review`", self.load(name)[1])
+
 
 if __name__ == "__main__":
     unittest.main()
