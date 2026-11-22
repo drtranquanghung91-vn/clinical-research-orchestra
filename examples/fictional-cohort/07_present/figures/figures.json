@@ -1,6 +1,7 @@
 {
   "style": {
-    "colors": {"<7": "#1f4e79", "7-9": "#c0504d", ">9": "#8d6e2f"},
+    "colors": {"<7": "#1f4e79", "7-9": "#c0504d", ">9": "#8d6e2f",
+               "<7%": "#1f4e79", "7–9%": "#c0504d", ">9%": "#8d6e2f"},
     "font": "Arial",
     "font_size": 9,
     "width_cm": 16
@@ -17,7 +18,6 @@
       "null": 1,
       "log_scale": true,
       "x_label": "OR (KTC 95%)",
-      "source": "Bảng 3.3",
       "poster_width_cm": 23
     },
     {
@@ -45,7 +45,6 @@
         {"label": "7–9%", "result": "R-A0-063"},
         {"label": ">9%", "result": "R-A0-064"}
       ],
-      "source": "Bảng 3.2",
       "poster_width_cm": 22
     },
     {
@@ -59,7 +58,7 @@
       "exclusions": [
         {"text": "Loại do thiếu dữ liệu biến hiệu chỉnh", "n": "R-A0-001.n - R-A1-003.n", "after": 1}
       ],
-      "source": "Không phải sơ đồ sàng lọc STROBE đầy đủ: không có số liệu sàng lọc/loại trừ ban đầu, chỉ có n toàn đoàn hệ (R-A0-001) và n mô hình hiệu chỉnh (R-A1-003).",
+      "source": "Không phải sơ đồ sàng lọc STROBE đầy đủ: không có số liệu sàng lọc/loại trừ ban đầu, chỉ có n toàn đoàn hệ và n đưa vào mô hình hiệu chỉnh.",
       "poster_width_cm": 21
     }
   ]

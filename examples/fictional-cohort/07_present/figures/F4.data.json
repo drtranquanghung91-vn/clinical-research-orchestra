@@ -1,7 +1,7 @@
 {
   "id": "F4",
   "type": "flow",
-  "source": "Không phải sơ đồ sàng lọc STROBE đầy đủ: không có số liệu sàng lọc/loại trừ ban đầu, chỉ có n toàn đoàn hệ (R-A0-001) và n mô hình hiệu chỉnh (R-A1-003).",
+  "source": "Không phải sơ đồ sàng lọc STROBE đầy đủ: không có số liệu sàng lọc/loại trừ ban đầu, chỉ có n toàn đoàn hệ và n đưa vào mô hình hiệu chỉnh.",
   "values": [
     {
       "label": "Toàn bộ đoàn hệ đủ tiêu chuẩn",
