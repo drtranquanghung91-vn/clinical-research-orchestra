@@ -15,7 +15,7 @@ Introduction, discussion, conclusion and abstract use the P4 roles (`introductio
 
 ## Methods (PRISMA 2020 items 5–15)
 Eligibility; sources with platforms and last search dates; full strings in an appendix; selection by two
-independent reviewers with consensus (kappa may be reported from `screening.py kappa` with
+independent reviewers with consensus (kappa may be reported from `python "${CLAUDE_PLUGIN_ROOT}/scripts/screening.py" . kappa --stage ta` with
 `<!-- not-a-result: screening agreement -->`); AI suggestions, if used, described as such; extraction by two
 extractors; RoB 2 / ROBINS-I; effect measures; model as registered (random effects, REML; HKSJ if registered);
 heterogeneity as τ², I² and the prediction interval; subgroup and sensitivity analyses as registered; Egger only

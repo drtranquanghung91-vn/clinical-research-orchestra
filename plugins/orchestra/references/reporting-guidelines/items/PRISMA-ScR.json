@@ -2,7 +2,7 @@
   "code": "PRISMA-ScR",
   "version": "2018",
   "items": [
-    {"id": "1", "section": "Title", "text": "Identify the report as a scoping review."},
+    {"id": "1", "section": "Title", "text": "The title states that this is a scoping review."},
     {"id": "2", "section": "Abstract", "text": "Structured summary from background through conclusions."},
     {"id": "3", "section": "Introduction", "text": "Rationale in light of what is known; why a scoping review."},
     {"id": "4", "section": "Introduction", "text": "Questions and objectives framed by population, concept and context."},

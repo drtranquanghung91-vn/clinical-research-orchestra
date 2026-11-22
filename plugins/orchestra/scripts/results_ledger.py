@@ -170,6 +170,8 @@ def validate_doc(doc: dict, project: Path, verify_raw: bool = False) -> list[str
                 raw, prec = str(rec["raw"]), numfmt._precision(rec["kind"])
                 v = rec["value"]
                 min_dec = 1 if rec["kind"] == "p" or (_num(v) and float(v) != int(v)) else 0  # "1" never stands for 0.77
+                if isinstance(rec.get("decimals"), int) and not isinstance(rec.get("decimals"), bool):
+                    min_dec = max(min_dec, rec["decimals"])  # raw must print the value at its recorded decimals
                 if _num(v) and not _in_raw(v, raw, min_dec, rec["kind"] == "p"):
                     probs.append(f"{rid}: value {rec['value']} does not appear in raw")
                 if isinstance(ci, list) and len(ci) == 2 and all(map(_num, ci)):

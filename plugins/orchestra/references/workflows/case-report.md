@@ -9,7 +9,7 @@
 4. Literature for the discussion and similar cases with the `literature-search` skill; every case a verified
    record; `01_case/similar-cases.csv` (`ref_id,age_range,sex,presentation,key_finding,treatment,outcome`).
 5. `python "${CLAUDE_PLUGIN_ROOT}/scripts/case_lint.py" .` until no block.
-6. The author locks G3: `gate.py lock . G3 --by "<name>" --files ledgers/results-ledger.json 01_case/facts.csv 01_case/similar-cases.csv`.
+6. The author locks G3: `gate.py lock . G3 --by "<name>" --files ledgers/results-ledger.json 01_case/facts.csv 01_case/similar-cases.csv 05_analysis/output/case-facts-log.txt`.
 7. Draft with the roles `case-front`, `case-presentation`, `case-discussion` (role briefs first in any subagent prompt).
 8. Review rounds (≤ 3) with the five reviewer agents and `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score . case-report --round N`.
 9. `python "${CLAUDE_PLUGIN_ROOT}/scripts/assemble.py" . case-report`, then

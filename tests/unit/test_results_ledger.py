@@ -172,6 +172,16 @@ class TestResultsLedger(unittest.TestCase):
     def _log(self, text):
         (self.p / "05_analysis" / "output" / "log.txt").write_text("header\n" + text + "\n", encoding="utf-8")
 
+    def test_verify_raw_honours_decimals(self):
+        log = self.p / "05_analysis" / "output" / "log.txt"
+        log.write_text("header" + chr(10) + "R-A1-001 x: value=1.1" + chr(10), encoding="utf-8")
+        base = dict(label="x", value=1.07, kind="measure", ci=None, p=None, n=None, locator="line 2",
+                    raw="R-A1-001 x: value=1.1", decimals=2)
+        probs = results_ledger.validate_doc(self.doc(result(**base)), self.p, verify_raw=True)
+        self.assertTrue(any("does not appear in raw" in x for x in probs), probs)
+        base.update(decimals=1)
+        self.assertEqual(results_ledger.validate_doc(self.doc(result(**base)), self.p, verify_raw=True), [])
+
     def test_verify_raw_invented_ci_fails(self):
         d = self.doc(result(ci=[1.5, 2.79]))
         probs = results_ledger.validate_doc(d, self.p, verify_raw=True)

@@ -2,7 +2,7 @@
   "code": "PRISMA-2020",
   "version": "2020",
   "items": [
-    {"id": "1", "section": "Title", "text": "Identify the report as a systematic review."},
+    {"id": "1", "section": "Title", "text": "The title states that this is a systematic review."},
     {"id": "2", "section": "Abstract", "text": "Structured abstract following the PRISMA 2020 for Abstracts list."},
     {"id": "3", "section": "Introduction", "text": "Rationale for the review in light of existing knowledge."},
     {"id": "4", "section": "Introduction", "text": "Explicit objectives or questions the review addresses."},
