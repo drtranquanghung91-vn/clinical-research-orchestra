@@ -13,6 +13,12 @@ check prints (first token kept): "G3: open — results locked by <by> on <date>;
 (open = the author approved; it does NOT mean the files are free to change), "G3: not open — not locked yet",
 or "G3: closed" plus the reasons (a locked file changed or is missing).
 
+G4 opens only from a clean, fresh audit: `open <project> G4 --by NAME` locks the files listed in
+reviews/audit.json (refused with the reasons while the audit is missing, has blocks, or a file changed since);
+`lock ... G4` and `--files` are usage errors. `check <project> G4 --deliverable thesis|manuscript` checks only
+that deliverable's locked files. Line: "G4: open — approved after a clean audit by <by> on <date>; <n> locked files
+unchanged", "G4: not open — not approved yet[ for the <d>]", or "G4: closed — <reason>; <reason>".
+
 Exit codes: open/lock 0 = recorded; check 0 = open (or waived), 1 = closed (reasons listed);
 2 = usage error, missing project folder or file, unreadable state (open/lock). Errors go to stderr.
 """
@@ -58,9 +64,80 @@ def _waived(project: Path, gate: str) -> bool:
     return re.search(rf"^WAIVE {gate}:", d.read_text(encoding="utf-8"), re.M) is not None
 
 
+DELIVERABLES = ("thesis", "manuscript")
+AUDIT = Path("reviews") / "audit.json"
+
+
+class Refused(Exception):
+    """A gate that cannot be opened yet (CLI: exit 1, reason on stdout)."""
+
+
+def waived(project: Path, gate: str) -> bool:
+    return _waived(project, gate)
+
+
+def audit_status(project: Path) -> tuple[dict | None, list[str]]:
+    p = Path(project) / AUDIT
+    if not p.is_file():
+        return None, ["reviews/audit.json not found: run /orchestra:audit (audit.py) first"]
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (ValueError, OSError) as e:
+        return None, [f"reviews/audit.json is unreadable: {e}"]
+    if not isinstance(data, dict) or not isinstance(data.get("files"), dict) \
+            or not isinstance(data.get("blocks"), int) or isinstance(data.get("blocks"), bool):
+        return None, ["reviews/audit.json lacks 'blocks' or 'files'"]
+    why = []
+    if data["blocks"]:
+        why.append(f"the audit has {data['blocks']} blocking finding(s); see reviews/audit.md")
+    if not data["files"]:
+        why.append("reviews/audit.json lists no files")
+    root = Path(project).resolve()
+    for rel, digest in sorted(data["files"].items()):
+        f = Path(project) / rel
+        if Path(rel).is_absolute() or not f.resolve().is_relative_to(root):
+            why.append(f"{rel} is outside the project")
+        elif not f.is_file():
+            why.append(f"{rel} is missing since the audit")
+        elif sha256(f) != digest:
+            why.append(f"{rel} changed since the audit")
+    return data, why
+
+
+def audited_deliverables(data: dict) -> list[str]:
+    ds = data.get("deliverables")
+    if isinstance(ds, list) and ds:
+        return [d for d in ds if d in DELIVERABLES]
+    d = data.get("deliverable")
+    return [d] if d in DELIVERABLES else list(DELIVERABLES)
+
+
+def _open_g4(project: Path, by: str) -> dict:
+    data, why = audit_status(project)
+    if why:
+        raise Refused("; ".join(why))
+    state = _load(project)
+    old = state.get("G4") if isinstance(state.get("G4"), dict) and state["G4"].get("status") == "open" else {}
+    now = dt.datetime.now().isoformat(timespec="seconds")
+    per = dict(old.get("deliverables", {}))
+    for d in audited_deliverables(data):
+        per[d] = {"at": now, "by": by, "audit_at": str(data.get("at", "")), "files": dict(data["files"])}
+    union: dict = {}
+    for entry in per.values():
+        union.update(entry["files"])
+    state["G4"] = {"status": "open", "at": now, "by": by, "files": union, "deliverables": per}
+    _state_path(project).parent.mkdir(parents=True, exist_ok=True)
+    _state_path(project).write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return state["G4"]
+
+
 def open_gate(project: Path, gate: str, by: str, files: list[str] | None = None) -> dict:
     if gate not in GATES:
         raise ValueError(f"gate must be one of {GATES}")
+    if gate == "G4":
+        if files:
+            raise ValueError("G4 takes its files from reviews/audit.json; do not pass --files")
+        return _open_g4(Path(project), by)
     project = Path(project)
     root = project.resolve()
     for f in files or []:
@@ -76,7 +153,7 @@ def open_gate(project: Path, gate: str, by: str, files: list[str] | None = None)
     return entry
 
 
-def check_gate(project: Path, gate: str) -> tuple[bool, list[str]]:
+def check_gate(project: Path, gate: str, deliverable: str | None = None) -> tuple[bool, list[str]]:
     if gate not in GATES:
         raise ValueError(f"gate must be one of {GATES}")
     project = Path(project)
@@ -88,32 +165,46 @@ def check_gate(project: Path, gate: str) -> tuple[bool, list[str]]:
         return False, [str(e)]
     if not entry or entry.get("status") != "open":
         return False, [f"{gate} is not open: the author has not approved it"]
+    files = entry.get("files", {})
+    if gate == "G4" and deliverable:
+        sub = entry.get("deliverables", {}).get(deliverable)
+        if not isinstance(sub, dict):
+            return False, [f"G4 is not open for the {deliverable}: the author has not opened it after a clean audit"]
+        files = sub.get("files", {})
     why = []
-    for rel, digest in entry.get("files", {}).items():
+    for rel, digest in files.items():
         f = project / rel
         if not f.exists():
-            why.append(f"{rel} is missing since {gate} was locked")
+            why.append(f"{rel} is missing since the audit" if gate == "G4" else f"{rel} is missing since {gate} was locked")
         elif sha256(f) != digest:
-            why.append(f"{rel} changed after {gate} was locked")
+            why.append(f"{rel} changed since the audit" if gate == "G4" else f"{rel} changed after {gate} was locked")
     return (not why), why
 
 
-def check_line(project: Path, gate: str, ok: bool, why: list[str]) -> str:
+def check_line(project: Path, gate: str, ok: bool, why: list[str], deliverable: str | None = None) -> str:
     """Text printed by `check`. "G3: open" means the author approved; it never means "unlocked"."""
     try:
         entry = _load(project).get(gate)
     except ValueError:
         return f"{gate}: closed" + "".join(f"\n  - {w}" for w in why)
     is_open = bool(entry) and entry.get("status") == "open"
+    if is_open and gate == "G4" and deliverable:
+        is_open = deliverable in entry.get("deliverables", {})
     if not ok:
         if not is_open and not _waived(project, gate):
-            return f"{gate}: not open — " + ("not locked yet" if gate == "G3" else "not approved yet")
+            return f"{gate}: not open — " + ("not locked yet" if gate == "G3" else "not approved yet" + (
+                f" for the {deliverable}" if deliverable else ""))
+        if gate == "G4":
+            return "G4: closed — " + "; ".join(why)
         return f"{gate}: closed" + "".join(f"\n  - {w}" for w in why)
     if not is_open:
         return f"{gate}: open — waived in decisions.md"
-    n = len(entry.get("files", {}))
+    files = entry.get("files", {})
+    if gate == "G4" and deliverable:
+        files = entry["deliverables"][deliverable].get("files", {})
+    n = len(files)
     when = str(entry.get("at", ""))[:10]
-    what = "results locked" if gate == "G3" else "approved"
+    what = {"G3": "results locked", "G4": "approved after a clean audit"}.get(gate, "approved")
     tail = f"; {n} locked files unchanged" if n else ""
     return f"{gate}: open — {what} by {entry.get('by', '?')} on {when}{tail}"
 
@@ -129,7 +220,14 @@ def main(argv=None) -> int:
     ap.add_argument("gate", choices=GATES)
     ap.add_argument("--by", default="")
     ap.add_argument("--files", nargs="*", default=[])
+    ap.add_argument("--deliverable", choices=DELIVERABLES)
     a = ap.parse_args(argv)
+    if a.deliverable and (a.gate != "G4" or a.cmd != "check"):
+        print("gate: --deliverable only applies to `check <project> G4`", file=sys.stderr)
+        return 2
+    if a.cmd == "lock" and a.gate == "G4":
+        print("gate: G4 opens from the audit: use gate.py open <project> G4 --by NAME", file=sys.stderr)
+        return 2
     if not Path(a.project).is_dir():
         print(f"gate: project folder {a.project} not found", file=sys.stderr)
         return 2
@@ -142,6 +240,9 @@ def main(argv=None) -> int:
             return 2
         try:
             open_gate(Path(a.project), a.gate, a.by, a.files)
+        except Refused as e:
+            print(f"G4: refused — {e}")
+            return 1
         except OSError as e:
             print(f"gate: cannot read {e.filename or e}", file=sys.stderr)
             return 2
@@ -150,8 +251,8 @@ def main(argv=None) -> int:
             return 2
         print(f"{a.gate} open by {a.by}")
         return 0
-    ok, why = check_gate(Path(a.project), a.gate)
-    print(check_line(Path(a.project), a.gate, ok, why))
+    ok, why = check_gate(Path(a.project), a.gate, a.deliverable)
+    print(check_line(Path(a.project), a.gate, ok, why, a.deliverable))
     return 0 if ok else 1
 
 
