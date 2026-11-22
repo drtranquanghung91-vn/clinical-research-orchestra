@@ -1,4 +1,4 @@
-# Fictional cohort: a simulated project (P1 plan, P2 analyse and report, P3 present)
+# Fictional cohort: a simulated project (P1 plan, P2 analyse and report, P3 present, P4 write)
 
 **Everything in this folder is simulated for demonstration.** The author ("Example author"), the
 site ("Bệnh viện Mô phỏng", a fictional provincial hospital), the study period and the expected
@@ -109,7 +109,7 @@ python plugins/orchestra/scripts/samplesize.py regression-epv --predictors 6 --e
   groups while the primary analysis is multivariable logistic regression; `sample-size.md` states
   this is the conservative approximation the test-selection reference allows.
 - **Next step points ahead.** `STATUS.md` names `ethics-and-crf` as the next skill; it is planned
-  for phase P5 (P4 before the 21 November re-ordering) and does not exist yet.
+  for phase P6 (P4 before the 21 November re-ordering, P5 before the 22 November one) and does not exist yet.
 - `00_inputs/` is not in the repository: the project's own `.gitignore` keeps it out of git, as it
   should for real projects.
 
@@ -315,3 +315,74 @@ research-figures):
   protocol and is recorded in `decisions.md`; it was kept. defense-prep now says to report such a
   mismatch and ask the author.
 - **Abstract.** The group rates in Kết quả have no CI (the overall rate and the ORs do).
+
+## P4: write (22 November 2026)
+
+### How it was run
+
+Same recipe as P3 (`--allowedTools "Bash,Read,Write,Edit,Glob,Grep,Skill,Agent"`, plugins `orchestra` and
+`phi-guard` with `--plugin-dir`, `--setting-sources ""`, empty MCP config, `--no-chrome`), in a fresh folder
+outside the repository with a fresh memory folder; this README was left out of the run folder. Every author
+answer was scripted in the prompt of the next turn and sent with `--resume <session_id>`: stage 1 is one
+conversation, stages 2 and 3 another. Claude Code 2.1.226, model `sonnet`, `mcp_servers: []` in every init
+event (`summarize_run.py`), no phi-guard or permission denials. `gate.py check . G3` exited 0 after every
+stage. Before stage 2 the author set `target` in `project.yaml` (journal "Tạp chí Y học Mô phỏng", a
+fictional name; `word_limit: 250`; new key `text_words: 3500`). Three stages and nine turns, one of them
+resumed after an API connection error: 562 turns, about 3.5 hours and USD 97 in total.
+
+| Stage | Turns of the conversation (author's answer, short form) | Skill or agent used | Turns, minutes, USD | Files written |
+|---|---|---|---|---|
+| 1 Thesis | (1) `/orchestra:thesis`: write Đặt vấn đề, Chương 2, Chương 4, Kết luận, Kiến nghị, Phụ lục with the STROBE table; outline first. (2) "Đồng ý dàn ý"; Chương 1 and 3 accepted as they are; the pending Biểu đồ 3.1 slot takes the existing F4 with a caption saying it is not a full STROBE flow; draft, review, humanize, assemble, audit, do not open G4. (3) the author's own text for the three `[[TÁC GIẢ: …]]` in Chương 2 (funding; ethics: no approval number, illustrative project with simulated data; Ministry of Health rules); add a Tóm tắt for STROBE 1a/1b; 6b not applicable confirmed; the author's own rewording of two trend sentences in Chương 3 and of one phrase about `[@chakraborty2021]` in Chương 1. (4) "Tôi là Example author, mở G4", then `--final` | thesis-writing, the five reviewers, prose-humanizer | 255, 108, 42.85 | `06_writing/thesis/` (six drafted sections, `00-tom-tat.md`, `thesis.assembled.md`, `thesis.draft.docx`), `ledgers/outline.json` (thesis entries), revise loop 5 → 10 → 10 of 16 (KEEP, KEEP, STOP), audit 2 blocks (STROBE 1a/1b) after turn 2 and 0 after turn 3, G4, `out/thesis.docx` |
+| 2 Manuscript | (1) `/orchestra:manuscript` in Vietnamese, journal answers given (structured abstract with four headings, at most 250 words; text at most 3,500 words; at most 5 tables and figures; Vancouver); outline first. (2) outline approved (three tables, F1 and F4 as figures), the author's title-page declarations given verbatim; draft, review, humanize, assemble, audit. (3) the three new-analysis requests are not run; "Tôi là Example author, mở G4", then `--final` | manuscript-writing, the five reviewers, prose-humanizer | 279, 86, 47.89 | `06_writing/manuscript/` (seven sections, `manuscript.assembled.md`, `manuscript.draft.docx`), revise loop 9 → 12 → 12 of 16 (KEEP, KEEP, STOP), abstract 247 and text 3,480 words, audit 0 block, G4, `out/manuscript.docx` |
+| 3 Close | `audit.py .` over both deliverables; if clean the author opens G4 for both and both `--final` exports run again; disclosure for both; `worklog.py decisions .`; `STATUS.md` row 6 | reporting-guideline-checker | 28, 13, 5.90 | `reviews/audit.json` covering thesis and manuscript (0 block, 32 warn), G4 for both, `out/ai-use-disclosure.md` (draft; three `[[AUTHOR: …]]` left for the author), `out/author-decisions.md`, `STATUS.md` row 6 `done` |
+
+`decisions.md` gained one entry per author decision. Only `reviews/rounds/<deliverable>/r3/` (the last round,
+also the last kept one) was copied back; rounds 1 and 2 stayed in the run folder.
+
+### P4 checks (run from the repository root)
+
+| Command | Exit | Result |
+|---|---|---|
+| `python plugins/orchestra/scripts/audit.py <copy of examples/fictional-cohort> thesis` | 0 | `audit: thesis — 0 block, 16 warn` (run on a copy, so the committed `reviews/audit.json` stays the audit of both) |
+| `python plugins/orchestra/scripts/audit.py <copy of examples/fictional-cohort> manuscript` | 0 | `audit: manuscript — 0 block, 16 warn` |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G4`, also with `--deliverable thesis` and `--deliverable manuscript`, in a fresh clone | 0 | G4: open — approved after a clean audit by Example author on 2026-11-22; 21 locked files unchanged |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3`, in a fresh clone | 0 | G3: open — results locked by Example author on 2026-11-21; 5 locked files unchanged |
+
+`check_numbers.py` on the results chapters of `thesis.assembled.md` is part of the audit (E-NUM). The warns:
+STROBE 13a–13c (no screening counts, see P3), 14b and 14c in the manuscript; E-PHI on the study-period dates
+(not patient dates); E-REV for reviewer reports written before the humanizer pass and the last author fixes
+(the loop had stopped, so there was no round 4); one P15 bold label.
+
+### Edits made by hand (controller)
+
+- Four text files came out of the run with CRLF line endings (`ledgers/outline.json`,
+  `06_writing/manuscript/04-results.md` and its `.rendered.md`, the manuscript round-3 checklist). They were
+  converted to LF in the run folder. Because `04-results.md` is hashed by G4, the author then ran, outside the
+  agent, `audit.py .` (0 block, 32 warn), `gate.py open . G4 --by "Example author"` and both `--final`
+  exports; both `.docx` were byte-identical to the earlier exports. `gates/state.json` and
+  `ledgers/results-ledger.json` stay CRLF as committed in P2 (the G3 hashes are over those bytes).
+- Rounds 1 and 2 of both revise loops were not copied back.
+
+### P4 known issues
+
+- **Multi-line author placeholders are not found.** `assemble.py` (and so `audit.py`) looks for
+  `[[TÁC GIẢ: …]]` line by line. The three placeholders in Chương 2 were wrapped over two or three lines and
+  the stage 1 audit did not report them. The author filled them; the gap in the script remains.
+- **One checklist file for two deliverables.** `reviews/guideline-checklist.json` holds one deliverable. The
+  manuscript reviews overwrote the thesis checklist refreshed after the Tóm tắt was added, so the first
+  `audit.py .` fell back to the thesis round-3 snapshot and blocked on 1a/1b. In stage 3 the agent reran the
+  guideline checker for the thesis and copied the current checklists into the round-3 snapshots
+  (`reviews/rounds/<d>/r3/reviews/`). That edits the round record; the checklists themselves are the
+  checker's own output on the current drafts.
+- **CRLF writes on Windows.** `gate.py` rewrites `gates/state.json` with CRLF, and some files written during
+  the run came out CRLF (see the hand edits).
+- **Humanizer.** In both loops the humanizer step made one mechanical change (bold labels removed in Chương 2
+  and on the title page) instead of paragraph rewrites checked by `invariants.py`. The Tóm tắt was written
+  after that step and was not humanized.
+- **"NEW-ANALYSIS: none".** A thesis reviewer wrote that line, so `out/author-decisions.md` lists "none" as a
+  request.
+- **Stale Chapter 3 .docx.** `out/ch3-results.docx` (P2) predates the author's two sentence changes in
+  Chương 3; `out/thesis.docx` has them.
+- **Row added to STATUS.** In stage 2 the agent added a row "8 Manuscript"; on the author's instruction it was
+  merged into row 6 in stage 3.
+- **Chương 1** is still the P1 chapter with thin sections 1.1–1.3; the author accepted it as it is.

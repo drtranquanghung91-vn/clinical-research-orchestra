@@ -1,0 +1,271 @@
+{
+  "rounds": [
+    {
+      "deliverable": "thesis",
+      "round": 1,
+      "at": "2026-11-22T16:49:42",
+      "scores": {
+        "citations": 0,
+        "statistics": 0,
+        "guideline": 0,
+        "structure": 1,
+        "claim_scope": 1,
+        "limitations": 1,
+        "consistency": 0,
+        "prose": 2
+      },
+      "total": 5,
+      "max": 16,
+      "decision": "KEEP",
+      "kept": true,
+      "compared_with": null,
+      "compared_total": null,
+      "drafts_digest": "d8d143eb01e27b80fbdc79749bd1e66b87ddd0f468bcdcc827cb868f815def59",
+      "files_changed": [
+        "00-dat-van-de.md",
+        "05-ket-luan.md",
+        "06-kien-nghi.md",
+        "90-phu-luc.md",
+        "ch1-literature-review.md",
+        "ch2-methods.md",
+        "ch3-results.md",
+        "ch4-discussion.md"
+      ],
+      "requests": [
+        {
+          "agent": "scientific-editor",
+          "text": "none — all findings are wording/structure fixes, not missing analyses."
+        }
+      ],
+      "notes": [
+        "guideline 0: 4 absent item(s)",
+        "consistency 0: 5 E-CONS block, 0 warn",
+        "prose 2: 24 pattern hits in 10437 words"
+      ]
+    },
+    {
+      "deliverable": "thesis",
+      "round": 2,
+      "at": "2026-11-22T17:31:14",
+      "scores": {
+        "citations": 0,
+        "statistics": 0,
+        "guideline": 1,
+        "structure": 2,
+        "claim_scope": 1,
+        "limitations": 2,
+        "consistency": 2,
+        "prose": 2
+      },
+      "total": 10,
+      "max": 16,
+      "decision": "KEEP",
+      "kept": true,
+      "compared_with": 1,
+      "compared_total": 5,
+      "drafts_digest": "c6daa0cb2dd92b315cee92ff8bf2b27546878c11174b87ca7cf7e2e87080c739",
+      "files_changed": [
+        "00-dat-van-de.md",
+        "05-ket-luan.md",
+        "06-kien-nghi.md",
+        "90-phu-luc.md",
+        "ch2-methods.md",
+        "ch4-discussion.md"
+      ],
+      "requests": [],
+      "notes": [
+        "guideline 1: 2 absent item(s)",
+        "consistency 2: 0 E-CONS block, 0 warn",
+        "consistency: the reviewer gave 1, the script measured 2; the script value is used",
+        "prose 2: 26 pattern hits in 11255 words"
+      ]
+    },
+    {
+      "deliverable": "thesis",
+      "round": 3,
+      "at": "2026-11-22T17:36:14",
+      "scores": {
+        "citations": 0,
+        "statistics": 0,
+        "guideline": 1,
+        "structure": 2,
+        "claim_scope": 1,
+        "limitations": 2,
+        "consistency": 2,
+        "prose": 2
+      },
+      "total": 10,
+      "max": 16,
+      "decision": "STOP",
+      "kept": true,
+      "compared_with": 2,
+      "compared_total": 10,
+      "drafts_digest": "eefc31e42500dbe9cf9594a32c21bbe771bc320b20a6124018556b0aa0834608",
+      "files_changed": [
+        "ch4-discussion.md"
+      ],
+      "requests": [],
+      "notes": [
+        "guideline 1: 2 absent item(s)",
+        "consistency 2: 0 E-CONS block, 0 warn",
+        "consistency: the reviewer gave 1, the script measured 2; the script value is used",
+        "prose 2: 26 pattern hits in 11259 words"
+      ]
+    },
+    {
+      "deliverable": "manuscript",
+      "round": 1,
+      "at": "2026-11-22T18:50:20",
+      "scores": {
+        "citations": 1,
+        "statistics": 1,
+        "guideline": 1,
+        "structure": 1,
+        "claim_scope": 2,
+        "limitations": 1,
+        "consistency": 2,
+        "prose": 0
+      },
+      "total": 9,
+      "max": 16,
+      "decision": "KEEP",
+      "kept": true,
+      "compared_with": null,
+      "compared_total": null,
+      "drafts_digest": "a405837cf622d3ee86f01a6640e299d069d6109367803d0565cb10c89f82d812",
+      "files_changed": [
+        "00-title.md",
+        "01-abstract.md",
+        "02-introduction.md",
+        "03-methods.md",
+        "04-results.md",
+        "05-discussion.md",
+        "06-conclusion.md"
+      ],
+      "requests": [
+        {
+          "agent": "reporting-guideline-checker",
+          "text": "add a labelled sensitivity analysis for the adjusted model (item 12e), for example re-fitting with an alternative missing-data rule or excluding the complete-case drop, to show the main OR is robust."
+        },
+        {
+          "agent": "reporting-guideline-checker",
+          "text": "tabulate exclusion counts per criterion (death, type 1/gestational/secondary diabetes, missing HbA1c, duplicate admission) from the screening log, if still available, for items 13a/13b."
+        },
+        {
+          "agent": "reporting-guideline-checker",
+          "text": "compute missing-value counts for each Table 1 variable (age, sex, comorbidity, insulin use, length of stay), for item 14b."
+        },
+        {
+          "agent": "reporting-guideline-checker",
+          "text": "compute a summary follow-up statistic (median follow-up time or total person-time before censoring) for item 14c."
+        }
+      ],
+      "notes": [
+        "guideline 1: 1 absent item(s)",
+        "consistency 2: 0 E-CONS block, 0 warn",
+        "prose 0: 17 pattern hits in 4088 words"
+      ]
+    },
+    {
+      "deliverable": "manuscript",
+      "round": 2,
+      "at": "2026-11-22T19:11:47",
+      "scores": {
+        "citations": 1,
+        "statistics": 2,
+        "guideline": 1,
+        "structure": 2,
+        "claim_scope": 2,
+        "limitations": 2,
+        "consistency": 2,
+        "prose": 0
+      },
+      "total": 12,
+      "max": 16,
+      "decision": "KEEP",
+      "kept": true,
+      "compared_with": 1,
+      "compared_total": 9,
+      "drafts_digest": "f242ce1e24d735a5c8891b68fa491e4872f7f0c7260670d9e3285767c80aa340",
+      "files_changed": [
+        "00-title.md",
+        "02-introduction.md",
+        "03-methods.md",
+        "04-results.md",
+        "05-discussion.md",
+        "06-conclusion.md"
+      ],
+      "requests": [
+        {
+          "agent": "reporting-guideline-checker",
+          "text": "add a labelled sensitivity analysis for the adjusted model (item 12e), for example re-fitting with an alternative missing-data rule or excluding the complete-case drop, to show the main OR is robust."
+        },
+        {
+          "agent": "reporting-guideline-checker",
+          "text": "tabulate exclusion counts per criterion (death, type 1/gestational/secondary diabetes, missing HbA1c, duplicate admission) from the screening log, if still available, for items 13a/13b."
+        },
+        {
+          "agent": "reporting-guideline-checker",
+          "text": "compute missing-value counts for each Table 1 variable (age, sex, comorbidity, insulin use, length of stay), for item 14b."
+        },
+        {
+          "agent": "reporting-guideline-checker",
+          "text": "compute a summary follow-up statistic (median follow-up time or total person-time before censoring) for item 14c."
+        }
+      ],
+      "notes": [
+        "guideline 1: 1 absent item(s)",
+        "consistency 2: 0 E-CONS block, 0 warn",
+        "prose 0: 18 pattern hits in 4041 words"
+      ]
+    },
+    {
+      "deliverable": "manuscript",
+      "round": 3,
+      "at": "2026-11-22T19:16:15",
+      "scores": {
+        "citations": 1,
+        "statistics": 2,
+        "guideline": 1,
+        "structure": 2,
+        "claim_scope": 2,
+        "limitations": 2,
+        "consistency": 2,
+        "prose": 0
+      },
+      "total": 12,
+      "max": 16,
+      "decision": "STOP",
+      "kept": true,
+      "compared_with": 2,
+      "compared_total": 12,
+      "drafts_digest": "f242ce1e24d735a5c8891b68fa491e4872f7f0c7260670d9e3285767c80aa340",
+      "files_changed": [],
+      "requests": [
+        {
+          "agent": "reporting-guideline-checker",
+          "text": "add a labelled sensitivity analysis for the adjusted model (item 12e), for example re-fitting with an alternative missing-data rule or excluding the complete-case drop, to show the main OR is robust."
+        },
+        {
+          "agent": "reporting-guideline-checker",
+          "text": "tabulate exclusion counts per criterion (death, type 1/gestational/secondary diabetes, missing HbA1c, duplicate admission) from the screening log, if still available, for items 13a/13b."
+        },
+        {
+          "agent": "reporting-guideline-checker",
+          "text": "compute missing-value counts for each Table 1 variable (age, sex, comorbidity, insulin use, length of stay), for item 14b."
+        },
+        {
+          "agent": "reporting-guideline-checker",
+          "text": "compute a summary follow-up statistic (median follow-up time or total person-time before censoring) for item 14c."
+        }
+      ],
+      "notes": [
+        "guideline 1: 1 absent item(s)",
+        "consistency 2: 0 E-CONS block, 0 warn",
+        "prose 0: 18 pattern hits in 4041 words"
+      ]
+    }
+  ],
+  "events": [],
+  "decisions_sha256": "13e52491af623b2f12a19e564c25c3e7393af94dd18e7291fa584e755c3859e4"
+}

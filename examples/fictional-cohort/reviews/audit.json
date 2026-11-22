@@ -1,0 +1,292 @@
+{
+  "deliverable": "all",
+  "deliverables": [
+    "thesis",
+    "manuscript"
+  ],
+  "at": "2026-11-22T19:50:44",
+  "blocks": 0,
+  "warns": 32,
+  "online": false,
+  "files": {
+    "06_writing/thesis/00-dat-van-de.md": "8c5ba04572b443b14c0c3b70298cbefa40bc4519546db59fca4f47af16baddbd",
+    "06_writing/thesis/00-tom-tat.md": "93c5f3d5ba435c21ca81b838d66f4b11bb0dd90e60ea71e05a38e6607d7fc0ac",
+    "06_writing/thesis/05-ket-luan.md": "093b71ad31d665649b4f990203af25d4af7be3ca1b2c77224cced4b708703fbd",
+    "06_writing/thesis/06-kien-nghi.md": "319dd2f54832665f1d0ccee35c4dd82b2271bb592c1cdf9f25ddacc02ad4e313",
+    "06_writing/thesis/90-phu-luc.md": "4500f93842f8b75422d2605bfed011d24275aeea87cf4b5157a9a32279c7facc",
+    "06_writing/thesis/ch1-literature-review.md": "bf4c218a9f87356fe92b48be840a76ba405afe3f5acaecaead40db582fe407e3",
+    "06_writing/thesis/ch2-methods.md": "1ad5ed7ec2d9fab12cceeddc6318998a9e825b0bede19e5c5df738424b89f3e6",
+    "06_writing/thesis/ch3-results.md": "5ae020a51b44a464e2889714abe59398f02eac5a710873df7e154b29414333aa",
+    "06_writing/thesis/ch4-discussion.md": "f0bdbc305e16ffbc073d7ef0e043549d95605fa8ae29d1e415e805cff5319f40",
+    "07_present/figures/F4.png": "eabedce5586569753c4151266b9dce910db00c93222711a978200e930ae96f04",
+    "06_writing/manuscript/00-title.md": "8bd5187babbda63e908e82f960b2c3f8766b037ec8021bd71485b711a785caf6",
+    "06_writing/manuscript/01-abstract.md": "0cde711f888f2461924f3ba20bc0db08b1ed1f35586df349be57bd1a6aad7ce7",
+    "06_writing/manuscript/02-introduction.md": "b02c36593b341fb476162544f1913d2c4f6a9b20de38d0198f6e447192b957af",
+    "06_writing/manuscript/03-methods.md": "eff2b175ff1e988764eb836392aa223aaf629e5be411bfc000fc579b4414a685",
+    "06_writing/manuscript/04-results.md": "de300e10b84c1f72b7d1c641ec2a00b5dd5c7b692fdda4ce0cde8a4483939c33",
+    "06_writing/manuscript/05-discussion.md": "d26458c45506a076aa7612341a11eac0f27a27481dd277b05fcc7346235f35eb",
+    "06_writing/manuscript/06-conclusion.md": "d7986509c3fc4c13e60db7a7785df4d4e97a0729d66de27361102cb2bfec84f0",
+    "07_present/figures/F1.png": "7364fd37d49ded55e03bd4bda3017bba265fa1125325d6dc6df95568b601afd5",
+    "ledgers/references.json": "3c473e54933fea4ab1f23dcc169a3e9c1cb42a8092af4c2f5889d8d40abdc28c",
+    "ledgers/results-ledger.json": "edf4303f7689179552be8bab95b28836316d4709e3794af78e4b433330276b45",
+    "ledgers/claims.json": "e4f20745b8eceebd6b5c0430c62cc1f57cd9ed58c234663bbd59cdb82fe01031"
+  },
+  "findings": [
+    {
+      "check": "prose density",
+      "code": "P15",
+      "level": "warn",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 169,
+      "msg": "\"**Tài trợ:**\" (4 hits / 100 words)"
+    },
+    {
+      "check": "guideline checklist",
+      "code": "E-RG",
+      "level": "warn",
+      "file": "06_writing/thesis/ch3-results.md",
+      "line": 11,
+      "msg": "item 13a is only partly reported: Chỉ có 2 mốc số liệu (đủ tiêu chuẩn chọn mẫu và số đưa vào mô hình hiệu chỉnh); không có số liệu sàng lọc/loại trừ ban đầu theo từng tiêu chuẩn vì dữ liệu mô phỏng không ghi nhận các mốc đó."
+    },
+    {
+      "check": "guideline checklist",
+      "code": "E-RG",
+      "level": "warn",
+      "file": "06_writing/thesis/ch3-results.md",
+      "line": 13,
+      "msg": "item 13b is only partly reported: Chỉ giải thích lý do loại khỏi mô hình hiệu chỉnh (thiếu biến nhiễu); không có lý do loại ở giai đoạn sàng lọc/đủ tiêu chuẩn ban đầu vì số liệu đó không được ghi nhận trong dữ liệu mô phỏng."
+    },
+    {
+      "check": "guideline checklist",
+      "code": "E-RG",
+      "level": "warn",
+      "file": "06_writing/thesis/ch3-results.md",
+      "line": 9,
+      "msg": "item 13c is only partly reported: Có hình nhưng tác giả tự ghi rõ đây là sơ đồ rút gọn, không phải lưu đồ STROBE đầy đủ (dòng 11 cùng file)."
+    },
+    {
+      "check": "guideline checklist",
+      "code": "E-RG",
+      "level": "warn",
+      "file": "06_writing/manuscript/04-results.md",
+      "line": 12,
+      "msg": "item 13a is only partly reported: Chỉ có 2 mốc số liệu (mẫu mô tả và mẫu mô hình hiệu chỉnh); không có số liệu đủ điều kiện/sàng lọc ban đầu theo từng bước; tác giả tự ghi nhận hạn chế này."
+    },
+    {
+      "check": "guideline checklist",
+      "code": "E-RG",
+      "level": "warn",
+      "file": "06_writing/manuscript/03-methods.md",
+      "line": 12,
+      "msg": "item 13b is only partly reported: Tiêu chuẩn loại được liệt kê ở Phương pháp nhưng không có số lượng loại theo từng lý do, trừ số thiếu biến thời gian mắc ĐTĐ (27, 2,5%) nêu ở Kết quả."
+    },
+    {
+      "check": "guideline checklist",
+      "code": "E-RG",
+      "level": "warn",
+      "file": "06_writing/manuscript/04-results.md",
+      "line": 10,
+      "msg": "item 13c is only partly reported: Có sơ đồ (Hình 2, F4.png) nhưng tác giả nêu rõ đây không phải sơ đồ sàng lọc STROBE đầy đủ (dòng kế tiếp)."
+    },
+    {
+      "check": "guideline checklist",
+      "code": "E-RG",
+      "level": "warn",
+      "file": "06_writing/manuscript/04-results.md",
+      "line": 7,
+      "msg": "item 14b is only partly reported: Chỉ số liệu thiếu của biến 'thời gian mắc ĐTĐ' (27, 2,5%) được định lượng; không có số liệu thiếu cho các biến khác trong Bảng 1 (tuổi, giới, bệnh đồng mắc, dùng insulin, thời gian nằm viện)."
+    },
+    {
+      "check": "guideline checklist",
+      "code": "E-RG",
+      "level": "warn",
+      "file": "06_writing/manuscript/03-methods.md",
+      "line": 7,
+      "msg": "item 14c is only partly reported: Phương pháp nêu theo dõi cố định 365 ngày, nhưng phần Kết quả không báo cáo tóm tắt tổng thời gian theo dõi/person-time (ví dụ thời gian theo dõi trung vị trước khi kiểm duyệt)."
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 17,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 40,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 41,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "line": 67,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/thesis/thesis.assembled.md",
+      "line": 315,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/thesis/thesis.assembled.md",
+      "line": 338,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/thesis/thesis.assembled.md",
+      "line": 339,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/thesis/thesis.assembled.md",
+      "line": 365,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/manuscript/03-methods.md",
+      "line": 7,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/manuscript/03-methods.md",
+      "line": 8,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/manuscript/04-results.md",
+      "line": 5,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/manuscript/manuscript.assembled.md",
+      "line": 108,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/manuscript/manuscript.assembled.md",
+      "line": 109,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "identifiers",
+      "code": "E-PHI",
+      "level": "warn",
+      "file": "06_writing/manuscript/manuscript.assembled.md",
+      "line": 163,
+      "msg": "possible patient identifier: full date"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/rounds/thesis/r3/reviews/citation-verifier.md",
+      "line": 1,
+      "msg": "citation-verifier reviewed an earlier version of the thesis drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/rounds/thesis/r3/reviews/statistical-reviewer.md",
+      "line": 1,
+      "msg": "statistical-reviewer reviewed an earlier version of the thesis drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/rounds/thesis/r3/reviews/scientific-editor.md",
+      "line": 1,
+      "msg": "scientific-editor reviewed an earlier version of the thesis drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/rounds/thesis/r3/reviews/consistency.md",
+      "line": 1,
+      "msg": "consistency-auditor reviewed an earlier version of the thesis drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/citation-verifier.md",
+      "line": 1,
+      "msg": "citation-verifier reviewed an earlier version of the manuscript drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/statistical-reviewer.md",
+      "line": 1,
+      "msg": "statistical-reviewer reviewed an earlier version of the manuscript drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/rounds/manuscript/r3/reviews/reporting-guideline-checker.md",
+      "line": 1,
+      "msg": "reporting-guideline-checker reviewed an earlier version of the manuscript drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/scientific-editor.md",
+      "line": 1,
+      "msg": "scientific-editor reviewed an earlier version of the manuscript drafts (digest differs); rerun it if the content changed"
+    },
+    {
+      "check": "reviewer reports",
+      "code": "E-REV",
+      "level": "warn",
+      "file": "reviews/consistency.md",
+      "line": 1,
+      "msg": "consistency-auditor reviewed an earlier version of the manuscript drafts (digest differs); rerun it if the content changed"
+    }
+  ]
+}

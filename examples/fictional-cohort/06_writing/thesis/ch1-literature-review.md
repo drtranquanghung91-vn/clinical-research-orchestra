@@ -69,7 +69,8 @@ này không báo cáo số liệu gộp (effect size, khoảng tin cậy) cho hi
 thiệp, và nhiều tiêu chí AMSTAR 2 trọng yếu (đăng ký đề cương trước, chiến lược tìm kiếm, đánh giá
 nguy cơ sai lệch của các nghiên cứu gộp vào) không thể xác định chỉ từ abstract (xem
 `02_evidence/appraisal/chakraborty2021.md`). Vì vậy, tổng quan này chỉ cho biết **đã có nỗ lực can
-thiệp** nhằm giảm tái nhập viện ở ĐTĐ type 2, nhưng không cung cấp bằng chứng định lượng, và — quan
+thiệp** nhằm giảm tái nhập viện ở ĐTĐ type 2, và theo phần tóm tắt không ghi nhận thay đổi có ý nghĩa
+về tỷ lệ tái nhập viện, và — quan
 trọng hơn đối với đề tài — đây là câu hỏi về **hiệu quả can thiệp**, không phải về HbA1c lúc nhập
 viện như một yếu tố nguy cơ tự nhiên (không can thiệp), nên không trả lời trực tiếp câu hỏi nghiên
 cứu của đề tài này.

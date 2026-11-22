@@ -11,19 +11,21 @@
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-0F5E7A"></a>
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-C8372D">
   <img alt="Languages" src="https://img.shields.io/badge/languages-English%20%7C%20Vietnamese-56677F">
-  <img alt="Status" src="https://img.shields.io/badge/status-0.4.0%20present-B7791F">
+  <img alt="Status" src="https://img.shields.io/badge/status-0.5.0%20write-B7791F">
   <a href="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
-> **Status: early.** Version 0.4.0 adds the P3 "present" skills (figures, conference abstract,
-> print poster in three layouts with preflight, thesis-defence deck with rehearsal questions, prose
-> humanizer, consistency audit) to the P2 "analyse and report results" skills (data
-> preparation, statistical analysis per the SAP, results writing with a Chapter 3 .docx), the
-> P1 "plan the study" skills (research question, literature search, critical appraisal, guideline
-> check, literature review, protocol design, sample size and SAP) and the 0.1.0 foundation (project
-> folder, ledgers, gates, reference verification and patient-data protection). Manuscript and thesis
-> writing skills arrive phase by phase; see [Roadmap](#roadmap). A simulated project run through
-> every P1, P2 and P3 skill is in [`examples/fictional-cohort/`](examples/fictional-cohort/). Do not
+> **Status: early.** Version 0.5.0 adds the P4 "write" skills (thesis and journal manuscript
+> written from locked results, reviewed by read-only agents in scored rounds, one audit command and
+> export only through gate G4) to the P3 "present" skills (figures, conference abstract, print poster
+> in three layouts with preflight, thesis-defence deck with rehearsal questions, prose humanizer,
+> consistency audit), the P2 "analyse and report results" skills (data preparation, statistical
+> analysis per the SAP, results writing with a Chapter 3 .docx), the P1 "plan the study" skills
+> (research question, literature search, critical appraisal, guideline check, literature review,
+> protocol design, sample size and SAP) and the 0.1.0 foundation (project folder, ledgers, gates,
+> reference verification and patient-data protection). Case reports, systematic reviews and the
+> remaining skills arrive phase by phase; see [Roadmap](#roadmap). A simulated project run through
+> every P1 to P4 skill is in [`examples/fictional-cohort/`](examples/fictional-cohort/). Do not
 > rely on it for real studies yet.
 
 ---
@@ -96,8 +98,12 @@ Two plugins ship from this marketplace:
 | 6 | `defense-prep`, `/orchestra:defense` | consistency audit before any slide, thesis-defence deck, committee questions (`consistency_audit.py`, `pptx_from_spec.py`, `check_pptx.py`) | 0.4.0 |
 | 5–6 | `prose-humanizer` | rewrites AI-sounding prose, keeps every number, citation and hedge (`lint_prose.py`, `invariants.py`) | 0.4.0 |
 | 5–6 | agents `consistency-auditor`, `committee-simulator` | numbers, dates and terms checked across deliverables; likely committee or reviewer questions with answers from the project files | 0.4.0 |
-| 5 | `manuscript`, `thesis`, `case-report`, `systematic-review` | manuscript and thesis .docx, CARE case report, PRISMA review | P4 |
-| 3, 7 | `ethics-and-crf`, `journal-selection`, `reviewer-response` | ethics dossier and CRF, journal shortlist, response to reviewers | P5 |
+| 5 | `thesis-writing`, `/orchestra:thesis` | Vietnamese thesis from locked results: Đặt vấn đề, Chương 2 and 4, Kết luận, Kiến nghị, Phụ lục with the STROBE checklist; reused Chương 1 and 3; one numbered reference list; .docx through G4 (`assemble.py`, `worklog.py`, `guideline_checklist.py`) | 0.5.0 |
+| 5 | `manuscript-writing`, `/orchestra:manuscript` | IMRaD journal article with a structured abstract, word counts against the journal limits, author declarations left to the author; .docx through G4 | 0.5.0 |
+| 5 | `/orchestra:audit` | one pass over citations, numbers, statistics, literature structure, consistency, prose, guideline items, captions, identifiers and reviews; `reviews/audit.md` (`audit.py`) | 0.5.0 |
+| 5 | agents `citation-verifier`, `statistical-reviewer`, `reporting-guideline-checker`, `scientific-editor` | read-only reviews of the drafts, each with sub-scores for the revise loop | 0.5.0 |
+| 5 | `case-report`, `systematic-review`, `/orchestra:sr`, `literature-review` mode (c) | CARE case report, PRISMA systematic review, standalone narrative or scoping review | P5 |
+| 3, 7 | `ethics-and-crf`, `journal-selection`, `reviewer-response` | ethics dossier and CRF, journal shortlist, response to reviewers | P6 |
 
 You can talk to the skills in Vietnamese or English. The language of research documents is
 a project setting (`project.yaml → language.output`), so a thesis can be written in
@@ -161,8 +167,9 @@ install hint and exits 2; the skills report that check as not run.
 | P1 Plan the study | research question, literature search, appraisal, guideline check, literature review, protocol, sample size and SAP | done (0.2.0) |
 | P2 Analyse and report results | data preparation, statistical analysis (run and import), results ledger, results writing, Chapter 3 .docx | done (0.3.0) |
 | P3 Present | figures, conference abstract, poster with print preflight, defence deck, prose humanizer, consistency audit | done (0.4.0) |
-| P4 Write | manuscript, thesis, case report, systematic review | next |
-| P5 Extend | ethics and CRF, journal selection, reviewer response, Codex and Antigravity packaging | planned |
+| P4 Write | thesis and manuscript writing, reviewer agents, revise loop, audit, gate G4 and its hook | done (0.5.0) |
+| P5 Reviews and case reports | case report (CARE), systematic review with `/orchestra:sr` (PRISMA 2020), literature review mode (c) | next |
+| P6 Extend | ethics and CRF, journal selection, reviewer response, Codex and Antigravity packaging | planned |
 
 The design spec is in [`docs/superpowers/specs/`](docs/superpowers/specs/) and each phase
 has its implementation plan in [`docs/superpowers/plans/`](docs/superpowers/plans/).
@@ -173,7 +180,7 @@ has its implementation plan in [`docs/superpowers/plans/`](docs/superpowers/plan
 .claude-plugin/marketplace.json   marketplace manifest (plugins: orchestra, phi-guard)
 plugins/orchestra/                research skills, commands, scripts/, templates/project/
 plugins/phi-guard/                outbound PHI hook, phi_scan.py, deidentify.py, deidentify-data skill
-examples/fictional-cohort/        a simulated project run through every P1 and P2 skill, with its checks
+examples/fictional-cohort/        a simulated project run through every P1 to P4 skill, with its checks
 tests/unit/                       tests for every script
 tests/scenarios/                  RED/GREEN behaviour scenarios and the baseline record
 tools/lint_skills.py              skill frontmatter and length checks

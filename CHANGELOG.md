@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.5.0 (2026-11-22)
+- P4 write: model skills `thesis-writing` (Vietnamese thesis: Đặt vấn đề, Chương 1–4, Kết luận,
+  Kiến nghị, Tài liệu tham khảo, Phụ lục) and `manuscript-writing` (IMRaD article with a structured
+  abstract and journal word limits), both written from results locked in G3, reviewed by read-only
+  agents in at most three scored rounds, humanized, assembled, audited and exported only through G4;
+  commands `/orchestra:thesis`, `/orchestra:manuscript` and `/orchestra:audit`. Writing references and
+  role briefs (`references/writing/roles/`: introduction, methods, results, discussion, conclusion,
+  abstract), the revise rubric, `vn-thesis.md`, `manuscript.md` and the AI-use disclosure template.
+- Agents: `citation-verifier`, `statistical-reviewer`, `reporting-guideline-checker` and
+  `scientific-editor` (read-only, write only into `reviews/`, report with a `drafts-digest:` line and a
+  `scores` block); `consistency-auditor` and `committee-simulator` gain `disallowedTools`.
+- Scripts: `assemble.py` (section order or `order.txt`, placeholders rendered, one citation numbering
+  over the whole text, caption numbering, images, draft `.docx`; `--final` only with G4),
+  `audit.py` (one pass over E-REF, E-NUM, E-STAT, E-LIT, E-CONS, P-codes, E-RG, E-FMT, E-PHI, E-REV →
+  `reviews/audit.md` and `reviews/audit.json` with the hashes of what it checked),
+  `guideline_checklist.py` (item-by-item checklist with locations, `--table` for the appendix; STROBE
+  item list), `worklog.py` (`score` KEEP/REVERT/STOP, `revert`, `digest`, `decisions` →
+  `out/author-decisions.md`), shared `crolib/drafts.py` and `crolib/reviews.py`. `build_docx.py` takes
+  several inputs, lists, PNG images, a table of contents, a footer and an institution template, and
+  writes a deterministic zip. `gate.py` opens G4 only from a clean, current audit, with one lock per
+  deliverable.
+- Hook: `gate_hook.py` (PreToolUse on Bash, PowerShell, Agent, Task) denies `assemble.py … --final` or a
+  `build_docx.py` write of `out/thesis.docx`/`out/manuscript.docx` while G4 is closed for that
+  deliverable, and an Agent prompt carrying `orchestra-role:` while G3 is not open.
+- New finding codes: `E-FMT` (required sections, caption numbering, images, unfilled `[[TÁC GIẢ: …]]` /
+  `[[AUTHOR: …]]`), `E-REV` (reviewer report missing or not about the current drafts); `E-RG` and
+  `E-PHI` get their first scripts.
+- Plan decisions: D1 model skills `thesis-writing`/`manuscript-writing`, command skills `thesis`,
+  `manuscript`, `audit`; D2 G4 keeps one lock per deliverable, so opening it for the manuscript keeps the
+  thesis lock; D19 manuscript files `02-introduction.md` and `04-results.md` (were `background.md` and
+  `results.md`).
+- Scenarios: thesis-g3-closed, discussion-overclaim, g4-export-blocked, revise-revert (RED/GREEN, results
+  in tests/scenarios/BASELINE.md). Skill change recorded there: E-REF is the author's call in
+  `thesis-writing` and `manuscript-writing` (verify, replace or record manually; never delete or reword
+  the citing sentence, never edit a reference status to pass).
+- Roadmap: case report, systematic review and literature-review mode (c) move to a new P5 Reviews and
+  case reports; the old P5 becomes P6 Extend.
+- Example: examples/fictional-cohort carried from the locked results to a Vietnamese thesis
+  (`out/thesis.docx`, Chương 1 and 3 reused) and a Vietnamese journal manuscript (`out/manuscript.docx`),
+  each through three scored review rounds and a clean audit, with G4 open for both, the AI-use disclosure
+  draft and the author-decisions file; run and known issues in its README ("P4: write").
+
 ## 0.4.0 (2026-11-22)
 - P3 present: research-figures (forest, Kaplan–Meier with numbers at risk, rates, STROBE/CONSORT flow
   drawn from the locked ledger or the de-identified CSV), conference-abstract (word limit, placeholders

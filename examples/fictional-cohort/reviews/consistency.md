@@ -1,15 +1,34 @@
-STATUS: FINDINGS
+STATUS: PASS
 
-`consistency_audit.py .` (run independently): `consistency_audit: 0 block, 0 warn`, exit 0 — confirms the author's own run. Manual cross-check of wording/rounding/dates not caught by the script found one real design-wording drift (see FINDINGS) that a committee member could catch when comparing the slide's "Mục tiêu cụ thể" wording against the methods slide. All numbers checked (ch3-results vs ch3-results.rendered, abstract vs abstract.rendered, poster.json, figures.json) trace to the same locked `R-…` ledger ids and round consistently (e.g. tỷ lệ chung 22,1% everywhere; OR >9% vs <7% hiệu chỉnh 1,42 [0,94–2,15] p=0,097 everywhere; HR Cox >9% 1,35 / 7–9% 1,07 match R-A4-006/R-A4-005; EPV 39 matches R-A1-010; AUC 0,588 matches R-A1-009; n=1070 / n=1043 used with the same meaning in ch3, abstract, poster and F4). Mortality is consistently labelled "tử vong trong viện" (not all-cause) everywhere it appears. Dates (discharge 01/2021–12/2022, follow-up to 31/12/2023) are consistent between question.md, protocol.md, ch3 and the abstract.
+`consistency_audit.py .` exited 0 (0 block, 0 warn). This is round 3 (final); the manuscript
+`drafts-digest` is unchanged from round 2, confirming the `.rendered.md` files are freshly and
+correctly re-built from source.
 
-FINDINGS
-| code | location (file:line) | fix |
-|---|---|---|
-| X-OBJ | `01_question/question.md:129-131` vs `03_protocol/protocol.md:194-201` | Mục tiêu cụ thể 2 in question.md still lists 6 adjustment factors ("tuổi, giới, thời gian mắc bệnh, bệnh đồng mắc, thời gian nằm viện, sử dụng insulin"), but protocol.md §2.7.2 (confirmed 2026-11-21, see decisions.md "Mediator classification") explicitly removes length-of-stay and insulin use from the adjusted model as likely mediators — and the actual A1 model (SAP §16, ch3 Bảng 3.3, abstract, poster) adjusts only for tuổi, giới, thời gian mắc ĐTĐ, ≥1 bệnh đồng mắc. Follow protocol.md (the later, author-confirmed design decision): replace question.md's clause with "có hiệu chỉnh một số yếu tố nhiễu (tuổi, giới, thời gian mắc bệnh, bệnh đồng mắc); thời gian nằm viện và sử dụng insulin được xử lý là biến trung gian, không hiệu chỉnh trong mô hình chính (xem protocol.md §2.7.2)." If this slide quotes the original "Mục tiêu cụ thể" verbatim, update it before presenting so the Methods slide's 4-variable adjustment set does not contradict the Objectives slide's 6-variable list. |
+Manual checks against the results ledger (`ledgers/results-ledger.json`) and design sources
+(`03_protocol/protocol.md`, `03_protocol/sap.md`, `03_protocol/sample-size.md`, `01_question/question.md`,
+`decisions.md`): every `{{R-…}}` placeholder across `00-title`, `01-abstract`, `03-methods`,
+`04-results`, `05-discussion`, `06-conclusion` resolved correctly and matches the ledger (n=1070/1043,
+22.1% overall readmission with 19.7–24.6% CI, OR 1.10/1.42 with matching CIs and p=0.641/0.097, AUC
+0.588, EPV 39, secondary A2–A6 estimates). Sample size wording (1,070 required vs ~1,200 available) is
+identical in protocol.md, sap.md, sample-size.md and 03-methods.md. Mortality/outcome naming ("tử vong
+trong viện trong 1 năm") is consistent between sap.md, 03-methods.md and 04-results.md. Objective wording
+in `question.md` Mục tiêu cụ thể 2 (4 adjustment covariates, insulin/length-of-stay as mediators) matches
+protocol.md §2.7.2 and the manuscript methods/abstract — the prior 6-vs-4-covariate drift (logged in
+decisions.md 2026-11-22) was already fixed and re-verified clean. Title page's word counts (247/3492)
+and table/figure counts (3 tables, 2 figures) match the rendered body text and a prior round's independent
+recount; the earlier stale "đúng ngay ở ngưỡng" (exactly at limit) claim on `00-title.rendered.md` from
+round 2 is gone and the figure is correctly re-rendered as 3492 (8 words under the 3500 limit). Citation
+content claims (hu2026, cao2026, robbins2021, li2026, chakraborty2021) match their stored abstracts per
+the citation-verifier's independent pass, with the same digest.
 
-GAPS
-- Could not independently re-derive any `value`/`ci`/`p` from raw data (G3-locked ledger is the only permitted source); checks above are limited to cross-file agreement with the ledger, not re-computation.
-- `ch1-literature-review.md` cites only external studies (hu2026, cao2026, li2026, robbins2021, chakraborty2021); it has no own-cohort numbers to cross-check against the ledger, so no rounding/naming check applies there beyond objective wording (already checked above).
+GAPS Country attribution for hu2026 ("tại Trung Quốc") and robbins2021 ("tại Anh") cannot be
+confirmed from the stored ledger abstracts (no country field) — carried over as a citation-verifier gap,
+not a consistency defect. STROBE completeness items (exclusion-stage counts, per-variable missing
+counts, sensitivity analysis) are reporting-guideline gaps already tracked in
+`reviews/reporting-guideline-checker.md`, not internal contradictions.
+CONFLICTS None found.
 
-CONFLICTS
-- None found that I could not resolve against a named source — the one real drift above has a clear authoritative answer (protocol.md over question.md's unupdated clause), so it is listed as a FINDING, not a CONFLICT.
+drafts-digest: manuscript f242ce1e24d735a5c8891b68fa491e4872f7f0c7260670d9e3285767c80aa340
+```scores
+{"deliverable": "manuscript", "consistency": 2}
+```
