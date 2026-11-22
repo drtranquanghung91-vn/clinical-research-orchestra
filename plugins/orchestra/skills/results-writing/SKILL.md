@@ -24,7 +24,7 @@ deviations in their own labelled subsection.
 ## 4. Mode
 - Thesis (`type: thesis-*`, `de-tai-co-so`): `06_writing/thesis/ch3-results.md`, Vietnamese Chapter 3
   conventions in `${CLAUDE_PLUGIN_ROOT}/references/writing/vn-chapter3.md`.
-- Manuscript: `06_writing/manuscript/results.md` in `language.output` (usually English); key estimates
+- Manuscript: `06_writing/manuscript/04-results.md` in `language.output` (usually English); key estimates
   only, no table repeated in prose. English text in a `vi` project: add `--lang en` to `render_results.py`
   and `check_numbers.py`.
 

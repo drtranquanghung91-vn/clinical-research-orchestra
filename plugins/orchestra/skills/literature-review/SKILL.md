@@ -15,9 +15,9 @@ record's abstract or full text in the ledger.
 2. Choose the mode:
    - **a. Thesis Chapter 1** (`06_writing/thesis/ch1-literature-review.md`): structure from
      `${CLAUDE_PLUGIN_ROOT}/references/literature/vn-chapter1.md`, including studies in Vietnam and abroad.
-   - **b. Manuscript background** (`06_writing/manuscript/background.md`): 3–5 paragraphs, funnel from
+   - **b. Manuscript background** (`06_writing/manuscript/02-introduction.md`): 3–5 paragraphs, funnel from
      burden to gap to aim.
-   - Scoping or systematic reviews are separate study types (phase P3); say so if asked.
+   - Scoping or systematic reviews are separate study types (phase P5); say so if asked.
 3. Plan in `ledgers/outline.json → section_plan`: one claim per paragraph, its supporting reference ids,
    the certainty from the evidence table.
 

@@ -39,7 +39,7 @@ after the number. The scripts measure; the agent writes.
 | Project `type` | Output | .docx |
 |---|---|---|
 | `thesis-*`, `de-tai-co-so` | `06_writing/thesis/ch3-results.md` | `out/ch3-results.docx` |
-| `manuscript` (or the author asks for a paper) | `06_writing/manuscript/results.md` | `out/results.docx` |
+| `manuscript` (or the author asks for a paper) | `06_writing/manuscript/04-results.md` | `out/results.docx` |
 
 Write in `project.yaml → language.output`. A thesis author who also wants a manuscript gets two files from
 the same ledger. An English manuscript inside a `language.output: vi` project: add `--lang en` to
@@ -119,7 +119,7 @@ In this order; a `block` stops hand-back until fixed (exit 1 = findings, 2 = usa
 | 3 | `python "${CLAUDE_PLUGIN_ROOT}/scripts/analysis_plan.py" check . --text 06_writing/thesis/ch3-results.md` | `analysis_plan: 0 block, 0 warn`, exit 0 |
 | 4 | `python "${CLAUDE_PLUGIN_ROOT}/scripts/build_docx.py" 06_writing/thesis/ch3-results.rendered.md out/ch3-results.docx --project .` | `build_docx: wrote out/ch3-results.docx`, exit 0 |
 
-Manuscript: the same with `06_writing/manuscript/results.md` and `out/results.docx`. Step 3 reads the
+Manuscript: the same with `06_writing/manuscript/04-results.md` and `out/results.docx`. Step 3 reads the
 placeholder file (it finds post-hoc ids through the placeholders); steps 2 and 4 read the rendered file.
 
 Findings and fixes:
