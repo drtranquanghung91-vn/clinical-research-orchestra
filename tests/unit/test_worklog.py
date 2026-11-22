@@ -149,6 +149,14 @@ class TestWorklog(unittest.TestCase):
         ev = json.loads((self.p / "reviews/worklog.json").read_text(encoding="utf-8"))["events"][-1]
         self.assertEqual((ev["event"], ev["to_round"], ev["removed"]), ("revert", 1, ["ch9-extra.md"]))
 
+    def test_none_request_recorded_by_an_older_version_is_not_listed(self):
+        self.score(1, request="phân tích dưới nhóm theo giới tính")
+        log = worklog.load_log(self.p)
+        log["rounds"][0]["requests"].append({"agent": "scientific-editor", "text": "none — wording fixes only"})
+        text = worklog.decisions_text(self.p, log)
+        self.assertIn("phân tích dưới nhóm theo giới tính", text)
+        self.assertNotIn("wording fixes only", text)
+
     def test_requests_assumptions_waivers_to_author_decisions(self):
         (self.p / "01_question").mkdir(exist_ok=True)
         (self.p / "01_question" / "question.md").write_text(ASSUME, encoding="utf-8")

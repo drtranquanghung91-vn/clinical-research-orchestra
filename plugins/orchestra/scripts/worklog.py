@@ -357,7 +357,7 @@ def decisions_text(project: Path, log: dict) -> str:
     for e in log["rounds"]:
         for r in e.get("requests", []):
             key = (e["deliverable"], r["text"])
-            if key not in seen:
+            if key not in seen and not reviews.is_none(r["text"]):   # "none — …" logged before the fix
                 seen.add(key)
                 reqs.append(f"- [{t[e['deliverable']]}, {t['round']} {e['round']}, {r['agent']}] {r['text']} — {t['ask']}")
     lines += reqs or [t["none"]]
