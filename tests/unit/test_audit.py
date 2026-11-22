@@ -225,6 +225,11 @@ class TestAudit(unittest.TestCase):
         self.assertEqual(self.cli("thesis")[0], 1)
         self.assertTrue(any(f["code"] == "E-FMT" and "placeholder" in f["msg"] for f in self.blocks()))
 
+    def test_author_placeholder_wrapped_over_lines_blocks(self):
+        self.append("ch2-methods.md", "\nĐạo đức: [[TÁC GIẢ: số quyết định\ncủa hội đồng đạo đức]]\n")
+        self.assertEqual(self.cli("thesis")[0], 1)
+        self.assertTrue(any(f["code"] == "E-FMT" and "placeholder" in f["msg"] for f in self.blocks()))
+
     def test_crash_in_a_check_is_a_block_not_a_clean_pass(self):
         (self.p / "ledgers" / "results-ledger.json").write_text("[]", encoding="utf-8")
         code, out, err = self.cli("thesis")

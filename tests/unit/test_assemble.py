@@ -171,6 +171,17 @@ class TestAssemble(unittest.TestCase):
         strict = assemble.format_findings(self.p, "thesis", strict=True)
         self.assertTrue(any(lvl == "block" and "[[" in m for _, lvl, _, m in strict))
 
+    def test_author_placeholder_wrapped_over_lines(self):
+        (self.d / "ch2-methods.md").write_text("# CHƯƠNG 2\n\nTài trợ: [[TÁC\nGIẢ: nguồn tài trợ,\nnếu có]].\n",
+                                               encoding="utf-8")
+        found = [f for f in assemble.format_findings(self.p, "thesis") if "placeholder" in f[3]]
+        self.assertEqual(len(found), 1, found)
+        code, lvl, loc, msg = found[0]
+        self.assertEqual((code, lvl, loc), ("E-FMT", "warn", "06_writing/thesis/ch2-methods.md:3"))
+        self.assertIn("[[TÁC GIẢ: nguồn tài trợ, nếu có]]", msg)
+        strict = [f for f in assemble.format_findings(self.p, "thesis", strict=True) if "placeholder" in f[3]]
+        self.assertEqual([f[1] for f in strict], ["block"])
+
     def audit_json(self):
         files = {p.relative_to(self.p).as_posix(): gate.sha256(p) for p in sorted(self.d.glob("*.md"))
                  if not p.name.endswith(".assembled.md")}

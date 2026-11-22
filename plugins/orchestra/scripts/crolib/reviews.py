@@ -17,6 +17,7 @@ SCORES = re.compile(r"^```scores[ \t]*\r?\n(.*?)\r?\n```[ \t]*$", re.M | re.S)
 DIGEST = re.compile(r"^drafts-digest:[ \t]*(thesis|manuscript)[ \t]+([0-9a-f]{64})[ \t]*$", re.M)
 REQUEST = re.compile(r"^[ \t]*(?:[-*][ \t]*)?NEW-ANALYSIS:[ \t]*(\S.*?)[ \t]*$", re.M)
 NONE = {"none", "không có", "không", "n/a", "-"}
+NONE_SPLIT = re.compile(r"\s*[—–;:,(]|\s+-\s+")
 
 
 def parse_report(text: str) -> dict:
@@ -32,7 +33,13 @@ def parse_report(text: str) -> dict:
         else:
             bad += 1
     return {"scores": blocks, "bad_scores": bad, "digests": dict(DIGEST.findall(text)),
-            "requests": [r for r in REQUEST.findall(text) if r.strip("() .").lower() not in NONE]}
+            "requests": [r for r in REQUEST.findall(text) if not is_none(r)]}
+
+
+def is_none(request: str) -> bool:
+    """`none`, also with a trailing comment ("none — wording only", "không có (…)")."""
+    head = NONE_SPLIT.split(request.strip(), 1)[0]
+    return head.strip("() .").lower() in NONE or request.strip("() .").lower() in NONE
 
 
 def scores_for(parsed: dict, deliverable: str) -> dict | None:

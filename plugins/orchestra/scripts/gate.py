@@ -57,6 +57,13 @@ def _state_path(project: Path) -> Path:
     return Path(project) / "gates" / "state.json"
 
 
+def _save_state(project: Path, state: dict) -> None:
+    """Write gates/state.json with LF line endings on every platform."""
+    path = _state_path(project)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+
+
 def _load(project: Path) -> dict:
     p = _state_path(project)
     if not p.exists():
@@ -138,8 +145,7 @@ def _open_g4(project: Path, by: str) -> dict:
     for entry in per.values():
         union.update(entry["files"])
     state["G4"] = {"status": "open", "at": now, "by": by, "files": union, "deliverables": per}
-    _state_path(project).parent.mkdir(parents=True, exist_ok=True)
-    _state_path(project).write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _save_state(project, state)
     return state["G4"]
 
 
@@ -160,8 +166,7 @@ def open_gate(project: Path, gate: str, by: str, files: list[str] | None = None)
     entry = {"status": "open", "at": dt.datetime.now().isoformat(timespec="seconds"), "by": by,
              "files": {f: sha256(project / f) for f in (files or [])}}
     state[gate] = entry
-    _state_path(project).parent.mkdir(parents=True, exist_ok=True)
-    _state_path(project).write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _save_state(project, state)
     return entry
 
 

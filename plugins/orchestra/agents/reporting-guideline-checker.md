@@ -33,7 +33,7 @@ drafts-digest: <deliverable> <sha256>
 {"deliverable": "<deliverable>", "guideline": 0}
 ```
 
-   FINDINGS: each absent or partial item, with the section where it belongs and what to add. Add `NEW-ANALYSIS: <what and why>` lines (before `drafts-digest:`) only when an item needs a new analysis. Keep prose outside the table to about 200 words.
+   FINDINGS: each absent or partial item, with the section where it belongs and what to add. Add `NEW-ANALYSIS: <what and why>` lines (before `drafts-digest:`) only when an item needs a new analysis. With none, write exactly `NEW-ANALYSIS: none` with nothing after it, or no line. Keep prose outside the table to about 200 words.
 
 ## Rules
 
