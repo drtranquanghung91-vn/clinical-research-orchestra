@@ -287,3 +287,261 @@ No ledger, results.json or locked G3 file was touched; only wording/Markdown syn
 placeholders and numbers. Re-ran all 4 checks: `render_results.py`, `check_numbers.py` (0 findings),
 `analysis_plan.py check . --text` (0 block, 0 warn), `build_docx.py` → `out/ch3-results.docx`, all
 exit 0.
+
+## 2026-11-22 — Figures F1-F3 drawn from the locked ledger; F4 (STROBE flow) blocked
+
+Author approved a 4-figure plan up front (forest of A1's adjusted HbA1c OR, KM of A4, rates of A0's
+1-year readmission by HbA1c group, STROBE participant-flow) and asked not to be asked again whether to
+draw them, but to be told if any number a figure needs is missing from the ledger.
+
+Confirmed gate G3 still locked (`gate.py check . G3` → open/locked, 5 file hashes unchanged). Wrote
+`07_present/figures/figures.json` and ran `figures.py . --only F1,F2,F3 --dpi 300`:
+- F1 forest — rows `R-A1-003` (HbA1c 7-9% vs <7%, OR 1,10 [0,74-1,62]) and `R-A1-004` (HbA1c >9% vs
+  <7%, OR 1,42 [0,94-2,15]), from Bảng 3.3 (mô hình A1 hiệu chỉnh theo tuổi, giới, thời gian mắc ĐTĐ,
+  bệnh đồng mắc).
+- F2 KM — redrawn from `04_data/cohort.deid.csv` (time `time_to_readmit_days`, event `readmit_1y`,
+  group `hba1c_group`, order <7/7-9/>9, censored at 365 ngày, at-risk table at 0/90/180/270/365); group
+  sizes at t=0 (235/514/321) match `R-A0-002/003/004.n`.
+- F3 rates — `R-A0-062/063/064` (tỷ lệ tái nhập viện 1 năm theo nhóm: 19,6% [15,0-25,1], 21,0%
+  [17,7-24,7], 25,5% [21,1-30,6]), from Bảng 3.2.
+
+`consistency_audit.py .` → 0 block, 0 warn. Opened every `F<n>.png` and checked the printed numbers
+against the ledger by hand before calling them done.
+
+F4 (STROBE participant-flow) was **not drawn**: this simulated dataset has no pre-exclusion
+screening/eligibility counts anywhere in the project (already noted in the 2026-11-21 Chapter-3 entry
+above — the dataset was generated directly at the final analytic-population size). The only
+sample-flow-shaped numbers that exist in the ledger are the full analytic cohort (`R-A0-001.n` = 1070)
+and the complete-case subset used by the adjusted models A1/A4 (`R-A1-003.n` / `R-A4-005.n` = 1043,
+i.e. 27 excluded for missing adjustment-covariate data). There is no box for "hồ sơ sàng lọc", "đủ tiêu
+chuẩn chọn mẫu", or a breakdown of exclusions by study criteria — those counts were never recorded.
+Reported this to the author instead of filling the diagram's boxes with invented or re-derived numbers;
+author to decide between (a) a minimal 2-box diagram built only from `R-A0-001.n` and `R-A1-003.n`
+(labelled honestly as "loại trừ do thiếu biến hiệu chỉnh", not a full STROBE screening flow), or (b)
+leaving F4 out of the thesis and noting the limitation in text, or (c) retrieving the real
+screening/exclusion counts from the original data source and adding them to the ledger first (would
+need `statistical-analysis` re-run and G3 re-locked). No ledger or locked G3 file touched.
+
+Author chose (a): the data is the full set of records already meeting the study's eligibility criteria
+as extracted from the system, with no screening step ever recorded, so a minimal diagram from the two
+ledger numbers is the honest option. Added `F4` (type `flow`) to `07_present/figures/figures.json`:
+box 1 "Toàn bộ đoàn hệ hồi cứu đủ tiêu chuẩn chọn mẫu" `n = R-A0-001.n` (1070); box 2 "Đưa vào mô hình
+hồi quy logistic và Cox hiệu chỉnh (A1, A4)" `n = R-A1-003.n` (1043); one exclusion box "Loại khỏi mô
+hình hiệu chỉnh do thiếu dữ liệu biến hiệu chỉnh (tuổi, giới, thời gian mắc ĐTĐ, bệnh đồng mắc)"
+`n = R-A0-001.n - R-A1-003.n` (27). Title and bottom source note both state in plain words that this is
+not a full STROBE screening diagram and that no pre-exclusion screening/eligibility counts exist in the
+project. Ran `figures.py . --only F4 --dpi 300` → `F4.{svg,pdf,png,data.json}`; opened `F4.png` and
+checked the three numbers (1070, 1043, 27) against the ledger. `consistency_audit.py .` on all four
+figures together → 0 block, 0 warn. No ledger or locked G3 file touched.
+
+## 2026-11-22 — Conference abstract drafted for a domestic endocrinology/diabetes conference
+
+Author gave the venue's rules directly (asked once, per the skill): Vietnamese, ≤300 words (title not
+counted), structured with headings Đặt vấn đề và mục tiêu / Phương pháp / Kết quả / Kết luận, no
+references required, no .docx needed yet.
+
+Confirmed G3 still locked. Wrote `07_present/abstract.md`: Background/Objective from the registered
+general objective (`01_question/question.md`); Methods gives design, setting, period, the full
+descriptive cohort (`R-A0-001.n`) and the complete-case subset for the adjusted model
+(`R-A1-003.n`), and the adjustment set (tuổi, giới, thời gian mắc ĐTĐ, ≥1 bệnh đồng mắc) matching A1;
+Results leads with the overall and per-group 1-year readmission rate (`R-A0-061..064`) then the primary
+analysis's adjusted OR for both HbA1c groups vs <7% (`R-A1-003`, `R-A1-004`, each with its CI and p);
+Conclusion answers the objective without a causal verb and names that both adjusted CIs cross 1. Every
+number is a `{{R-…}}` placeholder; none typed by hand. Kept the same "Dữ liệu mô phỏng" notice used in
+Chapter 3, placed above the structured body (not counted toward the 300-word limit, same convention as
+the title) since this draft is meant to leave the project for a real external audience; moved it into a
+single HTML comment right under the title once the checks below showed it was leaking into the word
+count and the ledger-number check (HTML/Markdown comments do not nest, so an earlier attempt to also put
+a `<!-- not-a-result: -->` marker inside that comment was wrong and was reverted).
+
+Ran the 6 checks of the skill, in order:
+(1) `render_results.py . 07_present/abstract.md` → wrote `abstract.rendered.md`.
+(2) `check_numbers.py`: first run 1 block (bare "300" in the then-visible disclaimer line); fixed by
+moving the disclaimer into one HTML comment (comments are blanked before the numeric scan); re-run → 0
+findings.
+(3) `analysis_plan.py check . --text` → 0 block, 0 warn.
+(4) `consistency_audit.py` against the rendered abstract and `ch3-results.rendered.md`: first run 1 warn
+(same bare "300", found nowhere else and in no ledger value); gone after the same comment fix → 0 block,
+0 warn.
+(5) `lint_prose.py --count-words`: first draft 373 words (limit 300) — cut Background from two sentences
+to one (dropped the restated "ở người bệnh ĐTĐ type 2" and the insulin/glycaemic-control aside) and
+trimmed a few Methods/Conclusion phrases, never touching an estimate or its CI; re-run → 274 words.
+(6) `lint_prose.py` (pattern lint) → 4 paragraphs, 0 hits, 0/100 words.
+
+No ledger or locked G3 file touched.
+
+## 2026-11-22 — Poster built in all 3 layouts from the accepted abstract
+
+Author's accepted abstract (07_present/abstract.md) moves to poster: 90×120 cm, portrait, Vietnamese,
+all 3 layouts (editorial, pathway, figure-led) for the author to choose, no logo, default palette, no
+conference rules beyond size. Author gave one fixed key message and said not to strengthen or redirect
+it: "HbA1c >9% lúc nhập viện có thể đi kèm nguy cơ tái nhập viện trong 1 năm cao hơn, nhưng cỡ mẫu này
+chưa đủ để khẳng định" — written into `poster.json.key_message` with the R-A1-004 adjusted OR and its CI
+added (satisfies the key-message test: estimate + CI + population + no causal verb) without changing
+direction or strength.
+
+Confirmed G3 still locked. Wrote `07_present/poster/poster.json` reusing all 4 locked figures
+(F1 forest/A1, F2 KM/A4, F3 rates/A0, F4 the author-approved minimal flow). Every number is a
+`{{R-…}}` placeholder.
+
+Hit two real defects while building, both fixed by changing wording/numbers presentation, not the
+underlying result:
+- `consistency_audit.py` blocked once on the poster's Cox sentence: "tỷ số nguy cơ ... hiệu chỉnh là
+  1,07" collided with the A2 continuous-HbA1c sentence in ch3-results ("... hiệu chỉnh là 1,02") because
+  a parenthetical "(HR)" right before the number broke the phrase-matching window down to just "hiệu
+  chỉnh", a key already used elsewhere. Fixed by dropping the inline "(HR)" (the thesis's own wording
+  never uses it either) and re-ordering the >9%/7–9% HR mentions to match `ch3-results.md`'s own order,
+  after which `consistency_audit.py` is 0 block, 0 warn.
+- `poster_build.py` reported box overflow in all 3 layouts on the first build (title band too short for
+  the full thesis title + authors + affiliation; several text columns too long for pathway's 2 columns
+  and figure-led's 3 small columns). Fixed by: shortening the poster title to drop the
+  site/year/design clause (kept in Methods instead); shortening every section body to poster-length
+  prose; lowering `body_pt` to {pathway: 26, figure-led: 24} (24 is the floor); rewriting F4's box/source
+  text shorter (regenerated both its document and poster PNG, reopened and checked both — the caveat
+  that this is not a full STROBE diagram is unchanged, just terser); and using `figure_width_cm` to place
+  F2 (the tallest figure, KM + at-risk table) and F4 narrower than their column. After these fixes,
+  `poster_build.py` reports 0 overflowing boxes in all 3 layouts (only a non-blocking "column N% full"
+  balance note on editorial/figure-led, which is informational, not a defect).
+
+`poster_preflight.py --layout L` for all 3 layouts: **0 block** each time (print-ready by the tool's own
+pass/fail line). Residual **warnings** the author should see before deciding on a layout, not silently
+accepted:
+- F2 (Kaplan–Meier) prints at ~15.7 pt wherever it appears in a side column (all 3 layouts), because
+  `figure_width_cm` places it narrower (15 cm) than it needs to be legible at the 24 pt floor. Tried
+  redrawing F2's poster asset directly at 15 cm (`figures.py --profile poster`, the fix preflight itself
+  suggests): the KM legend + 3-row at-risk table does not compress at a narrower width, it redistributes
+  height instead — the regenerated asset was ~9 cm taller at 15 cm wide than at 23 cm wide, which would
+  have reopened the overflow just fixed. Reverted to drawing F2 at 23 cm and accepting the 15.7 pt
+  placement warning as the real trade-off (fit vs. this one figure's in-column legibility), rather than
+  hiding it.
+- F1 (forest) prints at ~19.5 pt in the **editorial** layout only (its label+estimate text auto-widens
+  the drawn asset to 28.23 cm, wider than editorial's own column).
+- `lint_prose.py --slides` flags "Tài liệu tham khảo" (the references-strip heading) as a topic title
+  that should state a finding — a structural footer label, not a finding; same false-positive in all 3
+  layouts.
+
+`check_pptx.py --poster` on all 3 `.pptx`: 0 issues each. All 3 `L.png` opened and checked: nothing cut
+off, all 3 visibly different from each other, group colours/line fills consistent with `figures.json`
+style across every figure.
+
+Figures' poster-profile `poster_width_cm` changed from 23 to 22 (F3) and 21 (F4) to clear their own
+font-size warnings; F1 and F2 stay at 23. This only affects `F<n>.poster.*` — the document-profile
+(thesis) `F<n>.png/.svg/.pdf` at 9 pt/16 cm are untouched, re-verified after every F4 text edit.
+
+No ledger or locked G3 file touched. Author to pick one of the 3 layouts (or ask for the KM/forest
+warnings to be resolved differently, e.g. moving F2 to a wider slot) before printing.
+
+## 2026-11-22 — Poster revised: F2 given real room, data note pulled out of "Tài liệu tham khảo"
+
+Author reviewed all 3 PNGs, approved the key message wording with the OR+CI added, will print
+**pathway** but keep all 3 layouts. Two things rejected, explicitly not to be fixed by lowering any
+check's threshold: (1) the Kaplan–Meier (F2) printed too small/flattened (~16 pt) to read at 1.5 m —
+author wants F2 a genuinely wider slot, sections may be reorganised; (2) the "Dữ liệu mô phỏng" notice
+sat under the "Tài liệu tham khảo" heading although it is not a reference — wants it as its own labelled
+note if the format allows.
+
+Root cause of (1): `figure_width_cm` had been used to place F2 narrower than its drawn width to stop it
+overflowing its column — that's what shrank its text below the 24 pt floor. Real fix, in order:
+- Shortened F1's row labels (`HbA1c 7–9% vs <7%` → `7–9% vs <7%`, title already names HbA1c) — cut F1's
+  own auto-widened minimum width from 28.23 cm to 25.4 cm, since F1 had the same problem in the editorial
+  layout alone (reran `figures.py --only F1` for document and poster profiles; opened `F1.png` again,
+  unchanged meaning, still clear in context of the figure's own title).
+- Removed every `figure_width_cm` cap on F2 and let it draw and place at its natural/full column width:
+  full column width in editorial and pathway, and made it the `hero` of figure-led in place of F1 (F1
+  moves into a regular column instead — thematically still fine, since F1's own CI-crosses-1 message is
+  carried by Bảng 3.3's text regardless of which figure is the dominant visual).
+- Removed the "references" field entirely (freed the 0.08×H footer band back to the columns) and added
+  the simulated-data notice as its **own numbered section** ("Ghi chú về dữ liệu"), directly answering
+  request (2): it now carries its own heading in every layout, never appears near a label that says
+  "Tài liệu tham khảo" (that heading no longer exists on the poster at all).
+- Rebuilding then overflowed two of pathway's/figure-led's columns (F2 at full size is tall). Fixed by
+  explicit `"column"` pins (`Mối liên quan`+F1 and `Thời gian...`+F2 both pinned to column 2, letting the
+  other 5 sections auto-balance across the remaining columns) and by shortening section 4's heading
+  (it had wrapped to 2 lines in a narrow column, the real last few centimetres of overflow — not F2).
+  `poster_build.py` now reports 0 overflowing boxes in all 3 layouts (only non-blocking "column N% full"
+  balance notes, mostly on editorial, which has slack to spare).
+
+Did **not** touch any check's pass/fail threshold anywhere (`poster_preflight.py`'s 24 pt floor is
+unchanged) — closed the gap by giving the content more room instead.
+
+Re-ran every print check, all 3 layouts:
+- `consistency_audit.py` → 0 block, 0 warn.
+- `poster_build.py` → 0 overflowing boxes (down from the 1-2 before this round).
+- `poster_preflight.py --layout L` → **0 block** each; F2 now has no warning at all in pathway (full
+  column width) and figure-led (hero), and only 23.9 pt in editorial (effectively at the 24 pt floor).
+  Residual **warnings**, reported rather than hidden: F1 ~21.6 pt (editorial, figure-led), F3 ~21.8 pt,
+  F4 ~21.7 pt (all 3) — smaller figures with less text density than the KM plot, a real but modest
+  trade-off for giving F2 the room it needed within a fixed page budget.
+- `check_pptx.py --poster` on all 3 — first pass found 1 real issue on figure-led (`off-slide Body`): the
+  "Ghi chú" section's text box ran 0.8 cm past the literal page bottom, inside poster_build's own overflow
+  tolerance but outside check_pptx's stricter ~0.25 mm one. Fixed by shortening the note (dropped the
+  `tools/simulate_cohort.py` path mention, kept "dự án ví dụ"); re-ran → 0 issues on all 3 `.pptx`.
+- `lint_prose.py --slides` → 0 findings on all 3 (the earlier "Tài liệu tham khảo" false positive is gone
+  because that heading no longer exists).
+
+Opened every `L.png` again: F2 is visibly the largest or full-width figure in all 3 layouts now; "Ghi chú
+về dữ liệu" reads as its own section with its own heading, nowhere near a references label.
+
+No ledger or locked G3 file touched. Next: `committee-simulator` (deliverable `poster`) for the author's
+in-person Q&A rehearsal, per the author's request.
+
+## 2026-11-22 — Defense-prep: consistency audit before slides, one wording drift fixed
+
+Author asked for an 18-slide defence deck (18-20 min) with speaker notes, plus a committee question
+bank, for the thesis defence (broader scope than the poster: whole thesis, methodology, ethics, limits).
+Confirmed G3 still locked. Per `defense-prep`'s core rule, ran the consistency audit **before** planning
+any slide: `consistency_audit.py .` → 0 block, 0 warn; then the agent `consistency-auditor` (independent
+read of the locked ledger, both thesis chapters, the abstract, the poster spec, `figures.json`,
+`03_protocol/*`, `decisions.md`) → `reviews/consistency.md`, STATUS: FINDINGS (0 block, 1 real wording
+drift, not a numeric error).
+
+Finding (X-OBJ): `01_question/question.md`'s Mục tiêu cụ thể 2 still listed 6 adjustment factors (tuổi,
+giới, thời gian mắc bệnh, bệnh đồng mắc, **thời gian nằm viện, sử dụng insulin**), left over from before
+the mediator decision; `protocol.md` §2.7.2 (author-confirmed 2026-11-21) reclassified length-of-stay and
+insulin use as likely mediators, excluded from the adjusted model — the actual A1 model (SAP §16, ch3
+Bảng 3.3, abstract, poster) adjusts only tuổi, giới, thời gian mắc ĐTĐ, ≥1 bệnh đồng mắc (4 variables).
+If the objectives slide had quoted question.md verbatim it would have contradicted the methods slide's
+4-variable list in front of the committee. Fixed `question.md` mục tiêu cụ thể 2 to match protocol.md's
+wording (4 adjustment variables; length-of-stay/insulin named as mediators, not hiệu chỉnh, with a
+pointer to protocol.md §2.7.2). Re-ran `consistency_audit.py .` → still 0 block, 0 warn. No ledger or
+locked G3 file touched; `question.md` is a design document from before G1/G2, not part of the G3 lock.
+
+Planned and built `07_present/defense/deck.json` into `deck.pptx`: 18 main slides (title, outline, đặt
+vấn đề, mục tiêu, 2 methods slides, cỡ mẫu+đạo đức, sơ đồ chọn mẫu [F4 diagram], Bảng 1 [table], 3 result
+figures [F3 rates, F1 forest, F2 KM, each a native editable chart], tóm tắt [big_number], bàn luận, hạn
+chế, kết luận, kiến nghị, closing) sized for 18-20 minutes, plus 5 backup slides after closing
+(sample-size derivation, variable definitions/cut-offs, model assumptions table, post-hoc age-subgroup
+table, references) that do not count toward the time budget. No template given by the school; used the
+clean default theme with the project's accent colour. Every result number is a `{{R-…}}` placeholder;
+the few numbers that are not ledger results (sample-size targets: 300/600 EPV, 535/nhóm two-proportions,
+the 0.554-0.80 power table) are typed exactly as in `03_protocol/sample-size.md` (a pre-registered design
+document, not an analysis result — there is no ledger mechanism for design/sample-size parameters) and
+confined to the sample-size slide and its backup, each saying plainly where it came from.
+
+Fixed two build defects: (1) the full official thesis title overflowed the title slide box (175%) —
+shortened to match the poster's own shortened title, the presenter's notes carry the full official title
+to read aloud; (2) `consistency_audit.py` blocked once on "thực tế" colliding as the same key between the
+sample-size slide's {{R-A0-001.n}}=1070 and the limitations slide's {{R-A0-002.n}}/{{R-A0-004.n}}=235/321
+— same false-positive shape as the poster's earlier HR collision (a short, reused lead-in phrase). Fixed
+by giving each a distinguishing lead-in ("mẫu nghiên cứu hiện có" vs "hai nhóm cực chỉ có"); re-ran → 0
+block, 0 warn.
+
+Checks, in order: `pptx_from_spec.py` → 23 slides; `check_pptx.py` → 0 issues; `lint_prose.py --slides`
+→ 0 findings; `consistency_audit.py .` (whole project, including `deck.json`'s strings) → 0 block, 0
+warn. Rendered all 23 slides to PNG via PowerPoint (`check_pptx.py --render`) and opened every one:
+native charts/diagram/table all correct, nothing cut off, numbers match the ledger. No ledger or locked
+G3 file touched.
+
+Ran the agent `committee-simulator` (deliverable `defense`): 22 questions across the whole thesis (lit
+review gaps, design choices, sample size/power, mediator-vs-confounder reasoning, Cox censoring
+assumption, every analysis including A2-A6 post-hoc, ethics status, AI-use disclosure per ICMJE,
+generalisability, conclusions/recommendations staying within the data) plus 8 ranked weak points and 3
+gaps. The agent did not write its own output file this time (unlike the poster run); saved its returned
+text verbatim to `reviews/committee-defense.md` so it has the same durable location as
+`reviews/committee-poster.md`. One gap worth flagging to the author directly: `06_writing/thesis/` only
+has Chapter 1 (lit review) and Chapter 3 (results) as actual thesis prose — Chapters 2 (methods, beyond
+`03_protocol/protocol.md`), 4 (discussion) and 5 (conclusion/recommendations) exist only as the defence
+deck's slides, not as thesis chapter files; if the submitted thesis book needs those chapters written
+out, that is separate work this session has not done.
+
+No ledger or locked G3 file touched.

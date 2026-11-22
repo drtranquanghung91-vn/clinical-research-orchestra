@@ -11,17 +11,19 @@
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-0F5E7A"></a>
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-C8372D">
   <img alt="Languages" src="https://img.shields.io/badge/languages-English%20%7C%20Vietnamese-56677F">
-  <img alt="Status" src="https://img.shields.io/badge/status-0.3.0%20analyse%20and%20report-B7791F">
+  <img alt="Status" src="https://img.shields.io/badge/status-0.4.0%20present-B7791F">
   <a href="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
-> **Status: early.** Version 0.3.0 adds the P2 "analyse and report results" skills (data
-> preparation, statistical analysis per the SAP, results writing with a Chapter 3 .docx) to the
+> **Status: early.** Version 0.4.0 adds the P3 "present" skills (figures, conference abstract,
+> print poster in three layouts with preflight, thesis-defence deck with rehearsal questions, prose
+> humanizer, consistency audit) to the P2 "analyse and report results" skills (data
+> preparation, statistical analysis per the SAP, results writing with a Chapter 3 .docx), the
 > P1 "plan the study" skills (research question, literature search, critical appraisal, guideline
 > check, literature review, protocol design, sample size and SAP) and the 0.1.0 foundation (project
-> folder, ledgers, gates, reference verification and patient-data protection). Presentation and
+> folder, ledgers, gates, reference verification and patient-data protection). Manuscript and thesis
 > writing skills arrive phase by phase; see [Roadmap](#roadmap). A simulated project run through
-> every P1 and P2 skill is in [`examples/fictional-cohort/`](examples/fictional-cohort/). Do not
+> every P1, P2 and P3 skill is in [`examples/fictional-cohort/`](examples/fictional-cohort/). Do not
 > rely on it for real studies yet.
 
 ---
@@ -88,9 +90,12 @@ Two plugins ship from this marketplace:
 | 4 | `data-preparation` | codebook, data audit, cleaning log, de-identified data in `04_data/` | 0.3.0 |
 | 4 | `statistical-analysis`, `/orchestra:analyze` | analysis per the SAP register with a vendored `crostats.py`, or SPSS/Stata/R output imported; declared post-hoc analyses; results ledger (`analysis_plan.py`, `results_ledger.py`) | 0.3.0 |
 | 5 | `results-writing`, `/orchestra:results` | thesis Chapter 3 or manuscript Results from the locked ledger, with .docx (`render_results.py`, `check_numbers.py`, `build_docx.py`) | 0.3.0 |
-| 4 | `research-figures` | Table 1, Kaplan–Meier with numbers at risk, forest plots, flow diagrams | P3 |
-| 6 | `research-poster`, `defense-prep`, `conference-abstract` | poster with print preflight, thesis-defence deck, abstract | P3 |
-| 5–6 | `prose-humanizer` | rewrites AI-sounding prose, keeps every number and citation | P3 |
+| 4 | `research-figures` | forest plot, Kaplan–Meier with numbers at risk, rates chart, STROBE/CONSORT flow from the locked ledger or the de-identified data (`figures.py`) | 0.4.0 |
+| 6 | `conference-abstract` | structured abstract within the word limit, every number a ledger placeholder (`lint_prose.py --count-words`, `check_numbers.py`) | 0.4.0 |
+| 6 | `research-poster`, `/orchestra:poster` | print poster in three layouts (editorial, pathway, figure-led) as PDF, PNG and PPTX, with print preflight (`poster_build.py`, `poster_preflight.py`) | 0.4.0 |
+| 6 | `defense-prep`, `/orchestra:defense` | consistency audit before any slide, thesis-defence deck, committee questions (`consistency_audit.py`, `pptx_from_spec.py`, `check_pptx.py`) | 0.4.0 |
+| 5–6 | `prose-humanizer` | rewrites AI-sounding prose, keeps every number, citation and hedge (`lint_prose.py`, `invariants.py`) | 0.4.0 |
+| 5–6 | agents `consistency-auditor`, `committee-simulator` | numbers, dates and terms checked across deliverables; likely committee or reviewer questions with answers from the project files | 0.4.0 |
 | 5 | `manuscript`, `thesis`, `case-report`, `systematic-review` | manuscript and thesis .docx, CARE case report, PRISMA review | P4 |
 | 3, 7 | `ethics-and-crf`, `journal-selection`, `reviewer-response` | ethics dossier and CRF, journal shortlist, response to reviewers | P5 |
 
@@ -110,8 +115,8 @@ Vietnamese while the manuscript from the same study is in English.
   labelled as an assumption.
   Results enter text only as `{{R-…}}` placeholders filled from the locked ledger, and
   `check_numbers.py` blocks any typed number the ledger does not hold, at its printed precision (see
-  `judgement-defaults.md`). A consistency audit that
-  flags numbers disagreeing between sections arrives in P3.
+  `judgement-defaults.md`). `consistency_audit.py`
+  flags numbers, dates and terms that disagree between the thesis, abstract, poster and slides.
 - **Patient data protected by default.** `phi-guard` knows Vietnamese identifier formats
   (CCCD/CMND, BHYT, record numbers, labelled names, dates of birth, addresses) as well as
   phones and emails. Detection is heuristic and not proof that a text is clean.
@@ -143,6 +148,11 @@ the public PubMed, Europe PMC and Crossref APIs; no API key is needed. Analysis 
 `statistical-analysis` need `pandas`, `scipy` and `statsmodels` (`lifelines` for Cox models):
 `python -m pip install pandas scipy statsmodels openpyxl lifelines`.
 
+Optional, for presenting (P3): `matplotlib` for figures, `python-pptx` for the defence deck and the
+poster PPTX (`python -m pip install matplotlib python-pptx`), and Google Chrome or Microsoft Edge
+(headless) for the poster PDF, PNG and print preflight. A script that needs a missing one prints the
+install hint and exits 2; the skills report that check as not run.
+
 ## Roadmap
 
 | Phase | Scope | State |
@@ -150,8 +160,8 @@ the public PubMed, Europe PMC and Crossref APIs; no API key is needed. Analysis 
 | P0 Foundation | project folder, ledgers, gates, `phi-guard`, `verify_refs.py`, `search_lit.py`, CI | done (0.1.0) |
 | P1 Plan the study | research question, literature search, appraisal, guideline check, literature review, protocol, sample size and SAP | done (0.2.0) |
 | P2 Analyse and report results | data preparation, statistical analysis (run and import), results ledger, results writing, Chapter 3 .docx | done (0.3.0) |
-| P3 Present | figures, poster, defence deck, abstract, prose humanizer, consistency audit | next |
-| P4 Write | manuscript, thesis, case report, systematic review | planned |
+| P3 Present | figures, conference abstract, poster with print preflight, defence deck, prose humanizer, consistency audit | done (0.4.0) |
+| P4 Write | manuscript, thesis, case report, systematic review | next |
 | P5 Extend | ethics and CRF, journal selection, reviewer response, Codex and Antigravity packaging | planned |
 
 The design spec is in [`docs/superpowers/specs/`](docs/superpowers/specs/) and each phase

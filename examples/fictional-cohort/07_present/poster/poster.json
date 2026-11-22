@@ -1,0 +1,50 @@
+{
+  "size_cm": [90, 120],
+  "bleed_mm": 3,
+  "lang": "vi",
+  "layouts": ["editorial", "pathway", "figure-led"],
+  "title": "HbA1c lúc nhập viện và nguy cơ tái nhập viện trong 1 năm ở người bệnh đái tháo đường type 2",
+  "authors": "Example author",
+  "affiliation": "Khoa Nội tiết, Bệnh viện Mô phỏng",
+  "hero": "F2",
+  "body_pt": {"pathway": 26, "figure-led": 24},
+  "key_message": "HbA1c >9% lúc nhập viện có thể đi kèm nguy cơ tái nhập viện trong 1 năm cao hơn (OR hiệu chỉnh {{R-A1-004.value}}, KTC 95% {{R-A1-004.ci}}), nhưng cỡ mẫu chưa đủ để khẳng định.",
+  "sections": [
+    {
+      "heading": "Đặt vấn đề và mục tiêu",
+      "body": "Tái nhập viện 1 năm là gánh nặng thường gặp ở người bệnh ĐTĐ type 2. Mục tiêu: xác định mối liên quan giữa HbA1c lúc nhập viện và tái nhập viện trong 1 năm."
+    },
+    {
+      "heading": "Đối tượng và phương pháp",
+      "body": "Đoàn hệ hồi cứu, {{R-A0-001.n}} người bệnh ĐTĐ type 2. 3 nhóm HbA1c: <7% (tham chiếu), 7–9%, >9%. Hồi quy logistic đa biến, hiệu chỉnh tuổi, giới, thời gian mắc ĐTĐ, bệnh đồng mắc, trên {{R-A1-003.n}} người bệnh đủ dữ liệu.",
+      "figure": {"id": "F4", "caption": "**Hình 1.** Sơ đồ rút gọn mẫu phân tích.", "alt": "Sơ đồ 2 ô: n=1070 toàn đoàn hệ, loại 27 người do thiếu dữ liệu biến hiệu chỉnh, còn 1043 người vào mô hình hiệu chỉnh"},
+      "figure_width_cm": 19
+    },
+    {
+      "heading": "Đặc điểm chung và tỷ lệ tái nhập viện",
+      "body": "Tỷ lệ tái nhập viện 1 năm chung: {{R-A0-061.value}} (KTC 95%: {{R-A0-061.ci}}); theo nhóm HbA1c: {{R-A0-062.value}} (<7%), {{R-A0-063.value}} (7–9%), {{R-A0-064.value}} (>9%).",
+      "figure": {"id": "F3", "caption": "**Hình 2.** Tỷ lệ tái nhập viện trong 1 năm theo nhóm HbA1c.", "alt": "Biểu đồ thanh ngang tỷ lệ tái nhập viện 3 nhóm HbA1c kèm khoảng tin cậy 95%"},
+      "figure_width_cm": 20
+    },
+    {
+      "heading": "Mối liên quan HbA1c và tái nhập viện",
+      "body": "Cả hai khoảng tin cậy đều chứa giá trị 1.\n\n| Biến | OR hiệu chỉnh (KTC 95%) | p |\n|---|---|---|\n| HbA1c 7–9% so với <7% | {{R-A1-003.value}} ({{R-A1-003.ci}}) | {{R-A1-003.p}} |\n| HbA1c >9% so với <7% | {{R-A1-004.value}} ({{R-A1-004.ci}}) | {{R-A1-004.p}} |",
+      "figure": {"id": "F1", "caption": "**Hình 3.** OR hiệu chỉnh của HbA1c với tái nhập viện trong 1 năm (mô hình A1).", "alt": "Biểu đồ rừng hai tỷ số chênh hiệu chỉnh, cả hai khoảng tin cậy đều cắt giá trị 1"},
+      "column": 2
+    },
+    {
+      "heading": "Thời gian đến lần tái nhập viện đầu tiên",
+      "body": "Phân tích Cox (kiểm duyệt 365 ngày): tỷ số nguy cơ hiệu chỉnh là {{R-A4-006.value}} ở nhóm >9% (KTC 95%: {{R-A4-006.ci}}) và {{R-A4-005.value}} ở nhóm 7–9% (KTC 95%: {{R-A4-005.ci}}), so với nhóm <7%.",
+      "figure": {"id": "F2", "caption": "**Hình 4.** Kaplan–Meier thời gian đến lần tái nhập viện đầu tiên theo nhóm HbA1c.", "alt": "Ba đường Kaplan-Meier theo nhóm HbA1c với bảng số người còn theo dõi"},
+      "column": 2
+    },
+    {
+      "heading": "Kết luận và hạn chế",
+      "body": "Tái nhập viện tăng theo HbA1c nhưng chưa có ý nghĩa thống kê; cần cỡ mẫu lớn hơn. Hạn chế: đoàn hệ hồi cứu, đơn trung tâm, dữ liệu mô phỏng."
+    },
+    {
+      "heading": "Ghi chú về dữ liệu",
+      "body": "Dữ liệu mô phỏng (dự án ví dụ): không phải số liệu bệnh nhân thật, không có giá trị lâm sàng."
+    }
+  ]
+}
