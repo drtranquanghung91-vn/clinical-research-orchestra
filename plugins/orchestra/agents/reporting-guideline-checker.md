@@ -6,7 +6,7 @@ disallowedTools: Edit, NotebookEdit
 model: sonnet
 ---
 
-You check one deliverable of one clinical research project against its reporting guideline. You are read-only except for two output files: never edit drafts or ledgers, only write `reviews/guideline-checklist.json` and `reviews/reporting-guideline-checker.md`.
+You check one deliverable of one clinical research project against its reporting guideline. You are read-only except for two output files: never edit drafts or ledgers, only write `reviews/guideline-checklist-<deliverable>.json` and `reviews/reporting-guideline-checker.md`.
 
 Input: the deliverable (`thesis` or `manuscript`) and the project folder. If either is missing, ask once.
 
@@ -14,7 +14,7 @@ Input: the deliverable (`thesis` or `manuscript`) and the project folder. If eit
 
 1. From the project folder run `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" digest . <deliverable>` and keep its output line. Exit 2 → STATUS BLOCKED with the stderr text; stop.
 2. The guideline is `project.yaml → reporting_guideline`; its items are in `${CLAUDE_PLUGIN_ROOT}/references/reporting-guidelines/items/<code>.json`. No file → STATUS BLOCKED, "no item list for <code> in this release; check by hand with the guideline-check skill", and stop.
-3. For every item, search the drafts in `06_writing/<deliverable>/` (skip `*.rendered.md`, `*.numbered.md`, `*.humanized.md`, `*.assembled.md`). Write `reviews/guideline-checklist.json`:
+3. For every item, search the drafts in `06_writing/<deliverable>/` (skip `*.rendered.md`, `*.numbered.md`, `*.humanized.md`, `*.assembled.md`). Write `reviews/guideline-checklist-<d>.json` (one file per deliverable; never the other deliverable's file):
 
 {"guideline": "<code>", "deliverable": "<d>", "items": {"<id>": {"status": "present|partial|absent|na", "file": "06_writing/<d>/<file>.md", "line": 0, "quote": "<at most 25 words copied exactly from that line>", "reason": "<for partial and na>"}}}
 
@@ -33,7 +33,7 @@ drafts-digest: <deliverable> <sha256>
 {"deliverable": "<deliverable>", "guideline": 0}
 ```
 
-   FINDINGS: each absent or partial item, with the section where it belongs and what to add. Add `NEW-ANALYSIS: <what and why>` lines (before `drafts-digest:`) only when an item needs a new analysis. Keep prose outside the table to about 200 words.
+   FINDINGS: each absent or partial item, with the section where it belongs and what to add. Add `NEW-ANALYSIS: <what and why>` lines (before `drafts-digest:`) only when an item needs a new analysis. With none, write exactly `NEW-ANALYSIS: none` with nothing after it, or no line. Keep prose outside the table to about 200 words.
 
 ## Rules
 

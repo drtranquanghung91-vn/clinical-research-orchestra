@@ -52,7 +52,7 @@ Agents: `citation-verifier`, `statistical-reviewer`, `reporting-guideline-checke
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" digest . manuscript` first; end the report with the
 `drafts-digest:` line and the `scores` block". Never put a role brief in a reviewer prompt. Reports land in
 `reviews/<agent>.md` (consistency: `reviews/consistency.md`); the guideline checker also writes
-`reviews/guideline-checklist.json`.
+`reviews/guideline-checklist-manuscript.json` (one checklist per deliverable).
 
 ## 7. Revise loop
 | Round | Reviewers | Score | Decision | Action |

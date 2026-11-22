@@ -24,31 +24,43 @@
     {
       "section": "1.5a Can thiệp giảm tái nhập viện ở ĐTĐ type 2",
       "claim": "Các can thiệp trong bệnh viện nhằm giảm thời gian nằm viện/tái nhập viện ở ĐTĐ type 2 đã được tổng hợp trong 1 tổng quan hệ thống, nhưng không có số liệu gộp rõ và nguy cơ sai lệch không đánh giá được từ abstract.",
-      "refs": ["chakraborty2021"],
+      "refs": [
+        "chakraborty2021"
+      ],
       "certainty": "very_low_RoB_unclear"
     },
     {
       "section": "1.5b HbA1c lúc nhập viện và tái nhập viện ngắn hạn",
       "claim": "HbA1c lúc nhập viện cao hơn có thể liên quan với tăng nguy cơ tái nhập viện trong 30-31 ngày ở ĐTĐ type 2, nhưng bằng chứng gián tiếp (mốc thời gian ngắn hơn câu hỏi của đề tài).",
-      "refs": ["hu2026", "cao2026"],
+      "refs": [
+        "hu2026",
+        "cao2026"
+      ],
       "certainty": "very_low_indirect_short_term"
     },
     {
       "section": "1.5c Thời điểm đo HbA1c và chiều hướng liên quan",
       "claim": "Chưa rõ liệu hướng liên quan giữa HbA1c và tái nhập viện có phụ thuộc vào thời điểm đo (lúc nhập viện vs sau xuất viện) hay không.",
-      "refs": ["hu2026", "robbins2021"],
+      "refs": [
+        "hu2026",
+        "robbins2021"
+      ],
       "certainty": "very_low_conflicting_indirect"
     },
     {
       "section": "1.5d Yếu tố dự báo tái nhập viện ở mốc dài hạn",
       "claim": "Ở mốc 365 ngày, các yếu tố dự báo tái nhập viện ở ĐTĐ type 2 có thể chuyển từ yếu tố cấp tính sang biến chứng mạn tính, theo một mô hình học máy không tách riêng vai trò của HbA1c.",
-      "refs": ["li2026"],
+      "refs": [
+        "li2026"
+      ],
       "certainty": "very_low_methodologically_indirect"
     },
     {
       "section": "1.5e Guideline hiện hành",
       "claim": "Guideline lâm sàng hiện hành khuyến cáo kiểm soát đường huyết nội viện và lập kế hoạch xuất viện/chuyển tiếp chăm sóc nói chung, nhưng không đưa ra một ngưỡng HbA1c cụ thể để dự báo hoặc dự phòng tái nhập viện dài hạn.",
-      "refs": ["american2026"],
+      "refs": [
+        "american2026"
+      ],
       "certainty": "guideline_khong_so_lieu_cu_the"
     },
     {
@@ -60,10 +72,284 @@
     {
       "section": "1.7 Khoảng trống và cách nghiên cứu này giải quyết",
       "claim": "4 khoảng trống từ 02_evidence/gaps.md, mỗi khoảng trống có kiểm tra phản chứng, gắn với mục tiêu của đề tài.",
-      "refs": ["hu2026", "cao2026", "li2026", "robbins2021", "chakraborty2021", "american2026"],
+      "refs": [
+        "hu2026",
+        "cao2026",
+        "li2026",
+        "robbins2021",
+        "chakraborty2021",
+        "american2026"
+      ],
       "certainty": "theo_gaps_md"
+    },
+    {
+      "deliverable": "thesis",
+      "section": "Chương 1. Tổng quan tài liệu",
+      "file": "06_writing/thesis/ch1-literature-review.md",
+      "role": null,
+      "sources": [],
+      "results": [],
+      "status": "reuse",
+      "note": "Tác giả chấp nhận nguyên trạng (2026-11-22, xem decisions.md) dù STATUS.md dòng 6 còn ghi '1.1-1.3 cần thêm tài liệu' -- chỉ sửa E-FMT/E-NUM, không viết lại, không humanize; mọi góp ý khác ghi vào out/author-decisions.md."
+    },
+    {
+      "deliverable": "thesis",
+      "section": "Chương 3. Kết quả nghiên cứu",
+      "file": "06_writing/thesis/ch3-results.md",
+      "role": "results",
+      "sources": [],
+      "results": [],
+      "status": "reuse",
+      "note": "Tác giả chấp nhận nguyên trạng (2026-11-22, xem decisions.md). Biểu đồ 3.1 (ô chờ research-figures) đã được điền bằng F4.png theo quyết định của tác giả, ghi trong decisions.md -- đây là sửa E-FMT (ô chờ hình), không phải viết lại. Mọi góp ý khác về nội dung ghi vào out/author-decisions.md."
+    },
+    {
+      "deliverable": "thesis",
+      "section": "Đặt vấn đề",
+      "file": "06_writing/thesis/00-dat-van-de.md",
+      "role": "introduction",
+      "sources": [
+        "01_question/question.md",
+        "02_evidence/gaps.md",
+        "02_evidence/evidence-map.md",
+        "ledgers/references.json"
+      ],
+      "results": [],
+      "status": "drafted",
+      "note": "Gánh nặng ĐTĐ type 2/tái nhập viện (ghi hạn chế vì ledger không có ref dịch tễ chung, như 1.2) -> lý do chọn HbA1c lúc nhập viện (hu2026, cao2026, li2026, robbins2021) -> 4 khoảng trống của gaps.md -> giới thiệu thiết kế/địa điểm/thời gian -> kết ở Mục tiêu nghiên cứu (lấy đúng chữ từ 01_question/question.md, không viết lại)."
+    },
+    {
+      "deliverable": "thesis",
+      "section": "Chương 2. Đối tượng và phương pháp nghiên cứu",
+      "file": "06_writing/thesis/ch2-methods.md",
+      "role": "methods",
+      "sources": [
+        "03_protocol/protocol.md",
+        "03_protocol/sample-size.md",
+        "03_protocol/sap.md",
+        "03_protocol/variables.md",
+        "05_analysis/analysis-report.rendered.md",
+        "decisions.md"
+      ],
+      "results": [
+        "R-A0-001"
+      ],
+      "status": "drafted",
+      "note": "Chuyển protocol.md Phần B (2.1-2.9) thành văn luận văn, thì đã thực hiện (đã thu thập, đã phân tích): 2.1 đối tượng (chọn/loại), 2.2 thời gian-địa điểm, 2.3 thiết kế + cỡ mẫu (sample-size.md), 2.5 biến số (variables.md), 2.6 thu thập số liệu, 2.7 sai số (bao gồm phân loại biến thứ ba 2.7.2 đã được tác giả xác nhận), 2.8 xử lý/phân tích số liệu phải khớp đúng A0-A6 đã chạy thật (kể cả hậu kiểm A6, dẫn quyết định trong decisions.md, không chỉ chép lại SAP dự kiến), 2.9 đạo đức. Không có '2.4 Can thiệp' vì đoàn hệ quan sát -- ghi rõ không áp dụng."
+    },
+    {
+      "deliverable": "thesis",
+      "section": "Chương 4. Bàn luận",
+      "file": "06_writing/thesis/ch4-discussion.md",
+      "role": "discussion",
+      "sources": [
+        "05_analysis/analysis-report.rendered.md",
+        "ledgers/results-ledger.json",
+        "ledgers/claims.json",
+        "02_evidence/gaps.md",
+        "02_evidence/evidence-map.md",
+        "03_protocol/protocol.md",
+        "ledgers/references.json"
+      ],
+      "results": [
+        "R-A0-001",
+        "R-A0-009",
+        "R-A0-054",
+        "R-A0-056",
+        "R-A0-061",
+        "R-A0-062",
+        "R-A0-064",
+        "R-A1-001",
+        "R-A1-002",
+        "R-A1-003",
+        "R-A1-004",
+        "R-A1-009",
+        "R-A1-010",
+        "R-A2-002",
+        "R-A3-001",
+        "R-A3-002",
+        "R-A4-005",
+        "R-A4-006",
+        "R-A5-001",
+        "R-A5-002",
+        "R-A5-004",
+        "R-A6-002",
+        "R-A6-009",
+        "R-A6-015"
+      ],
+      "status": "drafted",
+      "note": "4.1 đặc điểm chung (Bảng 3.1, so y văn -- ghi hạn chế vì không có ref dịch tễ chung). 4.2 tỷ lệ tái nhập viện 1 năm so với hu2026/cao2026 (30-31 ngày, chỉ so gián tiếp, mốc khác). 4.3 A1 kết quả chính: OR hiệu chỉnh không ý nghĩa, KTC rộng -- so chiều hướng với hu2026 (có ý nghĩa, 30 ngày) và li2026 (365 ngày, mô hình khác, không tách HbA1c riêng) -- không nói 'phủ định' hay 'xác nhận'. 4.4 kết cục phụ A2-A5: A2 null, A3 có ý nghĩa nhưng thăm dò/không hiệu chỉnh đa so sánh (không dùng để kết luận nhân quả), A4 cùng chiều A1 không ý nghĩa, A5 chỉ mô tả. 4.5 hậu kiểm A6 (tuổi): p tương tác > 0,05, dán nhãn thăm dò rõ. 4.6 đối chiếu lại 4 khoảng trống ở gaps.md -- đề tài lấp được gì, còn gì chưa (đặc biệt Gap 3 thời điểm đo HbA1c không giải quyết trực tiếp). 4.7 điểm mạnh. 4.8 hạn chế (lấy đúng từ mục 7 analysis-report.rendered.md: dữ liệu thiếu, power, đơn trung tâm, hồi cứu/HIS, tử vong trong viện, EPV A3, không hiệu chỉnh đa so sánh, ngoại suy)."
+    },
+    {
+      "deliverable": "thesis",
+      "section": "Kết luận",
+      "file": "06_writing/thesis/05-ket-luan.md",
+      "role": "conclusion",
+      "sources": [
+        "01_question/question.md",
+        "05_analysis/analysis-report.rendered.md",
+        "ledgers/claims.json"
+      ],
+      "results": [
+        "R-A0-001",
+        "R-A1-003",
+        "R-A1-004"
+      ],
+      "status": "drafted",
+      "note": "Đánh số theo đúng 2 mục tiêu cụ thể của question.md (1 mô tả, 1 phân tích) -- mỗi kết luận không vượt quá dữ liệu: mục tiêu 2 phải nói rõ 'không tìm thấy mối liên quan có ý nghĩa thống kê' (OR hiệu chỉnh, KTC 95% chứa 1), không suy ra 'không có liên quan' hay dùng kết quả thăm dò A3/A6 làm kết luận chính."
+    },
+    {
+      "deliverable": "thesis",
+      "section": "Kiến nghị",
+      "file": "06_writing/thesis/06-kien-nghi.md",
+      "role": "conclusion",
+      "sources": [
+        "02_evidence/gaps.md",
+        "05_analysis/analysis-report.rendered.md",
+        "decisions.md"
+      ],
+      "results": [],
+      "status": "drafted",
+      "note": "Kiến nghị nghiên cứu: nghiên cứu đa trung tâm/tiến cứu cỡ mẫu lớn hơn (power hiện tại thấp); làm rõ vai trò thời điểm đo HbA1c (Gap 3); dùng tái nhập viện liên quan ĐTĐ (A3) như giả thuyết cho nghiên cứu xác nhận, không phải kết luận. Kiến nghị thực hành: chưa đủ bằng chứng để đề xuất ngưỡng HbA1c cụ thể dự phòng tái nhập viện 1 năm (khớp Gap 4, guideline hiện hành không có ngưỡng này) -- chỉ nhắc lại kiểm soát đường huyết nội viện nói chung theo guideline đã dẫn ở Chương 1."
+    },
+    {
+      "deliverable": "thesis",
+      "section": "Phụ lục",
+      "file": "06_writing/thesis/90-phu-luc.md",
+      "role": null,
+      "sources": [
+        "reviews/guideline-checklist.json",
+        "04_data/codebook.md",
+        "03_protocol/variables.md"
+      ],
+      "results": [],
+      "status": "drafted",
+      "note": "Phụ lục 1: bảng kiểm STROBE in bằng `guideline_checklist.py . --table` -- cần `reviews/guideline-checklist.json` do agent reporting-guideline-checker tạo ở vòng rà soát 1, nên bảng này chỉ chèn được sau vòng 1, không phải lúc soạn outline. Phụ lục 2: bảng biến số/biểu mẫu trích xuất dữ liệu (dẫn lại 03_protocol/variables.md, không phải CRF giấy vì đây là trích xuất EMR/HIS hồi cứu, không thu thập trực tiếp trên người bệnh). Phụ lục 3 (nếu tác giả muốn): từ điển biến/codebook (04_data/codebook.md) -- chỉ dẫn định nghĩa biến, không chèn file dữ liệu/định danh người bệnh."
+    },
+    {
+      "deliverable": "manuscript",
+      "section": "Tên bài báo và tác giả",
+      "file": "06_writing/manuscript/00-title.md",
+      "role": null,
+      "sources": ["01_question/question.md", "project.yaml"],
+      "results": [],
+      "status": "planned",
+      "note": "Tên rút gọn từ tên luận văn cho hợp văn phong bài báo (thiết kế đoàn hệ hồi cứu đã nêu trong Phương pháp, không nhất thiết lặp lại trong tên). Tác giả/đơn vị/liên hệ do chính tác giả điền bằng [[AUTHOR: ...]], không tự suy ra chức danh/đơn vị/email."
+    },
+    {
+      "deliverable": "manuscript",
+      "section": "Tóm tắt (4 mục: Mục tiêu / Đối tượng và phương pháp / Kết quả / Kết luận, tối đa 250 từ)",
+      "file": "06_writing/manuscript/01-abstract.md",
+      "role": "abstract",
+      "sources": ["06_writing/manuscript/02-introduction.md", "06_writing/manuscript/03-methods.md", "06_writing/manuscript/04-results.md", "06_writing/manuscript/06-conclusion.md"],
+      "results": [],
+      "status": "planned",
+      "note": "Viết SAU CÙNG, khi 4 phần chính văn đã ổn định. Phân bổ dự kiến trong 250 từ: Mục tiêu ~40, Đối tượng và phương pháp ~70, Kết quả ~90, Kết luận ~50. Không trích dẫn [@id] trong tóm tắt. Số liệu chỉ dạng {{R-...}}."
+    },
+    {
+      "deliverable": "manuscript",
+      "section": "Đặt vấn đề",
+      "file": "06_writing/manuscript/02-introduction.md",
+      "role": "introduction",
+      "sources": ["01_question/question.md", "02_evidence/gaps.md", "02_evidence/evidence-map.md", "ledgers/references.json"],
+      "results": [],
+      "status": "planned",
+      "note": "Mục tiêu ~450 từ. Viết MỚI cho bài báo (KHÔNG chép 06_writing/thesis/00-dat-van-de.md) -- súc tích hơn bản luận văn: 2-3 câu gánh nặng/hạn chế bằng chứng (ghi rõ ledger không có ref dịch tễ chung, như thesis 1.2) -> 2-3 câu rút gọn 4 khoảng trống của gaps.md -> 1 câu mục tiêu (lấy đúng ý mục tiêu tổng quát + 2 mục tiêu cụ thể của 01_question/question.md, có thể cô đọng câu chữ cho văn báo, không đổi nội dung). Trích dẫn Vancouver [1], [2]... theo thứ tự xuất hiện trong CHÍNH bài báo này (có thể khác thứ tự trong luận văn)."
+    },
+    {
+      "deliverable": "manuscript",
+      "section": "Đối tượng và phương pháp nghiên cứu",
+      "file": "06_writing/manuscript/03-methods.md",
+      "role": "methods",
+      "sources": ["03_protocol/protocol.md", "03_protocol/sample-size.md", "03_protocol/sap.md", "03_protocol/variables.md", "05_analysis/analysis-report.rendered.md", "decisions.md"],
+      "results": ["R-A0-001"],
+      "status": "planned",
+      "note": "Mục tiêu ~750 từ, rút gọn từ ch2-methods.md thành văn báo (không phải văn luận văn): 1 đoạn thiết kế+địa điểm+thời gian, 1 đoạn đối tượng (tiêu chuẩn chọn/loại), 1 đoạn biến số+kết cục chính (3 nhóm HbA1c + biến liên tục), 1 đoạn ngắn cách xử lý biến nhiễu/biến trung gian (thời gian nằm viện, insulin -- không hiệu chỉnh, theo SAP), 1-2 câu cỡ mẫu (nêu thẳng hạn chế power đã được tác giả chấp nhận ở gate G2), 1 đoạn xử lý thống kê (mô hình chính A0-A1; A2-A6 là phân tích phụ/thăm dò, không đi vào chi tiết SAP đầy đủ), 1-2 câu đạo đức (dữ liệu hồi cứu ẩn danh từ HIS). Không có mục 'Can thiệp' (đoàn hệ quan sát, không áp dụng)."
+    },
+    {
+      "deliverable": "manuscript",
+      "section": "Kết quả",
+      "file": "06_writing/manuscript/04-results.md",
+      "role": "results",
+      "sources": ["05_analysis/analysis-report.rendered.md", "ledgers/results-ledger.json"],
+      "results": [],
+      "status": "planned",
+      "note": "Mục tiêu ~800 từ, viết MỚI (KHÔNG chép ch3-results.md). Thứ tự dự kiến: (1) đặc điểm chung + Bảng 1 (ứng R-A0 mô tả chung, như Bảng 3.1 thesis); (2) tỷ lệ tái nhập viện chung/theo nhóm + OR thô và hiệu chỉnh + Bảng 2, GỘP phần tỷ lệ (Bảng 3.2 thesis) với OR (Bảng 3.3 thesis) vì đây là câu trả lời trực tiếp cho cả 2 mục tiêu cụ thể; (3) 1 đoạn ngắn kết quả phụ gộp vào Bảng 3 (HbA1c liên tục mỗi 1%, tái nhập viện liên quan ĐTĐ, thời gian đến tái nhập viện đầu tiên -- gộp Bảng 3.4+3.5+3.6 thesis); (4) 1-2 câu tử vong trong viện và 1 câu kết quả hậu kiểm A6 theo tuổi, dán nhãn rõ 'thăm dò/post-hoc', KHÔNG kèm bảng riêng cho 2 kết quả này (ưu tiên giới hạn 5 bảng/hình cho mục tiêu chính). Hình 1 (forest plot, tái dùng 07_present/figures/F1) và Hình 2 (sơ đồ rút gọn mẫu, tái dùng F4, phải ghi chú rõ không phải sơ đồ sàng lọc STROBE đầy đủ) chèn trong mục này. R-id chính xác cho Bảng 1-3 sẽ lấy từ ledgers/results-ledger.json lúc soạn văn, không suy diễn trước."
+    },
+    {
+      "deliverable": "manuscript",
+      "section": "Bàn luận",
+      "file": "06_writing/manuscript/05-discussion.md",
+      "role": "discussion",
+      "sources": ["05_analysis/analysis-report.rendered.md", "ledgers/results-ledger.json", "ledgers/claims.json", "02_evidence/gaps.md", "02_evidence/evidence-map.md", "03_protocol/protocol.md", "ledgers/references.json"],
+      "results": [],
+      "status": "planned",
+      "note": "Mục tiêu ~1200 từ, viết MỚI, cô đọng từ ch4-discussion.md (8 tiểu mục thesis -> gộp lại còn khoảng 5-6 đoạn cho bài báo): (1) tóm tắt phát hiện chính (OR hiệu chỉnh không ý nghĩa, KTC rộng -- không nói 'phủ định' hay 'xác nhận'); (2) so với hu2026 (30 ngày, có ý nghĩa) và li2026 (365 ngày, mô hình khác) -- chỉ so gián tiếp, mốc/mô hình khác; (3) kết cục phụ: A2 null, A3 có ý nghĩa nhưng thăm dò/không hiệu chỉnh đa so sánh (không dùng kết luận nhân quả), A4 cùng chiều A1 không ý nghĩa; A6 hậu kiểm tuổi p tương tác > 0,05; (4) đối chiếu lại các khoảng trống của gaps.md -- đề tài lấp được gì, Gap 3 (thời điểm đo HbA1c) chưa giải quyết trực tiếp; (5) điểm mạnh (ngắn); (6) hạn chế (đúng mục 7 analysis-report.rendered.md: dữ liệu thiếu, power, đơn trung tâm, hồi cứu/HIS, tử vong trong viện, EPV A3, không hiệu chỉnh đa so sánh, ngoại suy)."
+    },
+    {
+      "deliverable": "manuscript",
+      "section": "Kết luận",
+      "file": "06_writing/manuscript/06-conclusion.md",
+      "role": "conclusion",
+      "sources": ["01_question/question.md", "05_analysis/analysis-report.rendered.md", "ledgers/claims.json"],
+      "results": [],
+      "status": "planned",
+      "note": "Mục tiêu ~150 từ. Đánh số theo đúng 2 mục tiêu cụ thể của question.md. Mục tiêu 2 phải nói rõ 'không tìm thấy mối liên quan có ý nghĩa thống kê' (OR hiệu chỉnh, KTC 95% chứa 1) -- không suy ra 'không có liên quan', không dùng A3/A6 (thăm dò) làm kết luận chính. Có thể gộp 1 câu kiến nghị ngắn (nghiên cứu đa trung tâm/cỡ mẫu lớn hơn) nếu khuôn 250-từ-tóm tắt/3500-từ-chính-văn còn chỗ -- không bắt buộc, tạp chí này không yêu cầu mục Kiến nghị riêng như luận văn."
     }
   ],
-  "figure_plan": [],
-  "search_plan": {"targeted": [], "exploratory": []}
+  "figure_plan": [
+    {
+      "id": "T1",
+      "deliverable": "manuscript",
+      "type": "table",
+      "title": "Đặc điểm chung của đối tượng nghiên cứu theo nhóm HbA1c lúc nhập viện",
+      "reuse_of": "ch3-results.md Bảng 3.1 (dựng lại số liệu từ cùng R-id, không chép văn)",
+      "section": "Kết quả"
+    },
+    {
+      "id": "T2",
+      "deliverable": "manuscript",
+      "type": "table",
+      "title": "Tỷ lệ tái nhập viện trong 1 năm và tỷ số chênh (OR) thô, hiệu chỉnh theo nhóm HbA1c lúc nhập viện",
+      "reuse_of": "gộp ch3-results.md Bảng 3.2 (tỷ lệ) + Bảng 3.3 (OR thô/hiệu chỉnh) thành 1 bảng",
+      "section": "Kết quả",
+      "note": "Bảng trả lời trực tiếp cả 2 mục tiêu cụ thể -- bảng quan trọng nhất của bài báo."
+    },
+    {
+      "id": "T3",
+      "deliverable": "manuscript",
+      "type": "table",
+      "title": "Kết quả các phân tích phụ (HbA1c liên tục mỗi 1%, tái nhập viện liên quan đái tháo đường, thời gian đến lần tái nhập viện đầu tiên)",
+      "reuse_of": "gộp ch3-results.md Bảng 3.4 + Bảng 3.5 + Bảng 3.6 thành 1 bảng",
+      "section": "Kết quả"
+    },
+    {
+      "id": "F1",
+      "deliverable": "manuscript",
+      "type": "figure",
+      "subtype": "forest",
+      "title": "OR hiệu chỉnh của HbA1c lúc nhập viện với tái nhập viện trong 1 năm",
+      "reuse_of": "07_present/figures/F1.png (ảnh đã có, tái dùng nguyên trạng, không vẽ lại)",
+      "section": "Kết quả"
+    },
+    {
+      "id": "F4",
+      "deliverable": "manuscript",
+      "type": "figure",
+      "subtype": "flow",
+      "title": "Sơ đồ rút gọn mẫu phân tích",
+      "reuse_of": "07_present/figures/F4.png (ảnh đã có, tái dùng nguyên trạng)",
+      "section": "Kết quả",
+      "note": "Không phải sơ đồ sàng lọc STROBE đầy đủ (chỉ có n toàn đoàn hệ và n đưa vào mô hình hiệu chỉnh) -- phải ghi chú hạn chế này trong chú thích hình, như đã làm ở thesis."
+    }
+  ],
+  "dropped_from_manuscript": [
+    "Bảng 3.7 thesis (tử vong trong viện) -- còn 1 câu tóm tắt trong văn Kết quả, không có bảng riêng",
+    "Bảng 3.8 thesis (hậu kiểm tuổi, A6) -- còn 1 câu tóm tắt dán nhãn 'thăm dò' trong văn Kết quả, không có bảng riêng",
+    "Hình F2 (đường cong Kaplan-Meier) -- không đưa vào do đã dùng hết 5 bảng/hình; có thể thay F1 hoặc F4 nếu tác giả muốn nhấn hình sống còn hơn hình OR hoặc sơ đồ mẫu",
+    "Hình F3 (tỷ lệ tái nhập viện riêng) -- đã gộp số liệu vào Bảng T2, không cần hình riêng"
+  ],
+  "search_plan": {
+    "targeted": [],
+    "exploratory": []
+  }
 }

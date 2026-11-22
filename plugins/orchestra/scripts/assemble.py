@@ -51,7 +51,7 @@ CHAPTER_HEAD = re.compile(r"(?im)^#\s+(?:chương|chapter)\s+(\d+)\b")
 IMAGE = re.compile(r"^!\[([^\]]*)\]\(([^)]+)\)\s*$")
 COMMENT = re.compile(r"<!--.*?-->", re.S)
 REF_HEAD = re.compile(r"^#{1,4}\s*(?:tài liệu tham khảo|references?)\s*$", re.I)
-AUTHOR_TODO = re.compile(r"\[\[(?:AUTHOR|TÁC GIẢ)\s*:[^\]]*\]\]")
+AUTHOR_TODO = re.compile(r"\[\[(?:AUTHOR|TÁC\s+GIẢ)\s*:[^\]]*\]\]")
 NOTICE = {"vi": "**BẢN NHÁP – chưa xuất qua cổng G4; không nộp bản này.**",
           "en": "**DRAFT – not released through gate G4; do not submit this version.**"}
 REF_TITLE = {"vi": "TÀI LIỆU THAM KHẢO", "en": "References"}
@@ -160,10 +160,10 @@ def format_findings(project: Path, deliverable: str, strict: bool = False) -> li
               for p in drafts.draft_files(project, deliverable) if p.name not in listed]
     sections = [(f"{base_rel}/{p.name}", p.read_text(encoding="utf-8-sig")) for p in files]
     for rel, text in sections:
-        for i, line in enumerate(text.splitlines(), 1):
-            for m in AUTHOR_TODO.finditer(line):
-                found.append(("E-FMT", "block" if strict else "warn", f"{rel}:{i}",
-                              f"author placeholder not filled: {m.group(0)}"))
+        for m in AUTHOR_TODO.finditer(text):  # over the whole text: a placeholder may wrap over lines
+            line = text.count("\n", 0, m.start()) + 1
+            found.append(("E-FMT", "block" if strict else "warn", f"{rel}:{line}",
+                          f"author placeholder not filled: {' '.join(m.group(0).split())}"))
     return found + caption_findings(sections, deliverable, strict) + image_findings(drafts.folder(project, deliverable), sections)
 
 

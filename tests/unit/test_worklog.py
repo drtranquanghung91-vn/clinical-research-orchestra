@@ -149,6 +149,14 @@ class TestWorklog(unittest.TestCase):
         ev = json.loads((self.p / "reviews/worklog.json").read_text(encoding="utf-8"))["events"][-1]
         self.assertEqual((ev["event"], ev["to_round"], ev["removed"]), ("revert", 1, ["ch9-extra.md"]))
 
+    def test_none_request_recorded_by_an_older_version_is_not_listed(self):
+        self.score(1, request="phân tích dưới nhóm theo giới tính")
+        log = worklog.load_log(self.p)
+        log["rounds"][0]["requests"].append({"agent": "scientific-editor", "text": "none — wording fixes only"})
+        text = worklog.decisions_text(self.p, log)
+        self.assertIn("phân tích dưới nhóm theo giới tính", text)
+        self.assertNotIn("wording fixes only", text)
+
     def test_requests_assumptions_waivers_to_author_decisions(self):
         (self.p / "01_question").mkdir(exist_ok=True)
         (self.p / "01_question" / "question.md").write_text(ASSUME, encoding="utf-8")
@@ -195,9 +203,23 @@ class TestWorklog(unittest.TestCase):
 
     def test_checklist_for_another_deliverable_refused(self):
         with self.assertRaises(worklog.UsageError) as cm:
-            worklog.guideline_score(self.p, "manuscript")
-        self.assertIn("thesis", str(cm.exception))
+            worklog.guideline_score(self.p, "manuscript")    # the legacy file is the thesis's: ignored
+        self.assertIn("reviews/guideline-checklist-manuscript.json not found", str(cm.exception))
         self.assertEqual(worklog.guideline_score(self.p, "thesis")[0], 2)
+
+    def test_per_deliverable_checklists_scored_and_snapshotted_apart(self):
+        (self.p / "reviews" / "guideline-checklist.json").unlink()
+        for d, absent in (("thesis", 0), ("manuscript", 5)):
+            items = {f"x{i}": ({"status": "absent"} if i < absent else {"status": "na", "reason": "t"})
+                     for i in range(6)}
+            (self.p / "reviews" / f"guideline-checklist-{d}.json").write_text(json.dumps(
+                {"guideline": "TEST-GL", "deliverable": d, "items": items}), encoding="utf-8")
+        self.assertEqual(worklog.guideline_score(self.p, "thesis")[0], 2)
+        self.assertEqual(worklog.guideline_score(self.p, "manuscript")[0], 0)
+        reports(self.p)
+        worklog.score(self.p, "thesis", 1)
+        snap = self.p / "reviews/rounds/thesis/r1/reviews/guideline-checklist.json"
+        self.assertEqual(snap.read_bytes(), (self.p / "reviews" / "guideline-checklist-thesis.json").read_bytes())
 
     def test_bad_log_shape_exit_2(self):
         log = self.p / "reviews" / "worklog.json"

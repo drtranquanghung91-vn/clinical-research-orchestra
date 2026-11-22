@@ -64,7 +64,7 @@ def load_references(path: Path) -> list[dict]:
 
 def save_references(path: Path, refs: list[dict]) -> None:
     Path(path).write_text(json.dumps({"references": refs}, ensure_ascii=False, indent=2) + "\n",
-                          encoding="utf-8")
+                          encoding="utf-8", newline="\n")
 
 
 def unique_id(base: str, taken: set[str]) -> str:

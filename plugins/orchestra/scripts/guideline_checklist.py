@@ -4,13 +4,15 @@
   python guideline_checklist.py <project> [--guideline CODE] [--deliverable thesis|manuscript] [--table] [--json]
 
 Item lists: references/reporting-guidelines/items/<CODE>.json ({"code", "version", "items": [{"id", "section",
-"text"}]}; text paraphrased, never copied). Checklist: <project>/reviews/guideline-checklist.json
+"text"}]}; text paraphrased, never copied). Checklist: <project>/reviews/guideline-checklist-<deliverable>.json
+(one per deliverable, so the thesis and the manuscript never overwrite each other; the older single
+reviews/guideline-checklist.json is still read when its "deliverable" matches or is missing)
 ({"guideline", "deliverable", "items": {"1a": {"status": "present|partial|absent|na", "file", "line", "quote",
 "reason"}}}). Block: an item of the guideline missing from the checklist, "absent", "na" without a reason, an
 unknown status, a wrong guideline, or "present" whose quote is not within ±3 lines of file:line (in the draft or
 in that window rendered from the results ledger). Warn: "partial"; an id that is not in the guideline.
 The guideline defaults to project.yaml → reporting_guideline. --table prints the checklist as a Markdown table
-for the appendix. Exit codes: 0 = no block; 1 = block findings; 2 = usage, missing project, checklist or item
+for the appendix. Without --deliverable the only checklist present is used (two: exit 2). Exit codes: 0 = no block; 1 = block findings; 2 = usage, missing project, checklist or item
 list, unreadable JSON. Standard library only.
 """
 from __future__ import annotations
@@ -33,7 +35,8 @@ from crolib import projectcfg  # noqa: E402
 import render_results  # noqa: E402
 
 ITEMS_DIR = Path(__file__).resolve().parents[1] / "references" / "reporting-guidelines" / "items"
-CHECKLIST = "reviews/guideline-checklist.json"
+CHECKLIST = "reviews/guideline-checklist.json"  # legacy single checklist (read only as a fallback)
+DELIVERABLES = ("thesis", "manuscript")
 STATUSES = ("present", "partial", "absent", "na")
 WINDOW = 3
 STATUS_VI = {"present": "có", "partial": "một phần", "absent": "không có", "na": "không áp dụng"}
@@ -79,10 +82,56 @@ def load_items(code: str) -> dict:
     return data
 
 
+def deliverable_rel(deliverable: str) -> str:
+    """Where the reporting-guideline-checker writes the checklist of one deliverable."""
+    return f"reviews/guideline-checklist-{deliverable}.json"
+
+
+def _said(path: Path) -> object:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return None
+    return data.get("deliverable") if isinstance(data, dict) else None
+
+
+def checklist_path(project: Path, deliverable: str) -> Path:
+    """The checklist of `deliverable`: reviews/guideline-checklist-<d>.json if it exists; else the legacy
+    reviews/guideline-checklist.json when its "deliverable" is <d> or missing; else the per-deliverable path
+    (it does not exist; used in messages)."""
+    project = Path(project)
+    per, legacy = project / deliverable_rel(deliverable), project / CHECKLIST
+    if per.is_file():
+        return per
+    if legacy.is_file() and _said(legacy) in (deliverable, None):
+        return legacy
+    return per
+
+
+def default_path(project: Path, deliverable: str | None = None) -> Path:
+    """With a deliverable: checklist_path. Without one: the only checklist present (per-deliverable or legacy)."""
+    if deliverable:
+        return checklist_path(project, deliverable)
+    project = Path(project)
+    present = [project / deliverable_rel(d) for d in DELIVERABLES if (project / deliverable_rel(d)).is_file()]
+    if len(present) > 1:
+        raise InputError("there is a checklist for the thesis and one for the manuscript: pass --deliverable")
+    if present:
+        return present[0]
+    return project / CHECKLIST
+
+
+def rel_path(project: Path, path: Path) -> str:
+    try:
+        return Path(path).resolve().relative_to(Path(project).resolve()).as_posix()
+    except ValueError:
+        return Path(path).as_posix()
+
+
 def load_checklist(project: Path, path: Path | None = None) -> tuple[dict, str]:
-    p = Path(path) if path else Path(project) / CHECKLIST
+    p = Path(path) if path else default_path(project)
     if not p.is_file():
-        raise InputError(f"{CHECKLIST} not found: run the reporting-guideline-checker agent first")
+        raise InputError(f"{rel_path(project, p)} not found: run the reporting-guideline-checker agent first")
     text = p.read_text(encoding="utf-8-sig")
     try:
         data = json.loads(text)
@@ -129,20 +178,22 @@ def check(project: Path, guideline: str | None = None, checklist_path: Path | No
     project = Path(project)
     code = guideline_code(project, guideline)
     items = load_items(code)
-    data, text = load_checklist(project, checklist_path)
+    path = Path(checklist_path) if checklist_path else default_path(project, deliverable)
+    data, text = load_checklist(project, path)
+    where_cl = rel_path(project, path)
     entries, found = data["items"], []
     if str(data.get("guideline", "")).upper() != code.upper():
-        found.append(("block", f"{CHECKLIST}:1", f"the checklist is for {data.get('guideline')!r}; the project uses {code}"))
+        found.append(("block", f"{where_cl}:1", f"the checklist is for {data.get('guideline')!r}; the project uses {code}"))
     if deliverable and data.get("deliverable") != deliverable:
-        found.append(("warn", f"{CHECKLIST}:1",
+        found.append(("warn", f"{where_cl}:1",
                       f"the checklist's deliverable is {data.get('deliverable')!r}; expected {deliverable!r}"))
     by_id, lang = _ledger(project), projectcfg.output_lang(project)
     ids = [it["id"] for it in items["items"]]
     section = {it["id"]: it["section"] for it in items["items"]}
     for iid in ids:
-        e, loc = entries.get(iid), f"{CHECKLIST}:{_json_line(text, iid)}"
+        e, loc = entries.get(iid), f"{where_cl}:{_json_line(text, iid)}"
         if not isinstance(e, dict):
-            found.append(("block", f"{CHECKLIST}:1", f"item {iid} ({section[iid]}) is missing from the checklist"))
+            found.append(("block", f"{where_cl}:1", f"item {iid} ({section[iid]}) is missing from the checklist"))
             continue
         st = e.get("status")
         rel, line, quote = e.get("file"), e.get("line"), str(e.get("quote") or "")
@@ -176,14 +227,15 @@ def check(project: Path, guideline: str | None = None, checklist_path: Path | No
                 found.append(("block", f"{rel}:{line}",
                               f"item {iid} is present, but its quote is not within ±{WINDOW} lines of {rel}:{line}"))
     for extra in sorted(set(entries) - set(ids)):
-        found.append(("warn", f"{CHECKLIST}:{_json_line(text, extra)}", f"item {extra} is not an item of {code}"))
+        found.append(("warn", f"{where_cl}:{_json_line(text, extra)}", f"item {extra} is not an item of {code}"))
     return found
 
 
-def absent_count(project: Path, guideline: str | None = None, checklist_path: Path | None = None) -> int:
+def absent_count(project: Path, guideline: str | None = None, checklist_path: Path | None = None,
+                 deliverable: str | None = None) -> int:
     code = guideline_code(Path(project), guideline)
     ids = [it["id"] for it in load_items(code)["items"]]
-    entries = load_checklist(Path(project), checklist_path)[0]["items"]
+    entries = load_checklist(Path(project), checklist_path or default_path(project, deliverable))[0]["items"]
     return sum(1 for i in ids if not isinstance(entries.get(i), dict) or entries[i].get("status") == "absent")
 
 
@@ -192,11 +244,12 @@ def _loc(e: dict) -> str:
     return f"{e['file']}:{line}" if isinstance(line, int) and not isinstance(line, bool) else str(e["file"])
 
 
-def table(project: Path, guideline: str | None = None, checklist_path: Path | None = None) -> str:
+def table(project: Path, guideline: str | None = None, checklist_path: Path | None = None,
+          deliverable: str | None = None) -> str:
     project = Path(project)
     code = guideline_code(project, guideline)
     items = load_items(code)["items"]
-    data = load_checklist(project, checklist_path)[0]
+    data = load_checklist(project, checklist_path or default_path(project, deliverable))[0]
     if str(data.get("guideline", "")).upper() != code.upper():
         raise InputError(f"the checklist is for {data.get('guideline')!r}; the project uses {code}")
     entries = data["items"]
@@ -217,7 +270,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("project")
     ap.add_argument("--guideline")
-    ap.add_argument("--deliverable", choices=("thesis", "manuscript"))
+    ap.add_argument("--deliverable", choices=DELIVERABLES)
     ap.add_argument("--table", action="store_true")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
@@ -227,7 +280,7 @@ def main(argv=None) -> int:
         return 2
     try:
         if a.table:
-            print(table(project, a.guideline), end="")
+            print(table(project, a.guideline, deliverable=a.deliverable), end="")
             return 0
         code = guideline_code(project, a.guideline)
         found = check(project, a.guideline, deliverable=a.deliverable)

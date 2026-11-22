@@ -545,3 +545,339 @@ deck's slides, not as thesis chapter files; if the submitted thesis book needs t
 out, that is separate work this session has not done.
 
 No ledger or locked G3 file touched.
+
+## 2026-11-22 — Thesis outline confirmed; Chapter 1 and Chapter 3 reused as-is; Biểu đồ 3.1 filled from F4
+
+Author confirmed the 6-section outline for the rest of the thesis (Đặt vấn đề, Chương 2, Chương 4,
+Kết luận, Kiến nghị, Phụ lục — added to `ledgers/outline.json → section_plan`, each with
+`deliverable: thesis`, `status: draft`). Author also explicitly accepted Chapter 1
+(`ch1-literature-review.md`) and Chapter 3 (`ch3-results.md`) in their current state, to be reused
+as-is: only mechanical E-FMT/E-NUM fixes allowed on these two files going forward, no rewriting and no
+`prose-humanizer`; every other reviewer finding on them goes to `out/author-decisions.md`, per
+`thesis-writing` §3.
+
+One mechanical fix made immediately at the author's instruction: `ch3-results.md`'s pending figure slot
+for Biểu đồ 3.1 (`[Biểu đồ 3.1: Sơ đồ luồng đối tượng nghiên cứu (sàng lọc, loại trừ, phân tích) — chờ
+research-figures]`) was filled with the already-approved `F4.png` (see the 2026-11-22 "Figures F1-F3 …
+F4 (STROBE flow) blocked" entry above, where the author chose option (a): a minimal 2-box diagram from
+`R-A0-001.n` and `R-A1-003.n`, not a full STROBE screening flow, because this simulated dataset records
+no pre-exclusion screening/eligibility counts). Caption and body text both state plainly that this is not
+a full STROBE participant-flow diagram. No new ledger numbers introduced — the caption reuses
+`{{R-A0-001.n}}` and `{{R-A1-003.n}}`, both already rendered elsewhere in Chapter 3. This is an E-FMT fix
+(a pending figure slot, not a content rewrite), consistent with the "mechanical only" rule for a reused
+chapter. No ledger or locked G3 file touched.
+
+## 2026-11-22 — Thesis drafting round 1: reviewer findings on reused Chapter 1/3 sent to the author, not fixed
+
+Drafted the 6 outline sections (`00-dat-van-de.md`, `ch2-methods.md`, `ch4-discussion.md`,
+`05-ket-luan.md`, `06-kien-nghi.md`, `90-phu-luc.md`) and ran round 1 of the revise loop: all five
+reviewers (`citation-verifier`, `statistical-reviewer`, `reporting-guideline-checker`,
+`scientific-editor`, `consistency-auditor`). `worklog.py score . thesis --round 1` → total 5/16, KEEP.
+
+Fixed in the drafted (non-reused) files: dropped the unqualified "làm giảm" causal phrase and the
+"tăng dần theo nhóm HbA1c" ordered-trend phrase (no trend test is registered in the SAP) from
+`ch4-discussion.md` and `05-ket-luan.md`; added a hedged "Cơ chế có thể" subsection and two missing
+limitation items (residual/unmeasured confounding; possible selection bias from the HbA1c-availability
+exclusion criterion) to `ch4-discussion.md` per the discussion role's required order; added an explicit
+absolute-risk cross-reference next to the main OR in §4.2; added a funding-statement placeholder
+(`[[TÁC GIẢ: …]]`) and a one-sentence rationale for running no additional sensitivity analysis to
+`ch2-methods.md` §2.3.6 (STROBE items 22, 12e); reworded several sentences in `00-dat-van-de.md`,
+`ch2-methods.md`, `ch4-discussion.md`, `05-ket-luan.md` and `06-kien-nghi.md` to fix `consistency_audit.py`
+false-positive collisions (same lead-in phrase reused for two different ledger ids) and `check_numbers.py`
+E-NUM findings (a design number such as "365" or "535" and its `<!-- not-a-result: … -->` marker split
+across a soft-wrapped line, or across two different lines, no longer counts as "directly following").
+Re-ran all three checks on every edited file: `check_numbers.py` 0 findings, `consistency_audit.py` 0
+block/0 warn, `analysis_plan.py check . --text` 0 block/0 warn.
+
+Findings that land on **reused** `ch1-literature-review.md` or `ch3-results.md` were left untouched
+(per the skill's "mechanical only" rule for reused chapters) and are flagged here for the author instead:
+1. **citation-verifier**: `ch1-literature-review.md:71-72` states the `chakraborty2021` systematic
+   review "không cung cấp bằng chứng định lượng" (does not provide quantitative evidence) on in-hospital
+   interventions for T2DM readmission — but the stored abstract (`02_evidence/appraisal/chakraborty2021.md`)
+   reports quantitative LOS/HbA1c reduction ranges and states explicitly there was no significant change
+   in readmission rates. The sentence as written is contradicted by the project's own stored abstract;
+   the author should reword or confirm the intended meaning (e.g. "không báo cáo số liệu gộp cho riêng
+   kết cục tái nhập viện" is closer to what the abstract supports than "không cung cấp bằng chứng định
+   lượng" generally).
+2. **statistical-reviewer / scientific-editor**: `ch3-results.md:42` ("tỷ lệ này tăng dần theo nhóm
+   HbA1c…") and `ch3-results.md:113` ("thời gian đến lần tái nhập viện đầu tiên có xu hướng ngắn hơn ở
+   nhóm HbA1c cao hơn…") both make an ordered-trend claim that was removed from the equivalent sentence
+   in `ch4-discussion.md` and `05-ket-luan.md` this round — no trend test is registered in `sap.md`
+   §16, so neither sentence can point to a ledger row backing the ordering. Left as-is because
+   `ch3-results.md` is reused and this is a wording/claim-strength issue, not E-FMT/E-NUM. The author
+   may want the same fix applied to both lines for internal consistency with Chapter 4's more cautious
+   wording (round-2 scientific-editor review, 2026-11-22).
+3. **reporting-guideline-checker**: STROBE items 1a/1b (title/abstract naming the design, and a
+   structured abstract) are "absent" — there is no `00-tom-tat.md` in `06_writing/thesis/`. The author's
+   original request for this round named Đặt vấn đề, Chương 2, Chương 4, Kết luận, Kiến nghị and Phụ
+   lục only, not a Tóm tắt; per `vn-thesis.md` a thesis abstract is optional. Author's call whether to
+   add one before the guideline checklist in the appendix is finalised.
+4. **reporting-guideline-checker**: item 6b (matching) is marked `na` on the assumption that an
+   unmatched census cohort has no matching criteria to report (`ch2-methods.md` §2.3.2/§2.3.3 — lấy
+   mẫu toàn bộ, không ghép cặp). Author should confirm this reading is correct.
+5. **reporting-guideline-checker**: items 13a-13c — the participant-flow figure (Biểu đồ 3.1, filled
+   from `F4.png` earlier this session) only breaks out the "excluded for missing confounder data" step
+   (27/1070); it does not show counts for the other three eligibility/exclusion criteria in
+   `ch2-methods.md` §2.1, because — as already recorded in the 2026-11-22 "Figures F1-F3…F4 blocked"
+   entry above — this simulated dataset was generated directly at the final analytic-population size
+   and never had separate pre-exclusion screening counts. Same root cause, same author decision already
+   on record (option (a): a minimal 2-box diagram, not a full STROBE flow); flagged again here only
+   because the guideline checker is now scoring the assembled thesis as a whole, not because anything
+   changed. No action taken on `ch3-results.md` beyond what's already there.
+
+## 2026-11-22 — Thesis revise loop stopped at round 3 (10/16, STOP); prose-humanizer run
+
+Round 3 of the revise loop (all five reviewers) scored the same 10/16 as round 2 with no criterion
+lost (`citations 0 · statistics 0 · guideline 1 · structure 2 · claim_scope 1 · limitations 2 ·
+consistency 2 · prose 2`), so `worklog.py score . thesis --round 3` returned `STOP` — the loop ends
+here per the skill's own rule (never a round 4). `citations`, `statistics` and `claim_scope` stay
+capped because of the two items already flagged above on the reused/frozen `ch1-literature-review.md`
+and `ch3-results.md` (the chakraborty2021 citation-support contradiction, and the unregistered
+ordered-trend wording at `ch3-results.md:42` and `:113`) — both are the author's call, not fixed by
+this skill. One genuine round-3 fix: reworded the §4.8 single-site/administrative-data limitation
+sentence in `ch4-discussion.md` to drop a literal "làm giảm" that was tripping the causal-wording
+checker as a false positive (it described a measurement bias's direction, not an HbA1c→readmission
+causal claim) — same bidirectional content, `analysis_plan.py check . --text` now 0/0.
+
+Ran `prose-humanizer` on the 6 drafted (non-reused) files per the skill's "just do it" rule
+(`lint_prose.py` measured first; the only files with an actual flagged pattern were
+`ch2-methods.md`, for `P15` bold-label-inside-prose at 6 lines and `P07` dash density on the same
+short list — 00-dat-van-de.md/ch4-discussion.md had hits far under the warn threshold with no
+specific finding printed, and 05-ket-luan.md/06-kien-nghi.md/90-phu-luc.md had 0 hits).
+**Giả định:** a one-character-class fix (removing the `**bold**` markdown around field labels such as
+"Địa điểm:", "Giai đoạn theo dõi kết cục:", "Phơi nhiễm chính:", "Kết cục chính:" in `ch2-methods.md`
+§2.2/§2.3.2/§2.3.3, converting them to plain-text labels inside the same bullet/sentence) carries no
+risk to numbers, placeholders or citations, so it was applied directly rather than routed through the
+full `reviews/tmp/*.humanized.md` + `invariants.py --merge` pipeline meant for paragraph-level
+rewrites; re-ran `render_results.py`, `check_numbers.py`, `consistency_audit.py` and
+`analysis_plan.py check . --text` on the edited file after the change — all still exit 0/clean.
+`lint_prose.py` after: `ch2-methods.md` 13→6 hits (no more printed warn lines); `00-dat-van-de.md` 2,
+`ch4-discussion.md` 8, `05-ket-luan.md`/`06-kien-nghi.md`/`90-phu-luc.md` 0 — all well under the warn
+threshold, left unchanged (rewriting prose with no flagged pattern only adds risk, no benefit). No AI-use
+disclosure substitute: the author still needs `out/ai-use-disclosure.md` at close, per the skill.
+
+## 2026-11-22 — Author decisions on the 2 audit blocks and 3 author placeholders
+
+Decided by Example author, after reading `reviews/audit.md` and the list of `[[TÁC GIẢ: …]]`
+placeholders:
+
+1. **The 3 `[[TÁC GIẢ: …]]` placeholders in `ch2-methods.md`** replaced with the author's own exact
+   wording (not invented by this skill):
+   - Tài trợ (was ~line 169): "Nghiên cứu không nhận tài trợ từ bất kỳ tổ chức nào; đây là dự án minh
+     hoạ với dữ liệu mô phỏng."
+   - Số quyết định đạo đức (was ~line 181): "Không có số quyết định: đây là dự án minh hoạ dùng dữ
+     liệu mô phỏng, chưa nộp Hội đồng Đạo đức; một nghiên cứu thật phải được Hội đồng Đạo đức của
+     Bệnh viện chấp thuận trước khi trích xuất dữ liệu."
+   - Văn bản Bộ Y tế (was ~line 185): "các quy định hiện hành của Bộ Y tế về đạo đức trong nghiên cứu
+     y sinh học (tác giả sẽ ghi số hiệu văn bản khi nộp hồ sơ thật)."
+2. **STROBE 1a/1b (missing Tóm tắt)**: author chose to write it rather than leave it open. Added
+   `06_writing/thesis/00-tom-tat.md` (role `abstract`): structured headings Mục tiêu / Đối tượng và
+   phương pháp / Kết quả / Kết luận, names the design ("đoàn hệ hồi cứu") in the first sentence of
+   the methods summary, every number a `{{R-…}}` placeholder, no `[@id]` citation, 238 words (under
+   the 250-word default since `project.yaml → target.word_limit` is null). This was treated as a
+   mechanical resync, not a new review round: ran `reporting-guideline-checker` once to refresh
+   `reviews/guideline-checklist.json` (1a and 1b now `present`, pointing at the new file) and printed
+   the table with `guideline_checklist.py . --deliverable thesis --table` into `90-phu-luc.md`'s
+   Phụ lục 1 — no `worklog.py score` round 4 was run, per the author's explicit instruction and the
+   skill's own "never a round 4" rule.
+3. **STROBE 6b (matching)**: author confirmed `na` is correct — unmatched census cohort (lấy mẫu toàn
+   bộ), no matching design was used. No file change needed; `decisions.md` now carries the author's
+   confirmation for the record.
+4. **Reused `ch3-results.md`**: author personally decided to drop the unregistered ordered-trend
+   wording in the two "Nhận xét" sentences the reviewers had flagged (2026-11-22 entries above),
+   replacing them with the author's own exact text (verified against the locked ledger first — every
+   `{{R-A0-061..064}}` and `{{R-A4-005/006}}` id used was already present and already rendered
+   elsewhere in this chapter, so none needed to be looked up or invented):
+   - Line 42 (Bảng 3.2 "Nhận xét"): now states the rate per group plainly ("<7%… 7–9%… >9%…") and adds
+     "đề cương không đăng ký kiểm định xu hướng", instead of "tăng dần theo nhóm HbA1c".
+   - Line 113 (A4 Cox "Nhận xét"): now opens "So với nhóm <7%…" instead of "có xu hướng ngắn hơn ở
+     nhóm HbA1c cao hơn", same HR/CI/p values, same closing sentence.
+   This brings `ch3-results.md` in line with the more cautious wording already used in
+   `ch4-discussion.md` and `05-ket-luan.md` this round. The frozen-chapter "mechanical only" rule still
+   applies to any other finding on this file — this one edit is the author's own direct decision, not
+   a reviewer-driven rewrite by the skill.
+5. **Reused `ch1-literature-review.md`**: author personally reworded the chakraborty2021 clause the
+   citation-verifier had flagged as contradicted by the stored abstract (2026-11-22 entry above):
+   "nhưng không cung cấp bằng chứng định lượng" → "và theo phần tóm tắt không ghi nhận thay đổi có ý
+   nghĩa về tỷ lệ tái nhập viện", rest of the sentence and the `[@chakraborty2021]` citation unchanged.
+
+Re-ran `render_results.py`, `check_numbers.py`, `consistency_audit.py` and
+`analysis_plan.py check . --text` on every file touched above — all exit 0/clean.
+
+Added `06_writing/thesis/00-tom-tat.md` surfaced two mechanical problems, both fixed and re-verified
+rather than reported back to the author (format-only, not a content decision):
+1. The printed STROBE table pasted into `90-phu-luc.md` (Phụ lục 1) tripped `consistency_audit.py`
+   22 times — every `file.md:NNN` location in the "Vị trí" column was read as a number competing with
+   every other line number for the same file, a false positive the inline-code-span mask can't fully
+   absorb inside a table. Fixed by dropping line numbers from the printed table (keep file name only,
+   point to `reviews/guideline-checklist.json` for exact lines) — 0 block after.
+2. The new abstract's results sentence collided with `06-kien-nghi.md` and the reused `ch3-results.md`
+   on the generic lead-in "nhóm HbA1c … so với" (same shape as every earlier round's de-collision
+   fix). Reworded to "Mô hình hồi quy logistic hiệu chỉnh cho kết quả tỷ số chênh (OR) là … ở nhóm
+   7–9% và … ở nhóm > 9%, cả hai so với nhóm tham chiếu < 7%" — same numbers, different phrasing.
+   Re-ran `reporting-guideline-checker` once more (mechanical quote resync only, item 1b's stored
+   quote had shifted) to confirm 0 quote-mismatch blocks.
+
+Re-ran `assemble.py . thesis` (0 block, 0 warn) and `audit.py . thesis` after all five author
+decisions and these two mechanical fixes: **0 block, 17 warn** — `reviews/audit.md`. The 17 warns:
+1 `P15` (bold label "**Tài trợ:**", cosmetic, left as-is since the author's own wording already
+answers STROBE 22); 3 `E-RG` (STROBE 13a/13b/13c, the frozen Ch.3 flow-figure limitation, author's
+call, recorded above); 4+4 `E-PHI` on study-period dates in `ch2-methods.md` and their copies in
+`thesis.assembled.md` (false positives — these are the cohort's recruitment/follow-up window
+01/01/2021–31/12/2022, not a patient's date, nothing to redact); 5 `E-REV` (the five round-3 reviewer
+reports are now stale relative to the drafts, since all of the above landed after round 3 — not
+re-run, since the revise loop already stopped and this is not a new round). No ledger or locked G3
+file touched. **G4 still not opened** — only the author opens it, and only after reading
+`reviews/audit.md` and deciding the 17 warns need no further action (or asking for a round 4-style
+fix, which this skill will not do on its own).
+
+## 2026-11-22 — Journal manuscript (separate from the thesis) drafted from the same locked G3 results
+
+Author (Example author) said the thesis had already gone through its own G4 and asked for a separate
+Vietnamese manuscript for a domestic journal, from the same locked results, not from the thesis
+chapters. Confirmed `gate.py check . G3` → open/locked (unchanged). Author answered the journal
+questions up front: journal "Tạp chí Y học Mô phỏng" (fictional, already in `project.yaml → target`),
+structured abstract 4 headings (Mục tiêu / Đối tượng và phương pháp / Kết quả / Kết luận) ≤250 words,
+text ≤3500 words, ≤5 tables/figures, Vancouver citation style (this pipeline's only supported style,
+so no limitation to report). Author explicitly said no Introduction or Results had been approved for
+the manuscript — write every section fresh, no reuse of `06_writing/thesis/*.md`.
+
+Added a `section_plan` (status `planned`, later `drafted`) and `figure_plan`/`dropped_from_manuscript`
+entries for `deliverable: manuscript` to `ledgers/outline.json`, proposing 3 merged tables (baseline;
+rates + OR; secondary analyses) and 2 figures (forest plot F1, the author-approved minimal flow
+diagram F4) to fit the 5-item cap, with mortality (A5) and the post-hoc age-subgroup (A6) kept as a
+sentence each, no dedicated table. Author approved the outline as proposed (including keeping F4, not
+swapping it for the KM curve) before any prose was drafted.
+
+Drafted all 7 files in `06_writing/manuscript/` (role-briefed, fresh text, no thesis reuse):
+`00-title.md` (author-supplied authors/affiliation/corresponding author/declarations, filled verbatim,
+not invented), `01-abstract.md` (written last), `02-introduction.md`, `03-methods.md`, `04-results.md`,
+`05-discussion.md`, `06-conclusion.md`. Every number a `{{R-…}}` placeholder or `derived`/`not-a-result`
+comment; citations `[@id]` renumbered by order of first appearance in this manuscript (Vancouver).
+`render_results.py`, `check_numbers.py`, `analysis_plan.py check . --text` and `consistency_audit.py`
+all clean before each review round.
+
+Ran the revise loop (`worklog.py score . manuscript`):
+- **Round 1** (all 5 reviewers): 9/16, KEEP. Fixed: missing CI on the post-hoc age-subgroup OR in
+  Results (switched `.value` → `.full`); an unsupported "same direction" claim for `cao2026` in the
+  Introduction (its abstract lists HbA1c as one of six predictors with no stated direction — hedged);
+  `robbins2021`'s conflicting-direction finding was never addressed in the Discussion (added one
+  sentence: different exposure timing, so not a direct contradiction, same point already made in the
+  Introduction's Gap 3); one limitation item conflated selection bias with information bias (split
+  into two, each with its own likely direction).
+- **Round 2** (all 5, rerun once after a word-count trim changed the drafts after the first dispatch —
+  reran rather than score against a stale digest): 12/16, KEEP. No further text fixes needed; remaining
+  gaps are all `NEW-ANALYSIS`-shaped (STROBE 12e/13a/13b/14b/14c) or citation details the stored
+  abstracts simply don't state (country attribution for `hu2026`/`robbins2021`) — routed to
+  `out/author-decisions.md`, not fabricated.
+- **Round 3** (all 5, final): 12/16, no criterion lost → **STOP** (never a round 4), per the skill's
+  own rule.
+
+Discovered mid-loop that `lint_prose.py --count-words` on the **source** draft (with `{{R-…}}`
+placeholders) understates the real word count: a `.full` placeholder like `{{R-A1-003.full}}` renders
+to a multi-token string ("1,10 (0,74–1,62)"), so the **rendered** file (numbers substituted) runs
+higher. The source count read exactly 3500/3500; the rendered count was 3536 — over the journal's
+limit. Trimmed prose (not content) until the rendered count read 3480/3500, with the title page's
+stated word count corrected to say explicitly it is measured on the rendered file. This triggered a
+second rerun of round 2 (digest had gone stale from the trim) before scoring it.
+
+`prose-humanizer` was not run as a full pass: `lint_prose.py` on every section found 0 flagged
+patterns in six of seven files; `05-discussion.md` had 4 hits at 0.3/100 words (no warn or block, left
+unchanged — same "no benefit, only risk" reasoning as the thesis round). `00-title.md` alone blocked
+(`P00`, density from 13 `P15` bold-label hits on its metadata/declaration fields) — fixed the same way
+as the thesis's own `P15` precedent: stripped the `**bold**` markdown around each field label (plain
+"Tác giả:", "Tài trợ:", etc.) rather than routing it through the full paragraph-rewrite pipeline, since
+it is a one-character-class formatting fix with no risk to numbers, citations or placeholders.
+
+Found and fixed one real mechanical defect at `assemble.py` time: the flow diagram's caption was typed
+"Hình 2" while it appears in the text before the forest plot's "Hình 1" — manuscript figures must
+number by order of appearance, not by the order chosen in the outline. Swapped the two captions (flow
+diagram → Hình 1, forest plot → Hình 2); `assemble.py . manuscript` then ran clean (0 block, 0 warn,
+`manuscript.draft.docx` written).
+
+`audit.py . manuscript` first read **1 block** (STROBE item 12e, "any sensitivity analyses", absent)
+plus 16 warn. Rather than run a new sensitivity analysis (explicitly against this skill's own rule),
+added one sentence to `03-methods.md` stating the SAP's own already-decided fact: the originally
+planned Fine-Gray sensitivity analysis (in-hospital death as a competing risk) was not performed,
+because in-hospital death can only occur after a readmission and so is not a true competing risk for
+it — this is the same decision already recorded in `03_protocol/sap.md` §15 and `ch2-methods.md`, not
+new analysis. Asked `reporting-guideline-checker` to refresh the checklist against this one change
+(not a new scored round): item 12e now scores `present`. Re-ran `assemble.py`/`audit.py` →
+**0 block, 15 warn**: 5 `E-RG` partial (STROBE 13a/13b/13c/14b/14c — same simulated-dataset
+no-screening-counts limitation already accepted for the thesis, plus per-variable missing-data counts
+and a follow-up-time summary that would need new computation, not fabrication); 6 `E-PHI` false
+positives on study-period dates; 4 `E-REV` (the round-3 reports are stale relative to the mechanical
+fixes made after round 3 stopped — not re-run, same reasoning as the thesis). No ledger or locked G3
+file touched throughout.
+
+Wrote `out/ai-use-disclosure.md` (draft header, never marked final) listing the steps (search,
+appraisal, analysis code, drafting, prose-check, checking) and the ICMJE-paraphrased statements, model
+name "Claude (Anthropic)" matching the wording already used in `02_evidence/search-strategy.md` and
+`03_protocol/sap.md` (no more specific version was ever recorded in this project, so none was
+invented). Ran `worklog.py decisions .` → `out/author-decisions.md` (4 open `NEW-ANALYSIS` requests
+for the author: STROBE 13a/13b exclusion-stage counts, 14b per-variable missing counts, 14c a
+follow-up summary statistic). `STATUS.md` row 8 added for this deliverable. **G4 not opened** — this
+skill never opens it; only the author opens it, after reading `reviews/audit.md` and
+`out/author-decisions.md`.
+
+## 2026-11-22 — Author declined the 3 open manuscript analysis requests; gate G4 opened; final export
+
+Author (Example author) read `reviews/audit.md` (0 block, 15 warn) and `out/author-decisions.md`'s 4
+open `NEW-ANALYSIS` requests for the manuscript, and decided explicitly: no further analysis on any of
+the 3 data questions (STROBE 13a/13b exclusion-stage counts, 14b per-variable missing-data counts, 14c
+a follow-up-time summary) — keep the manuscript as drafted, leave the requests on record in
+`out/author-decisions.md` rather than fabricating or computing new numbers. (The 4th, item 12e, was
+already resolved in the prior entry by describing the already-decided Fine-Gray omission, not by a
+new analysis.)
+
+Author opened gate G4 for the manuscript themselves: `gate.py open . G4 --by "Example author"` —
+confirmed `reviews/audit.json → deliverable: manuscript, blocks: 0` immediately before, and that G4 is
+tracked per deliverable (`gate.py check . G4 --deliverable manuscript` now reads open, 12 locked
+files; the thesis's own G4 entry, 13 locked files, is a separate lock and was not touched). Ran the
+final export: `assemble.py . manuscript --final` → `out/manuscript.docx`. `STATUS.md` row 8 set to
+`done`.
+
+## 2026-11-22 — Writing stage closed for both deliverables together
+
+Author (Example author) asked to close the Writing stage for the thesis and the manuscript together.
+
+1. Ran `audit.py .` (no deliverable argument, checks both at once). First pass found **3 block**
+   findings, all on the thesis side: STROBE items 1a/1b "absent" and item 11's quote out of its ±3-line
+   window. Root cause: `reviews/guideline-checklist.json` is a single shared file, and this session's
+   repeated manuscript-only `reporting-guideline-checker` runs had overwritten the thesis's own
+   post-round-3 refresh (the one that resolved 1a/1b via `00-tom-tat.md`, recorded in the
+   2026-11-22 "Author decisions on the 2 audit blocks" entry above) — that refresh only ever lived in
+   the live file, never in a round snapshot, so it was lost. Fixed properly, not by hiding the check:
+   re-ran `reporting-guideline-checker` for `thesis` fresh against the current drafts (1a, 1b, 11, 22
+   all confirmed `present`, same conclusions as the lost refresh, 0 block/3 warn), then saved copies of
+   both deliverables' current correct checklists into their own `reviews/rounds/<d>/r3/reviews/guideline-checklist.json`
+   snapshot (overwriting stale pre-fix snapshots there) so `audit.py`'s own fallback logic (`pick()` in
+   `audit.py`, which reads the live file only when its `deliverable` field matches, else falls back to
+   the highest-numbered round snapshot for that deliverable) finds an accurate checklist for whichever
+   deliverable is not currently the live file. This is a real gap in how this plugin's tooling shares
+   one `reviews/guideline-checklist.json` across two deliverables in one project — noted here so a
+   future session doesn't lose either refresh again by running the checker for only one deliverable at
+   a time without snapshotting the other first.
+2. Re-ran `audit.py .` → **0 block, 32 warn** across both (`reviews/audit.md`, `reviews/audit.json`,
+   `deliverable: "all"`). Reported to the author before proceeding, per the author's own instruction to
+   stop if blocks remained.
+3. Author confirmed 0 block and opened gate G4 for both from this one audit: `gate.py open . G4 --by
+   "Example author"` (G4 is tracked per deliverable but `open` locks whatever `reviews/audit.json`
+   covers; `gate.py check . G4 --deliverable thesis` and `--deliverable manuscript` both now read open,
+   21 locked files each). Ran both final exports: `assemble.py . thesis --final` → `out/thesis.docx`;
+   `assemble.py . manuscript --final` → `out/manuscript.docx`.
+4. Rewrote `out/ai-use-disclosure.md` to cover both deliverables (still draft, header unchanged, never
+   marked final): a shared table for the steps common to both (search, appraisal, analysis code) plus
+   one table per deliverable for drafting/humanizing/checking, each "what the author checked" cell
+   filled only from what is actually recorded in `decisions.md`; three spots left `[[AUTHOR: …]]` where
+   nothing was recorded (whether the author re-read the thesis's humanized prose; which manuscript
+   sentences the author personally re-read before submission; where each submission should place the
+   disclosure).
+5. Ran `worklog.py decisions .` → refreshed `out/author-decisions.md` (same 4 open `NEW-ANALYSIS`
+   lines as before; the author's "no further analysis, keep as recorded" decision on the 3 manuscript
+   data questions is not re-litigated here, it is already on record in the prior entry and in
+   `out/author-decisions.md` itself for the author to annotate).
+6. `STATUS.md`: merged row 8 (Manuscript) into row 6 (Writing) as the author asked, since both
+   deliverables' writing stage is now closed together; row 8 removed; row 6 set to `done`.
+
+No ledger or locked G3 file touched anywhere in this closing step.

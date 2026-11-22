@@ -135,14 +135,55 @@ class TestGuidelineChecklist(unittest.TestCase):
 
     def test_deliverable_mismatch_warns(self):
         self.write()
+        legacy = self.p / "reviews" / "guideline-checklist.json"
         self.assertEqual(gc.check(self.p, deliverable="thesis"), [])
-        found = gc.check(self.p, deliverable="manuscript")
+        found = gc.check(self.p, checklist_path=legacy, deliverable="manuscript")
         self.assertTrue(any(l == "warn" and "deliverable" in m for l, _, m in found), found)
-        self.assertEqual(self.cli("--deliverable", "manuscript")[0], 0)
+        # the legacy file holds the thesis checklist: it is not the manuscript's
+        with self.assertRaises(gc.InputError):
+            gc.check(self.p, deliverable="manuscript")
+        code, _, err = self.cli("--deliverable", "manuscript")
+        self.assertEqual(code, 2)
+        self.assertIn("reviews/guideline-checklist-manuscript.json not found", err)
         (self.p / "reviews" / "guideline-checklist.json").write_text(
             json.dumps({"guideline": "STROBE", "items": {i: {"status": "na", "reason": "x"} for i in IDS}}),
             encoding="utf-8")
         self.assertTrue(any(l == "warn" for l, _, _ in gc.check(self.p, deliverable="thesis")))
+
+    def write_for(self, deliverable, drop=()):
+        items = {i: {"status": "na", "reason": "fixture"} for i in IDS if i not in drop}
+        (self.p / "reviews" / f"guideline-checklist-{deliverable}.json").write_text(json.dumps(
+            {"guideline": "STROBE", "deliverable": deliverable, "items": items}), encoding="utf-8")
+
+    def test_one_checklist_per_deliverable(self):
+        self.write_for("thesis")
+        self.write_for("manuscript", drop=("1a",))
+        self.assertEqual(gc.check(self.p, deliverable="thesis"), [])
+        found = gc.check(self.p, deliverable="manuscript")
+        self.assertEqual(found, [("block", "reviews/guideline-checklist-manuscript.json:1",
+                                  "item 1a (Title and abstract) is missing from the checklist")])
+        self.assertEqual(gc.checklist_path(self.p, "thesis"), self.p / "reviews" / "guideline-checklist-thesis.json")
+        code, _, err = self.cli()
+        self.assertEqual(code, 2)
+        self.assertIn("pass --deliverable", err)
+        code, out, _ = self.cli("--table", "--deliverable", "manuscript")
+        self.assertEqual(code, 0)
+        self.assertIn("| 1a |", out)
+        self.assertIn("không có", out.splitlines()[2])
+
+    def test_per_deliverable_file_wins_over_legacy(self):
+        self.write(drop=("1a",))
+        self.write_for("thesis")
+        self.assertEqual(gc.check(self.p, deliverable="thesis"), [])
+
+    def test_legacy_file_is_read_for_its_own_deliverable_or_without_one(self):
+        self.write()
+        legacy = self.p / "reviews" / "guideline-checklist.json"
+        self.assertEqual(gc.checklist_path(self.p, "thesis"), legacy)
+        self.assertEqual(gc.checklist_path(self.p, "manuscript"),
+                         self.p / "reviews" / "guideline-checklist-manuscript.json")
+        legacy.write_text(json.dumps({"guideline": "STROBE", "items": {}}), encoding="utf-8")
+        self.assertEqual(gc.checklist_path(self.p, "manuscript"), legacy)
 
     def test_na_reason_must_be_a_string(self):
         self.write(**{"1a": {"status": "na", "reason": 5}})

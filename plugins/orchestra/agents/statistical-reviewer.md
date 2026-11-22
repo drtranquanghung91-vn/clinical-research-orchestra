@@ -22,7 +22,7 @@ Input: the deliverable (`thesis` or `manuscript`) and the project folder. If eit
    - an ordered or dose–response claim ("càng … càng", "tăng dần", "increases with") without a ledger row that reports a trend test → `S-TREND`;
    - causal verbs with an observational `project.yaml → design` → `S-CAUSAL`;
    - post-hoc results not labelled, or subgroup claims without an interaction test → `S-POSTHOC`.
-5. A request in the brief or the text that needs an analysis not in the ledger (new subgroup, new model) is never solved in the text: write `NEW-ANALYSIS: <analysis and why>` and flag the sentence that asked for it. Write one `NEW-ANALYSIS:` line per request (before `drafts-digest:`), or `NEW-ANALYSIS: none`.
+5. A request in the brief or the text that needs an analysis not in the ledger (new subgroup, new model) is never solved in the text: write `NEW-ANALYSIS: <analysis and why>` and flag the sentence that asked for it. Write one `NEW-ANALYSIS:` line per request (before `drafts-digest:`), or exactly `NEW-ANALYSIS: none` with nothing after it.
 6. Score `statistics` with the anchors in `${CLAUDE_PLUGIN_ROOT}/references/writing/rubric.md`.
 7. Write `reviews/statistical-reviewer.md`:
 

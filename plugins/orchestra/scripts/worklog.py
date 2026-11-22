@@ -25,7 +25,8 @@ reviews/worklog.json: {"rounds": [{"deliverable", "round", "at", "scores": {8 ke
 "requests": [{"agent", "text"}], "notes"}], "events": [...], "decisions_sha256": "..."}
 
 Snapshot layout: reviews/rounds/<d>/r<N>/<draft files and order.txt>, r<N>/reviews/<report files>,
-r<N>/reviews/guideline-checklist.json.
+r<N>/reviews/guideline-checklist.json (a copy of the deliverable's reviews/guideline-checklist-<d>.json, or of
+the legacy reviews/guideline-checklist.json when that one is for <d>).
 """
 from __future__ import annotations
 
@@ -48,6 +49,7 @@ for _s in (sys.stdout, sys.stderr):
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from crolib import drafts, projectcfg, reviews  # noqa: E402
 import consistency_audit  # noqa: E402
+import guideline_checklist  # noqa: E402
 import lint_prose  # noqa: E402
 
 ORCH = Path(__file__).resolve().parents[1]
@@ -130,16 +132,17 @@ def round_dir(project: Path, deliverable: str, n: int) -> Path:
 
 
 def guideline_score(project: Path, deliverable: str) -> tuple[int, str]:
-    p = Path(project) / "reviews" / "guideline-checklist.json"
+    p = guideline_checklist.checklist_path(project, deliverable)
+    rel = guideline_checklist.rel_path(project, p)
     if not p.is_file():
-        raise UsageError("reviews/guideline-checklist.json not found: run reporting-guideline-checker first")
+        raise UsageError(f"{rel} not found: run reporting-guideline-checker on the {deliverable} first")
     try:
         data = json.loads(p.read_text(encoding="utf-8-sig"))
     except ValueError as e:
-        raise UsageError(f"reviews/guideline-checklist.json is unreadable: {e}") from e
+        raise UsageError(f"{rel} is unreadable: {e}") from e
     said = data.get("deliverable") if isinstance(data, dict) else None
     if said and said != deliverable:
-        raise UsageError(f"reviews/guideline-checklist.json is for the {said}, not the {deliverable}: "
+        raise UsageError(f"{rel} is for the {said}, not the {deliverable}: "
                          f"rerun reporting-guideline-checker on the {deliverable}")
     entries = data.get("items", {}) if isinstance(data, dict) else {}
     absent = sum(1 for e in entries.values() if isinstance(e, dict) and e.get("status") == "absent")
@@ -193,9 +196,9 @@ def snapshot(project: Path, deliverable: str, n: int) -> Path:
         src = Path(project) / rel
         if src.is_file():
             shutil.copyfile(src, dest / "reviews" / src.name)
-    gl = Path(project) / "reviews" / "guideline-checklist.json"
+    gl = guideline_checklist.checklist_path(project, deliverable)
     if gl.is_file():
-        shutil.copyfile(gl, dest / "reviews" / gl.name)
+        shutil.copyfile(gl, dest / "reviews" / "guideline-checklist.json")
     return dest
 
 
@@ -354,7 +357,7 @@ def decisions_text(project: Path, log: dict) -> str:
     for e in log["rounds"]:
         for r in e.get("requests", []):
             key = (e["deliverable"], r["text"])
-            if key not in seen:
+            if key not in seen and not reviews.is_none(r["text"]):   # "none — …" logged before the fix
                 seen.add(key)
                 reqs.append(f"- [{t[e['deliverable']]}, {t['round']} {e['round']}, {r['agent']}] {r['text']} — {t['ask']}")
     lines += reqs or [t["none"]]

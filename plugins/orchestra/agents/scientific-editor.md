@@ -34,7 +34,7 @@ drafts-digest: <deliverable> <sha256>
 {"deliverable": "<deliverable>", "structure": 0, "claim_scope": 0, "limitations": 0}
 ```
 
-   Add `NEW-ANALYSIS: <what and why>` lines (before `drafts-digest:`) only when a point can be settled only by a new analysis. Keep prose outside the table to about 200 words.
+   Add `NEW-ANALYSIS: <what and why>` lines (before `drafts-digest:`) only when a point can be settled only by a new analysis. With none, write exactly `NEW-ANALYSIS: none` with nothing after it, or no line. Keep prose outside the table to about 200 words.
 
 ## Rules
 

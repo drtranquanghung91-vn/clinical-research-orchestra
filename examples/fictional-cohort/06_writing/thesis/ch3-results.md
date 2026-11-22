@@ -6,7 +6,9 @@
 
 Dữ liệu được trích xuất từ hồ sơ bệnh án điện tử (EMR) và hệ thống thông tin bệnh viện (HIS) của Bệnh viện Mô phỏng theo tiêu chuẩn chọn và loại trừ đã định trong đề cương (phần đối tượng và phương pháp nghiên cứu, mục 2.1); quần thể phân tích mô tả gồm {{R-A0-001.n}} người bệnh đái tháo đường type 2 xuất viện giai đoạn 2021–2022, theo dõi 1 năm sau xuất viện.
 
-[Biểu đồ 3.1: Sơ đồ luồng đối tượng nghiên cứu (sàng lọc, loại trừ, phân tích) — chờ research-figures]
+![Sơ đồ rút gọn số lượng đối tượng nghiên cứu](../../07_present/figures/F4.png)
+
+Biểu đồ 3.1. Sơ đồ rút gọn số lượng đối tượng nghiên cứu. *Đây không phải sơ đồ luồng STROBE đầy đủ:* dữ liệu của đề tài không ghi nhận số liệu sàng lọc/đủ tiêu chuẩn ban đầu, nên sơ đồ chỉ dựng được từ hai số đã có trong ledger — toàn bộ đoàn hệ hồi cứu đủ tiêu chuẩn chọn mẫu ({{R-A0-001.n}}) và số đưa vào mô hình hồi quy logistic/Cox hiệu chỉnh ({{R-A1-003.n}}), với một ô loại trừ do thiếu dữ liệu biến hiệu chỉnh (tuổi, giới, thời gian mắc ĐTĐ, bệnh đồng mắc).
 
 Trong số {{R-A0-001.n}} người bệnh, 27 <!-- derived: R-A0-001.n - R-A1-003.n --> người (thời gian mắc đái tháo đường không ghi nhận) được xử lý theo nguyên tắc phân tích ca đầy đủ ở các mô hình hiệu chỉnh từ mục 3.2; mọi biến khác không thiếu dữ liệu.
 
@@ -37,7 +39,7 @@ Bảng 3.2. Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm, chung
 Nguồn: số liệu nghiên cứu (mô phỏng).
 Ghi chú: N: số người bệnh trong nhóm; n: số người tái nhập viện; KTC: khoảng tin cậy, phương pháp Wilson.
 
-Nhận xét: Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm chung là {{R-A0-061.value}} (KTC 95%: {{R-A0-061.ci}}); tỷ lệ này tăng dần theo nhóm HbA1c, từ {{R-A0-062.value}} ở nhóm <7% đến {{R-A0-064.value}} ở nhóm >9%, nhưng khoảng tin cậy của 3 nhóm còn chồng lấp.
+Nhận xét: Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm chung là {{R-A0-061.value}} (KTC 95%: {{R-A0-061.ci}}); tỷ lệ ở nhóm <7% là {{R-A0-062.value}}, ở nhóm 7–9% là {{R-A0-063.value}} và ở nhóm >9% là {{R-A0-064.value}}; khoảng tin cậy của 3 nhóm còn chồng lấp và đề cương không đăng ký kiểm định xu hướng.
 
 ## 3.2 Mối liên quan giữa HbA1c lúc nhập viện và tái nhập viện trong 1 năm (Mục tiêu 2)
 
@@ -108,7 +110,7 @@ Bảng 3.6. Thời gian đến lần tái nhập viện đầu tiên theo nhóm 
 Nguồn: số liệu nghiên cứu (mô phỏng); hồi quy Cox, kiểm duyệt tại 1 năm, script phân tích analysis.py (A4).
 Ghi chú: HR: tỷ số nguy cơ; KTC: khoảng tin cậy; phân tích phụ, thăm dò; giả định tỷ số nguy cơ không đổi theo thời gian được kiểm tra bằng phần dư Schoenfeld, không ghi nhận vi phạm ở cả hai mô hình.
 
-Nhận xét: Thời gian đến lần tái nhập viện đầu tiên có xu hướng ngắn hơn ở nhóm HbA1c cao hơn, với tỷ số nguy cơ hiệu chỉnh là {{R-A4-006.value}} ở nhóm >9% (KTC 95%: {{R-A4-006.ci}}; p = {{R-A4-006.p}}) và {{R-A4-005.value}} ở nhóm 7–9% (KTC 95%: {{R-A4-005.ci}}; p = {{R-A4-005.p}}) so với nhóm <7%; cả hai khoảng tin cậy đều chứa giá trị 1, hướng và độ lớn tương tự tỷ số chênh ở mục 3.2.2.
+Nhận xét: So với nhóm <7%, tỷ số nguy cơ hiệu chỉnh của lần tái nhập viện đầu tiên là {{R-A4-006.value}} ở nhóm >9% (KTC 95%: {{R-A4-006.ci}}; p = {{R-A4-006.p}}) và {{R-A4-005.value}} ở nhóm 7–9% (KTC 95%: {{R-A4-005.ci}}; p = {{R-A4-005.p}}); cả hai khoảng tin cậy đều chứa giá trị 1, hướng và độ lớn tương tự tỷ số chênh ở mục 3.2.2.
 
 ### 3.3.4 Tử vong trong viện trong 1 năm
 

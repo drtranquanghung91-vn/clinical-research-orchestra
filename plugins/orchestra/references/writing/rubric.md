@@ -9,7 +9,7 @@ the formula criteria and its value wins over anything a reviewer writes.
 |---|---|---|---|---|
 | `citations` | citation-verifier | Every `[@id]` is VERIFIED (or MANUAL with `seen_in`) and every citing sentence is supported by the stored abstract. | All verified, but 1-2 sentences claim more than the source (scope, direction, certainty) or cannot be checked (no abstract). | Any missing, unverified or retracted citation, a sentence the source contradicts, or 3 or more overstated sentences. |
 | `statistics` | statistical-reviewer | Methods match the SAP register and `decisions.md`; every effect has its CI; no p-value or trend overclaim; multiplicity addressed; post-hoc work and deviations labelled. | Minor slips: one effect without CI, "no difference" read from p > 0.05, multiplicity not discussed. | An `analysis_plan.py` block, a causal or trend claim without support, a number not in the ledger, or methods that contradict the SAP. |
-| `guideline` | formula, from `reviews/guideline-checklist.json` | No absent item. | 3 or fewer absent. | More than 3 absent. Items missing from the checklist count as absent. |
+| `guideline` | formula, from `reviews/guideline-checklist-<d>.json` | No absent item. | 3 or fewer absent. | More than 3 absent. Items missing from the checklist count as absent. |
 | `structure` | scientific-editor | Sections and their order as in `vn-thesis.md` / `manuscript.md` and the role briefs; one point per paragraph; the text answers each objective. | One section out of order, repetitive, or missing a required element. | A required section is missing or an objective is not answered. |
 | `claim_scope` | scientific-editor | Every claim stays within the design (association for observational designs), the studied population and the evidence table's certainty. | One or two overreaching sentences. | A causal claim from an observational design, a generalisation beyond the population, or a conclusion with no ledger support. |
 | `limitations` | scientific-editor | A limitations part names selection, information and confounding bias, missing data and generalisability, each with its likely direction. | Present but generic. | Absent. |
@@ -45,7 +45,7 @@ consistency-auditor `consistency`. A stale digest or a missing block is refused 
 ## 4. Snapshots and the log
 
 `reviews/rounds/<d>/r<N>/` holds the draft files and `order.txt`; `r<N>/reviews/` holds the report files and
-`guideline-checklist.json`. `worklog.py revert` restores the kept round exactly and deletes tracked files
+`guideline-checklist.json` (the copy of that round's `reviews/guideline-checklist-<d>.json`). `worklog.py revert` restores the kept round exactly and deletes tracked files
 that are absent from it (they stay in the later round's snapshot).
 
 `reviews/worklog.json`: `{"rounds": [{"deliverable", "round", "at", "scores", "total", "max": 16, "decision",

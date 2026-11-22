@@ -51,6 +51,7 @@ class TestLedgers(unittest.TestCase):
             ledgers.save_references(p, [REF])
             self.assertEqual(ledgers.load_references(p), [REF])
             self.assertIn('"references"', p.read_text(encoding="utf-8"))
+            self.assertNotIn(b"\r\n", p.read_bytes())
 
     def test_check_project_reports_bad_records_and_duplicates(self):
         with tempfile.TemporaryDirectory() as t:

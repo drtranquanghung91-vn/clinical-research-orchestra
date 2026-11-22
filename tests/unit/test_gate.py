@@ -202,6 +202,15 @@ class TestGateG4(unittest.TestCase):
             self.assertIn("06_writing/thesis/ch4.md changed since the audit", out)
             self.assertNotIn("G4", json.loads((p / "gates" / "state.json").read_text(encoding="utf-8")))
 
+    def test_state_is_written_with_lf(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            gate.open_gate(p, "G1", by="A")
+            self.assertNotIn(b"\r\n", (p / "gates" / "state.json").read_bytes())
+            audited(p)
+            self.assertEqual(self.run_cli("open", str(p), "G4", "--by", "A")[0], 0)
+            self.assertNotIn(b"\r\n", (p / "gates" / "state.json").read_bytes())
+
     def test_open_locks_audit_hashes_then_edit_closes(self):
         with tempfile.TemporaryDirectory() as t:
             p = project(t)
