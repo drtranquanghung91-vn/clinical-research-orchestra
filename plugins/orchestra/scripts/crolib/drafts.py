@@ -71,15 +71,35 @@ def folder(project, deliverable: str) -> Path:
     return Path(project) / "06_writing" / deliverable
 
 
-def review_kind(project) -> str:
-    return REVIEW_KIND.get(str(projectcfg.read_project_yaml(project).get("design", "")), "narrative")
+NOT_REVIEW_DESIGN = "project.yaml design is not a review design (systematic-review | scoping-review | narrative-review)"
+
+
+class NotReviewDesign(ValueError):
+    """The review deliverable cannot pick its checks: project.yaml names no review design."""
+
+
+def review_kind(project) -> str | None:
+    """systematic | scoping | narrative; None when project.yaml does not name a review design (never a guess)."""
+    try:
+        y = projectcfg.read_project_yaml(project)
+    except (OSError, ValueError):
+        return None
+    ptype, design = str(y.get("type", "")).strip(), str(y.get("design", "")).strip()
+    if ptype == "systematic-review":
+        return "systematic"
+    if ptype == "review":
+        return REVIEW_KIND.get(design) if design in ("scoping-review", "narrative-review") else None
+    return REVIEW_KIND.get(design)
 
 
 def variant(project, deliverable: str) -> str:
     if deliverable == "case-report":
         return "bmj" if str(projectcfg.get(project, "target.journal_style", "") or "").casefold() == "bmj" else "care"
     if deliverable == "review":
-        return review_kind(project)
+        kind = review_kind(project)
+        if kind is None:
+            raise NotReviewDesign(NOT_REVIEW_DESIGN)
+        return kind
     folder(project, deliverable)  # validates the name
     return deliverable
 

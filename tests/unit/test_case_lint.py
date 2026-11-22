@@ -164,6 +164,17 @@ class TestCaseLint(unittest.TestCase):
                 (self.p / "decisions.md").write_text(f"CONSENT: {tail}\n", encoding="utf-8")
                 self.assertFalse(case_lint.consent_recorded(self.p))
 
+    def test_consent_inside_code_fence_ignored(self):
+        line = "CONSENT: obtained written form, signed by the patient"
+        for fence in ("```", "~~~", "```text"):
+            with self.subTest(fence=fence):
+                close = fence[:3]
+                (self.p / "decisions.md").write_text(f"# Decisions\n\nExample of the format:\n\n{fence}\n{line}\n{close}\n",
+                                                     encoding="utf-8")
+                self.assertFalse(case_lint.consent_recorded(self.p))
+        (self.p / "decisions.md").write_text(f"# Decisions\n\n```\nexample\n```\n\n{line}\n", encoding="utf-8")
+        self.assertTrue(case_lint.consent_recorded(self.p))
+
     def test_institution_word_boundary_and_diacritics(self):
         set_institution(self.p, "Bệnh viện Mô phỏng", "Huế")
         self.dossier("Nộp thuế đúng hạn.\n")

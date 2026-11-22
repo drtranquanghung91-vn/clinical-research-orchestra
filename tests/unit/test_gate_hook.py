@@ -140,6 +140,43 @@ class TestGateHook(unittest.TestCase):
             self.assertIsNotNone(d, cmd)
             self.assertEqual(d["permissionDecision"], "deny", cmd)
 
+    def test_redirections_and_substitutions_do_not_hide_the_output(self):
+        b = "python /plug/scripts/build_docx.py 06_writing/thesis/thesis.assembled.md"
+        bash = [f"{b} out/thesis.docx 2>&1", f"{b} out/thesis.docx > log.txt", f"{b} out/thesis.docx >> log.txt 2>&1",
+                f"{b} out/thesis.docx >log.txt", f"{b} out/thesis.docx 2>err.txt", f"{b} out/thesis.docx &> log.txt",
+                f"{b} out/thesis.docx < /dev/null", f"{b} out/thesis.docx | tee log.txt",
+                f"{b} out/thesis.docx>log.txt", f"echo `{b} out/thesis.docx`", f"echo $({b} out/thesis.docx)",
+                f'x="$({b} out/thesis.docx)"', f"{b} out/thesis.docx extra.md",
+                f"{b} \\\n  out/thesis.docx > log.txt",
+                "python /plug/scripts/assemble.py . thesis --final > log.txt 2>&1",
+                "python /plug/scripts/assemble.py . thesis --final 2>&1 | tee log.txt"]
+        ps = [f"{b} out/thesis.docx *> log.txt", f"{b} out/thesis.docx 2>&1 | Out-Null", f"{b} out/thesis.docx > $null",
+              f"& {{ {b} out/thesis.docx }}", f"$r = $({b} out/thesis.docx)", f"{b} `\n  out/thesis.docx"]
+        for tool, cmds in (("Bash", bash), ("PowerShell", ps)):
+            for cmd in cmds:
+                with self.subTest(tool=tool, cmd=cmd):
+                    d = gate_hook.decide(shell(cmd, self.p, tool=tool))
+                    self.assertIsNotNone(d, cmd)
+                    self.assertEqual(d["permissionDecision"], "deny", cmd)
+        for out in ("out/ch3-results.docx > log.txt", "reviews/tmp/thesis.docx 2>&1"):
+            self.assertIsNone(gate_hook.decide(shell(f"{b} {out}", self.p)), out)
+
+    def test_trailing_dots_spaces_and_module_form(self):
+        for cmd in ("python /plug/scripts/build_docx.py a.md out/case-report.docx.",
+                    'python /plug/scripts/build_docx.py a.md "out/thesis.docx "',
+                    "python /plug/scripts/build_docx.py a.md out/thesis.docx...",
+                    "python /plug/scripts/build_docx.py a.md out./thesis.docx",
+                    "python -m build_docx a.md out/thesis.docx",
+                    "python -mbuild_docx a.md out/review.docx",
+                    "python -m assemble . thesis --final",
+                    "python -m scripts.assemble . thesis --final"):
+            with self.subTest(cmd=cmd):
+                d = gate_hook.decide(shell(cmd, self.p))
+                self.assertIsNotNone(d, cmd)
+                self.assertEqual(d["permissionDecision"], "deny", cmd)
+        self.assertIsNone(gate_hook.decide(shell("python -m assemble . thesis", self.p)))
+        self.assertIsNone(gate_hook.decide(shell("python -m build_docx a.md out/ch3.docx", self.p)))
+
     def test_writer_role_needs_g3(self):
         payload = {"tool_name": "Agent", "tool_input": {"description": "draft Chương 4",
                    "prompt": "orchestra-role: discussion\n\nDraft 06_writing/thesis/ch4-discussion.md."},
