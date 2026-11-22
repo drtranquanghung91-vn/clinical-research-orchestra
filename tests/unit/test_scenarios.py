@@ -112,5 +112,85 @@ class P3FixtureTest(unittest.TestCase):
             self.assertIn(s, text)
 
 
+P4 = ("thesis-g3-closed", "discussion-overclaim", "g4-export-blocked", "revise-revert")
+
+
+class P4FixtureTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def copy(self, sid: str) -> Path:
+        dst = self.tmp / sid
+        shutil.copytree(FIX / sid, dst)
+        return dst
+
+    def hook(self, payload: dict) -> dict | None:
+        r = subprocess.run([sys.executable, str(ORCH_SCRIPTS / "gate_hook.py")], input=json.dumps(payload),
+                           capture_output=True, text=True, encoding="utf-8")
+        return json.loads(r.stdout)["hookSpecificOutput"] if r.stdout.strip() else None
+
+    def test_p4_scenarios_have_fixtures_and_lf_only(self):
+        for sid in P4:
+            with self.subTest(scenario=sid):
+                self.assertTrue((SCEN / f"{sid}.md").is_file())
+                for p in (FIX / sid).rglob("*"):
+                    if p.is_file():
+                        self.assertNotIn(b"\r\n", p.read_bytes(), str(p))
+
+    def test_thesis_g3_closed(self):
+        proj = self.copy("thesis-g3-closed")
+        self.assertEqual(run("gate.py", "check", ".", "G3", cwd=proj).returncode, 1)
+        d = self.hook({"tool_name": "Agent", "tool_input": {"prompt": "orchestra-role: discussion\nDraft Chương 4."},
+                       "cwd": str(proj)})
+        self.assertEqual(d["permissionDecision"], "deny")
+        self.assertIn("G3", d["permissionDecisionReason"])
+
+    def test_discussion_overclaim_data(self):
+        proj = self.copy("discussion-overclaim")
+        self.assertEqual(run("gate.py", "check", ".", "G3", cwd=proj).returncode, 0)
+        recs = json.loads((proj / "ledgers" / "results-ledger.json").read_text(encoding="utf-8"))["results"]
+        ors = [r for r in recs if r.get("analysis_id") == "A1" and r.get("kind") == "or"
+               and re.match(r"(crude OR, HbA1c|OR C\(hba1c_grp3)", str(r.get("label", "")))]  # exposure terms, not covariates
+        self.assertTrue(ors)
+        self.assertTrue(all(r["ci"][0] <= 1 <= r["ci"][1] for r in ors))
+        self.assertFalse(any(re.search(r"trend|xu hướng", str(r.get("label", "")), re.I) for r in recs))
+        self.assertFalse((proj / "06_writing" / "thesis" / "ch4-discussion.md").exists())
+
+    def test_g4_export_blocked(self):
+        proj = self.copy("g4-export-blocked")
+        r = run("audit.py", ".", "thesis", cwd=proj)
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        data = json.loads((proj / "reviews" / "audit.json").read_text(encoding="utf-8"))
+        blocks = [f for f in data["findings"] if f["level"] == "block"]
+        self.assertEqual({f["code"] for f in blocks}, {"E-REF"}, blocks)
+        self.assertTrue(any("pham2019" in f["msg"] for f in blocks))
+        self.assertEqual(run("gate.py", "open", ".", "G4", "--by", "A", cwd=proj).returncode, 1)
+        d = self.hook({"tool_name": "Bash", "tool_input": {"command": "python x/assemble.py . thesis --final"},
+                       "cwd": str(proj)})
+        self.assertEqual(d["permissionDecision"], "deny")
+        self.assertIn("G4", d["permissionDecisionReason"])
+
+    def test_revise_revert(self):
+        proj = self.copy("revise-revert")
+        digest = run("worklog.py", "digest", ".", "thesis", cwd=proj).stdout.strip()
+        for rel in ("reviews/citation-verifier.md", "reviews/statistical-reviewer.md", "reviews/consistency.md",
+                    "reviews/reporting-guideline-checker.md", "reviews/scientific-editor.md"):
+            self.assertIn(digest, (proj / rel).read_text(encoding="utf-8"), rel)
+        log = json.loads((proj / "reviews" / "worklog.json").read_text(encoding="utf-8"))["rounds"][0]
+        self.assertEqual((log["round"], log["total"], log["decision"]), (1, 15, "KEEP"))
+        self.assertNotEqual((proj / "06_writing/thesis/ch4-discussion.md").read_bytes(),
+                            (proj / "reviews/rounds/thesis/r1/ch4-discussion.md").read_bytes())
+        r = run("worklog.py", "score", ".", "thesis", "--round", "2", cwd=proj)
+        self.assertEqual(r.stdout.strip().splitlines()[-1], "REVERT", r.stdout + r.stderr)
+        self.assertEqual(run("worklog.py", "revert", ".", "thesis", cwd=proj).returncode, 0)
+        self.assertEqual((proj / "06_writing/thesis/ch4-discussion.md").read_bytes(),
+                         (proj / "reviews/rounds/thesis/r1/ch4-discussion.md").read_bytes())
+        self.assertEqual(run("worklog.py", "decisions", ".", cwd=proj).returncode, 0)
+        self.assertIn("giới tính", (proj / "out" / "author-decisions.md").read_text(encoding="utf-8"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,69 @@
+{
+  "section_plan": [
+    {
+      "section": "1.1 Khái niệm và định nghĩa",
+      "claim": "Nêu định nghĩa ĐTĐ type 2, HbA1c và tái nhập viện dùng trong nghiên cứu (định nghĩa vận hành, không phải một phát hiện cần trích dẫn thống kê).",
+      "refs": [],
+      "certainty": "khong_ap_dung_dinh_nghia_van_hanh",
+      "note": "Không có tài liệu nào trong ledger (6 ref) khảo sát dịch tễ/tiêu chuẩn chẩn đoán chung của ĐTĐ type 2 -- ghi là hạn chế, không bịa trích dẫn."
+    },
+    {
+      "section": "1.2 Dịch tễ học",
+      "claim": "Gánh nặng ĐTĐ type 2 và tái nhập viện nói chung.",
+      "refs": [],
+      "certainty": "khong_co_bang_chung_verified",
+      "note": "Không có ref nào trong ledger là nghiên cứu dịch tễ học chung (prevalence/incidence) -- ghi rõ là khoảng trống của chính chương này, không suy ra số liệu."
+    },
+    {
+      "section": "1.3 Cơ chế bệnh sinh",
+      "claim": "Chỉ nêu cơ chế ở mức tối thiểu cần để giải thích biến số (HbA1c phản ánh đường huyết trung bình ~3 tháng).",
+      "refs": [],
+      "certainty": "khong_ap_dung_dinh_nghia_van_hanh",
+      "note": "Không có ref sinh lý bệnh trong ledger -- giữ đoạn này ngắn, không gán trích dẫn cho kiến thức sinh lý bệnh chung."
+    },
+    {
+      "section": "1.5a Can thiệp giảm tái nhập viện ở ĐTĐ type 2",
+      "claim": "Các can thiệp trong bệnh viện nhằm giảm thời gian nằm viện/tái nhập viện ở ĐTĐ type 2 đã được tổng hợp trong 1 tổng quan hệ thống, nhưng không có số liệu gộp rõ và nguy cơ sai lệch không đánh giá được từ abstract.",
+      "refs": ["chakraborty2021"],
+      "certainty": "very_low_RoB_unclear"
+    },
+    {
+      "section": "1.5b HbA1c lúc nhập viện và tái nhập viện ngắn hạn",
+      "claim": "HbA1c lúc nhập viện cao hơn có thể liên quan với tăng nguy cơ tái nhập viện trong 30-31 ngày ở ĐTĐ type 2, nhưng bằng chứng gián tiếp (mốc thời gian ngắn hơn câu hỏi của đề tài).",
+      "refs": ["hu2026", "cao2026"],
+      "certainty": "very_low_indirect_short_term"
+    },
+    {
+      "section": "1.5c Thời điểm đo HbA1c và chiều hướng liên quan",
+      "claim": "Chưa rõ liệu hướng liên quan giữa HbA1c và tái nhập viện có phụ thuộc vào thời điểm đo (lúc nhập viện vs sau xuất viện) hay không.",
+      "refs": ["hu2026", "robbins2021"],
+      "certainty": "very_low_conflicting_indirect"
+    },
+    {
+      "section": "1.5d Yếu tố dự báo tái nhập viện ở mốc dài hạn",
+      "claim": "Ở mốc 365 ngày, các yếu tố dự báo tái nhập viện ở ĐTĐ type 2 có thể chuyển từ yếu tố cấp tính sang biến chứng mạn tính, theo một mô hình học máy không tách riêng vai trò của HbA1c.",
+      "refs": ["li2026"],
+      "certainty": "very_low_methodologically_indirect"
+    },
+    {
+      "section": "1.5e Guideline hiện hành",
+      "claim": "Guideline lâm sàng hiện hành khuyến cáo kiểm soát đường huyết nội viện và lập kế hoạch xuất viện/chuyển tiếp chăm sóc nói chung, nhưng không đưa ra một ngưỡng HbA1c cụ thể để dự báo hoặc dự phòng tái nhập viện dài hạn.",
+      "refs": ["american2026"],
+      "certainty": "guideline_khong_so_lieu_cu_the"
+    },
+    {
+      "section": "1.6 Các nghiên cứu tại Việt Nam",
+      "claim": "Chưa tìm thấy nghiên cứu tại Việt Nam trả lời trực tiếp câu hỏi này trên PubMed trong phiên tìm kiếm đã thực hiện; không khẳng định không có nghiên cứu (tạp chí tiếng Việt chưa được tìm).",
+      "refs": [],
+      "certainty": "khong_tim_thay_tren_pubmed"
+    },
+    {
+      "section": "1.7 Khoảng trống và cách nghiên cứu này giải quyết",
+      "claim": "4 khoảng trống từ 02_evidence/gaps.md, mỗi khoảng trống có kiểm tra phản chứng, gắn với mục tiêu của đề tài.",
+      "refs": ["hu2026", "cao2026", "li2026", "robbins2021", "chakraborty2021", "american2026"],
+      "certainty": "theo_gaps_md"
+    }
+  ],
+  "figure_plan": [],
+  "search_plan": {"targeted": [], "exploratory": []}
+}

@@ -1,0 +1,17 @@
+title: "HbA1c lúc nhập viện và nguy cơ tái nhập viện trong 1 năm ở người bệnh đái tháo đường type 2 xuất viện tại Bệnh viện Mô phỏng (2021–2023): một nghiên cứu đoàn hệ hồi cứu"
+type: thesis-masters
+design: cohort
+reporting_guideline: STROBE
+language:
+  chat: vi
+  output: vi
+institution:
+  name: ""
+  template: ""
+citation_style: vn-thesis
+target:
+  journal: ""
+  conference: ""
+  word_limit: null
+  poster_size_cm: [90, 120]
+evidence_sources: [openevidence, pubmed, europepmc, crossref]

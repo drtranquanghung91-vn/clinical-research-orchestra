@@ -1,0 +1,42 @@
+{
+  "rounds": [
+    {
+      "deliverable": "thesis",
+      "round": 1,
+      "at": "2026-11-22T13:54:59",
+      "scores": {
+        "citations": 2,
+        "statistics": 2,
+        "guideline": 2,
+        "structure": 2,
+        "claim_scope": 1,
+        "limitations": 2,
+        "consistency": 2,
+        "prose": 2
+      },
+      "total": 15,
+      "max": 16,
+      "decision": "KEEP",
+      "kept": true,
+      "compared_with": null,
+      "compared_total": null,
+      "drafts_digest": "2ba575fdbb6f96c3fa562070de0c802cba902ff6b25ad86043f9923205acc745",
+      "files_changed": [
+        "00-dat-van-de.md",
+        "05-ket-luan.md",
+        "06-kien-nghi.md",
+        "ch1-literature-review.md",
+        "ch2-methods.md",
+        "ch3-results.md",
+        "ch4-discussion.md"
+      ],
+      "requests": [],
+      "notes": [
+        "guideline 2: 0 absent item(s)",
+        "consistency 2: 0 E-CONS block, 0 warn",
+        "prose 2: 3 pattern hits in 4450 words"
+      ]
+    }
+  ],
+  "events": []
+}
