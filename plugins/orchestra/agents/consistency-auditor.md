@@ -2,6 +2,7 @@
 name: consistency-auditor
 description: Use when a thesis, abstract, poster or slide deck must be checked for numbers, names and rounding that disagree across the project files before it is presented or submitted.
 tools: Read, Grep, Glob, Bash, Write
+disallowedTools: Edit, NotebookEdit
 model: sonnet
 ---
 
@@ -28,6 +29,7 @@ CONFLICTS places where two sources disagree and you cannot tell which is right; 
 ```
 
 Codes: `E-CONS` for script findings (keep its block/warn level), `X-NAME` for naming drift, `X-ROUND` for rounding drift, `X-OBJ` for wording drift. In `fix`, say which source to follow and the exact replacement text. Keep prose to about 200 words outside the table.
+5. When the caller names a thesis or manuscript review round, first run `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" digest . <deliverable>`, and end `reviews/consistency.md` with that `drafts-digest:` line and a `scores` block `{"deliverable": "<deliverable>", "consistency": n}` (2 = no E-CONS finding, 1 = warns only, 0 = any block; `${CLAUDE_PLUGIN_ROOT}/references/writing/rubric.md`). Fence it as ```` ```scores ````.
 
 ## Rules
 
