@@ -1,0 +1,7 @@
+rec_id,database,pmid,doi,title,authors,year,journal,abstract,duplicate_of
+rec-0001,PubMed,,10.0000/fictional.p5.1,"Fictional trial of drug X and 30-day mortality, report 1","Author1, A",2016,Fictional Journal,Fictional abstract 1; no real data.,
+rec-0002,PubMed,,10.0000/fictional.p5.2,"Fictional trial of drug X and 30-day mortality, report 2","Author2, A",2017,Fictional Journal,Fictional abstract 2; no real data.,
+rec-0003,PubMed,,10.0000/fictional.p5.3,"Fictional cohort of drug X and 30-day mortality, report 3","Author3, A",2018,Fictional Journal,Fictional abstract 3; no real data.,
+rec-0004,PubMed,,10.0000/fictional.p5.4,"Fictional trial of drug X and 30-day mortality, report 4","Author4, A",2019,Fictional Journal,Fictional abstract 4; no real data.,
+rec-0005,PubMed,,10.0000/fictional.p5.5,"Fictional case series of drug X and 30-day mortality, report 5","Author5, A",2020,Fictional Journal,Fictional abstract 5; no real data.,
+rec-0006,PubMed,,10.0000/fictional.p5.6,"Fictional registry study of drug X and 30-day mortality, report 6","Author6, A",2021,Fictional Journal,Fictional abstract 6; no real data.,

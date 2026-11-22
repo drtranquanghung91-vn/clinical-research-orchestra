@@ -1,0 +1,30 @@
+title: "Can thiệp số trong chăm sóc đái tháo đường: tổng quan phạm vi (hư cấu)"
+type: review
+design: scoping-review
+reporting_guideline: PRISMA-ScR
+language:
+  chat: vi
+  output: vi
+institution:
+  name: ""
+  city: ""
+  template: ""
+citation_style: vancouver
+target:
+  journal: ""
+  journal_style: null
+  conference: ""
+  word_limit: null
+  text_words: null
+  poster_size_cm: [90, 120]
+evidence_sources: [openevidence, pubmed, europepmc, crossref]
+docx:
+  font: "Times New Roman"
+  size_pt: 13
+  line_spacing: 1.5
+  margins_cm: [2, 2, 3, 2]
+review:
+  reviewers: [Reviewer A, Reviewer B]
+  registration: null
+tools:
+  rscript: null
