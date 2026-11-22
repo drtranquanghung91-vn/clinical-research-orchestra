@@ -1,0 +1,66 @@
+{
+  "style": {
+    "colors": {"<7": "#1f4e79", "7-9": "#c0504d", ">9": "#8d6e2f"},
+    "font": "Arial",
+    "font_size": 9,
+    "width_cm": 16
+  },
+  "figures": [
+    {
+      "id": "F1",
+      "type": "forest",
+      "title": "OR hiệu chỉnh của HbA1c lúc nhập viện với tái nhập viện trong 1 năm (mô hình A1)",
+      "rows": [
+        {"label": "7–9% vs <7%", "result": "R-A1-003"},
+        {"label": ">9% vs <7%", "result": "R-A1-004"}
+      ],
+      "null": 1,
+      "log_scale": true,
+      "x_label": "OR (KTC 95%)",
+      "source": "Bảng 3.3",
+      "poster_width_cm": 23
+    },
+    {
+      "id": "F2",
+      "type": "km",
+      "data": "04_data/cohort.deid.csv",
+      "time": "time_to_readmit_days",
+      "event": "readmit_1y",
+      "group": "hba1c_group",
+      "order": ["<7", "7-9", ">9"],
+      "at_risk": [0, 90, 180, 270, 365],
+      "max_time": 365,
+      "time_unit": "ngày",
+      "x_label": "Thời gian theo dõi (ngày)",
+      "y_label": "Xác suất không tái nhập viện",
+      "poster_width_cm": 23
+    },
+    {
+      "id": "F3",
+      "type": "rates",
+      "title": "Tỷ lệ tái nhập viện trong 1 năm theo nhóm HbA1c lúc nhập viện",
+      "unit": "%",
+      "rows": [
+        {"label": "<7%", "result": "R-A0-062"},
+        {"label": "7–9%", "result": "R-A0-063"},
+        {"label": ">9%", "result": "R-A0-064"}
+      ],
+      "source": "Bảng 3.2",
+      "poster_width_cm": 22
+    },
+    {
+      "id": "F4",
+      "type": "flow",
+      "title": "Sơ đồ rút gọn mẫu phân tích",
+      "boxes": [
+        {"text": "Toàn bộ đoàn hệ đủ tiêu chuẩn", "n": "R-A0-001.n"},
+        {"text": "Đưa vào mô hình hiệu chỉnh (A1, A4)", "n": "R-A1-003.n"}
+      ],
+      "exclusions": [
+        {"text": "Loại do thiếu dữ liệu biến hiệu chỉnh", "n": "R-A0-001.n - R-A1-003.n", "after": 1}
+      ],
+      "source": "Không phải sơ đồ sàng lọc STROBE đầy đủ: không có số liệu sàng lọc/loại trừ ban đầu, chỉ có n toàn đoàn hệ (R-A0-001) và n mô hình hiệu chỉnh (R-A1-003).",
+      "poster_width_cm": 21
+    }
+  ]
+}
