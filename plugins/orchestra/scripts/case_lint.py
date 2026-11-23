@@ -4,7 +4,7 @@
   python case_lint.py <project> [--strict]
 
 Scans 01_case/dossier.md and the drafts in 06_writing/case-report/. Blocks: calendar dates (dd/mm/yyyy,
-yyyy-mm-dd, "tháng 3 năm 2025", "March 2025"), exact ages ("45 tuổi", "45-year-old", "aged 45"; ranges and
+yyyy-mm-dd, "tháng 3 năm 2025", "March 2025"), day and month without a year ("5 March", "ngày 5/3"), exact ages ("45 tuổi", "45-year-old", "aged 45"; ranges and
 decades pass), the institution or city named in project.yaml (institution.name, institution.city), identifiers
 phi-guard reports as strong, unverified references in 01_case/similar-cases.csv (E-REF), and — with --strict, the
 final-export path — consent not recorded in decisions.md as "CONSENT: obtained <form, who signed>". Warns:
@@ -44,8 +44,8 @@ DATES = [re.compile(r"\b\d{1,2}[/.-]\d{1,2}[/.-](?:19|20)\d{2}\b"),
          re.compile(r"(?<![/.\d-])\b\d{1,2}/(?:19|20)\d{2}\b"),
          re.compile(r"(?i)\btháng\s+\d{1,2}(?:\s+năm\s+|\s*/\s*)(?:19|20)\d{2}\b"),
          re.compile(rf"\b(?:\d{{1,2}}{ORD}\s+(?:of\s+)?)?{MONTH}\.?\s+(?:\d{{1,2}}{ORD},?\s+)?(?:19|20)\d{{2}}\b")]
-# day and month without a year: a warning, not a block (it still dates the case)
-DATES_WARN = [re.compile(rf"\b\d{{1,2}}{ORD}\s+(?:of\s+)?{MONTH}\b(?!\.?,?\s*(?:19|20)\d{{2}})"),
+# day and month without a year: still dates the case (block, plan D24)
+DAY_MONTH = [re.compile(rf"\b\d{{1,2}}{ORD}\s+(?:of\s+)?{MONTH}\b(?!\.?,?\s*(?:19|20)\d{{2}})"),
               re.compile(rf"\b{MONTH}\.?\s+\d{{1,2}}{ORD}\b(?!\s*,?\s*(?:19|20)\d{{2}})"),
               re.compile(r"(?i)\bngày\s+\d{1,2}\s+tháng\s+\d{1,2}\b(?!\s*(?:năm\s+|/)\s*(?:19|20)\d{2})"),
               re.compile(r"(?i)\bngày\s+\d{1,2}\s*/\s*\d{1,2}\b(?!\s*/\s*\d)")]
@@ -178,10 +178,10 @@ def lint(project: Path, strict: bool = False, phi: bool = True) -> list[tuple[st
                 for m in rx.finditer(line):
                     found.append(("E-CASE", "block", f"{rel}:{i}", f'calendar date "{m.group(0)}"; use relative time '
                                                                    "(day 0, day +3, week 6)"))
-            for rx in DATES_WARN:
+            for rx in DAY_MONTH:
                 for m in rx.finditer(line):
-                    found.append(("E-CASE", "warn", f"{rel}:{i}", f'day and month "{m.group(0)}"; use relative time '
-                                                                  "(day 0, day +3, week 6)"))
+                    found.append(("E-CASE", "block", f"{rel}:{i}", f'day and month "{m.group(0)}" date the case even '
+                                                                   "without a year; use relative time (day 0, day +3, week 6)"))
             for m in _exact_ages(line):
                 found.append(("E-CASE", "block", f"{rel}:{i}", f'exact age "{m.group(0)}"; use a range '
                                                                '("in her 40s", "40–49 tuổi")'))

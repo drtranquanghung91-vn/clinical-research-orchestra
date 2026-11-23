@@ -179,6 +179,20 @@ class TestGrade(unittest.TestCase):
         self.assertIn("may", grade.load_wording("en")["low"])
         self.assertIn("very uncertain", grade.load_wording("en")["very low"])
 
+    def test_outcome_names_with_digits_carry_the_marker(self):
+        import check_numbers
+        self.assertEqual(grade.outcome_cell("Mortality at 30 days"),
+                         "Mortality at 30 <!-- not-a-result: outcome name --> days")
+        self.assertEqual(grade.outcome_cell("Pain"), "Pain")
+        (self.p / "06_writing" / "review" / "04-results.md").write_text(
+            "# Results\n\nTable 1. Included studies\n| a |\n|---|\n| b |\n", encoding="utf-8")
+        self.write_grade(outcome())
+        self.assertEqual(cli(self.p, "run")[0], 0)
+        sof = (self.p / grade.SOF).read_text(encoding="utf-8")
+        self.assertIn("Mortality at 30 <!-- not-a-result: outcome name --> days", sof)
+        found = [tok for _, tok in check_numbers.find_unmatched(sof, list(self.ledger().values()), "en")]
+        self.assertNotIn("30", found)
+
 
 if __name__ == "__main__":
     unittest.main()
