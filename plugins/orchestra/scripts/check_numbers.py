@@ -51,11 +51,13 @@ YEAR = r"(?:19\d{2}|20\d{2}|2100)"
 MONTHS = (r"(?:January|February|March|April|May|June|July|August|September|October|November|December|"
           r"Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)")
 NOT_A_YEAR_AFTER = r"(?!\s+(?:patients?|participants?|people|persons|cases|subjects|người|bệnh nhân|ca\b|trường hợp))"
+NOT_A_YEAR_UNIT = (r"(?!\s*(?:%|(?:mg|[µμ]g|mcg|ug|ng|pg|g|kg|ml|dl|l|mmol|mol|mmHg|IU|UI|cm|mm|m|kcal|kJ|cal|min|h|bpm|"
+                   r"đơn vị|viên|lần)\b))")
 YEAR_CTX = re.compile(
     rf"(?:\b(?:năm|in|since|from|until|during|between|before|after|từ|đến|trước|sau|giai đoạn|thời kỳ|period)\s+(?:năm\s+)?"
     rf"|\b{MONTHS}\.?\s+(?:\d{{1,2}},?\s+)?|\btháng\s*\d{{1,2}}\s*(?:/\s*|\s+năm\s+)|\b\d{{1,2}}/"
     rf"|\bet al\.?,?\s+|\bvà (?:cộng sự|cs\.?),?\s+)"
-    rf"{YEAR}[a-z]?(?:\s*(?:[–-]|to|and|đến|và)\s*{YEAR})?(?!\d){NOT_A_YEAR_AFTER}", re.IGNORECASE)
+    rf"{YEAR}[a-z]?(?:\s*(?:[–-]|to|and|đến|và)\s*{YEAR})?(?!\d){NOT_A_YEAR_AFTER}{NOT_A_YEAR_UNIT}", re.IGNORECASE)
 CITE_YEAR = re.compile(rf"\([^()]*[A-Za-zÀ-ỹĐđ]{{2,}}[^()]*?,?\s+{YEAR}[a-z]?\s*\)|\(\s*{YEAR}\s*[–-]\s*{YEAR}\s*\)")
 TREND = re.compile(r"(?i)\btăng dần\b|\bgiảm dần\b|\bxu hướng\b|\bpeak(?:s|ed|ing)?\b|\btrends?\b|\bincreasing(?:ly)?\b")
 TREND_TEST = re.compile(r"(?i)trend|xu hướng|cochran|armitage|jonckheere|mann[- ]kendall|cuzick|joinpoint")

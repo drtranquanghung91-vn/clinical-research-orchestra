@@ -191,6 +191,12 @@ class TestYearContext(unittest.TestCase):
             with self.subTest(s=s):
                 self.assertEqual(self.unmatched(s), [], s)
 
+    def test_year_context_word_before_a_quantity_is_not_a_year(self):
+        self.assertEqual(self.unmatched("Given after 2000 mL of saline."), ["2000"])
+        self.assertEqual(self.unmatched("Dosed in 2005 mg/day."), ["2005"])
+        self.assertEqual(self.unmatched("Truyền sau 2000 ml dịch.", "vi"), ["2000"])
+        self.assertEqual(self.unmatched("in 2005 mg/day, from 2018 to 2020"), ["2005"])
+
     def test_other_integers_in_the_year_range_are_checked(self):
         self.assertEqual(self.unmatched("We enrolled 1995 patients."), ["1995"])
         self.assertEqual(self.unmatched("Seen in 1995 patients."), ["1995"])
