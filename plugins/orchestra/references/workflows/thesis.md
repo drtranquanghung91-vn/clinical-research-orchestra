@@ -32,6 +32,7 @@ One object per section, always with `"deliverable"` (decision D18). Entries of t
   about them inside the single outline confirmation question. Reused chapters are not rewritten and not
   humanized: apply only mechanical E-FMT and E-NUM fixes; send every other finding to the author through
   `out/author-decisions.md`.
+- Edit only the sections you drafted in this run. A chapter the author wrote and has not accepted (for example their own Chapter 3) is never edited, even for a reviewer finding: list the finding for the author.
 - If the user says not to ask, proceed with defaults and open the first drafted file with an
   **Giả định / Assumptions** box; record the same text in `decisions.md`. It never opens or locks a gate and never
   changes a ledger.
@@ -47,9 +48,7 @@ If G3 is not open the hook denies the prompt; do not retry, tell the author.
 Agents: `citation-verifier`, `statistical-reviewer`, `reporting-guideline-checker`, `scientific-editor`,
 `consistency-auditor`. Prompt: the project path, deliverable `thesis`, "run
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" digest . thesis` first; end the report with the
-`drafts-digest:` line and the `scores` block". Never put a role brief in a reviewer prompt. Reports land in
-`reviews/<agent>.md` (the consistency-auditor in `reviews/consistency.md`); the guideline checker also writes
-`reviews/guideline-checklist-thesis.json` (one checklist per deliverable).
+`drafts-digest:` line and the `scores` block". Never put a role brief in a reviewer prompt. Each agent returns its report in its reply (agents write no files); save it unchanged to `reviews/<agent>-thesis.md` (`reviews/consistency-thesis.md` for the consistency auditor) and the guideline checker's `checklist` block to `reviews/guideline-checklist-thesis.json`. Full procedure: `references/writing/review-round.md`.
 
 ## 6. Revise loop
 | Round | Reviewers | Score | Decision | Action |
@@ -59,6 +58,8 @@ Agents: `citation-verifier`, `statistical-reviewer`, `reporting-guideline-checke
 | 3 | all five | `--round 3` | any | stop (never a round 4) |
 | any | | | REVERT | `worklog.py revert . thesis` restores the last kept round exactly; stop |
 | any | | | STOP | stop |
+
+One round = one pass of the five reviewers followed by exactly one score; never rerun reviewers without scoring the round (the audit warns on unscored reports).
 
 Higher total keeps; lower reverts; equal with a lost criterion reverts; equal without a loss stops; 16/16 stops.
 A `NEW-ANALYSIS:` request goes to `out/author-decisions.md`, never into the text; never run a new analysis.

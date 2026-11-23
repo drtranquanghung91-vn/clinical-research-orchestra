@@ -32,5 +32,5 @@ Place each at its own width. Re-run after every change to the figure spec.
 6. Look at each `L.png`.
 
 ## 5. Rehearsal and send-off
-Agent `committee-simulator`, deliverable `poster` (8-12 questions, weak points). Give the print note.
+Required: agent `committee-simulator`, deliverable `poster` (8-12 questions, weak points); save its reply to `reviews/committee-poster.md`; the hand-off says whether it ran. Give the print note. Say a PNG was checked only after opening it with the Read tool.
 Print-ready is said only when steps 1-5 all ran for the chosen layout and no block remains.
