@@ -8,6 +8,9 @@ their folders (01_case/ or 02_evidence/sr/, 04_data/sr/, 05_analysis/meta/, and 
 06_writing/review/). The pairing holds both ways: design case-report needs type case-report, systematic-review needs
 type systematic-review, scoping-review and narrative-review need type review.
 
+Every project gets 03_protocol/ethics/; types that publish (manuscript, case-report, systematic-review, review) also
+get 08_submission/ and 09_revision/.
+
 Exit codes: 0 = created; 2 = bad arguments, destination already has project.yaml, or cannot write.
 """
 from __future__ import annotations
@@ -34,6 +37,7 @@ FOLDERS = {"case-report": ("01_case", "06_writing/case-report"),
            "scoping-review": ("02_evidence/sr", "04_data/sr", "05_analysis/meta", "06_writing/review"),
            "narrative-review": ("06_writing/review",)}
 LANGS = ("vi", "en")
+PUBLISHING = ("manuscript", "case-report", "systematic-review", "review")
 
 YAML = """title: "{title}"
 type: {ptype}
@@ -91,6 +95,10 @@ def create(dest: Path, title: str, ptype: str, design: str, output_lang: str, ch
         chat=chat_lang, output=output_lang, style=style), encoding="utf-8")
     for rel in (FOLDERS.get(design, ()) if ptype in TYPE_DESIGNS else ()):
         (dest / rel).mkdir(parents=True, exist_ok=True)
+    (dest / "03_protocol" / "ethics").mkdir(parents=True, exist_ok=True)
+    if ptype in PUBLISHING:
+        for rel in ("08_submission", "09_revision"):
+            (dest / rel).mkdir(parents=True, exist_ok=True)
     return dest
 
 
