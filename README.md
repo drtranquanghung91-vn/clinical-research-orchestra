@@ -151,6 +151,23 @@ Then start a project:
 /orchestra:start
 ```
 
+### Other hosts (Codex, Antigravity)
+
+Each plugin also ships a Codex manifest (`plugins/<plugin>/.codex-plugin/plugin.json`) and an Antigravity manifest
+(`plugins/<plugin>/.antigravity-plugin/plugin.json`). Install the plugin folder the way your host installs a local
+plugin. The skills and every script work there; hooks are a Claude Code feature, so on these hosts the PHI blocking
+(phi-guard) and the gate checks on final exports (orchestra) are **not automatic**: run
+`python plugins/orchestra/scripts/gate.py check . G4` and `python plugins/phi-guard/scripts/phi_scan.py --file <file>`
+yourself before exporting or sending anything. Skills call their scripts through `CLAUDE_PLUGIN_ROOT`; set it to
+the plugin folder before starting the host (`<repo>` is where you cloned this repository):
+
+- Windows (PowerShell): `$env:CLAUDE_PLUGIN_ROOT = "<repo>\plugins\orchestra"`
+- Windows (cmd): `set CLAUDE_PLUGIN_ROOT=<repo>\plugins\orchestra`
+- macOS and Linux (bash, zsh): `export CLAUDE_PLUGIN_ROOT="<repo>/plugins/orchestra"`
+
+A static landing page (`site/index.html`, Vietnamese and English) is deployed by `.github/workflows/pages.yml`
+once GitHub Pages is enabled for the repository.
+
 ### Tools the scripts use
 
 Python 3.10 or later. The harness scripts use the standard library only. Literature lookups call

@@ -40,6 +40,47 @@ class TestManifests(unittest.TestCase):
         self.assertIn("${CLAUDE_PLUGIN_ROOT}/scripts/gate_hook.py", entry["hooks"][0]["command"])
         self.assertTrue((ROOT / "plugins" / "orchestra" / "scripts" / "gate_hook.py").is_file())
 
+    def test_codex_and_antigravity_manifests(self):
+        m = load(".claude-plugin/marketplace.json")
+        version = m["metadata"]["version"]
+        for p in m["plugins"]:
+            claude = load(f"{p['source']}/.claude-plugin/plugin.json")
+            for host in (".codex-plugin", ".antigravity-plugin"):
+                with self.subTest(plugin=p["name"], host=host):
+                    pj = load(f"{p['source']}/{host}/plugin.json")
+                    self.assertEqual(pj["name"], p["name"])
+                    self.assertEqual(pj["version"], version)
+                    self.assertEqual(pj["license"], "MIT")
+                    self.assertEqual(pj["author"]["name"], "Trần Quang Hưng")
+                    self.assertEqual(pj["repository"], claude["repository"])
+                    self.assertTrue(pj["description"])
+                    self.assertNotIn("logo", pj)
+            codex = load(f"{p['source']}/.codex-plugin/plugin.json")
+            self.assertEqual(codex["skills"], "./skills/")
+            self.assertTrue((ROOT / p["source"] / "skills").is_dir())
+            self.assertEqual(codex["interface"]["developerName"], "Trần Quang Hưng")
+            self.assertNotIn("logo", codex["interface"])
+            self.assertTrue(load(f"{p['source']}/.antigravity-plugin/plugin.json")["displayName"])
+
+    def test_site_and_pages_workflow(self):
+        html = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
+        for s in ('lang="vi"', 'lang="en"', "prefers-color-scheme: dark", "Trần Quang Hưng",
+                  "https://github.com/drtranquanghung91-vn/clinical-research-orchestra"):
+            self.assertIn(s, html)
+        self.assertNotIn("<script", html.lower())
+        self.assertNotRegex(html, r"[A-Za-z]:\\Users|/Users/|/home/")
+        self.assertNotRegex(html, r"[\w.+-]+@[\w-]+\.[\w.]+")  # no email address (plugin@marketplace has no dot)
+        wf = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
+        for s in ("workflow_dispatch", "vars.PAGES_ENABLED", "path: site", "actions/configure-pages",
+                  "actions/upload-pages-artifact", "actions/deploy-pages", "pages: write", "id-token: write"):
+            self.assertIn(s, wf)
+
+    def test_readme_other_hosts(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        for s in ("### Other hosts (Codex, Antigravity)", "$env:CLAUDE_PLUGIN_ROOT", "set CLAUDE_PLUGIN_ROOT=",
+                  'export CLAUDE_PLUGIN_ROOT="<repo>/plugins/orchestra"', "not automatic"):
+            self.assertIn(s, readme)
+
 
 if __name__ == "__main__":
     unittest.main()
