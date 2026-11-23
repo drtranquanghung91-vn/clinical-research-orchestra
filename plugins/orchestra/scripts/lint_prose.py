@@ -4,6 +4,7 @@
   python lint_prose.py FILE... [--lang vi|en|auto] [--json]
   python lint_prose.py --count-words FILE
   python lint_prose.py --slides FILE.pptx|FILE.html [--json]
+  python lint_prose.py --profile consent FILE...  plain-language warns CF01-CF03 for consent forms (exit 0)
 
 Markdown/text: paragraphs are blank-line separated. Headings (#), table rows (|), fenced code, HTML comments
 and {{...}} placeholders are skipped (a placeholder counts as one word). Output lines follow
@@ -315,6 +316,54 @@ def lint_file(path: str, lang: str) -> dict:
             "density": round(density, 2), "findings": findings}
 
 
+# --- consent profile (plan D4) ------------------------------------------------------------------------------
+CONSENT_WORDS = {"en": 25, "vi": 40}     # Vietnamese words are syllables
+VI_LETTER = re.compile(r"[ăâđêôơưàảãáạằẳẵắặầẩẫấậèẻẽéẹềểễếệìỉĩíịòỏõóọồổỗốộờởỡớợùủũúụừửữứựỳỷỹýỵ]", re.I)
+JARGON = re.compile(r"(?i)\b(?:randomi[sz](?:ed|ation)|placebo|double[- ]blind|single[- ]blind|cohort|biomarkers?|"
+                    r"pharmacokinetics?|adverse events?|pseudonymi[sz](?:ed|ation)|de-?identified|ngẫu nhiên ho[áa]|"
+                    r"giả dược|mù đôi|mù đơn|đoàn hệ|dấu ấn sinh học|dược động học|biến cố bất lợi|mã ho[áa])\b")
+EXPLAIN = re.compile(r"\(|\bnghĩa là\b|\btức là\b|\bthat is\b|\bwhich means\b|\bmeaning\b|\bi\.e\.")
+OBLIGATION = re.compile(r"(?i)\b(?:must|shall|will) be [a-z]+(?:ed|en)\b|\b(?:is|are) (?:required|obliged|expected) to\b|"
+                        r"\bphải được\b|\bbắt buộc phải\b|\bđược yêu cầu\b")
+CONSENT_SPLIT = re.compile(r"(?<=[.!?;])\s+")
+
+
+def lint_consent(path: str) -> dict:
+    """Plain-language warns for a consent form or information sheet: CF01 long sentence, CF02 unexplained jargon,
+    CF03 passive obligation. Headings, tables, fences and HTML comments are skipped."""
+    text = Path(path).read_text(encoding="utf-8-sig", errors="replace")
+    text = re.sub(r"<!--.*?-->", lambda m: re.sub(r"[^\n]", " ", m.group(0)), text, flags=re.S)
+    findings, sentences, fence = [], 0, False
+
+    def add(code: str, n: int, msg: str) -> None:
+        findings.append({"code": code, "level": "warn", "file": path, "line": n, "message": msg})
+
+    for n, line in enumerate(text.splitlines(), 1):
+        if FENCE.match(line):
+            fence = not fence
+            continue
+        s = line.strip()
+        if fence or not s or s.startswith(("#", "|")):
+            continue
+        s = re.sub(r"^(?:[-*+]|\d+[.)])\s+", "", s)
+        s = re.sub(r"\[\[[^\]]*\]\]|\{\{[^{}]*\}\}", "X", s)
+        for sent in CONSENT_SPLIT.split(s):
+            if not sent.strip():
+                continue
+            sentences += 1
+            nw = len(re.findall(r"[^\W_]+", sent))
+            limit = CONSENT_WORDS["vi" if VI_LETTER.search(sent) else "en"]
+            if nw > limit:
+                add("CF01", n, f"sentence of {nw} words (plain-language target ≤ {limit}); split it")
+            for m in JARGON.finditer(sent):
+                if not EXPLAIN.search(sent[m.end():m.end() + 25]):
+                    add("CF02", n, f'"{m.group(0)}" is not explained in plain words right after it')
+            for m in OBLIGATION.finditer(sent):
+                add("CF03", n, f'"{m.group(0)}" is a passive obligation; say who does what ("you sign", '
+                               '"the study team keeps")')
+    return {"file": path, "sentences": sentences, "findings": findings}
+
+
 # --- slides -----------------------------------------------------------------------------------------------
 
 VERBS = {
@@ -488,6 +537,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--lang", choices=["vi", "en", "auto"], default="auto")
     ap.add_argument("--slides", action="store_true", help="lint .pptx/.html slide text (S17, S20, S21)")
     ap.add_argument("--count-words", action="store_true", help="print the prose word count and exit 0")
+    ap.add_argument("--profile", choices=["academic", "consent"], default="academic")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
 
@@ -496,13 +546,18 @@ def main(argv: list[str] | None = None) -> int:
             print(f"lint_prose: file not found: {f}", file=sys.stderr)
             return 2
 
+    if args.profile == "consent" and args.slides:
+        print("lint_prose: --profile consent is for text files, not --slides", file=sys.stderr)
+        return 2
+
     try:
         if args.count_words:
             for f in args.files:
                 n = word_count(Path(f).read_text(encoding="utf-8-sig", errors="replace"))
                 print(f"words: {n}" if len(args.files) == 1 else f"{f}: words: {n}")
             return 0
-        results = [lint_slides(f) if args.slides else lint_file(f, args.lang) for f in args.files]
+        results = [lint_consent(f) if args.profile == "consent" else (lint_slides(f) if args.slides else lint_file(f, args.lang))
+                   for f in args.files]
     except OSError as e:
         print(f"lint_prose: {e}", file=sys.stderr)
         return 2
@@ -515,7 +570,9 @@ def main(argv: list[str] | None = None) -> int:
         for r in results:
             for x in r["findings"]:
                 print(f"{x['code']} {x['level']} {x['file']}:{x['line']}: {x['message']}")
-            if args.slides:
+            if args.profile == "consent":
+                print(f"lint_prose: consent profile, {r['sentences']} sentences, {len(r['findings'])} warnings")
+            elif args.slides:
                 print(f"lint_prose: {r['slides']} slides, {len(r['findings'])} findings")
             else:
                 print(f"lint_prose: {r['paragraphs']} paragraphs, {r['hits']} hits, {_fmt(r['density'])}/100 words")
