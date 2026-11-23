@@ -21,3 +21,9 @@ Runs on this repository (one row per case and run): date, base, head, case, verd
 
 | Date | Base | Head | Case | Verdict | Cost | Note |
 |---|---|---|---|---|---|---|
+| 2026-11-23 | main ff2e944 | 4630980 | sr-pooling | new | 1.28 | A1/A2/K5 text not worse; the old side never ran the pooling script |
+| 2026-11-23 | main ff2e944 | 4630980 | case-anonymisation | old | 2.24 | both orders agree; the new side skipped `case_lint.py` (rubric 1), the old ran it; new side used fewer turns (19 vs 27) |
+| 2026-11-23 | main ff2e944 | 4630980 | thesis-discussion-overclaim | not run (budget) | est. 19+ | stopped by hand after about 60 min: the old side's reviewer loop alone had used roughly USD 19 of cache reads and had no cost report yet |
+
+The cases exercise A1 (one scored reviewer round per pass), A2 (committee and reviewer replies saved by the skill) and K5 (per-deliverable reports).
+The verdicts are a maintainer signal on three fixed cases, not a test.
