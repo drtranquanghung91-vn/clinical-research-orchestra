@@ -570,6 +570,21 @@ class TestStaleFigures(unittest.TestCase):
         self.ledger([])
         self.assertIn("no longer in the results ledger", self.found()[0][2])
 
+    def test_missing_or_unreadable_ledger_gives_one_finding(self):
+        self.write_data({"id": "F1", "type": "forest", "chart": {}, "values": [
+            {"label": "a", "ref": "R-A1-003", "est": 1.1}, {"label": "b", "ref": "R-A1-004", "est": 2.0}]})
+        ledger = self.p / "ledgers" / "results-ledger.json"
+        for how in ("missing", "garbled"):
+            if how == "missing":
+                ledger.unlink()
+            else:
+                ledger.write_text("{not json", encoding="utf-8")
+            found = self.found()
+            self.assertEqual(len(found), 1, found)
+            self.assertEqual(found[0][0], "block")
+            self.assertIn("results-ledger.json", found[0][2])
+            self.assertNotIn("no longer in", found[0][2])
+
     def test_data_file_hash(self):
         data = self.p / "04_data" / "c.deid.csv"
         data.parent.mkdir(parents=True, exist_ok=True)

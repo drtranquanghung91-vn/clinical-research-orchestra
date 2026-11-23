@@ -14,4 +14,5 @@ Scripts are in `${CLAUDE_PLUGIN_ROOT}/scripts/`; run them from the project folde
    Over the limit: cut Background first, never a CI.
 5. Typical findings: an abstract number found nowhere else in the thesis (warn): re-derive it from the
    ledger; a rate printed two ways (block): use the placeholder in both places.
-6. Optional: `build_docx.py` for a .docx; agent `committee-simulator` (deliverable `abstract`, 8-10 questions).
+6. Optional: `build_docx.py` for a .docx; agent `committee-simulator` (deliverable `abstract`, 8-10 questions); save its
+   reply to `reviews/committee-abstract.md` (the agent writes no file).
