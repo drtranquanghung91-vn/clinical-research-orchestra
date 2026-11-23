@@ -9,9 +9,9 @@ starting with "WAIVE G<n>:".
   python gate.py lock  <project> G3 --by "Author name" --files ledgers/results-ledger.json 05_analysis/output/km.txt
   python gate.py check <project> G3
 
-check prints (first token kept): "G3: open — results locked by <by> on <date>; <n> locked files unchanged"
-(open = the author approved; it does NOT mean the files are free to change), "G3: not open — not locked yet",
-or "G3: closed" plus the reasons (a locked file changed or is missing).
+check prints (first token kept): "G3: open (locked, <n> files unchanged) — results locked by <by> on <date>"
+(G1/G2: "approved by"; a gate without files: "G1: open — approved by <by> on <date>"; open = the author approved;
+it does NOT mean the files are free to change), "G3: not open — not locked yet", or "G3: closed" plus the reasons.
 
 G4 opens only from a clean, fresh audit: `open <project> G4 --by NAME` locks the files listed in
 reviews/audit.json (refused with the reasons while the audit is missing, has blocks, or a file changed since);
@@ -27,6 +27,11 @@ build_docx.py out/<d>.docx, the orchestra gate hook): [] = allowed. It returns t
 deliverable (a "WAIVE G4:" line counts as open), plus the reasons reviews/audit.json is missing, unreadable, or
 no longer matches the files on disk. The audit file must exist and match even when G4 is waived; blocking
 findings in it are tolerated only when G4 is waived.
+
+FINAL_NAMES maps the final export names to deliverables; out/response-letter.docx belongs to
+09_revision/comments.json's deliverable (default manuscript). final_problems(project, name) = export_problems for
+that deliverable, plus every block of response.py check for the response letter: the one rule for build_docx.py,
+response.py build and the hook.
 
 Exit codes: open/lock 0 = recorded; check 0 = open (or waived), 1 = closed (reasons listed);
 2 = usage error, missing project folder or file, unreadable state (open/lock). Errors go to stderr.
@@ -241,6 +246,46 @@ def export_problems(project: Path, deliverable: str | None) -> list[str]:
     return problems
 
 
+FINAL_NAMES = {"thesis.docx": "thesis", "manuscript.docx": "manuscript", "case-report.docx": "case-report",
+               "review.docx": "review", "response-letter.docx": None}
+REVISION = Path("09_revision") / "comments.json"
+
+
+def revision_deliverable(project: Path) -> str:
+    try:
+        d = json.loads((Path(project) / REVISION).read_text(encoding="utf-8-sig")).get("deliverable")
+    except (OSError, ValueError, AttributeError):
+        d = None
+    return d if d in DELIVERABLES else "manuscript"
+
+
+def final_deliverable(project: Path, name: str) -> str | None:
+    """Deliverable whose G4 a final export `name` needs (None: not a final name)."""
+    if name not in FINAL_NAMES:
+        return None
+    return FINAL_NAMES[name] or revision_deliverable(project)
+
+
+def final_problems(project: Path, name: str) -> list[str]:
+    """Reasons writing out/<name> is refused; [] = allowed or not a final name."""
+    project = Path(project)
+    d = final_deliverable(project, name)
+    if d is None:
+        return []
+    problems = export_problems(project, d)
+    if name == "response-letter.docx":
+        import response  # lazy: response imports gate
+        try:
+            found = response.check(project)
+        except response.InputError as e:
+            found = [("E-RESP", "block", f"{response.COMMENTS}:1", str(e))]
+        for code, level, loc, msg in found:
+            w = f"{code} {loc}: {msg}"
+            if level == "block" and w not in problems:
+                problems.append(w)
+    return problems
+
+
 _IMG = re.compile(r"!\[[^\]]*\]\(([^)\s]+)")
 
 
@@ -302,9 +347,12 @@ def check_line(project: Path, gate: str, ok: bool, why: list[str], deliverable: 
         files = entry["deliverables"][deliverable].get("files", {})
     n = sum(1 for v in files.values() if v is not None)     # null = an input absent at audit time
     when = str(entry.get("at", ""))[:10]
-    what = {"G3": "results locked", "G4": "approved after a clean audit"}.get(gate, "approved")
-    tail = f"; {n} locked files unchanged" if n else ""
-    return f"{gate}: open — {what} by {entry.get('by', '?')} on {when}{tail}"
+    if gate == "G4":
+        tail = f"; {n} locked files unchanged" if n else ""
+        return f"G4: open — approved after a clean audit by {entry.get('by', '?')} on {when}{tail}"
+    what = "results locked" if gate == "G3" else "approved"
+    lock = f" (locked, {n} file{'s' if n != 1 else ''} unchanged)" if n else ""
+    return f"{gate}: open{lock} — {what} by {entry.get('by', '?')} on {when}"
 
 
 def main(argv=None) -> int:

@@ -148,8 +148,7 @@ class TestGateCheckLines(unittest.TestCase):
             code, out = self.run_cli("check", str(p), "G3")
             self.assertEqual(code, 0)
             self.assertTrue(out.startswith("G3: open"), out)
-            self.assertIn("results locked by Dr A on ", out)
-            self.assertIn("1 locked files unchanged", out)
+            self.assertTrue(out.startswith("G3: open (locked, 1 file unchanged) — results locked by Dr A on "), out)
 
     def test_changed_file_keeps_closed_lines(self):
         with tempfile.TemporaryDirectory() as t:
@@ -374,3 +373,33 @@ class TestGateG4Review(unittest.TestCase):
             self.assertEqual(gate.export_problems(p, "thesis"), [])
             f.write_text("edited\n", encoding="utf-8")
             self.assertTrue(any("changed since the audit" in w for w in gate.export_problems(p, "thesis")))
+
+
+class TestP6Gate(unittest.TestCase):
+    def test_open_wording_names_the_lock(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            (p / "03_protocol" / "sap.md").write_text("x\n", encoding="utf-8")
+            gate.open_gate(p, "G1", by="Dr A")
+            gate.open_gate(p, "G2", by="Dr A", files=["03_protocol/sap.md", "project.yaml"])
+            for g, start in (("G1", "G1: open — approved by Dr A on "),
+                             ("G2", "G2: open (locked, 2 files unchanged) — approved by Dr A on ")):
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    self.assertEqual(gate.main(["check", str(p), g]), 0)
+                self.assertTrue(out.getvalue().startswith(start), out.getvalue())
+
+    def test_final_names_and_deliverables(self):
+        import json
+        with tempfile.TemporaryDirectory() as t:
+            p = project(t)
+            self.assertEqual(gate.final_deliverable(p, "thesis.docx"), "thesis")
+            self.assertEqual(gate.final_deliverable(p, "response-letter.docx"), "manuscript")
+            self.assertIsNone(gate.final_deliverable(p, "ch3-results.docx"))
+            probs = gate.final_problems(p, "response-letter.docx")
+            self.assertTrue(any("G4" in w for w in probs), probs)
+            self.assertTrue(any("comments.json" in w for w in probs), probs)
+            self.assertEqual(gate.final_problems(p, "draft.docx"), [])
+            (p / "09_revision").mkdir()
+            (p / "09_revision" / "comments.json").write_text(json.dumps({"deliverable": "case-report"}), encoding="utf-8")
+            self.assertEqual(gate.final_deliverable(p, "response-letter.docx"), "case-report")

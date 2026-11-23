@@ -388,3 +388,9 @@ class TestFinalExportRefused(unittest.TestCase):
         code, _, err = self.main(self.md, self.p / "out" / "thesis.docx", "--project", self.p)
         self.assertEqual(code, 0, err)
         self.assertTrue((self.p / "out" / "thesis.docx").is_file())
+
+    def test_response_letter_is_a_final_name(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = init_project.create(Path(t) / "p", "T", "manuscript", "cohort", "en", "en")
+            self.assertTrue(build_docx.final_export_problems(p / "out" / "response-letter.docx"))
+            self.assertEqual(build_docx.final_export_problems(p / "out" / "response-letter-draft.docx"), [])
