@@ -400,6 +400,6 @@ class TestP6Gate(unittest.TestCase):
             self.assertTrue(any("G4" in w for w in probs), probs)
             self.assertTrue(any("comments.json" in w for w in probs), probs)
             self.assertEqual(gate.final_problems(p, "draft.docx"), [])
-            (p / "09_revision").mkdir()
+            (p / "09_revision").mkdir(exist_ok=True)
             (p / "09_revision" / "comments.json").write_text(json.dumps({"deliverable": "case-report"}), encoding="utf-8")
             self.assertEqual(gate.final_deliverable(p, "response-letter.docx"), "case-report")
