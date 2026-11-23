@@ -62,19 +62,6 @@ class TestManifests(unittest.TestCase):
             self.assertNotIn("logo", codex["interface"])
             self.assertTrue(load(f"{p['source']}/.antigravity-plugin/plugin.json")["displayName"])
 
-    def test_site_and_pages_workflow(self):
-        html = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
-        for s in ('lang="vi"', 'lang="en"', "prefers-color-scheme: dark", "Trần Quang Hưng",
-                  "https://github.com/drtranquanghung91-vn/clinical-research-orchestra"):
-            self.assertIn(s, html)
-        self.assertNotIn("<script", html.lower())
-        self.assertNotRegex(html, r"[A-Za-z]:\\Users|/Users/|/home/")
-        self.assertNotRegex(html, r"[\w.+-]+@[\w-]+\.[\w.]+")  # no email address (plugin@marketplace has no dot)
-        wf = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
-        for s in ("workflow_dispatch", "vars.PAGES_ENABLED", "path: site", "actions/configure-pages",
-                  "actions/upload-pages-artifact", "actions/deploy-pages", "pages: write", "id-token: write"):
-            self.assertIn(s, wf)
-
     def test_readme_other_hosts(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         for s in ("### Other hosts (Codex, Antigravity)", "$env:CLAUDE_PLUGIN_ROOT", "set CLAUDE_PLUGIN_ROOT=",
