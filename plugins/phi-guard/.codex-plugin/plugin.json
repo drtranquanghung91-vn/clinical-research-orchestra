@@ -1,6 +1,6 @@
 {
   "name": "phi-guard",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Patient-identifier guard: scans text and de-identifies CSV/XLSX files. On hosts without Claude Code hooks the outbound blocking is not automatic.",
   "author": {
     "name": "Trần Quang Hưng",

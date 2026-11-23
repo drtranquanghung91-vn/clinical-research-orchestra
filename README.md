@@ -11,11 +11,13 @@
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-0F5E7A"></a>
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-C8372D">
   <img alt="Languages" src="https://img.shields.io/badge/languages-English%20%7C%20Vietnamese-56677F">
-  <img alt="Status" src="https://img.shields.io/badge/status-0.6.0%20reviews-B7791F">
+  <img alt="Status" src="https://img.shields.io/badge/status-0.7.0%20extend-B7791F">
   <a href="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
-> **Status: early.** Version 0.6.0 adds the P5 "reviews and case reports" skills (a CARE case report, a PRISMA 2020
+> **Status: early.** Version 0.7.0 adds the P6 "extend" skills (an ethics dossier and CRF, journal choice with checkable
+> signals, and a point-by-point response to reviewers), Codex and Antigravity manifests and a landing page, to the P5
+> "reviews and case reports" skills (a CARE case report, a PRISMA 2020
 > systematic review with dual screening, double extraction, meta-analysis and a GRADE summary of
 > findings, and a standalone narrative or scoping review) to the P4 "write" skills (thesis and journal manuscript
 > written from locked results, reviewed by read-only agents in scored rounds, one audit command and
@@ -25,8 +27,7 @@
 > analysis per the SAP, results writing with a Chapter 3 .docx), the P1 "plan the study" skills
 > (research question, literature search, critical appraisal, guideline check, literature review,
 > protocol design, sample size and SAP) and the 0.1.0 foundation (project folder, ledgers, gates,
-> reference verification and patient-data protection). The remaining skills (ethics, journal choice,
-> reviewer response) arrive in P6; see [Roadmap](#roadmap). A simulated project run through
+> reference verification and patient-data protection). See [Roadmap](#roadmap) (1.0.0 comes after the owner's sign-off). A simulated project run through
 > every P1 to P4 skill is in [`examples/fictional-cohort/`](examples/fictional-cohort/). Do not
 > rely on it for real studies yet.
 
@@ -107,7 +108,9 @@ Two plugins ship from this marketplace:
 | 5 | `case-report`, `/orchestra:case` | CARE case report (BMJ Case Reports mode) from a de-identified dossier: case facts locked, similar-cases table, consent checked before the final export (`case_facts.py`, `case_lint.py`) | 0.6.0 |
 | 2–5 | `systematic-review`, `/orchestra:sr` | PRISMA 2020 review: protocol and PROSPERO draft, search log, dual screening with kappa and PRISMA flow, double extraction and risk of bias, meta-analysis with prediction interval, GRADE summary of findings, `out/review.docx` through G4 (`screening.py`, `extract_check.py`, `meta.py`, `grade.py`; the R `metafor` cross-check is optional) | 0.6.0 |
 | 2 | `literature-review` mode (c), `/orchestra:review` | standalone narrative review (SANRA) or scoping review (PRISMA-ScR, charts instead of pooling) | 0.6.0 |
-| 3, 7 | `ethics-and-crf`, `journal-selection`, `reviewer-response` | ethics dossier and CRF, journal shortlist, response to reviewers | P6 |
+| 3 | `ethics-and-crf` | ethics dossier and consent form (elements checklist, `lint_prose.py --profile consent`), E-CRF and data dictionary tied to the variable register (`crf.py`) | 0.7.0 |
+| 7 | `journal-selection` | journal shortlist from NLM Catalog, DOAJ and Crossref signals, never verdicts; Think. Check. Submit. pointer (`journal_check.py`) | 0.7.0 |
+| 7 | `reviewer-response` | point-by-point response to reviewers; claimed changes checked against the submitted snapshot; `out/response-letter.docx` through G4 (`response.py`) | 0.7.0 |
 
 You can talk to the skills in Vietnamese or English. The language of research documents is
 a project setting (`project.yaml → language.output`), so a thesis can be written in
@@ -167,6 +170,7 @@ the plugin folder before starting the host (`<repo>` is where you cloned this re
 
 A static landing page (`site/index.html`, Vietnamese and English) is deployed by `.github/workflows/pages.yml`
 once GitHub Pages is enabled for the repository.
+A landing page in `site/` is published with GitHub Pages after the 1.0 sign-off.
 
 ### Tools the scripts use
 
@@ -190,7 +194,8 @@ install hint and exits 2; the skills report that check as not run.
 | P3 Present | figures, conference abstract, poster with print preflight, defence deck, prose humanizer, consistency audit | done (0.4.0) |
 | P4 Write | thesis and manuscript writing, reviewer agents, revise loop, audit, gate G4 and its hook | done (0.5.0) |
 | P5 Reviews and case reports | case report (CARE) with `/orchestra:case`, systematic review with `/orchestra:sr` (PRISMA 2020), literature review mode (c) | done (0.6.0) |
-| P6 Extend | ethics and CRF, journal selection, reviewer response, autorater, Codex and Antigravity packaging | next |
+| P6 Extend | ethics and CRF, journal selection, reviewer response, autorater, Codex and Antigravity packaging | done (0.7.0) |
+| 1.0.0 | release after the owner's sign-off | next |
 
 The design spec is in [`docs/superpowers/specs/`](docs/superpowers/specs/) and each phase
 has its implementation plan in [`docs/superpowers/plans/`](docs/superpowers/plans/).
@@ -223,13 +228,15 @@ python -m unittest discover -s tests/unit -v
 python tools/lint_skills.py
 ```
 
-CI runs both on Linux and Windows with Python 3.10 and 3.12 on every push.
+`tests/unit/test_ci_config.py` checks the CI and Pages workflow files. CI runs both on Linux and Windows with Python 3.10 and 3.12 on every push.
 
 The skills are written test-first, as Superpowers prescribes. Each behaviour is first run on
 an agent without the plugin, and the failures are recorded in
 [`tests/scenarios/BASELINE.md`](tests/scenarios/BASELINE.md). The skills are then written to
 fix those failures and the scenarios re-run with them loaded
-([`tests/scenarios/README.md`](tests/scenarios/README.md)).
+([`tests/scenarios/README.md`](tests/scenarios/README.md)). P6 added four scenarios (CRF variable, predatory-journal signals,
+reviewer asks for a new analysis, response claims an unmade change). `tools/autorater.py` is a maintainer tool
+that compares outputs with order-swapped judging; it is not part of CI.
 
 ## Authors
 

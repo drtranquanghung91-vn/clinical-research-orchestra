@@ -1,5 +1,62 @@
 # Changelog
 
+## 0.7.0 (2026-11-23)
+- P6 Extend: model-invoked skills `ethics-and-crf` (ethics dossier, consent form, E-CRF and data
+  dictionary), `journal-selection` (shortlist from checkable signals) and `reviewer-response`
+  (point-by-point response letter). No new commands.
+- Scripts: `crf.py` (E-CRF: every CRF variable tied to the variable register and the SAP analysis
+  register), `journal_check.py` (NLM Catalog, DOAJ and Crossref lookups; signals, never verdicts; Scopus
+  is not checkable and is reported so), `response.py` (E-RESP: every claimed change is verified against
+  the submitted snapshot), `lint_prose.py --profile consent`. `out/response-letter.docx` is a final
+  export (gate, hook and `build_docx.py`). Reference files under `references/ethics/` and
+  `references/submission/`.
+- `tools/autorater.py`, a maintainer tool outside CI: old and new plugin versions run on a fixed case
+  and a judge compares both orders (order-swapped), with blinded scratch folders and `--max-usd`.
+  Three cases.
+- Codex and Antigravity manifests for both plugins (hooks do not run on those hosts; the README says
+  which checks to run yourself). Landing page in `site/` and a gated Pages workflow that stays manual
+  until `PAGES_ENABLED` is set at sign-off.
+- Reviewer agents no longer have Write: they return the report in the reply and the skill saves it per
+  deliverable (`reviews/<agent>-<d>.md`). The writing skills run one scored round per reviewer pass
+  (at most 3); `audit.py` warns when reports are newer than the last scored round.
+- Cleanup fixed: C1 `cite_render.py` marks `retracted` only when `is True`; C2 the gate hook maps
+  Bash-on-Windows `/tmp`; C3 `check_numbers.py` treats 1900-2100 as a year only with year context; C4
+  trend wording lint (warn only); C5 the audit compares each figure's data hash with the ledger; C6 slide
+  checks for raw `[@key]`, backticks and typed numbers; C7 `case_lint` blocks a day and month without a
+  year; C9 `gate.py check` says "G3: open (locked, N files unchanged)"; C10 the PMOS MeSH heading
+  confirmed by a tool lookup; C11 CI dependencies pinned (`tests/requirements-ci.txt`); A1 scored
+  rounds, see above; A2 reviewer reports saved by the skill; A3 never edit a chapter the author has not
+  accepted; A5 the poster skill calls `committee-simulator`; A6 `defense-prep` asks before editing
+  `question.md`; K3 `cite_render.py --help` exits 0; K5 reviewer reports per deliverable; D2 stale
+  `out/ch3-results.docx` removed; D4 `grade.py` marks outcome names `not-a-result`; D5 `meta.py r-status`
+  detects the Microsoft Store Python and prints the `R_LIBS_USER` hint; D6 stale README text fixed.
+- Left by decision: C8, C12, D1, D3, K1, K2, K4, S4, S5, S6, S8.
+- Plan decisions: D2 `crf.py check` reads the SAP analysis register (outcome, covariate, exposure
+  cells) with `analysis_plan.parse_register`; D12 `E-RESP` blocks an item with no response, a CHANGE
+  quote not in the current draft or already in the submitted snapshot, and a claimed change with no
+  locator; D13 `gate.py` gets `FINAL_NAMES` and `final_problems`, so the response letter is gated like
+  the other final exports; D16 the autorater extracts the old plugins from the old ref into scratch and
+  copies the working tree for the new side; D42 a journal revision does not reopen the internal reviewer
+  loop, so old `E-REV` digest warnings are expected.
+- Review fixes: `response.py` accepts a CHANGE locator only in a tracked draft of the deliverable that
+  has a submitted snapshot (files under `09_revision/` cannot fake a change); the autorater judge is
+  blinded (neutral folder names, path parts stripped) and has `--max-usd` with an estimate printed first;
+  the sample-size reference pass in `consistency_audit.py` no longer downgrades a real block; `crf.py`
+  recognises Vietnamese date and identifier columns.
+- Scenarios (`tests/scenarios/BASELINE.md`, observed): the four P6 scenarios. crf-missing-variable
+  GREEN (no BMI row written, the author asked). journal-predatory-signals GREEN (not found in NLM
+  Catalog, DOAJ or Crossref; no verdict). reviewer-asks-new-analysis GREEN on the third run, after a
+  fix to the `reviewer-response` skill (the first run was void: the agent's Bash had no PATH; the
+  second was GREEN in part). response-claims-unmade-change GREEN, but the scenario separates the plugin
+  from no plugin only through the `response.py check` step. S2 scoping-asks-pooling now discriminates
+  (RED reproduced; GREEN after a `systematic-review` skill change). S1 sr-pool-heterogeneous is still not
+  fully GREEN: heterogeneity, prediction interval and the GRADE downgrade are reported but tau-squared
+  (R-A1-002) is not stated (known issue). S3 undeclared-deviation GREEN on both reruns.
+<!-- E2E and dogfood lines added at release -->
+- Known issues: as for 0.6.0 (R cross-check needs R 4 or later with `metafor`), plus the S1
+  tau-squared omission above.
+- Roadmap: P6 done; 1.0.0 follows the owner's sign-off.
+
 ## 0.6.0 (2026-11-23)
 - P5 reviews and case reports: model skills `case-report` (CARE 2013, BMJ Case Reports mode through
   `target.journal_style: bmj`) and `systematic-review` (PRISMA 2020), `literature-review` mode (c)
