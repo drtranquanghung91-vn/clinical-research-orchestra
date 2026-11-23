@@ -1,4 +1,5 @@
 import csv
+import hashlib
 import json
 import re
 import subprocess
@@ -174,6 +175,54 @@ class TestFictionalSystematicReview(unittest.TestCase):
         self.assertTrue(all(r["title"].startswith("Fictional") and r.get("seen_in") for r in studies))
         self.assertTrue(all(str(r.get("verified_by", "")).endswith("VERIFIED") for r in refs if r.get("source") != "manual"))
         self.assertIn("fictional", (SR / "README.md").read_text(encoding="utf-8").lower())
+
+
+class TestFictionalCohortP6(unittest.TestCase):
+    """P6: ethics dossier and CRF, journal shortlist from live lookups, one revision round to the response letter."""
+
+    def script(self, name, *args):
+        return subprocess.run([sys.executable, str(GATE.parent / name), *args], capture_output=True, text=True,
+                              encoding="utf-8")
+
+    def test_crf_and_ethics_documents(self):
+        r = self.script("crf.py", str(EXAMPLE), "check")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        for name in ("crf.md", "data-dictionary.csv", "consent-form.md", "dossier.md"):
+            self.assertTrue((EXAMPLE / "03_protocol" / "ethics" / name).is_file(), name)
+        for name in ("crf.docx", "consent-form.docx", "dossier.docx"):
+            self.assertTrue(zipfile.is_zipfile(EXAMPLE / "out" / "ethics" / name), name)
+
+    def test_journal_shortlist_from_lookups_and_the_authors_pick(self):
+        from crolib import projectcfg
+        data = json.loads((EXAMPLE / "08_submission" / "journals.json").read_text(encoding="utf-8"))
+        self.assertGreaterEqual(len(data["journals"]), 2)
+        for rec in data["journals"]:
+            self.assertRegex(rec["looked_up"], r"^\d{4}-\d{2}-\d{2}$")
+            self.assertTrue(rec["title"] and all(t["source"] for t in rec["title"]), rec["key"])
+        picked = [r for r in data["journals"] if r.get("picked")]
+        self.assertEqual(len(picked), 1)
+        self.assertEqual(picked[0]["picked"]["by"], "Example author")
+        self.assertEqual(projectcfg.get(EXAMPLE, "target.journal"), picked[0]["title"][0]["value"].replace('"', "'"))
+        self.assertNotIn("predatory", (EXAMPLE / "08_submission" / "journals.md").read_text(encoding="utf-8").lower())
+
+    def test_revision_round_and_letter(self):
+        r = self.script("response.py", str(EXAMPLE), "check")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        data = json.loads((EXAMPLE / "09_revision" / "comments.json").read_text(encoding="utf-8"))
+        self.assertTrue(data["approved"])
+        for rel, sha in data["submitted"].items():
+            self.assertEqual(hashlib.sha256((EXAMPLE / "09_revision" / "submitted" / rel).read_bytes()).hexdigest(), sha)
+        text = (EXAMPLE / "09_revision" / "response.md").read_text(encoding="utf-8")
+        for item in data["items"]:
+            self.assertIn(f"## {item['id']}", text)
+        self.assertIn("[[CHANGE:", text)
+        self.assertIn("fictional", (EXAMPLE / "09_revision" / "comments-received.md").read_text(encoding="utf-8").lower())
+        with zipfile.ZipFile(EXAMPLE / "out" / "response-letter.docx") as z:
+            self.assertIn("word/document.xml", z.namelist())
+        r = subprocess.run([sys.executable, str(GATE), "check", str(EXAMPLE), "G4", "--deliverable", "manuscript"],
+                           capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertFalse((EXAMPLE / "out" / "ch3-results.docx").exists())
 
 
 if __name__ == "__main__":

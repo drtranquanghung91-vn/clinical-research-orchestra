@@ -94,8 +94,8 @@ is recorded.
 
 | Command | Exit | Result |
 |---|---|---|
-| `python plugins/orchestra/scripts/gate.py check examples/fictional-sr G2`, in a fresh clone | 0 | G2: open — approved by Example author on 2026-11-23; 3 locked files unchanged |
-| `python plugins/orchestra/scripts/gate.py check examples/fictional-sr G3`, in a fresh clone | 0 | G3: open — results locked by Example author on 2026-11-23; 5 locked files unchanged |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-sr G2`, in a fresh clone | 0 | G2: open (locked, 3 files unchanged) — approved by Example author on 2026-11-23 |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-sr G3`, in a fresh clone | 0 | G3: open (locked, 5 files unchanged) — results locked by Example author on 2026-11-23 |
 | `python plugins/orchestra/scripts/gate.py check examples/fictional-sr G4 --deliverable review`, in a fresh clone | 0 | G4: open — approved after a clean audit by Example author on 2026-11-23; 20 locked files unchanged |
 | `python plugins/orchestra/scripts/screening.py examples/fictional-sr check` | 0 | `screening: 0 block, 0 warn` |
 | `python plugins/orchestra/scripts/extract_check.py examples/fictional-sr` | 0 | 0 block, 1 warn (the deliberate differing cell) |

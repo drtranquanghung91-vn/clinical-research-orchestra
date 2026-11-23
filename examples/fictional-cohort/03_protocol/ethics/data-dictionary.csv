@@ -1,0 +1,19 @@
+variable,label,type,unit,values,range,source_form,required
+hba1c_luc_nhap_vien,HbA1c lúc nhập viện (phân nhóm),ordinal,,< 7%|7–9%|> 9%,,main,yes
+hba1c_luc_nhap_vien_2,HbA1c lúc nhập viện (liên tục),continuous,% (NGSP),,,main,yes
+tai_nhap_vien_1_nam,Tái nhập viện 1 năm (mọi nguyên nhân),binary,,Có|Không,,main,yes
+tai_nhap_vien_lien_quan_dtd,Tái nhập viện liên quan ĐTĐ,binary,,Có|Không,,main,yes
+thoi_gian_den_lan_tai_nhap_vien,Thời gian đến lần tái nhập viện đầu tiên,time-to-event,Ngày,,,main,yes
+tu_vong_trong_1_nam,Tử vong trong 1 năm (trong viện),binary,,Có|Không,,main,yes
+tuoi,Tuổi,continuous,Năm,,,main,yes
+gioi,Giới,binary,,Nam|Nữ,,main,yes
+thoi_gian_mac_dtd,Thời gian mắc ĐTĐ,continuous,Năm,,,main,yes
+benh_dong_mac_chinh,Bệnh đồng mắc chính,binary,,Có|Không,,main,yes
+su_dung_insulin_trong_thoi_gian,Sử dụng insulin trong thời gian nằm viện,binary,,Có|Không,,main,yes
+thoi_gian_nam_vien,Thời gian nằm viện (lần nhập viện chỉ số),continuous,Ngày,,,main,yes
+ty_so_bach_cau_trung_tinh_lympho,Tỷ số bạch cầu trung tính/lympho (NLR),continuous,Tỷ số,,,main,yes
+chi_so_viem_tong_hop,Chỉ số viêm tổng hợp (SII hoặc SIRI),continuous,Chỉ số tính toán,,,main,yes
+nguy_co_dinh_duong_luc_nhap_vien,Nguy cơ dinh dưỡng lúc nhập viện,categorical,,Tùy thang đo,,main,yes
+ma_so_nghien_cuu,Mã số nghiên cứu,text,,,,main,yes
+ngay_nhap_vien_chi_so,Ngày nhập viện chỉ số,date,,,,main,yes
+ngay_xuat_vien_chi_so,Ngày xuất viện chỉ số,date,,,,main,yes
