@@ -1,23 +1,27 @@
 # Audit: thesis, manuscript
 
-Date: 2026-11-22T20:44:03 · mode: offline (stored ledger statuses) · blocks: 0 · warns: 32
+Date: 2026-11-23T14:40:58 · mode: offline (stored ledger statuses) · blocks: 0 · warns: 34
 
 | Check | Code | Block | Warn |
 |---|---|---|---|
 | ledgers | E-REF | 0 | 0 |
 | citations | E-REF | 0 | 0 |
-| results numbers | E-NUM | 0 | 0 |
+| results numbers | E-NUM | 0 | 1 |
 | analysis declarations | E-STAT | 0 | 0 |
+| case report | E-CASE | 0 | 0 |
+| screening and extraction | E-SCR | 0 | 0 |
+| GRADE wording | E-GRADE | 0 | 0 |
 | literature synthesis | E-LIT | 0 | 0 |
 | consistency | E-CONS | 0 | 0 |
 | prose density | P00 | 0 | 1 |
 | guideline checklist | E-RG | 0 | 8 |
 | sections and captions | E-FMT | 0 | 0 |
 | identifiers | E-PHI | 0 | 14 |
-| reviewer reports | E-REV | 0 | 9 |
+| reviewer reports | E-REV | 0 | 10 |
 
 ## Cách sửa / How to fix
 
+- `E-NUM`: thay số gõ tay bằng ô {{R-...}}, hoặc đánh dấu <!-- not-a-result: ... --> nếu không phải kết quả.
 - `P15`: giảm mẫu văn phong bị đánh dấu (prose-humanizer).
 - `E-RG`: bổ sung mục hướng dẫn còn thiếu hoặc ghi lý do không áp dụng; chạy lại reporting-guideline-checker.
 - `E-PHI`: xoá hoặc ẩn danh định danh, rồi chạy lại audit.
@@ -26,6 +30,7 @@ Date: 2026-11-22T20:44:03 · mode: offline (stored ledger statuses) · blocks: 0
 ## Findings
 
 ```text
+E-NUM warn 06_writing/thesis/ch4-discussion.md:135: trend wording "xu hướng" without two ledger values or a trend-test result in the sentence: cite them as {{R-…}} or reword (no trend test, no trend claim)
 P15 warn 06_writing/thesis/ch2-methods.md:169: "**Tài trợ:**" (4 hits / 100 words)
 E-RG warn 06_writing/thesis/ch3-results.md:11: item 13a is only partly reported: Chỉ có 2 mốc số liệu (đủ tiêu chuẩn chọn mẫu và số đưa vào mô hình hiệu chỉnh); không có số liệu sàng lọc/loại trừ ban đầu theo từng tiêu chuẩn vì dữ liệu mô phỏng không ghi nhận các mốc đó.
 E-RG warn 06_writing/thesis/ch3-results.md:13: item 13b is only partly reported: Chỉ giải thích lý do loại khỏi mô hình hiệu chỉnh (thiếu biến nhiễu); không có lý do loại ở giai đoạn sàng lọc/đủ tiêu chuẩn ban đầu vì số liệu đó không được ghi nhận trong dữ liệu mô phỏng.
@@ -53,6 +58,7 @@ E-REV warn reviews/rounds/thesis/r3/reviews/citation-verifier.md:1: citation-ver
 E-REV warn reviews/rounds/thesis/r3/reviews/statistical-reviewer.md:1: statistical-reviewer reviewed an earlier version of the thesis drafts (digest differs); rerun it if the content changed
 E-REV warn reviews/rounds/thesis/r3/reviews/scientific-editor.md:1: scientific-editor reviewed an earlier version of the thesis drafts (digest differs); rerun it if the content changed
 E-REV warn reviews/rounds/thesis/r3/reviews/consistency.md:1: consistency-auditor reviewed an earlier version of the thesis drafts (digest differs); rerun it if the content changed
+E-REV warn reviews/reporting-guideline-checker.md:1: newer than the last scored round (r3): score each reviewer pass once (worklog.py score . thesis --round N), at most 3 rounds
 E-REV warn reviews/citation-verifier.md:1: citation-verifier reviewed an earlier version of the manuscript drafts (digest differs); rerun it if the content changed
 E-REV warn reviews/statistical-reviewer.md:1: statistical-reviewer reviewed an earlier version of the manuscript drafts (digest differs); rerun it if the content changed
 E-REV warn reviews/rounds/manuscript/r3/reviews/reporting-guideline-checker.md:1: reporting-guideline-checker reviewed an earlier version of the manuscript drafts (digest differs); rerun it if the content changed

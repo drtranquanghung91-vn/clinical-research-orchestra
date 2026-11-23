@@ -49,13 +49,11 @@ bệnh đồng mắc; mô hình có diện tích dưới đường cong ROC {{R-
 ![Hình 2. OR hiệu chỉnh của HbA1c lúc nhập viện với tái nhập viện trong 1 năm](../../07_present/figures/F1.png)
 
 Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm chung là {{R-A0-061.value}} (KTC 95%
-{{R-A0-061.ci}}); theo từng nhóm, tỷ lệ là {{R-A0-062.value}} ở nhóm <7%, {{R-A0-063.value}} ở nhóm
-7–9% và {{R-A0-064.value}} ở nhóm >9%, với khoảng tin cậy của 3 nhóm còn chồng lấp rộng (đề cương
-không đăng ký kiểm định xu hướng). Sau hiệu chỉnh, OR đạt {{R-A1-003.value}} (KTC 95%:
-{{R-A1-003.ci}}) ở nhóm 7–9% và {{R-A1-004.value}} (KTC 95%: {{R-A1-004.ci}}) ở nhóm >9%, so với nhóm
-<7%; cả hai cùng chiều với giả thuyết nghiên cứu nhưng khoảng tin cậy 95% đều chứa giá trị 1 — mối
-liên quan giữa HbA1c lúc nhập viện và tái nhập viện mọi nguyên nhân trong 1 năm chưa đạt ý nghĩa
-thống kê ở cỡ mẫu hiện có.
+{{R-A0-061.ci}}), khác nhau giữa 3 nhóm HbA1c (Bảng 2), với khoảng tin cậy 3 nhóm còn chồng lấp rộng.
+Sau hiệu chỉnh, OR đạt {{R-A1-003.value}} (KTC 95%:
+{{R-A1-003.ci}}) ở nhóm 7–9% và {{R-A1-004.value}} (KTC 95%: {{R-A1-004.ci}}) ở nhóm >9% so với nhóm
+<7%; cùng chiều với giả thuyết nghiên cứu nhưng cả hai khoảng tin cậy 95% đều chứa giá trị 1 — mối
+liên quan chưa đạt ý nghĩa thống kê ở cỡ mẫu hiện có.
 
 Kết quả các phân tích phụ được trình bày ở Bảng 3.
 
@@ -70,18 +68,14 @@ Ghi chú: *dòng HbA1c liên tục là ước lượng cho mỗi 1% HbA1c tăng 
 cột bên phải. OR/HR hiệu chỉnh theo cùng biến nhiễu như Bảng 2. Toàn bộ phân tích ở bảng này mang tính
 khám phá, không hiệu chỉnh đa so sánh.
 
-Khi dùng HbA1c liên tục, OR hiệu chỉnh mỗi 1% là {{R-A2-002.value}} (KTC 95%: {{R-A2-002.ci}}) — khoảng
-tin cậy hẹp quanh giá trị 1. Khi giới hạn kết cục vào tái nhập viện liên quan ĐTĐ, OR hiệu chỉnh cao
-hơn rõ và có ý nghĩa thống kê ở cả nhóm 7–9% ({{R-A3-001.value}}; KTC 95%: {{R-A3-001.ci}}) và nhóm
->9% ({{R-A3-002.value}}; KTC 95%: {{R-A3-002.ci}}; p {{R-A3-002.p}}). Hồi quy Cox cho kết quả cùng
-chiều và cùng độ lớn với kết cục chính: HR hiệu chỉnh {{R-A4-005.value}} ở nhóm 7–9% và
-{{R-A4-006.value}} ở nhóm >9%, cả hai KTC 95% cũng chứa giá trị 1.
+HbA1c liên tục cho OR hiệu chỉnh {{R-A2-002.value}} (KTC 95%: {{R-A2-002.ci}}) mỗi 1% — khoảng hẹp
+quanh giá trị 1. Khi giới hạn kết cục vào tái nhập viện liên quan ĐTĐ, OR hiệu chỉnh cao hơn rõ và có
+ý nghĩa ở cả nhóm 7–9% ({{R-A3-001.value}}; {{R-A3-001.ci}}) và nhóm >9% ({{R-A3-002.value}};
+{{R-A3-002.ci}}; p {{R-A3-002.p}}). Hồi quy Cox cho HR hiệu chỉnh cùng chiều, cùng độ lớn:
+{{R-A4-005.value}} ở nhóm 7–9%, {{R-A4-006.value}} ở nhóm >9%, cả hai KTC cũng chứa 1.
 
 Tử vong trong viện trong 1 năm (không xác định được tử vong ngoài viện) thấp ở cả 3 nhóm, từ
-{{R-A5-002.value}} ở nhóm <7% đến {{R-A5-004.value}} ở nhóm >9% (chung: {{R-A5-001.value}}); kết cục
-này chỉ được mô tả, không phân tích đa biến. Phân tích hậu kiểm (không đăng ký trước) theo nhóm tuổi
-cho thấy, ở người <65 tuổi, tỷ số chênh hiệu chỉnh của HbA1c >9% (so với <7%) đạt {{R-A6-002.full}};
-ở người ≥65 tuổi, giá trị này là {{R-A6-009.full}}, với p kiểm định tương tác HbA1c × tuổi là
-{{R-A6-015.value}} —
-chưa có bằng chứng hiệu ứng khác nhau thật sự theo tuổi ở cỡ mẫu hiện có; kết quả này chỉ mang tính
-khám phá.
+{{R-A5-002.value}} đến {{R-A5-004.value}} (chung: {{R-A5-001.value}}); chỉ mô tả, không phân tích đa
+biến. Phân tích hậu kiểm (không đăng ký trước) theo tuổi: ở người <65 tuổi, OR hiệu chỉnh của HbA1c
+>9% (so <7%) là {{R-A6-002.full}}; ở người ≥65 tuổi là {{R-A6-009.full}}, p tương tác HbA1c × tuổi =
+{{R-A6-015.value}} — chưa có bằng chứng hiệu ứng khác theo tuổi; kết quả chỉ mang tính khám phá.

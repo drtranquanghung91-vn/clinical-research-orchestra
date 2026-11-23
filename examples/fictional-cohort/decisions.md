@@ -881,3 +881,18 @@ Author (Example author) asked to close the Writing stage for the thesis and the 
    deliverables' writing stage is now closed together; row 8 removed; row 6 set to `done`.
 
 No ledger or locked G3 file touched anywhere in this closing step.
+
+## 2026-11-23 — Consent waiver (author)
+
+Hội đồng đạo đức (hư cấu) miễn ký phiếu đồng ý vì nghiên cứu hồi cứu hồ sơ; vẫn soạn bản thông tin để lưu hồ sơ. (Example author; the committee and its decision are fictional.)
+
+## 2026-11-23 — Reviewer-response round (manuscript): author declined R1.2
+
+Phản biện 1 (R1.2) yêu cầu thêm phân tích phân nhóm theo giới. Tác giả (Example author) quyết định
+**không** bổ sung phân tích này, với hai lý do tác giả đưa ra: (1) không định trước trong
+`03_protocol/sap.md` §10 (giới chỉ dùng làm biến hiệu chỉnh trong mô hình chính, không phải biến phân
+nhóm đã đăng ký); (2) cỡ mẫu nhỏ — chia thêm theo giới sẽ tạo nhóm nhỏ hơn nữa trong một mẫu đã biết
+trước là thiếu lực mẫu cho phân tích chính (xem Hạn chế, `06_writing/manuscript/05-discussion.md`).
+Ghi vào `09_revision/response.md` mục R1.2 làm "no change because …"; không có dòng `NEW-ANALYSIS` nào
+được chạy. Các mục E1 (giới hạn số từ), R1.1 (tiêu chuẩn loại trừ), R2.1 (nhiễu tồn dư) được sửa trực
+tiếp trong bản thảo; R2.2 (KTC của OR trong tóm tắt) không cần sửa, đã có sẵn.

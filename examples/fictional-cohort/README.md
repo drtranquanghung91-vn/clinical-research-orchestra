@@ -1,4 +1,4 @@
-# Fictional cohort: a simulated project (P1 plan, P2 analyse and report, P3 present, P4 write)
+# Fictional cohort: a simulated project (P1 plan, P2 analyse and report, P3 present, P4 write, P6 ethics, journal choice and revision)
 
 **Everything in this folder is simulated for demonstration.** The author ("Example author"), the
 site ("Bệnh viện Mô phỏng", a fictional provincial hospital), the study period and the expected
@@ -147,7 +147,7 @@ model `claude-sonnet-5`, plugins `orchestra` and `phi-guard`, `mcp_servers: []` 
 | 3 | the author asks for one post-hoc subgroup (age < 65 / ≥ 65, same covariates as A1, interaction test) and a clearer Table 3.1 footnote | statistical-analysis (post-hoc rule) | `POST-HOC A6:` line in `decisions.md` written before the run; A6 block in `analysis.py`; table T3.8; report §5 labelled post-hoc; ledger 127 results |
 | 4 | the author accepts the analysis report and will lock G3 | none | `STATUS.md` row 5, `decisions.md` |
 | — | author's act, outside the agent: `gate.py lock <project> G3 --by "Example author" --files ledgers/results-ledger.json 05_analysis/output/results.json 05_analysis/analysis.py 05_analysis/crostats.py 04_data/cohort.deid.csv` | — | `gates/state.json` (G3 with five SHA-256 hashes) |
-| 5 | `/orchestra:results` | results-writing | `06_writing/thesis/ch3-results.md`, `ch3-results.rendered.md`, `out/ch3-results.docx`, Chapter 3 rows in `ledgers/claims.json` |
+| 5 | `/orchestra:results` | results-writing | `06_writing/thesis/ch3-results.md`, `ch3-results.rendered.md`, `out/ch3-results.docx` (removed in P6: `out/thesis.docx` carries Chapter 3), Chapter 3 rows in `ledgers/claims.json` |
 | 6 | the author's read-through: the `>` box and backticks show literally in the .docx; one sentence reads badly | results-writing (continued) | Chapter 3 text rewritten, render and .docx rebuilt |
 
 Main results (simulated): adjusted OR of 1-year readmission 1.10 (95% CI 0.74–1.62) for HbA1c 7–9% and
@@ -162,15 +162,17 @@ exploratory.
 | `python plugins/orchestra/scripts/crolib/ledgers.py check examples/fictional-cohort` | 0 | `ledgers: 0 problems` |
 | `python plugins/orchestra/scripts/analysis_plan.py check examples/fictional-cohort --text examples/fictional-cohort/06_writing/thesis/ch3-results.md` | 0 | 0 block, 0 warn |
 | `python plugins/orchestra/scripts/results_ledger.py import examples/fictional-cohort --verify-raw` | 0 | 127 results imported; the locked ledger's SHA-256 is unchanged |
-| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3` | 0 | G3: open — results locked by … ; n locked files unchanged |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3` | 0 | G3: open (locked, n files unchanged) — results locked by … |
 | `python plugins/orchestra/scripts/check_numbers.py examples/fictional-cohort examples/fictional-cohort/06_writing/thesis/ch3-results.rendered.md` | 0 | 0 findings |
 | `python plugins/phi-guard/scripts/phi_scan.py --file examples/fictional-cohort/04_data/codebook.md examples/fictional-cohort/06_writing/thesis/ch3-results.rendered.md` | 0 | no finding |
 
-`out/ch3-results.docx` contains "Bảng 3.1". Re-running `05_analysis/analysis.py` on a copy gives the
+The stage-5 `out/ch3-results.docx` contained "Bảng 3.1" (removed in P6; Chapter 3 is in `out/thesis.docx`). Re-running `05_analysis/analysis.py` on a copy gives the
 same `results.json` apart from `run_at` and the same `log.txt`, and `render_results.py` gives the same
-rendered chapter. `05_analysis/crostats.py` is the plugin's `crostats.py` as it was at the run (before the final P2 fix
-wave added `order=`) plus its one-line header. G2 and G3 were locked before the fix wave made
-`03_protocol/sap.md` part of both locks, so this example's locks do not list it.
+rendered chapter. `05_analysis/crostats.py` is the plugin's `crostats.py` as it was at the run plus its one-line
+header: `compare_two` already took `order=`, but `compare_k` and `compare_props` did not (the final P2 fix wave added
+it), and later releases added more (the P5 result kinds `smd`, `tau2`, `absolute`, `measure`; no negative zero), so the
+vendored file is older than the plugin's and stays as locked. G2 (no locked file) and G3 (five locked files) were
+locked before the fix wave made `03_protocol/sap.md` part of both locks, so this example's locks do not list it.
 
 ### P2 edits made by hand
 
@@ -195,7 +197,7 @@ wave added `order=`) plus its one-line header. G2 and G3 were locked before the 
 
 - **Vendored header says 0.2.0.** The run used the plugin before the 0.3.0 version bump, so the first
   line of `05_analysis/crostats.py` reads "copied from clinical-research-orchestra 0.2.0"; the body is
-  the 0.3.0 file. It is locked in G3 and kept.
+  the file as it was at the run, before the 0.3.0 fix wave (see above). It is locked in G3 and kept.
 - **Group order** (fixed in the plugin in the final P2 fix wave: `order=` sets the levels and the
   reference group). `crostats` sorted group labels as text, so `<7`, `7-9`, `>9` would print in the
   order 7-9, <7, >9. The analysis script relabels them in memory (`1. <7%`, `2. 7-9%`, `3. >9%`) to
@@ -249,7 +251,7 @@ re-runs: 332 turns, about 100 minutes and USD 44 in total.
 | `python plugins/orchestra/scripts/check_numbers.py examples/fictional-cohort examples/fictional-cohort/07_present/abstract.rendered.md` | 0 | 0 findings |
 | `python plugins/orchestra/scripts/lint_prose.py examples/fictional-cohort/07_present/abstract.rendered.md` | 0 | 4 paragraphs, 0 hits; `--count-words`: 268 |
 | `python plugins/orchestra/scripts/check_pptx.py examples/fictional-cohort/07_present/defense/deck.pptx` | 0 | 23 slides, 0 issues, including the new `leftover-markup` (S22) check (`--render` with PowerPoint: 23 PNGs, looked at; `lint_prose.py --slides`: 0 findings) |
-| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3` | 0 | G3: open — results locked by Example author on 2026-11-21; 5 locked files unchanged |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3` | 0 | G3: open (locked, 5 files unchanged) — results locked by Example author on 2026-11-21 |
 
 ### P3 edits made by hand
 
@@ -346,7 +348,7 @@ also the last kept one) was copied back; rounds 1 and 2 stayed in the run folder
 | `python plugins/orchestra/scripts/audit.py <copy of examples/fictional-cohort> thesis` | 0 | `audit: thesis — 0 block, 16 warn` (run on a copy, so the committed `reviews/audit.json` stays the audit of both) |
 | `python plugins/orchestra/scripts/audit.py <copy of examples/fictional-cohort> manuscript` | 0 | `audit: manuscript — 0 block, 16 warn` |
 | `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G4`, also with `--deliverable thesis` and `--deliverable manuscript`, in a fresh clone | 0 | G4: open — approved after a clean audit by Example author on 2026-11-22; 21 locked files unchanged |
-| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3`, in a fresh clone | 0 | G3: open — results locked by Example author on 2026-11-21; 5 locked files unchanged |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3`, in a fresh clone | 0 | G3: open (locked, 5 files unchanged) — results locked by Example author on 2026-11-21 |
 
 `check_numbers.py` on the results chapters of `thesis.assembled.md` is part of the audit (E-NUM). The warns:
 STROBE 13a–13c (no screening counts, see P3), 14b and 14c in the manuscript; E-PHI on the study-period dates
@@ -396,8 +398,100 @@ STROBE 13a–13c (no screening counts, see P3), 14b and 14c in the manuscript; E
   comment after "none" for a request and listed it in `out/author-decisions.md`. "none" followed by a comment
   is now no request, the reviewer agents are told to write `NEW-ANALYSIS: none` alone, and the regenerated
   `out/author-decisions.md` no longer lists it.
-- **Stale Chapter 3 .docx.** `out/ch3-results.docx` (P2) predates the author's two sentence changes in
-  Chương 3; `out/thesis.docx` has them.
+- **Stale Chapter 3 .docx (removed in P6).** `out/ch3-results.docx` (P2) predated the author's two sentence
+  changes in Chương 3; it was deleted in P6, and `out/thesis.docx` has the current chapter.
 - **Row added to STATUS.** In stage 2 the agent added a row "8 Manuscript"; on the author's instruction it was
   merged into row 6 in stage 3.
 - **Chương 1** is still the P1 chapter with thin sections 1.1–1.3; the author accepted it as it is.
+
+## P6: ethics, journal choice and one revision round (23 November 2026)
+
+### How it was run
+
+Same recipe as P4 with `WebFetch` added (`--allowedTools "Bash,Read,Write,Edit,Glob,Grep,Skill,Agent,WebFetch"`,
+plugins `orchestra` and `phi-guard` with `--plugin-dir`, `--setting-sources ""`, empty MCP config, `--no-chrome`,
+`--max-budget-usd` per turn as a guard), in a fresh folder outside the repository with a fresh, empty memory folder;
+this README was left out of the run folder, and the network was on (the journal lookups are live). Claude Code
+2.1.226, model `sonnet` (`claude-sonnet-5`), `plugins: orchestra, phi-guard` and `mcp_servers: []` in every init
+event (`summarize_run.py`), no phi-guard or permission denials. Each stage is one conversation; every author answer
+was sent with `--resume <session_id>`. The controller acted as the Example author: the G4 opening and the
+consent-waiver entry in `decisions.md` were run or written by the controller outside the agent, and every other
+author input was typed as a turn. Four stages and ten turns, one of them killed and rerun (see known issues):
+200 turns, about 45 minutes of agent time and USD 12 in total (USD 11.59 reported, plus about USD 0.6 estimated
+from the token counts of the killed turn).
+
+| Stage | Turns of the conversation (author's input, short form) | Skill used | Turns, minutes, USD | Files written |
+|---|---|---|---|---|
+| 1 Ethics | (1) "Làm hồ sơ đạo đức cho đề tài: phiếu thu thập số liệu (CRF), từ điển dữ liệu, bản thông tin và phiếu đồng ý, danh mục hồ sơ." (2) unscripted author answer to the agent's data-minimisation question: keep the study ID and the index admission and discharge dates, worded as in `03_protocol/variables.md` (killed after a hook hang, rerun once). (3) the scripted consent-waiver sentence, after the controller wrote it in `decisions.md` | ethics-and-crf | 33, 6.1, 1.40 (+ about 0.6 for the killed turn) | `03_protocol/ethics/crf.md`, `data-dictionary.csv`, `consent-form.md` (after the waiver: an information sheet kept on file, no signature block), `dossier.md`; `out/ethics/crf.docx`, `consent-form.docx`, `dossier.docx` |
+| 2 Journals | (1) "Đề xuất 3–4 tạp chí để nộp bài báo trong 06_writing/manuscript, tra cứu từng tạp chí và lập bảng so sánh." (2) "Tôi là Example author, chọn tạp chí BMJ open diabetes research & care." | journal-selection | 56, 8.4, 1.91 | `08_submission/journals.json`, `journals.md`; `project.yaml` `target.journal` written by `journal_check.py . pick … --by "Example author"` |
+| 3 Revision | the controller wrote `09_revision/comments-received.md` (a fictional editor and two fictional reviewers; the first line marks it as invented). (1) "Đây là nhận xét phản biện (09_revision/comments-received.md). Sửa bài báo và soạn thư trả lời." (2) "Không làm phân tích phân nhóm theo giới; lý do: không định trước trong SAP và nhóm nhỏ." (3) unscripted author request: run `audit.py .` over both deliverables before G4 | reviewer-response | 100, 25, 7.36 | `09_revision/comments.json`, `submitted/**`, `response.md`; five manuscript drafts revised; `reviews/guideline-checklist-manuscript.json` (five STROBE quotes re-anchored), `reviews/audit.*` (both deliverables, 0 block, 34 warn); `decisions.md` entry for R1.2 |
+| 4 Close | the controller ran `gate.py open . G4 --by "Example author"`; then "Tôi là Example author, đã mở G4 … Xuất bản cuối và thư trả lời, cập nhật out/author-decisions.md và STATUS.md." | reviewer-response | 11, 2.0, 0.93 | `out/manuscript.docx` (`assemble.py . manuscript --final`), `out/response-letter.docx` (`response.py . build`), `STATUS.md` row 8 |
+
+Scripted author inputs (D38), as typed: the consent-waiver line "Hội đồng đạo đức (hư cấu) miễn ký phiếu đồng ý vì
+nghiên cứu hồi cứu hồ sơ; vẫn soạn bản thông tin để lưu hồ sơ." (also written by the controller in `decisions.md`),
+the journal pick sentence, the new-analysis decision for R1.2 and `gate.py open . G4 --by "Example author"`.
+Unscripted author answers: the stage 1 answer on the three identifier and date fields, and the stage 3 request to
+audit both deliverables. The scripted exclusion-criteria answer ("Tiêu chuẩn loại trừ lấy đúng mục 6 của
+03_protocol/protocol.md.") was not used: the agent never asked, and took the four criteria from
+`03_protocol/protocol.md` §2.1.2 itself.
+
+Journals looked up live on 2026-11-23 with `journal_check.py . lookup` (NLM Catalog, DOAJ, Crossref); every fact
+in the table comes from those records: Diabetes Research and Clinical Practice (MEDLINE currently indexed; not in
+DOAJ), BMJ Open Diabetes Research & Care (currently indexed; in DOAJ, APC as recorded), Journal of Diabetes
+Investigation (currently indexed; in DOAJ; one signal: the publisher name differs across the three sources) and
+Diabetes, Metabolic Syndrome and Obesity (not listed for MEDLINE; in DOAJ). The author picked the first row without
+a signal that is a real candidate (see known issues). `journal_check.py . note` recorded one scope line (Diabetes,
+Metabolic Syndrome and Obesity); the other journals' author pages returned 403 or DNS errors through WebFetch, so
+no word limit or reference style was noted, and `target.word_limit` and `target.text_words` keep the P4 values
+(250 and 3,500).
+
+The revision round (fictional comments): E1 word limit (main text cut to 3,361 of 3,500 words); R1.1 exclusion
+criteria (an itemised list in Methods, plus a limitation that the source data hold no per-reason counts); R1.2
+subgroup by sex (not run, the author's decision; "No change because …" in the letter); R2.1 residual confounding
+(the Limitations paragraph rewritten); R2.2 adjusted-OR CI in the abstract (no change, it was already there). The
+E-NUM block the 0.7.0 rules raise on `06-conclusion.md` (a line starting "2021–2022:") was fixed by the agent by
+rewrapping the sentence.
+
+### P6 checks (run from the repository root)
+
+| Command | Exit | Result |
+|---|---|---|
+| `python plugins/orchestra/scripts/crf.py examples/fictional-cohort check` | 0 | `crf: 0 block, 3 warn` (the three fields the author chose to keep) |
+| `python plugins/orchestra/scripts/response.py examples/fictional-cohort check` | 0 | `response: 0 block, 0 warn` |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G2`, in a fresh clone | 0 | G2: open — approved by Example author on 2026-11-21 |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G3`, in a fresh clone | 0 | G3: open (locked, 5 files unchanged) — results locked by Example author on 2026-11-21 |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-cohort G4 --deliverable thesis`, also `--deliverable manuscript`, in a fresh clone | 0 | G4: open — approved after a clean audit by Example author on 2026-11-23; 21 locked files unchanged |
+| `python plugins/orchestra/scripts/audit.py <copy of examples/fictional-cohort>` | 0 | `audit: thesis, manuscript — 0 block, 34 warn` |
+| `python plugins/orchestra/scripts/journal_check.py <copy> table` | 0 | rewrites `08_submission/journals.md` byte for byte |
+
+The 34 warns: STROBE 13a–13c (both deliverables) and 14b–14c (manuscript) partial, as in P4; E-PHI on the
+study-period dates; one P15 bold label; one E-NUM trend word in `ch4-discussion.md` (thesis, from P4); twelve E-REV
+warns. The E-REV warns are expected: the internal reviewer agents saw the submitted version, and in a revision round
+the journal's reviewers are that round's reviewers, so the internal loop is not rerun.
+
+### P6 known issues
+
+- **Hook hang (environment, not the pipeline).** On the run machine (Windows) `python3` on the PATH was the
+  Microsoft Store alias. The orchestra PreToolUse hook prefers `python3`; one call of `gate_hook.py` through that
+  alias hung past the hook's 15-second timeout and stalled stage 1 turn 2 for about 36 minutes. The turn was
+  killed and rerun once (same session, same answer), with a `python3` shim for the real interpreter first on the
+  PATH.
+- **Mismatched lookup row.** The first title lookup for Diabetes Research and Clinical Practice matched its
+  discontinued Supplement record (ISSN 1572-1671, deselected from MEDLINE). The agent looked the journal up again by
+  ISSN and told the author to ignore that row, but the record stays first in `journals.json` and in the table
+  (`journal_check.py` has no command to drop a record). The author skipped it and picked the first real candidate
+  without a signal.
+- **Journal limits not noted.** Most author-instruction pages could not be read during the run (403, DNS), so
+  `pick` kept the P4 word limits; the agent said so and asked the author to check the journal's pages.
+- **Audit of one deliverable.** The agent first ran `audit.py . manuscript` only. Opening G4 from that audit closed
+  G4 for the thesis (its lock included the manuscript drafts). At the author's request the agent ran `audit.py .`
+  over both deliverables and the author opened G4 again; both deliverables pass.
+- **Exclusion criteria not asked.** The agent wrote the criteria from the protocol without asking. They match
+  `03_protocol/protocol.md` §2.1.2 (the protocol has no section 6, so the scripted answer would have pointed nowhere).
+- **Rendered section files not refreshed.** `06_writing/manuscript/*.rendered.md` still hold the submitted text;
+  `manuscript.assembled.md` and `out/manuscript.docx` are current.
+- **`out/author-decisions.md` not regenerated.** `worklog.py decisions .` refused (exit 1) because the file was
+  edited by hand in P4; the R1.2 decision is in `decisions.md` and `09_revision/response.md`.
+- **Row added to STATUS.** As in P4, the agent added a row ("8 Revision") instead of updating row 6.
+- **Thesis export.** No thesis draft changed, so `assemble.py . thesis --final` was not run; `out/thesis.docx` is
+  the P4 export.
