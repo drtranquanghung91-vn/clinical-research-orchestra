@@ -12,7 +12,13 @@ A record of kind "p" (or any record with p < 0.001) lets "< 0.001" pass.
 A number that is not a result (an age range in eligibility criteria, a ward code) carries a marker
 right after it, same as derived: 18–65 <!-- not-a-result: eligibility --> (both numbers of a range are skipped).
 Headings, citation groups, table/figure/section references, dates, "95%" in CI labels, integers 0–10 and
-years are not checked (defaults in references/judgement-defaults.md).
+years in context (after năm, in, since, from, until, during, between, before, after, từ, đến, trước, sau, giai đoạn,
+thời kỳ, period, a month, `tháng N/`, `N/`, `et al.,`, `và cộng sự`, inside a parenthesised author-year citation, or a
+parenthesised year range; not before patients/participants/people/cases/subjects/người/bệnh nhân/ca/trường hợp) are not
+checked; any other 1900-2100 integer is (defaults in references/judgement-defaults.md).
+Trend words (tăng dần, giảm dần, xu hướng, peak/peaked, trend, increasing) in a sentence need two `{{R-…}}` values or one
+trend-test result (label with trend, Cochran-Armitage, Jonckheere, Mann-Kendall, Cuzick, p for trend, joinpoint), unless
+negated: `E-NUM warn` (run it on the text with placeholders).
 Thousands separators are not parsed (this project never writes them): an author-typed "1,070" (en) or
 "1.070" (vi) is expected to produce an E-NUM finding; the fix is a placeholder.
 Exit codes: 0 = clean (warnings allowed); 1 = E-NUM block findings (listed); 2 = usage or I/O error.
@@ -41,6 +47,43 @@ CI95 = re.compile(r"95\s*%\s*(?=CI\b|KTC|CrI\b|confidence interval|khoảng tin 
 THRESH = re.compile(r"(?:\bp|α|\balpha)\s*[<≤=>≥]\s*0[.,](?:05|01|1)(?!\d)", re.IGNORECASE)
 NAMES = re.compile(r"(?<=[^\W\d_])-\d+(?!\d|[.,]\d)")  # COVID-19 yes; OR-1.84 and baseline-3.7 stay checked
 PSMALL = re.compile(r"[<≤]\s*0[.,]001")
+YEAR = r"(?:19\d{2}|20\d{2}|2100)"
+MONTHS = (r"(?:January|February|March|April|May|June|July|August|September|October|November|December|"
+          r"Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)")
+NOT_A_YEAR_AFTER = r"(?!\s+(?:patients?|participants?|people|persons|cases|subjects|người|bệnh nhân|ca\b|trường hợp))"
+NOT_A_YEAR_UNIT = (r"(?!\s*(?:%|(?:mg|[µμ]g|mcg|ug|ng|pg|g|kg|ml|dl|l|mmol|mol|mmHg|IU|UI|cm|mm|m|kcal|kJ|cal|min|h|bpm|"
+                   r"đơn vị|viên|lần)\b))")
+YEAR_CTX = re.compile(
+    rf"(?:\b(?:năm|in|since|from|until|during|between|before|after|từ|đến|trước|sau|giai đoạn|thời kỳ|period)\s+(?:năm\s+)?"
+    rf"|\b{MONTHS}\.?\s+(?:\d{{1,2}},?\s+)?|\btháng\s*\d{{1,2}}\s*(?:/\s*|\s+năm\s+)|\b\d{{1,2}}/"
+    rf"|\bet al\.?,?\s+|\bvà (?:cộng sự|cs\.?),?\s+)"
+    rf"{YEAR}[a-z]?(?:\s*(?:[–-]|to|and|đến|và)\s*{YEAR})?(?!\d){NOT_A_YEAR_AFTER}{NOT_A_YEAR_UNIT}", re.IGNORECASE)
+CITE_YEAR = re.compile(rf"\([^()]*[A-Za-zÀ-ỹĐđ]{{2,}}[^()]*?,?\s+{YEAR}[a-z]?\s*\)|\(\s*{YEAR}\s*[–-]\s*{YEAR}\s*\)")
+TREND = re.compile(r"(?i)\btăng dần\b|\bgiảm dần\b|\bxu hướng\b|\bpeak(?:s|ed|ing)?\b|\btrends?\b|\bincreasing(?:ly)?\b")
+TREND_TEST = re.compile(r"(?i)trend|xu hướng|cochran|armitage|jonckheere|mann[- ]kendall|cuzick|joinpoint")
+NEGATION = re.compile(r"(?i)\b(?:no|not|without|neither|không|chưa)\b")
+SENTENCE = re.compile(r"(?<=[.!?;])\s+")
+PLACEHOLDER_ID = re.compile(r"\{\{(R-A\d+-\d{3})")
+
+
+def trend_findings(text: str, results: list[dict]) -> list[tuple[int, str, str]]:
+    """Warn per sentence with trend wording that cites fewer than two ledger values and no trend-test result."""
+    trend_ids = {r.get("id") for r in results if isinstance(r, dict)
+                 and TREND_TEST.search(f"{r.get('label', '')} {r.get('test', '')}")}
+    out = []
+    for n, line in enumerate(text.split("\n"), start=1):
+        if line.lstrip().startswith("#"):
+            continue
+        for sent in SENTENCE.split(COMMENT.sub(" ", line)):
+            m = TREND.search(sent)
+            if not m or NEGATION.search(sent):
+                continue
+            ids = set(PLACEHOLDER_ID.findall(sent))
+            if len(ids) >= 2 or ids & trend_ids:
+                continue
+            out.append((n, "warn", f'trend wording "{m.group(0)}" without two ledger values or a trend-test result '
+                                   "in the sentence: cite them as {{R-…}} or reword (no trend test, no trend claim)"))
+    return out
 
 
 DERIVED_FULL = re.compile(r"(-?\d+(?:[.,]\d+)?)(%?)\s*<!--\s*derived:(.*?)-->", re.DOTALL)
@@ -114,13 +157,15 @@ def find_unmatched(text: str, ledger_results: list[dict], lang: str) -> list[tup
         s = CITE.sub(" ", s)
         s = REFS.sub(" ", s)
         s = DATES.sub(" ", s)
+        s = YEAR_CTX.sub(" ", s)
+        s = CITE_YEAR.sub(" ", s)
         s = CI95.sub(" ", s)
         s = THRESH.sub(" ", s)
         s = NAMES.sub(" ", s)
         if has_small_p:
             s = PSMALL.sub(" ", s)
         for tok, value, decimals in numfmt.parse_tokens(s, lang):
-            if decimals == 0 and not tok.endswith("%") and (0 <= value <= 10 or 1900 <= value <= 2100):
+            if decimals == 0 and not tok.endswith("%") and 0 <= value <= 10:
                 continue
             if not numfmt.matches(value, decimals, xs):
                 found.append((n, tok))
@@ -165,6 +210,9 @@ def main(argv=None) -> int:
                 total += 1
             else:
                 warns += 1
+        for n, sev, msg in trend_findings(text, results):
+            print(f"E-NUM {sev} {f}:{n}: {msg}")
+            warns += 1
     print(f"check_numbers: {total} findings" + (f", {warns} warnings" if warns else ""))
     return 1 if total else 0
 

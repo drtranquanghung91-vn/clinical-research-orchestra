@@ -1,0 +1,30 @@
+title: "HbA1c lúc nhập viện và tái nhập viện 1 năm ở người bệnh đái tháo đường type 2 (hư cấu)"
+type: thesis-masters
+design: cohort
+reporting_guideline: STROBE
+language:
+  chat: vi
+  output: vi
+institution:
+  name: ""
+  city: ""
+  template: ""
+citation_style: vn-thesis
+target:
+  journal: ""
+  journal_style: null
+  conference: ""
+  word_limit: null
+  text_words: null
+  poster_size_cm: [90, 120]
+evidence_sources: [openevidence, pubmed, europepmc, crossref]
+docx:
+  font: "Times New Roman"
+  size_pt: 13
+  line_spacing: 1.5
+  margins_cm: [2, 2, 3, 2]
+review:
+  reviewers: []
+  registration: null
+tools:
+  rscript: null

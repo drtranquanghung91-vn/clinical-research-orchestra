@@ -1,0 +1,41 @@
+{
+  "name": "orchestra",
+  "version": "0.7.0",
+  "description": "Evidence-first clinical research lifecycle for medical students and healthcare professionals (Vietnamese and English).",
+  "author": {
+    "name": "Trần Quang Hưng",
+    "url": "https://github.com/drtranquanghung91-vn"
+  },
+  "homepage": "https://github.com/drtranquanghung91-vn/clinical-research-orchestra",
+  "repository": "https://github.com/drtranquanghung91-vn/clinical-research-orchestra",
+  "license": "MIT",
+  "keywords": [
+    "clinical-research",
+    "medical",
+    "thesis",
+    "manuscript",
+    "case-report",
+    "systematic-review",
+    "poster",
+    "evidence",
+    "vietnamese"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Clinical Research Orchestra",
+    "shortDescription": "Evidence-first clinical research, from question to protocol, analysis, thesis, manuscript and reviews",
+    "longDescription": "Skills and standard-library scripts for medical students and clinicians, in Vietnamese and English: research question, literature with verified references, protocol, sample size and analysis plan, ethics dossier and CRF, results with checked numbers, thesis and manuscript drafting with scored reviewer rounds, case reports, systematic reviews, journal choice, reviewer responses, posters and defence. On this host the skills and scripts work; the gate hook does not run, so check the gates yourself before a final export.",
+    "developerName": "Trần Quang Hưng",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Giúp tôi viết đề cương nghiên cứu",
+      "Check the numbers in my results chapter against the ledger"
+    ],
+    "websiteURL": "https://github.com/drtranquanghung91-vn/clinical-research-orchestra"
+  }
+}

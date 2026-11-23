@@ -8,6 +8,8 @@ description: 'Use when the user wants a systematic review or meta-analysis plann
 Protocol first, two human reviewers, every number from a script, export only through G4. Detail:
 `${CLAUDE_PLUGIN_ROOT}/references/workflows/systematic-review.md`. Not covered: network meta-analysis, IPD,
 diagnostic-accuracy pooling, meta-regression beyond one factor, Bayesian models; refer to a statistician.
+`design: scoping-review`: compute no pooled number and no risk of bias, even if asked; say scoping reviews chart
+(PRISMA-ScR) and offer a systematic review (new protocol, G2).
 
 ## 1. Protocol (G2)
 Write `03_protocol/sr-protocol.md` from `${CLAUDE_PLUGIN_ROOT}/references/review/sr-protocol-template.md` with the
@@ -32,7 +34,7 @@ Two extraction files, a consensus file and `rob.csv` confirmed by both reviewers
 
 ## 4. Synthesis
 - `python "${CLAUDE_PLUGIN_ROOT}/scripts/meta.py" . run`, then `meta.py . forest-spec`. Report every pooled
-  estimate with τ², I² and the prediction interval. Never switch model after seeing results; a switch is a
+  estimate with τ², I² and the prediction interval, each followed by its result id (`R-A1-00n`), in the files and in your answer. Never switch model after seeing results; a switch is a
   `DEVIATION A<n>:` line the author writes.
 - High heterogeneity, or a protocol that forbids pooling: say the pooled value is uncertain or do not pool,
   propose downgrading inconsistency (and imprecision when the CI or prediction interval crosses no effect) in
@@ -44,7 +46,7 @@ Two extraction files, a consensus file and `rob.csv` confirmed by both reviewers
 
 ## 5. Lock, write, export
 The author locks G3. Draft with `${CLAUDE_PLUGIN_ROOT}/references/writing/roles/review-systematic.md` and the P4
-roles; reviewers, then `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score . review --round N`;
+roles; review rounds per `${CLAUDE_PLUGIN_ROOT}/references/writing/review-round.md` (replies saved to `reviews/<agent>-review.md`, one `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score . review --round N` per pass, at most 3);
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/assemble.py" . review`; `python "${CLAUDE_PLUGIN_ROOT}/scripts/audit.py" . review`;
 the author opens G4; `python "${CLAUDE_PLUGIN_ROOT}/scripts/assemble.py" . review --final`. Then the disclosure (AI
 suggestions counted) and `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" decisions .`.

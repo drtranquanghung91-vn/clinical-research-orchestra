@@ -1,6 +1,6 @@
 {
   "name": "orchestra",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Evidence-first clinical research lifecycle for medical students and healthcare professionals (Vietnamese and English).",
   "author": { "name": "Trần Quang Hưng" },
   "license": "MIT",

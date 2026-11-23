@@ -1,0 +1,36 @@
+{
+  "name": "phi-guard",
+  "version": "0.7.0",
+  "description": "Patient-identifier guard: scans text and de-identifies CSV/XLSX files. On hosts without Claude Code hooks the outbound blocking is not automatic.",
+  "author": {
+    "name": "Trần Quang Hưng",
+    "url": "https://github.com/drtranquanghung91-vn"
+  },
+  "homepage": "https://github.com/drtranquanghung91-vn/clinical-research-orchestra",
+  "repository": "https://github.com/drtranquanghung91-vn/clinical-research-orchestra",
+  "license": "MIT",
+  "keywords": [
+    "privacy",
+    "phi",
+    "de-identification",
+    "hook"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "PHI Guard",
+    "shortDescription": "Find and remove patient identifiers before anything leaves the machine",
+    "longDescription": "A scanner for patient identifiers in Vietnamese and English text and a de-identifier for data files. In Claude Code a hook blocks identifiers in outbound tool calls; on this host that hook does not run, so scan files yourself before sending or uploading anything.",
+    "developerName": "Trần Quang Hưng",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Ẩn danh tệp dữ liệu bệnh nhân này",
+      "Scan this note for patient identifiers"
+    ],
+    "websiteURL": "https://github.com/drtranquanghung91-vn/clinical-research-orchestra"
+  }
+}

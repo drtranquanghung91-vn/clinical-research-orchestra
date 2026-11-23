@@ -5,6 +5,8 @@ Defaults here (IQR × 1.5 for outliers) are defaults the author may override, no
 
 ## Codebook template (`04_data/codebook.md`)
 
+When `03_protocol/ethics/data-dictionary.csv` exists (built by `crf.py`), the codebook starts from it: same variable names, types and value lists; a difference between the data and the dictionary is a question for the author, never a silent rename.
+
 | Variable | Type | Unit | Coding | Source column | Notes |
 |---|---|---|---|---|---|
 | sbp_adm | numeric | mmHg | continuous | Huyết áp tâm thu | measured at admission |

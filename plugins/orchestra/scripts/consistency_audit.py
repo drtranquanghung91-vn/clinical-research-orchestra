@@ -11,7 +11,9 @@ Checks: same quantity (same words before a number, same unit, different value) =
 written approximately or as a decimal = block; date ranges sharing one end but not the other = block;
 abstract numbers found nowhere else = warn; percentage columns not summing to the total row = warn;
 term variants (project.yaml terms: + built-ins) = warn. A line containing <!-- cons-ok: reason --> is
-skipped. Exit 0 = no block; 1 = at least one block; 2 = usage or I/O error. Standard library only.
+skipped. 03_protocol/sample-size.md, when present, is read as a reference source for the same-quantity
+check only: a typed number elsewhere that differs from it under the same key words is a warn (per-group and
+total sizes share key words, so never a block); no other check runs on it. Exit 0 = no block; 1 = at least one block; 2 = usage or I/O error. Standard library only.
 
 Deliberate blind spots (noise trade-offs; the consistency-auditor agent covers them):
 - integers <= 10 and years 1900-2100 are never compared as quantities ("5 deaths" vs "7 deaths");
@@ -38,6 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from crolib import numfmt, projectcfg  # noqa: E402
 import render_results  # noqa: E402
 
+SAMPLE_SIZE = "03_protocol/sample-size.md"
 STOP = frozenset("là của có và được trong với ở cho các những một này "
                  "is was of the a an in at to".split())
 SKIP_LAST = frozenset({"p", "pvalue", "p-value", "ci", "ktc", "or", "rr", "hr", "sd", "auc"})
@@ -394,6 +397,21 @@ def _key(dm: str, idx: int, end: int, unit: str):
     return prefix, nxt, ci
 
 
+SENT_CUT = re.compile(r"[.;!?](?=\s|$)|\|")
+QUAL = (("per", re.compile(r"m\u1ed7i\s+\d|per\s+(?:\d|unit|one|each|increase)", re.I)),
+        ("cont", re.compile(r"li\u00ean\s+t\u1ee5c|continuous", re.I)))
+
+
+def _qualifier(dm: str, idx: int, end: int) -> frozenset:
+    """Markers that make the quantity a different one (per-unit, continuous exposure), read from the
+    sentence (or table cell) holding the token, so "OR hiệu chỉnh 1,02 mỗi 1%" is not compared with the
+    unqualified "OR hiệu chỉnh" of a categorical exposure."""
+    a = max((m.end() for m in SENT_CUT.finditer(dm, 0, idx)), default=0)
+    m = SENT_CUT.search(dm, end)
+    seg = nfc(dm[a:m.start() if m else len(dm)])
+    return frozenset(name for name, rx in QUAL if rx.search(seg))
+
+
 def _suffix(a: tuple, b: tuple) -> bool:
     s, l = (a, b) if len(a) <= len(b) else (b, a)
     return l[len(l) - len(s):] == s
@@ -412,12 +430,13 @@ def _check_quantities(infos: list[Info], out: list) -> None:
             prefix, nxt, ci = _key(info.km, idx, idx + len(tok), unit)
             if ci or len(prefix) < 2 or prefix[-1] in SKIP_LAST | REF_WORDS | GROUP_WORDS:
                 continue
-            bucket = buckets.setdefault((unit, nxt, prefix[-2:]), [])
+            qual = _qualifier(info.km, idx, idx + len(tok))
+            bucket = buckets.setdefault((unit, nxt, prefix[-2:], qual), [])
             for o_tok, o_val, o_dec, o_prefix, o_loc in bucket:
                 if not _suffix(prefix, o_prefix) or _same(val, dec, o_val, o_dec):
                     continue
                 short = prefix if len(prefix) <= len(o_prefix) else o_prefix
-                tag = (unit, nxt, short, frozenset((tok, o_tok)))
+                tag = (unit, nxt, qual, short, frozenset((tok, o_tok)))
                 if tag not in seen:
                     seen.add(tag)
                     out.append(("block", info.loc,
@@ -629,7 +648,17 @@ def audit(project: Path, files: list[Path] | None = None, lang: str | None = Non
     docs = [_load_doc(p, project, by_id, lang, findings) for p in paths]
     infos_by_doc = [_analyse(d, lang) for d in docs]
     infos = [i for infos_ in infos_by_doc for i in infos_]
-    _check_quantities(infos, findings)
+    ref_infos: list = []
+    if files is None and (project / SAMPLE_SIZE).is_file():
+        ref_infos = _analyse(_load_doc(project / SAMPLE_SIZE, project, by_id, lang, findings), lang)
+    _check_quantities(infos, findings)  # the cross-document pass is unchanged: its blocks stay blocks
+    if ref_infos:  # separate pass: only what disagrees with sample-size.md, always a warn
+        quantities: list = []
+        _check_quantities(ref_infos + infos, quantities)  # reference first: a finding sits on the later, typed copy
+        for _sev, loc, msg in quantities:
+            if str(loc).startswith(SAMPLE_SIZE) or SAMPLE_SIZE not in msg:
+                continue
+            findings.append(("warn", loc, msg))
     _check_sample_size(infos, findings)
     _check_dates(infos, findings)
     _check_abstract(docs, infos_by_doc, by_id, lang, findings)

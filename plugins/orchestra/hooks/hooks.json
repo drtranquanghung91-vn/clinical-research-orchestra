@@ -7,7 +7,7 @@
           {
             "type": "command",
             "command": "if python3 -c 'import sys' >/dev/null 2>&1; then P=python3; elif python -c 'import sys' >/dev/null 2>&1; then P=python; else printf '%s\\n' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"ask\",\"permissionDecisionReason\":\"[orchestra] Python not found; cannot check gates G3/G4. / Không tìm thấy Python; không kiểm tra được cổng G3/G4.\"}}'; exit 0; fi; \"$P\" \"${CLAUDE_PLUGIN_ROOT}/scripts/gate_hook.py\"",
-            "timeout": 15
+            "timeout": 30
           }
         ]
       }

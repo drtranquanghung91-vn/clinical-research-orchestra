@@ -30,16 +30,14 @@ from memory; author-only facts go in `[[TÁC GIẢ: …]]`; ask the author to fi
 analysis.
 
 ## 4. Review and revise (at most 3 rounds)
-Each round dispatch in parallel `citation-verifier`, `statistical-reviewer`, `reporting-guideline-checker`,
-`scientific-editor` and `consistency-auditor` with the project, the deliverable `thesis` and no role brief, then
-run `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score . thesis --round N`; its last line decides. Exit 2:
-read stderr, rerun the named reviewer (or the guideline checker for a missing checklist), score the same N again;
-never raise N after a failed score.
+Follow `${CLAUDE_PLUGIN_ROOT}/references/writing/review-round.md` with deliverable `thesis`. One round: the five
+reviewer agents in parallel (no role brief); save each reply unchanged to `reviews/<agent>-thesis.md`; then one
+`python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score . thesis --round N` before any fix; its last line decides.
 - `KEEP`: fix the findings, next round.
 - `REVERT`: `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" revert . thesis`; the loop stops.
 - `STOP`: the loop stops.
-A request for a new analysis (`NEW-ANALYSIS:`) never enters the text: it goes to `out/author-decisions.md`.
-Findings on reused chapters: fix only mechanical E-FMT/E-NUM issues; send the rest to the author.
+`NEW-ANALYSIS:` requests go to `out/author-decisions.md`, never into the text. Edit only sections you drafted;
+reused chapters get mechanical E-FMT/E-NUM fixes only; an author's chapter not accepted is never edited.
 
 ## 5. Humanize
 After the last content round run `prose-humanizer` (Skill tool) on each section you drafted (not reused).

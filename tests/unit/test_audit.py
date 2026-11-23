@@ -295,3 +295,52 @@ class TestAudit(unittest.TestCase):
                                           encoding="utf-8")
         names = {f.name for f in gate.export_files(self.p, "thesis")}
         self.assertTrue({"fig1.png", "order.txt", "ch3-results.md"} <= names)
+
+    def test_retracted_only_when_true(self):
+        self.assertIsNone(audit.citation_problem(dict(OK, retracted="false")))
+        self.assertEqual(audit.citation_problem(dict(OK, retracted=True)), "is retracted")
+
+    def test_trend_wording_warns_and_stale_figure_blocks(self):
+        figs = self.p / "07_present" / "figures"
+        figs.mkdir(parents=True, exist_ok=True)
+        (figs / "F1.png").write_bytes(PNG)
+        (figs / "F1.data.json").write_text(json.dumps({"id": "F1", "values": [
+            {"label": "adjusted", "ref": "R-A1-001", "est": 1.42, "lo": 1.05, "hi": 1.91}]}), encoding="utf-8")
+        (self.d / "ch3-results.md").write_text(
+            SECTIONS["ch3-results.md"] + "\nTỷ lệ tái nhập viện tăng dần theo nhóm.\n\n![Hình 3.1. OR](../../07_present/figures/F1.png)\n",
+            encoding="utf-8")
+        write_reports(self.p)
+        code, out, err = self.cli("thesis")
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("E-NUM warn 06_writing/thesis/ch3-results.md:5: trend wording", out)
+        (self.p / "ledgers" / "results-ledger.json").write_text(json.dumps({"results": [dict(RES, value=1.5)]}),
+                                                                 encoding="utf-8")
+        code, out, _ = self.cli("thesis")
+        self.assertEqual(code, 1)
+        self.assertIn("figure F1 is stale: R-A1-001.est drawn as 1.42 but the ledger has 1.5", out)
+
+    def test_per_deliverable_reports_are_read_and_missing_one_blocks_there(self):
+        for agent, (rel, _) in reviews.REVIEWERS.items():
+            (self.p / rel).rename(self.p / reviews.report_rel(agent, "thesis"))
+        code, out, _ = self.cli("thesis")
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("E-REV block", out)
+        (self.p / reviews.report_rel("scientific-editor", "thesis")).unlink()
+        code, out, _ = self.cli("thesis")
+        self.assertEqual(code, 1)
+        self.assertIn("E-REV block reviews/scientific-editor-thesis.md:1", out)
+
+    def test_unscored_reports_warn_until_a_round_is_scored(self):
+        import worklog
+        code, out, _ = self.cli("thesis")
+        self.assertEqual(code, 0, out)
+        self.assertIn("E-REV warn reviews/scientific-editor.md:1: no reviewer round of the thesis is scored yet", out)
+        with contextlib.redirect_stdout(io.StringIO()):
+            worklog.score(self.p, "thesis", 1)
+        out = self.cli("thesis")[1]
+        self.assertNotIn("is scored yet", out)
+        self.assertNotIn("newer than the last scored round", out)
+        rep = self.p / "reviews" / "statistical-reviewer.md"
+        rep.write_text(rep.read_text(encoding="utf-8") + "\nRerun.\n", encoding="utf-8")
+        self.assertIn("E-REV warn reviews/statistical-reviewer.md:1: newer than the last scored round (r1)",
+                      self.cli("thesis")[1])

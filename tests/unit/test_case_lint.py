@@ -147,7 +147,8 @@ class TestCaseLint(unittest.TestCase):
         for s in ("on 5 March", "March 5", "ngày 5 tháng 3", "ngày 05/03"):
             with self.subTest(text=s):
                 self.dossier(s + "\n")
-                self.assertTrue(self.found(level="warn"), s)
+                self.assertTrue(self.found(level="block"), s)
+                self.assertIn("day and month", " ".join(m for _, m in self.found(level="block")))
 
     def test_mask_keeps_real_numbers(self):
         for text, keep in (("BE −8 mmol/L", "8"), ("increased by +12%", "12"), ("z-score −2.5", "2.5"),

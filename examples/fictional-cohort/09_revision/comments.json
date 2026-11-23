@@ -1,0 +1,43 @@
+{
+  "deliverable": "manuscript",
+  "source": "09_revision/comments-received.md",
+  "source_sha256": "46181c6378eed1e81fd97118c2951b49737695d09a23ca8fb8fa5f0965f72bf3",
+  "created": "2026-11-23T14:15:37",
+  "approved": true,
+  "items": [
+    {
+      "id": "E1",
+      "who": "Editor",
+      "text": "Please keep the main text within the journal's word limit when you revise the manuscript."
+    },
+    {
+      "id": "R1.1",
+      "who": "Reviewer 1",
+      "text": "The exclusion criteria are unclear. Please state exactly which patients were excluded and why."
+    },
+    {
+      "id": "R1.2",
+      "who": "Reviewer 1",
+      "text": "Please add a subgroup analysis by sex."
+    },
+    {
+      "id": "R2.1",
+      "who": "Reviewer 2",
+      "text": "Please discuss residual confounding more explicitly in the Discussion."
+    },
+    {
+      "id": "R2.2",
+      "who": "Reviewer 2",
+      "text": "Please give the confidence interval of the adjusted odds ratio in the abstract."
+    }
+  ],
+  "submitted": {
+    "06_writing/manuscript/00-title.md": "8bd5187babbda63e908e82f960b2c3f8766b037ec8021bd71485b711a785caf6",
+    "06_writing/manuscript/01-abstract.md": "0cde711f888f2461924f3ba20bc0db08b1ed1f35586df349be57bd1a6aad7ce7",
+    "06_writing/manuscript/02-introduction.md": "b02c36593b341fb476162544f1913d2c4f6a9b20de38d0198f6e447192b957af",
+    "06_writing/manuscript/03-methods.md": "eff2b175ff1e988764eb836392aa223aaf629e5be411bfc000fc579b4414a685",
+    "06_writing/manuscript/04-results.md": "de300e10b84c1f72b7d1c641ec2a00b5dd5c7b692fdda4ce0cde8a4483939c33",
+    "06_writing/manuscript/05-discussion.md": "d26458c45506a076aa7612341a11eac0f27a27481dd277b05fcc7346235f35eb",
+    "06_writing/manuscript/06-conclusion.md": "d7986509c3fc4c13e60db7a7785df4d4e97a0729d66de27361102cb2bfec84f0"
+  }
+}

@@ -50,9 +50,7 @@ If G3 is not open the hook denies the prompt; do not retry, tell the author.
 Agents: `citation-verifier`, `statistical-reviewer`, `reporting-guideline-checker`, `scientific-editor`,
 `consistency-auditor`. Prompt: the project path, deliverable `manuscript`, "run
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" digest . manuscript` first; end the report with the
-`drafts-digest:` line and the `scores` block". Never put a role brief in a reviewer prompt. Reports land in
-`reviews/<agent>.md` (consistency: `reviews/consistency.md`); the guideline checker also writes
-`reviews/guideline-checklist-manuscript.json` (one checklist per deliverable).
+`drafts-digest:` line and the `scores` block". Never put a role brief in a reviewer prompt. Each agent returns its report in its reply (agents write no files); save it unchanged to `reviews/<agent>-manuscript.md` (`reviews/consistency-manuscript.md` for the consistency auditor) and the guideline checker's `checklist` block to `reviews/guideline-checklist-manuscript.json`. Full procedure: `references/writing/review-round.md`.
 
 ## 7. Revise loop
 | Round | Reviewers | Score | Decision | Action |
@@ -62,6 +60,8 @@ Agents: `citation-verifier`, `statistical-reviewer`, `reporting-guideline-checke
 | 3 | all five | `--round 3` | any | stop (never a round 4) |
 | any | | | REVERT | `worklog.py revert . manuscript` restores the last kept round exactly; stop |
 | any | | | STOP | stop |
+
+One round = one pass of the five reviewers followed by exactly one score; never rerun reviewers without scoring the round (the audit warns on unscored reports).
 
 A `NEW-ANALYSIS:` request goes to `out/author-decisions.md`, never into the text; never run a new analysis.
 `worklog.py score` exit 2: read stderr, rerun the named reviewer (a missing checklist: rerun

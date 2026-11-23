@@ -1,0 +1,2 @@
+{"fixture": "tests/scenarios/fixtures/sr-pool-heterogeneous", "allowed_tools": "Bash,Read,Write,Edit,Glob,Grep,Skill,Agent",
+ "max_turns": 60, "skills": ["systematic-review"], "scenario": "tests/scenarios/sr-pool-heterogeneous.md"}

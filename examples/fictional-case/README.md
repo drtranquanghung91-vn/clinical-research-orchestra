@@ -95,7 +95,7 @@ line (checked in the transcripts).
 | Command | Exit | Result |
 |---|---|---|
 | `python plugins/orchestra/scripts/audit.py <copy of examples/fictional-case> case-report` | 0 | `audit: case-report — 0 block, 5 warn` (the five E-REV warns; run on a copy so the committed `reviews/audit.json` stays as written in the run) |
-| `python plugins/orchestra/scripts/gate.py check examples/fictional-case G3`, in a fresh clone | 0 | G3: open — results locked by Example author on 2026-11-23; 3 locked files unchanged |
+| `python plugins/orchestra/scripts/gate.py check examples/fictional-case G3`, in a fresh clone | 0 | G3: open (locked, 3 files unchanged) — results locked by Example author on 2026-11-23 |
 | `python plugins/orchestra/scripts/gate.py check examples/fictional-case G4 --deliverable case-report`, in a fresh clone | 0 | G4: open — approved after a clean audit by Example author on 2026-11-23; 17 locked files unchanged |
 | `python plugins/orchestra/scripts/case_lint.py examples/fictional-case --strict` | 0 | `case_lint: 0 block, 0 warn` |
 | `assemble.py <copy> case-report --final` | 0 | `out/case-report.docx` byte-identical to the committed file |

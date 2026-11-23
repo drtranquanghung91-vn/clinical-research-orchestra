@@ -134,7 +134,7 @@ Model-invoked skills have descriptions that start "Use when…" and list trigger
 | 6 | `literature-review` | 2/5 | new, from owner's review skills | synthesised prose in three modes: (a) thesis Chapter 1 *Tổng quan tài liệu*, (b) manuscript background/introduction, (c) standalone narrative or scoping review (PRISMA-ScR). Modes (a) and (b) done in P1; mode (c) done in P5 |
 | 7 | `protocol-design` | 3 | Amelia Le | design choice with trade-offs, eligibility, variables table, bias and confounding, SPIRIT 2025 map → `03_protocol/` |
 | 8 | `sample-size-sap` | 3 | Amelia Le | sample size with sensitivity table via `samplesize.py`, every parameter sourced, SAP → `03_protocol/` |
-| 9 | `ethics-and-crf` | 3 | new (P4) | ethics committee dossier, consent form, CRF, data dictionary |
+| 9 | `ethics-and-crf` | 3 | new (P6, done) | ethics committee dossier, consent form, CRF, data dictionary; `crf.py` (E-CRF), `lint_prose.py --profile consent`; no new command |
 | 10 | `data-preparation` | 4 | new | cleaning log, codebook, de-identification via `phi-guard` |
 | 11 | `statistical-analysis` | 4 | owner's `stat-analysis-vi` | reproducible R script (Python fallback), or extraction from the user's SPSS/Stata output; fills `results-ledger.json` |
 | 12 | `research-figures` | 4 | grand-rounds + MZL lessons | Table 1, KM with numbers-at-risk, forest plot, CONSORT/STROBE/PRISMA flow diagrams; native editable charts or vector plots; never AI-generated images of data. Done in P3 (forest, KM, rates, flow; Table 1 stays with `statistical-analysis`) |
@@ -146,8 +146,8 @@ Model-invoked skills have descriptions that start "Use when…" and list trigger
 | 18 | `prose-humanizer` | 5/6 | `humanizer` v4 adapted | rewrites AI-sounding prose (section 10.4). Done in P3 |
 | 19 | `research-poster` | 6 | owner's poster skill + IVLBCL lessons | section 11.1. Done in P3 |
 | 20 | `defense-prep` | 6 | new + MZL lessons | section 11.2. Done in P3 |
-| 21 | `journal-selection` | 7 | new (P4) | shortlist with scope fit, indexing, APC, predatory-journal checks |
-| 22 | `reviewer-response` | 7 | new (P4) | point-by-point response letter linked to manuscript edits |
+| 21 | `journal-selection` | 7 | new (P6, done) | shortlist with scope fit, indexing, APC, predatory-journal signals from NLM Catalog, DOAJ and Crossref (`journal_check.py`, never verdicts); no new command |
+| 22 | `reviewer-response` | 7 | new (P6, done) | point-by-point response letter linked to manuscript edits; claimed changes checked against the submitted snapshot (`response.py`, E-RESP); no new command |
 
 ### 6.2 User-invoked commands
 
@@ -449,7 +449,8 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
 
 - **End-to-end:** `examples/fictional-cohort` runs from question to poster with `claude -p` and the installed plugins.
 - **CI** (`.github/workflows/ci.yml`): unit tests, `claude plugin validate` for both plugins and the marketplace (when the CLI is available in CI; otherwise a JSON-schema check of manifests), frontmatter lint (name equals folder, description starts "Use when", body word count), link check for internal references.
-- **Autorater** (P6): order-swapped side-by-side judgement of old vs new skill output on fixed fixtures, used before merging prompt changes.
+- **Autorater** (P6, `tools/autorater.py`): order-swapped side-by-side judgement of old vs new skill output on fixed fixtures, used before merging prompt changes. It is a maintainer tool and runs outside CI.
+- **P6 scenarios** (crf-missing-variable, journal-predatory-signals, reviewer-asks-new-analysis, response-claims-unmade-change) and reruns of scoping-asks-pooling, sr-pool-heterogeneous and undeclared-deviation are recorded in `tests/scenarios/BASELINE.md`. CI dependencies are pinned.
 
 ## 14. Conventions (`AGENTS.md`)
 
@@ -467,7 +468,8 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
   `/plugin marketplace add drtranquanghung91-vn/clinical-research-orchestra`, then `/plugin install phi-guard@clinical-research-orchestra` and `/plugin install orchestra@clinical-research-orchestra`.
 - SemVer in `plugin.json` and `marketplace.json`; `CHANGELOG.md` from v0.1.0.
 - Public on GitHub from 0.1.0 (owner decision, 20 Nov 2026). README states the phase status so users know which skills exist.
-- Codex and Antigravity manifests (as in grand-rounds) in P6.
+- Codex and Antigravity manifests (as in grand-rounds) shipped in P6 (0.7.0); hooks do not run on those hosts.
+- A landing page in `site/` with a Pages workflow (`.github/workflows/pages.yml`) that stays manual until the owner enables GitHub Pages at the 1.0 sign-off.
 
 ## 16. Roadmap
 
@@ -479,7 +481,7 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
 | **P3 Present** | `research-figures`, `research-poster`, `defense-prep`, `conference-abstract`, `prose-humanizer`, `consistency_audit.py`, `poster_preflight.py`, `lint_prose.py`, `invariants.py`, `committee-simulator` | poster with 3 layouts and defence deck built from fictional cohort; MZL and 87-dpi scenarios GREEN. Done (0.4.0, 22 Nov 2026) |
 | **P4 Write** | `thesis-writing`, `manuscript-writing`, `/orchestra:audit`, remaining reviewer agents, revise loop, G4 hook; design in `2026-11-22-p4-write-design.md` | fictional cohort yields manuscript .docx and thesis .docx passing `/orchestra:audit`; thesis-g3-closed, discussion-overclaim, g4-export-blocked, revise-revert scenarios GREEN. Done (0.5.0, 22 Nov 2026) |
 | **P5 Reviews and case reports** | `case-report` (CARE), `systematic-review` with `/orchestra:sr` (PRISMA 2020), `literature-review` mode (c) | fictional case and fictional systematic review pass `/orchestra:audit` and reach G4; case-identifiers, case-consent-missing, sr-single-screener, sr-pool-heterogeneous, scoping-asks-pooling scenarios GREEN; design in `2026-11-22-p5-reviews-case-reports-design.md`. Done (0.6.0, 23 Nov 2026) |
-| **P6 Extend** | `ethics-and-crf`, `journal-selection`, `reviewer-response`, Codex/Antigravity manifests, autorater, landing page; v1.0 release | owner sign-off. Next |
+| **P6 Extend** | `ethics-and-crf`, `journal-selection`, `reviewer-response`, Codex/Antigravity manifests, autorater, landing page; v1.0 release | done (0.7.0); 1.0.0 follows the owner's sign-off |
 
 Each phase gets its own implementation plan in `docs/superpowers/plans/`. Phases were re-ordered on 21 Nov 2026 (statistical analysis moved from P3 to a new P2; old P2–P4 became P3–P5) and on 22 Nov 2026 (case report, systematic review and literature-review mode (c) moved out of P4 into a new P5; old P5 Extend became P6).
 

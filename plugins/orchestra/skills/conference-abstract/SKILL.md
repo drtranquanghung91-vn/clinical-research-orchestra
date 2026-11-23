@@ -38,7 +38,8 @@ Scripts in `${CLAUDE_PLUGIN_ROOT}/scripts/`, from the project folder, in order; 
 Report each script's last line. A check that did not run is reported as not run, never as passed.
 
 ## 6. Hand-off
-Offer the agent `committee-simulator` (deliverable `abstract`) for review questions. A .docx only when asked:
+Offer the agent `committee-simulator` (deliverable `abstract`) for review questions; it cannot write files, so save
+its reply to `reviews/committee-abstract.md`. A .docx only when asked:
 `build_docx.py 07_present/abstract.rendered.md out/abstract.docx --project .`. Ask the author to read the
 rendered file before submission.
 

@@ -1,0 +1,29 @@
+{
+  "name": "orchestra",
+  "displayName": "Clinical Research Orchestra",
+  "version": "0.7.0",
+  "description": "Evidence-first clinical research lifecycle for medical students and healthcare professionals (Vietnamese and English). Hooks do not run on this host: check the gates yourself before a final export.",
+  "suggestedPrompts": [
+    "Giúp tôi viết đề cương nghiên cứu",
+    "Check the numbers in my results chapter against the ledger"
+  ],
+  "category": "Productivity",
+  "keywords": [
+    "clinical-research",
+    "medical",
+    "thesis",
+    "manuscript",
+    "case-report",
+    "systematic-review",
+    "poster",
+    "evidence",
+    "vietnamese"
+  ],
+  "author": {
+    "name": "Trần Quang Hưng",
+    "url": "https://github.com/drtranquanghung91-vn"
+  },
+  "homepage": "https://github.com/drtranquanghung91-vn/clinical-research-orchestra",
+  "repository": "https://github.com/drtranquanghung91-vn/clinical-research-orchestra",
+  "license": "MIT"
+}

@@ -63,14 +63,14 @@
     "9": {
       "status": "present",
       "file": "06_writing/manuscript/03-methods.md",
-      "line": 31,
-      "quote": "HIS chỉ ghi nhận tái nhập viện tại chính Bệnh viện Mô phỏng — người bệnh tái nhập viện ở"
+      "line": 34,
+      "quote": "HIS chỉ ghi tái nhập viện tại chính Bệnh viện Mô phỏng — người tái nhập viện ở cơ sở khác"
     },
     "10": {
       "status": "present",
       "file": "06_writing/manuscript/03-methods.md",
-      "line": 14,
-      "quote": "lần đầu được lấy làm nhập viện chỉ số. Chọn mẫu toàn bộ (census). Cỡ mẫu yêu cầu cho so sánh 2 nhóm"
+      "line": 17,
+      "quote": "Chọn mẫu toàn bộ (census). Cỡ mẫu yêu cầu cho so sánh 2 nhóm"
     },
     "11": {
       "status": "present",
@@ -93,8 +93,8 @@
     "12c": {
       "status": "present",
       "file": "06_writing/manuscript/03-methods.md",
-      "line": 48,
-      "quote": "trên một biến nhiễu, phân tích ca đầy đủ được áp dụng."
+      "line": 47,
+      "quote": "trên một biến nhiễu, dùng phân tích ca đầy đủ."
     },
     "12d": {
       "status": "na",
@@ -103,8 +103,8 @@
     "12e": {
       "status": "present",
       "file": "06_writing/manuscript/03-methods.md",
-      "line": 43,
-      "quote": "Phân tích độ nhạy Fine-Gray (tử vong là nguy cơ cạnh tranh) không thực hiện:"
+      "line": 46,
+      "quote": "Fine-Gray vì tử vong trong viện chỉ xảy ra sau tái nhập viện, không phải nguy cơ cạnh tranh thật."
     },
     "13a": {
       "status": "partial",
@@ -186,8 +186,8 @@
     "19": {
       "status": "present",
       "file": "06_writing/manuscript/05-discussion.md",
-      "line": 49,
-      "quote": "Thứ nhất, lực mẫu: cả OR chính và HR phụ đều không đạt ý nghĩa thống kê với KTC 95% rộng"
+      "line": 42,
+      "quote": "Thứ nhất, lực mẫu: OR chính và HR phụ đều không đạt ý nghĩa thống kê với KTC rộng chứa 1,"
     },
     "20": {
       "status": "present",

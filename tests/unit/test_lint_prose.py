@@ -228,5 +228,63 @@ class TestCli(unittest.TestCase):
         self.assertNotIn("S20", out)
 
 
+CONSENT = ("# Phiếu đồng ý (hư cấu)\n\n"
+           "Bạn sẽ được chia ngẫu nhiên hoá vào một trong hai nhóm và nhóm còn lại sẽ dùng giả dược (thuốc không có "
+           "hoạt chất) trong suốt thời gian nghiên cứu kéo dài mười hai tháng tại bệnh viện cùng với các lần tái khám "
+           "định kỳ mỗi tháng một lần.\n\n"
+           "Phiếu này phải được ký trước khi tham gia.\n\n"
+           "Nghiên cứu là mù đôi (cả bạn và bác sĩ đều không biết bạn ở nhóm nào).\n")
+
+
+class TestConsentProfile(unittest.TestCase):
+    def setUp(self):
+        self.d = Path(tempfile.mkdtemp())
+        self.f = self.d / "consent-form.md"
+        self.f.write_text(CONSENT, encoding="utf-8")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def test_codes_and_warn_only(self):
+        res = lint_prose.lint_consent(str(self.f))
+        codes = [(x["code"], x["line"]) for x in res["findings"]]
+        self.assertIn(("CF01", 3), codes)
+        self.assertIn(("CF02", 3), codes)
+        self.assertIn(("CF03", 5), codes)
+        self.assertTrue(all(x["level"] == "warn" for x in res["findings"]))
+        msgs = " ".join(x["message"] for x in res["findings"])
+        self.assertIn("ngẫu nhiên hoá", msgs)
+        self.assertNotIn("giả dược", msgs)      # explained in the parenthesis right after it
+        self.assertNotIn("mù đôi", msgs)
+
+    def _cf02(self, text):
+        self.f.write_text(text + "\n", encoding="utf-8")
+        return [x["message"] for x in lint_prose.lint_consent(str(self.f))["findings"] if x["code"] == "CF02"]
+
+    def test_jargon_accepts_both_hoa_spellings_and_nfd(self):
+        import unicodedata
+        for word in ("mã hóa", "mã hoá", "ngẫu nhiên hóa", "ngẫu nhiên hoá"):
+            self.assertEqual(len(self._cf02(f"Dữ liệu được {word} khi lưu.")), 1, word)
+        nfd = unicodedata.normalize("NFD", "Dữ liệu được mã hóa khi lưu.")
+        self.assertEqual(len(self._cf02(nfd)), 1)
+
+    def test_cli_exit_0_and_profiles(self):
+        r = run_cli("--profile", "consent", self.f)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        out = r.stdout.decode("utf-8")
+        self.assertIn("CF03 warn", out)
+        self.assertIn("consent profile", out)
+        self.assertNotIn("CF0", run_cli(self.f).stdout.decode("utf-8"))
+        self.assertEqual(run_cli("--profile", "consent", "--slides", self.f).returncode, 2)
+
+    def test_english_sentence_limit(self):
+        self.f.write_text("At each visit you answer a few short questions about your health and your treatment "
+                          "during the study, which lasts one year.\n", encoding="utf-8")
+        self.assertEqual([x["code"] for x in lint_prose.lint_consent(str(self.f))["findings"]], [])
+        self.f.write_text(" ".join(["word"] * 26) + ".\n", encoding="utf-8")
+        self.assertEqual([x["code"] for x in lint_prose.lint_consent(str(self.f))["findings"]], ["CF01"])
+
+
 if __name__ == "__main__":
     unittest.main()

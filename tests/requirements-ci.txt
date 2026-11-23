@@ -1,0 +1,8 @@
+# CI only (plan D26): direct dependencies pinned to versions with wheels for CPython 3.10 and 3.12 on Linux and
+# Windows, checked with pip download on 2026-11-23. Transitive packages are not pinned. Users install what they need.
+matplotlib==3.10.9
+openpyxl==3.1.5
+pandas==2.3.3
+python-pptx==1.0.2
+scipy==1.15.3
+statsmodels==0.15.0

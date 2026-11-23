@@ -78,6 +78,22 @@ class TestSameQuantity(Base):
                "Tỷ lệ đáp ứng 86,3%. <!-- cons-ok: nhóm khác -->\n")
         self.assertEqual(self.blocks(), [])
 
+    def test_per_unit_qualifier_is_a_different_quantity(self):
+        self.w("07_present/poster.md", "Nguy cơ cao hơn (OR hiệu chỉnh 1,42, KTC 95% 0,94-2,15).\n")
+        self.w("06_writing/thesis/ch3.md",
+               "HbA1c liên tục cho OR hiệu chỉnh 1,02 (KTC 95%: 0,93-1,11) mỗi 1%.\n")
+        self.assertEqual(self.blocks(), [])
+
+    def test_same_qualifier_different_numbers_still_blocks(self):
+        self.w("07_present/poster.md", "OR hiệu chỉnh 1,42 (KTC 95% 0,94-2,15) mỗi 1%.\n")
+        self.w("06_writing/thesis/ch3.md", "OR hiệu chỉnh 1,02 (KTC 95%: 0,93-1,11) mỗi 1%.\n")
+        self.assertEqual(len(self.blocks(needle="hiệu chỉnh")), 1)
+
+    def test_unqualified_different_numbers_still_blocks(self):
+        self.w("07_present/poster.md", "OR hiệu chỉnh 1,42 ở nhóm HbA1c >9%.\n")
+        self.w("06_writing/thesis/ch3.md", "OR hiệu chỉnh 1,02 ở nhóm HbA1c >9%.\n")
+        self.assertEqual(len(self.blocks(needle="hiệu chỉnh")), 1)
+
     def test_years_headings_and_citations_ignored(self):
         self.w("06_writing/thesis/a.md", "# Mục tiêu 2\nNăm 2021 và [12] và nhóm 1.\n")
         self.w("06_writing/thesis/b.md", "# Mục tiêu 3\nNăm 2023 và [13] và nhóm 2.\n")
@@ -346,6 +362,61 @@ class TestCli(Base):
         self.w("06_writing/thesis/ch3.md", "Tỷ lệ đáp ứng 86,3%.\n")
         code, _, _ = self.run_cli(self.p, "--lang", "en")
         self.assertEqual(code, 0)
+
+
+class TestSampleSizeSource(unittest.TestCase):
+    """C6: a typed sample size on a slide is compared with 03_protocol/sample-size.md (warn)."""
+
+    def test_slide_disagreeing_with_sample_size_md_warns(self):
+        import init_project
+        with tempfile.TemporaryDirectory() as t:
+            p = init_project.create(Path(t) / "p", "T", "thesis-masters", "cohort", "vi", "vi")
+            (p / "ledgers" / "results-ledger.json").write_text('{"results": []}', encoding="utf-8")
+            (p / "03_protocol" / "sample-size.md").write_text(
+                "# Cỡ mẫu\n\nCỡ mẫu tối thiểu cần thiết là 535 người.\n\nTính ra n = 534,6, làm tròn lên.\n", encoding="utf-8")
+            deck = p / "07_present" / "defense"
+            deck.mkdir(parents=True)
+            (deck / "deck.json").write_text(json.dumps({"slides": [{"body": ["Cỡ mẫu tối thiểu cần thiết là 530 người"]}]},
+                                                       ensure_ascii=False), encoding="utf-8")
+            found = ca.audit(p)
+        warns = [(loc, m) for sev, loc, m in found if sev == "warn"]
+        self.assertTrue(any("530" in m and "535" in m and loc.startswith("07_present/") for loc, m in warns), found)
+        self.assertFalse([f for f in found if f[0] == "block"], found)
+        self.assertFalse([f for f in found if str(f[1]).startswith(ca.SAMPLE_SIZE)], found)
+
+    def _project(self, t, ref_text, slide_text, ch2_text=None):
+        import init_project
+        p = init_project.create(Path(t) / "p", "T", "thesis-masters", "cohort", "vi", "vi")
+        (p / "ledgers" / "results-ledger.json").write_text('{"results": []}', encoding="utf-8")
+        if ref_text:
+            (p / "03_protocol" / "sample-size.md").write_text(ref_text, encoding="utf-8")
+        if ch2_text:
+            d = p / "06_writing" / "thesis"
+            d.mkdir(parents=True, exist_ok=True)
+            (d / "02-methods.md").write_text(ch2_text, encoding="utf-8")
+        deck = p / "07_present" / "defense"
+        deck.mkdir(parents=True)
+        (deck / "deck.json").write_text(json.dumps({"slides": [{"body": [slide_text]}]}, ensure_ascii=False),
+                                        encoding="utf-8")
+        return p
+
+    def test_real_block_survives_a_matching_reference(self):
+        ch2 = "# Phương pháp\n\nCỡ mẫu tối thiểu cần thiết là 535 người.\n"
+        ref = "# Cỡ mẫu\n\nCỡ mẫu tối thiểu cần thiết là 535 người.\n"
+        slide = "Cỡ mẫu tối thiểu cần thiết là 530 người"
+        with tempfile.TemporaryDirectory() as t:
+            without = ca.audit(self._project(t, None, slide, ch2))
+        with tempfile.TemporaryDirectory() as t:
+            with_ref = ca.audit(self._project(t, ref, slide, ch2))
+        self.assertTrue([f for f in without if f[0] == "block" and "530" in f[2] and "535" in f[2]], without)
+        self.assertTrue([f for f in with_ref if f[0] == "block" and "530" in f[2] and "535" in f[2]], with_ref)
+
+    def test_reference_only_disagreement_is_a_warn(self):
+        ref = "# Cỡ mẫu\n\nCỡ mẫu tối thiểu cần thiết là 535 người.\n"
+        with tempfile.TemporaryDirectory() as t:
+            found = ca.audit(self._project(t, ref, "Cỡ mẫu tối thiểu cần thiết là 530 người"))
+        self.assertTrue([f for f in found if f[0] == "warn" and ca.SAMPLE_SIZE in f[2]], found)
+        self.assertFalse([f for f in found if f[0] == "block"], found)
 
 
 if __name__ == "__main__":

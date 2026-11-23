@@ -1,0 +1,373 @@
+{
+  "journals": [
+    {
+      "key": "1572-1671",
+      "query": "1572-1671",
+      "looked_up": "2026-11-23",
+      "title": [
+        {
+          "value": "Diabetes research and clinical practice. Supplement",
+          "source": "NLM Catalog"
+        }
+      ],
+      "issn": [
+        {
+          "value": "0168-8227",
+          "type": "Undetermined",
+          "source": "NLM Catalog"
+        },
+        {
+          "value": "1572-1671",
+          "type": "Print",
+          "source": "NLM Catalog"
+        }
+      ],
+      "publisher": [
+        {
+          "value": "Elsevier Science Publishers B.V",
+          "source": "NLM Catalog"
+        }
+      ],
+      "medline": {
+        "value": false,
+        "detail": "Deselected",
+        "source": "NLM Catalog",
+        "url": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8609985"
+      },
+      "doaj": {
+        "listed": false,
+        "has_apc": null,
+        "apc": [],
+        "seal": false,
+        "source": "DOAJ",
+        "url": ""
+      },
+      "crossref": {
+        "listed": false,
+        "source": "Crossref",
+        "url": ""
+      },
+      "claims": [],
+      "open_access_claimed": false,
+      "signals": [],
+      "notes": {},
+      "picked": null
+    },
+    {
+      "key": "2052-4897",
+      "query": "BMJ Open Diabetes Research & Care",
+      "looked_up": "2026-11-23",
+      "title": [
+        {
+          "value": "BMJ open diabetes research & care",
+          "source": "NLM Catalog"
+        },
+        {
+          "value": "BMJ Open Diabetes Research & Care",
+          "source": "DOAJ"
+        },
+        {
+          "value": "BMJ Open Diabetes Research & Care",
+          "source": "Crossref"
+        }
+      ],
+      "issn": [
+        {
+          "value": "2052-4897",
+          "type": "Electronic",
+          "source": "NLM Catalog"
+        },
+        {
+          "value": "2052-4897",
+          "type": "electronic",
+          "source": "DOAJ"
+        },
+        {
+          "value": "2052-4897",
+          "type": "electronic",
+          "source": "Crossref"
+        }
+      ],
+      "publisher": [
+        {
+          "value": "Published by BMJ in partnership with the American Diabetes Association",
+          "source": "NLM Catalog"
+        },
+        {
+          "value": "BMJ Publishing Group",
+          "source": "DOAJ"
+        },
+        {
+          "value": "BMJ",
+          "source": "Crossref"
+        }
+      ],
+      "medline": {
+        "value": true,
+        "detail": "Currently-indexed",
+        "source": "NLM Catalog",
+        "url": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101641391"
+      },
+      "doaj": {
+        "listed": true,
+        "has_apc": true,
+        "apc": [
+          "3580 GBP"
+        ],
+        "seal": false,
+        "source": "DOAJ",
+        "url": "https://doaj.org/toc/2052-4897"
+      },
+      "crossref": {
+        "listed": true,
+        "source": "Crossref",
+        "url": "https://api.crossref.org/journals/2052-4897"
+      },
+      "claims": [
+        "medline"
+      ],
+      "open_access_claimed": true,
+      "signals": [],
+      "notes": {},
+      "picked": {
+        "by": "Example author",
+        "at": "2026-11-23"
+      }
+    },
+    {
+      "key": "2040-1116",
+      "query": "Journal of Diabetes Investigation",
+      "looked_up": "2026-11-23",
+      "title": [
+        {
+          "value": "Journal of diabetes investigation",
+          "source": "NLM Catalog"
+        },
+        {
+          "value": "Journal of Diabetes Investigation",
+          "source": "DOAJ"
+        },
+        {
+          "value": "Journal of Diabetes Investigation",
+          "source": "Crossref"
+        }
+      ],
+      "issn": [
+        {
+          "value": "2040-1116",
+          "type": "Print",
+          "source": "NLM Catalog"
+        },
+        {
+          "value": "2040-1124",
+          "type": "Electronic",
+          "source": "NLM Catalog"
+        },
+        {
+          "value": "2040-1116",
+          "type": "print",
+          "source": "DOAJ"
+        },
+        {
+          "value": "2040-1124",
+          "type": "electronic",
+          "source": "DOAJ"
+        },
+        {
+          "value": "2040-1116",
+          "type": "print",
+          "source": "Crossref"
+        },
+        {
+          "value": "2040-1124",
+          "type": "electronic",
+          "source": "Crossref"
+        }
+      ],
+      "publisher": [
+        {
+          "value": "Asian Association for the Study of Diabetes and Blackwell Pub. Asia",
+          "source": "NLM Catalog"
+        },
+        {
+          "value": "Wiley",
+          "source": "DOAJ"
+        },
+        {
+          "value": "Wiley (Blackwell Publishing)",
+          "source": "Crossref"
+        }
+      ],
+      "medline": {
+        "value": true,
+        "detail": "Currently-indexed",
+        "source": "NLM Catalog",
+        "url": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101520702"
+      },
+      "doaj": {
+        "listed": true,
+        "has_apc": true,
+        "apc": [
+          "3850 USD",
+          "2420 GBP",
+          "2810 EUR"
+        ],
+        "seal": false,
+        "source": "DOAJ",
+        "url": "https://doaj.org/toc/2040-1116"
+      },
+      "crossref": {
+        "listed": true,
+        "source": "Crossref",
+        "url": "https://api.crossref.org/journals/2040-1116"
+      },
+      "claims": [
+        "medline"
+      ],
+      "open_access_claimed": false,
+      "signals": [
+        {
+          "signal": "publisher differs across sources: NLM Catalog 'Asian Association for the Study of Diabetes and Blackwell Pub. Asia'; DOAJ 'Wiley'; Crossref 'Wiley (Blackwell Publishing)'",
+          "source": "NLM Catalog, DOAJ, Crossref"
+        }
+      ],
+      "notes": {},
+      "picked": null
+    },
+    {
+      "key": "1178-7007",
+      "query": "1178-7007",
+      "looked_up": "2026-11-23",
+      "title": [
+        {
+          "value": "Diabetes, metabolic syndrome and obesity : targets and therapy",
+          "source": "NLM Catalog"
+        },
+        {
+          "value": "Diabetes, Metabolic Syndrome and Obesity",
+          "source": "DOAJ"
+        },
+        {
+          "value": "Diabetes Metabolic Syndrome and Obesity",
+          "source": "Crossref"
+        }
+      ],
+      "issn": [
+        {
+          "value": "1178-7007",
+          "type": "Electronic",
+          "source": "NLM Catalog"
+        },
+        {
+          "value": "1178-7007",
+          "type": "electronic",
+          "source": "DOAJ"
+        },
+        {
+          "value": "1178-7007",
+          "type": "electronic",
+          "source": "Crossref"
+        }
+      ],
+      "publisher": [
+        {
+          "value": "Dove Medical Press",
+          "source": "NLM Catalog"
+        },
+        {
+          "value": "Dove Medical Press",
+          "source": "DOAJ"
+        },
+        {
+          "value": "Dove Medical Press",
+          "source": "Crossref"
+        }
+      ],
+      "medline": {
+        "value": false,
+        "detail": "not listed for MEDLINE",
+        "source": "NLM Catalog",
+        "url": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101515585"
+      },
+      "doaj": {
+        "listed": true,
+        "has_apc": true,
+        "apc": [
+          "4320 USD"
+        ],
+        "seal": false,
+        "source": "DOAJ",
+        "url": "https://doaj.org/toc/1178-7007"
+      },
+      "crossref": {
+        "listed": true,
+        "source": "Crossref",
+        "url": "https://api.crossref.org/journals/1178-7007"
+      },
+      "claims": [],
+      "open_access_claimed": false,
+      "signals": [],
+      "notes": {
+        "scope": {
+          "value": "Công bố nhanh các phát hiện lâm sàng/phòng thí nghiệm mới về chẩn đoán, điều trị, phòng ngừa đái tháo đường, hội chứng chuyển hóa và béo phì",
+          "source": "https://www.dovepress.com/diabetes-metabolic-syndrome-and-obesity-targets-and-therapy-journal",
+          "date": "2026-11-23"
+        }
+      },
+      "picked": null
+    },
+    {
+      "key": "1872-8227",
+      "query": "1872-8227",
+      "looked_up": "2026-11-23",
+      "title": [
+        {
+          "value": "Diabetes research and clinical practice",
+          "source": "NLM Catalog"
+        }
+      ],
+      "issn": [
+        {
+          "value": "0168-8227",
+          "type": "Print",
+          "source": "NLM Catalog"
+        },
+        {
+          "value": "1872-8227",
+          "type": "Electronic",
+          "source": "NLM Catalog"
+        }
+      ],
+      "publisher": [
+        {
+          "value": "Elsevier Science Publishers B.V",
+          "source": "NLM Catalog"
+        }
+      ],
+      "medline": {
+        "value": true,
+        "detail": "Currently-indexed",
+        "source": "NLM Catalog",
+        "url": "https://www.ncbi.nlm.nih.gov/nlmcatalog/8508335"
+      },
+      "doaj": {
+        "listed": false,
+        "has_apc": null,
+        "apc": [],
+        "seal": false,
+        "source": "DOAJ",
+        "url": ""
+      },
+      "crossref": {
+        "listed": false,
+        "source": "Crossref",
+        "url": ""
+      },
+      "claims": [],
+      "open_access_claimed": false,
+      "signals": [],
+      "notes": {},
+      "picked": null
+    }
+  ]
+}

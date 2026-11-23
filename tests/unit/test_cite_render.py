@@ -149,6 +149,21 @@ class TestCiteRender(unittest.TestCase):
         self.run_cr("See [link](http://x) and [@a].\r\n")
         self.assertEqual(self.output(), "See [link](http://x) and [1].\r\n")
 
+    def test_retracted_only_when_true(self):
+        self.write_refs([dict(REFS[0], retracted="false"), dict(REFS[1], retracted=False)])
+        r = self.run_cr("A [@a] B [@b].\n")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.write_refs([dict(REFS[0], retracted=True)])
+        r = self.run_cr("A [@a].\n")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("E-REF a: retracted", r.stdout)
+
+    def test_help_exits_0_with_usage_on_stdout(self):
+        for flag in ("--help", "-h"):
+            r = subprocess.run([sys.executable, str(SCRIPT), flag], capture_output=True, text=True, encoding="utf-8")
+            self.assertEqual(r.returncode, 0, flag)
+            self.assertIn("Usage:", r.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

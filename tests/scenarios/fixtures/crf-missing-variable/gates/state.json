@@ -1,0 +1,18 @@
+{
+  "G1": {
+    "status": "open",
+    "at": "2026-11-23T12:42:43",
+    "by": "Example author",
+    "files": {}
+  },
+  "G2": {
+    "status": "open",
+    "at": "2026-11-23T12:42:43",
+    "by": "Example author",
+    "files": {
+      "03_protocol/protocol.md": "ebd0b115ceb4215889cdfb7d7ff5f5cc76783f73b5e6e8ceaec407f2b3f4aac4",
+      "03_protocol/variables.md": "e02a8f77a1ddd80627199f8166c7211b51a1043e60f40012f56cd41d4e172944",
+      "03_protocol/sap.md": "89792341566d7097cca54b2aa212b0fda25261a76646d93cd6e5f984bb3dd454"
+    }
+  }
+}

@@ -1,5 +1,5 @@
-source_id,design,intervention,outcomes_reported,extracted_by,verified_by
-F01,trial,app,HbA1c,Reviewer A,Reviewer B
-F02,cohort,text messages,adherence,Reviewer A,Reviewer B
-F03,qualitative,app,acceptability,Reviewer A,Reviewer B
-F04,trial,text messages,HbA1c,Reviewer A,Reviewer B
+source_id,design,intervention,outcomes_reported,n,hba1c_change_mean,hba1c_change_sd,extracted_by,verified_by
+F01,trial,app,HbA1c,120,-0.4,0.9,Reviewer A,Reviewer B
+F02,cohort,text messages,adherence,300,,,Reviewer A,Reviewer B
+F03,qualitative,app,acceptability,24,,,Reviewer A,Reviewer B
+F04,trial,text messages,HbA1c,86,-0.2,1.1,Reviewer A,Reviewer B

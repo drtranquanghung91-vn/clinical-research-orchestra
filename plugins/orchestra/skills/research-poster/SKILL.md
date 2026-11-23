@@ -40,12 +40,14 @@ Scripts in `${CLAUDE_PLUGIN_ROOT}/scripts/`, from the project folder:
 5. `lint_prose.py --slides 07_present/poster/<L>.html`.
 
 ## 6. Rehearsal and print note
-Call the agent `committee-simulator` with the Agent tool: deliverable `poster`. Show weak points to the
-author. Give the print note (100 %, bleed, fonts, paper). Ask the author to look at every layout PNG.
+Required: call the agent `committee-simulator` with the Agent tool, deliverable `poster`; save its reply to
+`reviews/committee-poster.md` and show the weak points to the author. Give the print note (100 %, bleed, fonts,
+paper). Ask the author to look at every layout PNG.
 
 ## 7. Hand-off
-List the files, each check's last line, and which checks did not run. Say "print-ready" only when every
-check ran and no block remains.
+List the files, each check's last line, which checks did not run, and whether `committee-simulator` ran. Say you
+looked at a PNG only if you opened it with the Read tool. Say "print-ready" only when every check ran and no block
+remains.
 
 ## 8. Workflow
 `${CLAUDE_PLUGIN_ROOT}/references/workflows/research-poster.md`

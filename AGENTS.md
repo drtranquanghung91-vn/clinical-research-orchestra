@@ -16,7 +16,15 @@ Read `docs/superpowers/specs/2026-11-20-clinical-research-orchestra-design.md` f
 - "The agent reasons; scripts measure." Anything a script can check is checked by a script.
 - Privacy: nothing leaves the machine except literature-API queries; never the user's name or
   email; never patient data.
-- Every change to a skill ships with a scenario in `tests/scenarios/` or a note why none applies.
+- Every change to a skill ships with a scenario in `tests/scenarios/`, an autorater case in `evals/cases/`, or a
+  note why none applies.
+
+## Skill changes and the autorater
+- A change to a skill's or agent's prompt text runs `python tools/autorater.py run <case>… --base main` on the
+  cases that exercise it (`python tools/autorater.py list --skill <name>`), or the commit says why not (no case
+  exercises it, wording only, cost). Put the verdicts in the PR description or `evals/README.md`.
+- The autorater is a maintainer tool: it needs a logged-in `claude` CLI, costs money and never runs in CI. Results
+  stay in `evals/results/` (git-ignored).
 
 ## CLI conventions
 - Exit codes for every script: 0 = ok / clean; 1 = findings, listed (for `gate.py check`: the gate

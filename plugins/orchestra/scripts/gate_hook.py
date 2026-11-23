@@ -7,6 +7,9 @@
   `python -m assemble` / `-m build_docx` count too; redirections (`> log`, `2>&1`, `*>`) are dropped, `$(…)`,
   backticks and braces are opened, every build_docx positional is checked, and trailing dots or spaces in the
   output name are ignored (Windows drops them). build_docx.py refuses the same exports on its own.
+- `response.py <project> build`, or `build_docx.py … out/response-letter.docx`, is a final export of the revision's
+  deliverable and is denied unless `gate.final_problems(project, "response-letter.docx")` is empty (G4 plus a clean
+  `response.py check`). Git Bash `/tmp` is mapped to the temp folder on Windows.
 - An Agent/Task prompt containing `orchestra-role:` is denied unless G3 is open for the project in the working
   directory (the nearest folder upward with project.yaml).
 - An Agent/Task prompt containing `orchestra-prep:` (P5 review-work briefs) is denied unless G2 is open.
@@ -19,6 +22,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 
 for _s in (sys.stdout, sys.stderr):
@@ -39,9 +43,10 @@ SUBST = re.compile(r"\$\(|[`(){}]")                # $(…), `…`, (…), { …
 REDIRECT = re.compile(r"^(?:\d|\*|&)?(?:>>?|<)(?:&\d)?")
 GLUED_REDIRECT = re.compile(r"(?:\d|\*|&)?(?:>>?|<)")
 CD = {"cd", "set-location", "sl", "pushd", "push-location", "chdir"}
-OPTS_WITH_VALUE = {"assemble.py": {"--lang"}, "build_docx.py": {"--project", "--template"}}
-MODULES = {"assemble": "assemble.py", "build_docx": "build_docx.py"}
-FINAL_NAMES = ("thesis.docx", "manuscript.docx", "case-report.docx", "review.docx")
+OPTS_WITH_VALUE = {"assemble.py": {"--lang"}, "build_docx.py": {"--project", "--template"},
+                   "response.py": {"--deliverable"}}
+MODULES = {"assemble": "assemble.py", "build_docx": "build_docx.py", "response": "response.py"}
+FINAL_NAMES = tuple(gate.FINAL_NAMES)
 PREP = re.compile(r"orchestra-prep:\s*([\w-]+)")
 
 
@@ -74,10 +79,13 @@ def _strip_redirects(toks: list[str]) -> list[str]:
 
 
 def map_path(s: str, nt: bool | None = None) -> str:
-    """Git Bash paths on Windows: `/c/x` -> `C:/x`; `~` -> the home folder."""
+    """Git Bash paths on Windows: `/c/x` -> `C:/x`, `/tmp/x` -> <temp folder>/x; `~` -> the home folder."""
     if s.startswith("~"):
         s = os.path.expanduser(s)
-    if (os.name == "nt" if nt is None else nt) and re.match(r"^/[A-Za-z](/|$)", s):
+    win = os.name == "nt" if nt is None else nt
+    if win and (s == "/tmp" or s.startswith("/tmp/")):
+        return Path(tempfile.gettempdir()).as_posix() + s[4:]
+    if win and re.match(r"^/[A-Za-z](/|$)", s):
         s = s[1].upper() + ":" + (s[2:] or "/")
     return s
 
@@ -157,6 +165,10 @@ def _exports(command: str, cwd: Path, loose: bool) -> list[tuple[Path, str, str]
                         proj = opts.get("--project")
                         project = cwd / map_path(proj) if isinstance(proj, str) and proj else out.parent.parent
                         found.append((project, fname[:-len(".docx")], f"build_docx.py → out/{fname}"))
+            elif name == "response.py":
+                pos, opts = _args(toks, i, name)
+                if len(pos) >= 2 and pos[1] == "build":
+                    found.append((cwd / map_path(pos[0]), "response-letter", "response.py build"))
     return found
 
 
@@ -188,12 +200,15 @@ def decide(data: dict) -> dict | None:
     if tool in SHELL:
         cmd = str(tin.get("command", "")) if isinstance(tin, dict) else str(tin)
         low = cmd.lower()
-        if "assemble" not in low and "build_docx" not in low:
+        if "assemble" not in low and "build_docx" not in low and "response" not in low:
             return None
         for project, deliverable, what in exports(cmd, cwd):
             if not (project / "project.yaml").is_file():
                 continue
-            why = gate.export_problems(project, deliverable or None)
+            if deliverable and deliverable + ".docx" in gate.FINAL_NAMES:
+                why = gate.final_problems(project, deliverable + ".docx")
+            else:
+                why = gate.export_problems(project, deliverable or None)
             if why:
                 scope = f" for the {deliverable}" if deliverable else ""
                 return _deny(f"[orchestra] {what} is a final export and cannot run{scope}: {'; '.join(why)}. "

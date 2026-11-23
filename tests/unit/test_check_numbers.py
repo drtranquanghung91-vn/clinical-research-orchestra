@@ -177,5 +177,69 @@ class TestCheckNumbers(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
 
 
+class TestYearContext(unittest.TestCase):
+    LEDGER = [{"id": "R-A1-001", "value": 1.42, "kind": "or"}]
+
+    def unmatched(self, text, lang="en"):
+        return [tok for _, tok in check_numbers.find_unmatched(text, self.LEDGER, lang)]
+
+    def test_years_in_context_are_skipped(self):
+        for s in ("In 2019, the ward opened.", "since 2015", "from 2018 to 2020", "between 2018 and 2020",
+                  "Năm 2020 có thay đổi.", "từ năm 2018 đến năm 2020", "tháng 3/2024", "tháng 3 năm 2024",
+                  "March 2024", "March 5, 2024", "as reported (Nguyen et al., 2020).", "Smith et al., 2019 found",
+                  "12/2023", "(WHO 2019)", "xuất viện giai đoạn 2021–2022, theo dõi 1 năm", "a cohort (2021–2023)"):
+            with self.subTest(s=s):
+                self.assertEqual(self.unmatched(s), [], s)
+
+    def test_year_context_word_before_a_quantity_is_not_a_year(self):
+        self.assertEqual(self.unmatched("Given after 2000 mL of saline."), ["2000"])
+        self.assertEqual(self.unmatched("Dosed in 2005 mg/day."), ["2005"])
+        self.assertEqual(self.unmatched("Truyền sau 2000 ml dịch.", "vi"), ["2000"])
+        self.assertEqual(self.unmatched("in 2005 mg/day, from 2018 to 2020"), ["2005"])
+
+    def test_other_integers_in_the_year_range_are_checked(self):
+        self.assertEqual(self.unmatched("We enrolled 1995 patients."), ["1995"])
+        self.assertEqual(self.unmatched("Seen in 1995 patients."), ["1995"])
+        self.assertEqual(self.unmatched("The total was 2048."), ["2048"])
+        self.assertEqual(self.unmatched("Năm 2020 có 2021 người bệnh.", "vi"), ["2021"])
+
+
+class TestTrend(unittest.TestCase):
+    LEDGER = [{"id": "R-A1-001", "label": "OR 7-9 vs <7", "value": 1.1},
+              {"id": "R-A1-002", "label": "OR >9 vs <7", "value": 1.42},
+              {"id": "R-A2-001", "label": "p for trend across HbA1c groups", "value": 0.04, "kind": "p"}]
+
+    def warns(self, text):
+        return check_numbers.trend_findings(text, self.LEDGER)
+
+    def test_trend_words_need_two_values_or_a_trend_test(self):
+        self.assertEqual(len(self.warns("Tỷ lệ tái nhập viện tăng dần theo nhóm HbA1c.")), 1)
+        self.assertEqual(self.warns("An increasing pattern ({{R-A1-001}}, then {{R-A1-002}})."), [])
+        self.assertEqual(self.warns("The trend was significant ({{R-A2-001.p}})."), [])
+        self.assertEqual(len(self.warns("The odds peaked in the top group ({{R-A1-002}}).")), 1)
+        self.assertEqual(self.warns("Không thấy xu hướng rõ."), [])
+        self.assertEqual(self.warns("# Xu hướng tái nhập viện"), [])
+        n, level, msg = self.warns("First line.\nThe trend rose.")[0]
+        self.assertEqual((n, level), (2, "warn"))
+        self.assertIn('"trend"', msg)
+
+    def test_cli_prints_trend_warn_and_exits_0(self):
+        import contextlib
+        import io
+        import json
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as t:
+            (Path(t) / "ledgers").mkdir()
+            (Path(t) / "ledgers" / "results-ledger.json").write_text(json.dumps({"results": self.LEDGER}), encoding="utf-8")
+            f = Path(t) / "ch3.md"
+            f.write_text("Tỷ lệ tái nhập viện tăng dần theo nhóm HbA1c.\n", encoding="utf-8")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = check_numbers.main([t, str(f), "--lang", "vi"])
+        self.assertEqual(code, 0)
+        self.assertIn("E-NUM warn", out.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()

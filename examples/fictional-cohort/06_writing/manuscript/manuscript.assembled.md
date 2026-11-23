@@ -76,21 +76,21 @@ viện, phản ánh qua chỉ số HbA1c, được xem là một dấu hiệu c�
 quan với nguy cơ tái nhập viện cao hơn sau xuất viện.
 
 Bằng chứng hiện có tập trung ở các mốc theo dõi ngắn: một nghiên cứu đoàn hệ hồi cứu tại Trung Quốc
-ghi nhận HbA1c lúc nhập viện cao hơn liên quan với tăng nguy cơ tái nhập viện trong 30 ngày ở người
-bệnh ĐTĐ type 2 trẻ và trung niên [1]; một nomogram khác cũng xác định HbA1c là một yếu tố dự
-báo tái nhập viện 31 ngày, dù không nêu chiều hướng riêng của biến này [2]. Ở mốc 365 <!-- not-a-result: mốc theo dõi của li2026, không phải của đề tài này --> ngày, một mô hình học máy cho thấy các yếu tố dự báo có thể chuyển dần từ
-cấp tính sang mạn tính theo thời gian, nhưng không tách riêng được hiệu ứng độc lập của HbA1c
-[3]; một nghiên cứu tại Anh lại cho thấy HbA1c đo sau xuất viện thấp hơn liên quan với tái nhập
-viện cao hơn [4], gợi ý mối liên quan có thể phụ thuộc vào thời điểm đo. Một tổng quan hệ
-thống về can thiệp trong bệnh viện trả lời câu hỏi về hiệu quả can thiệp, không phải về HbA1c như một
-yếu tố liên quan tự nhiên [5]; hướng dẫn hiện hành của Hội Đái tháo đường Hoa Kỳ đề cập
-kiểm soát đường huyết nội viện nói chung, không đưa ra ngưỡng HbA1c cụ thể để dự phòng tái nhập viện
-dài hạn [6].
+ghi nhận HbA1c lúc nhập viện cao hơn liên quan tăng nguy cơ tái nhập viện trong 30 ngày ở người bệnh
+ĐTĐ type 2 trẻ và trung niên [1]; một nomogram khác cũng xác định HbA1c là yếu tố dự báo tái
+nhập viện 31 ngày, dù không nêu chiều hướng riêng [2]. Ở mốc 365 <!-- not-a-result: mốc theo dõi của li2026, không phải của đề tài này --> ngày, một mô hình học máy cho thấy yếu tố dự báo
+chuyển dần từ cấp tính sang mạn tính theo thời gian, nhưng không tách riêng được hiệu ứng độc lập của
+HbA1c [3]; một nghiên cứu tại Anh lại cho thấy HbA1c đo sau xuất viện thấp hơn liên quan tái
+nhập viện cao hơn [4], gợi ý mối liên quan có thể phụ thuộc thời điểm đo. Một tổng quan hệ
+thống về can thiệp trong bệnh viện trả lời câu hỏi hiệu quả can thiệp, không phải về HbA1c như yếu tố
+liên quan tự nhiên [5]; hướng dẫn hiện hành của Hội Đái tháo đường Hoa Kỳ đề cập kiểm
+soát đường huyết nội viện nói chung, không đưa ngưỡng HbA1c cụ thể để dự phòng tái nhập viện dài hạn
+[6].
 
 Nhìn chung, bằng chứng cho câu hỏi ở mốc 1 năm có độ chắc chắn rất thấp: phần lớn nghiên cứu ở mốc
 ngắn hơn, nghiên cứu duy nhất ở mốc 1 năm không tách riêng hiệu ứng HbA1c, và chưa có nghiên cứu nào
 đối chiếu trực tiếp HbA1c lúc nhập viện với tái nhập viện ở đúng mốc này. Trong phạm vi tìm kiếm trên
-PubMed đã thực hiện, chưa tìm thấy nghiên cứu nào tại Việt Nam trả lời câu hỏi này <!-- not-a-result: 02_evidence/gaps.md Gap 2; tạp chí tiếng Việt không được lập chỉ mục trên PubMed và chưa được tìm
+PubMed đã thực hiện, chưa tìm thấy nghiên cứu tại Việt Nam trả lời câu hỏi này <!-- not-a-result: 02_evidence/gaps.md Gap 2; tạp chí tiếng Việt không được lập chỉ mục trên PubMed và chưa được tìm
 trong phiên tìm kiếm này -->.
 
 Vì vậy, nghiên cứu này là một đoàn hệ hồi cứu, đơn trung tâm, tại Khoa Nội tiết, Bệnh viện Mô phỏng,
@@ -110,9 +110,12 @@ viện (HIS) đến 31/12/2023. Báo cáo theo STROBE (bản 2007).
 
 **Đối tượng nghiên cứu.** Tiêu chuẩn chọn: chẩn đoán ĐTĐ type 2 (ICD-10 khối E11) ghi trong hồ sơ ra
 viện; ≥ 18 tuổi; xuất viện từ Khoa Nội tiết, Bệnh viện Mô phỏng trong giai đoạn trên; có HbA1c đo trong
-24–48 giờ đầu nhập viện. Tiêu chuẩn loại: tử vong trong lần nhập viện chỉ số; ĐTĐ thai kỳ/type 1/thứ
-phát; không có HbA1c lúc nhập viện hợp lệ; hoặc xuất viện nhiều lần trong giai đoạn trên, khi đó chỉ
-lần đầu được lấy làm nhập viện chỉ số. Chọn mẫu toàn bộ (census). Cỡ mẫu yêu cầu cho so sánh 2 nhóm
+24–48 giờ đầu nhập viện. Tiêu chuẩn loại, áp dụng tuần tự: (1) tử vong trong lần nhập viện chỉ số —
+không có thời gian theo dõi sau xuất viện; (2) ĐTĐ thai kỳ, type 1 hoặc thứ phát — cơ chế bệnh khác ĐTĐ
+type 2; (3) không có HbA1c đo trong 24–48 giờ đầu nhập viện — thiếu giá trị phơi nhiễm chính; (4) xuất
+viện nhiều lần trong giai đoạn trên — chỉ lần xuất viện đầu tiên được lấy làm nhập viện chỉ số. Dữ liệu
+nguồn không ghi số người bệnh bị loại theo từng lý do riêng, chỉ có tổng số đưa vào mẫu phân tích (xem
+Hạn chế). Chọn mẫu toàn bộ (census). Cỡ mẫu yêu cầu cho so sánh 2 nhóm
 HbA1c cực (giả thuyết OR = 1,5 <!-- not-a-result: sample-size.md §3b, giả định -->) là 1.070 <!-- not-a-result: sample-size.md §3c --> người bệnh, so với 1.200 <!-- not-a-result: sample-size.md §2, số ước tính --> người bệnh khả dụng — rủi ro thiếu lực mẫu được chấp nhận trước khi xem dữ liệu (xem
 Hạn chế). Số người bệnh thực tế đưa vào mẫu phân tích là 1070.
 
@@ -121,40 +124,37 @@ Hạn chế). Số người bệnh thực tế đưa vào mẫu phân tích là 
 tái nhập viện do mọi nguyên nhân trong vòng 365 <!-- not-a-result: mốc theo dõi của đề tài --> ngày
 kể từ ngày xuất viện. Kết cục phụ gồm: tái nhập viện liên quan ĐTĐ/biến chứng đường huyết; thời gian
 đến lần tái nhập viện đầu tiên (kiểm duyệt tại 365 <!-- not-a-result: mốc theo dõi của đề tài --> ngày);
-và tử vong trong 1 năm — chỉ ghi nhận được tử vong **trong viện** nên chỉ báo cáo mô tả. Biến
-nhiễu đưa vào mô hình hiệu chỉnh chính (định trước): tuổi, giới, thời gian mắc ĐTĐ, có/không ≥ 1 bệnh
-đồng mắc chính. Sử dụng insulin khi nằm viện và thời gian nằm viện được đo sau hoặc đồng thời với HbA1c
-nên có thể là biến trung gian; hai biến này chỉ dùng mô tả, không hiệu chỉnh trong mô hình chính.
+và tử vong trong 1 năm — chỉ ghi nhận được tử vong **trong viện** nên chỉ báo cáo mô tả. Biến nhiễu
+đưa vào mô hình hiệu chỉnh chính (định trước): tuổi, giới, thời gian mắc ĐTĐ, có/không ≥ 1 bệnh đồng
+mắc chính. Insulin khi nằm viện và thời gian nằm viện được đo sau hoặc đồng thời với HbA1c nên có thể
+là biến trung gian; hai biến này chỉ dùng mô tả.
 
 **Nguồn dữ liệu.** Dữ liệu được trích xuất từ hồ sơ bệnh án điện tử và HIS của Bệnh viện Mô phỏng,
 2021–2023.
 
-**Sai số.** HIS chỉ ghi nhận tái nhập viện tại chính Bệnh viện Mô phỏng — người bệnh tái nhập viện ở
-cơ sở khác bị tính nhầm là không tái nhập viện (hướng, độ lớn sai lệch chưa rõ). Nhiễu do chỉ định
-được kiểm soát bằng hiệu chỉnh đa biến; sai lệch thời gian bất tử được hạn chế vì phơi nhiễm
-được đo và cố định trước thời điểm bắt đầu theo dõi.
+**Sai số.** HIS chỉ ghi tái nhập viện tại chính Bệnh viện Mô phỏng — người tái nhập viện ở cơ sở khác
+bị tính nhầm là không tái nhập viện (hướng, độ lớn chưa rõ). Nhiễu do chỉ định được kiểm soát bằng
+hiệu chỉnh đa biến; sai lệch thời gian bất tử được hạn chế vì phơi nhiễm được đo và cố định trước thời
+điểm bắt đầu theo dõi.
 
 **Xử lý và phân tích số liệu.** Dữ liệu được quản lý và phân tích bằng Python (pandas, statsmodels)
 <!-- not-a-result: 05_analysis/output/results.json → engine -->. Mục tiêu 1 dùng thống kê mô tả (trung
-bình ± độ lệch chuẩn hoặc trung vị [khoảng liên phân vị]; tần số, tỷ lệ %; tỷ lệ tái nhập viện kèm
-khoảng tin cậy 95% (KTC) Wilson). Mục tiêu 2 dùng hồi quy logistic đa biến, hiệu chỉnh các biến nhiễu
-nêu trên, báo cáo tỷ số chênh (OR) thô và hiệu chỉnh kèm KTC 95%. Phân tích phụ, mang tính khám phá,
-không hiệu chỉnh đa so sánh, gồm: HbA1c liên tục; tái nhập viện liên quan ĐTĐ; thời gian đến lần tái
-nhập viện đầu tiên bằng hồi quy Cox (giả định nguy cơ tỷ lệ kiểm tra bằng phần dư Schoenfeld); tử vong
-trong viện (chỉ mô tả). Phân tích độ nhạy Fine-Gray (tử vong là nguy cơ cạnh tranh) không thực hiện:
-tử vong trong viện chỉ xảy ra sau tái nhập viện, không phải nguy cơ cạnh tranh thật. Mức ý nghĩa
-α = 0,05, hai phía, chỉ áp dụng kiểm định xác nhận cho
-kết cục chính. Biến thời gian mắc ĐTĐ thiếu ở 27 <!-- derived: R-A0-001.n - R-A1-003.n --> người bệnh
-(2,5% <!-- derived: (R-A0-001.n - R-A1-003.n) / R-A0-001.n * 100 -->), biến duy nhất thiếu dữ liệu; vì
-≤ 5% trên một biến nhiễu, phân tích ca đầy đủ được áp dụng. Thời gian theo dõi cố định 365 <!-- not-a-result: mốc theo dõi của đề tài --> ngày cho mọi người bệnh theo thiết kế. Sau khi xem kết quả đã
-khóa, một phân tích hậu kiểm không đăng ký trước được thực hiện theo đề nghị của tác giả: hiệu ứng
-nhóm HbA1c lên tái nhập viện có khác theo nhóm tuổi (< 65 so với ≥ 65) không, dùng cùng biến hiệu
-chỉnh cộng kiểm định tương tác; kết quả này mang tính khám phá.
+bình ± độ lệch chuẩn hoặc trung vị [khoảng liên phân vị]; tần số, tỷ lệ %; tỷ lệ tái nhập viện kèm KTC
+95% Wilson). Mục tiêu 2 dùng hồi quy logistic đa biến, hiệu chỉnh các biến nhiễu nêu trên, báo cáo OR
+thô và hiệu chỉnh kèm KTC 95%. Phân tích phụ khám phá, không hiệu chỉnh đa so sánh, gồm: HbA1c liên
+tục; tái nhập viện liên quan ĐTĐ; thời gian đến lần tái nhập viện đầu tiên bằng hồi quy Cox (giả định
+nguy cơ tỷ lệ kiểm tra bằng phần dư Schoenfeld); tử vong trong viện (chỉ mô tả) — không làm độ nhạy
+Fine-Gray vì tử vong trong viện chỉ xảy ra sau tái nhập viện, không phải nguy cơ cạnh tranh thật. Mức ý
+nghĩa α = 0,05 hai phía chỉ áp dụng cho kết cục chính. Biến thời gian mắc ĐTĐ thiếu ở 27 <!-- derived: R-A0-001.n - R-A1-003.n --> người bệnh (2,5% <!-- derived: (R-A0-001.n - R-A1-003.n) / R-A0-001.n * 100 -->), biến duy nhất thiếu dữ liệu; vì ≤ 5% trên một biến nhiễu, dùng phân tích ca đầy đủ. Thời gian
+theo dõi cố định 365 <!-- not-a-result: mốc theo dõi của đề tài --> ngày cho mọi người bệnh theo thiết
+kế. Sau khi xem kết quả đã khóa, một phân tích hậu kiểm không đăng ký trước được thực hiện theo đề
+nghị của tác giả: hiệu ứng nhóm HbA1c lên tái nhập viện theo nhóm tuổi (< 65 so với ≥ 65), dùng cùng
+biến hiệu chỉnh cộng kiểm định tương tác; kết quả mang tính khám phá.
 
-**Đạo đức nghiên cứu.** Đây là nghiên cứu hồi cứu trên dữ liệu đã có sẵn, không can thiệp. Dữ liệu
-được mã hóa bằng số thứ tự nghiên cứu, loại bỏ định danh cá nhân trước khi phân tích. Không có số
-quyết định: đây là dự án minh hoạ dùng dữ liệu mô phỏng, chưa nộp Hội đồng Đạo đức; một nghiên cứu
-thật phải được Hội đồng Đạo đức của Bệnh viện chấp thuận trước khi trích xuất dữ liệu.
+**Đạo đức nghiên cứu.** Nghiên cứu hồi cứu trên dữ liệu đã có sẵn, không can thiệp; dữ liệu được mã
+hóa bằng số thứ tự nghiên cứu, loại bỏ định danh cá nhân trước khi phân tích. Không có số quyết định:
+dự án minh hoạ dùng dữ liệu mô phỏng, chưa nộp Hội đồng Đạo đức; một nghiên cứu thật phải được Hội
+đồng Đạo đức của Bệnh viện chấp thuận trước khi trích xuất dữ liệu.
 
 orchestra-role: results
 
@@ -207,13 +207,11 @@ bệnh đồng mắc; mô hình có diện tích dưới đường cong ROC 0,58
 ![Hình 2. OR hiệu chỉnh của HbA1c lúc nhập viện với tái nhập viện trong 1 năm](../../07_present/figures/F1.png)
 
 Tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm chung là 22,1% (KTC 95%
-19,7–24,6); theo từng nhóm, tỷ lệ là 19,6% ở nhóm <7%, 21,0% ở nhóm
-7–9% và 25,5% ở nhóm >9%, với khoảng tin cậy của 3 nhóm còn chồng lấp rộng (đề cương
-không đăng ký kiểm định xu hướng). Sau hiệu chỉnh, OR đạt 1,10 (KTC 95%:
-0,74–1,62) ở nhóm 7–9% và 1,42 (KTC 95%: 0,94–2,15) ở nhóm >9%, so với nhóm
-<7%; cả hai cùng chiều với giả thuyết nghiên cứu nhưng khoảng tin cậy 95% đều chứa giá trị 1 — mối
-liên quan giữa HbA1c lúc nhập viện và tái nhập viện mọi nguyên nhân trong 1 năm chưa đạt ý nghĩa
-thống kê ở cỡ mẫu hiện có.
+19,7–24,6), khác nhau giữa 3 nhóm HbA1c (Bảng 2), với khoảng tin cậy 3 nhóm còn chồng lấp rộng.
+Sau hiệu chỉnh, OR đạt 1,10 (KTC 95%:
+0,74–1,62) ở nhóm 7–9% và 1,42 (KTC 95%: 0,94–2,15) ở nhóm >9% so với nhóm
+<7%; cùng chiều với giả thuyết nghiên cứu nhưng cả hai khoảng tin cậy 95% đều chứa giá trị 1 — mối
+liên quan chưa đạt ý nghĩa thống kê ở cỡ mẫu hiện có.
 
 Kết quả các phân tích phụ được trình bày ở Bảng 3.
 
@@ -228,21 +226,17 @@ Ghi chú: *dòng HbA1c liên tục là ước lượng cho mỗi 1% HbA1c tăng 
 cột bên phải. OR/HR hiệu chỉnh theo cùng biến nhiễu như Bảng 2. Toàn bộ phân tích ở bảng này mang tính
 khám phá, không hiệu chỉnh đa so sánh.
 
-Khi dùng HbA1c liên tục, OR hiệu chỉnh mỗi 1% là 1,02 (KTC 95%: 0,93–1,11) — khoảng
-tin cậy hẹp quanh giá trị 1. Khi giới hạn kết cục vào tái nhập viện liên quan ĐTĐ, OR hiệu chỉnh cao
-hơn rõ và có ý nghĩa thống kê ở cả nhóm 7–9% (2,97; KTC 95%: 1,31–6,73) và nhóm
->9% (5,50; KTC 95%: 2,42–12,49; p < 0,001). Hồi quy Cox cho kết quả cùng
-chiều và cùng độ lớn với kết cục chính: HR hiệu chỉnh 1,07 ở nhóm 7–9% và
-1,35 ở nhóm >9%, cả hai KTC 95% cũng chứa giá trị 1.
+HbA1c liên tục cho OR hiệu chỉnh 1,02 (KTC 95%: 0,93–1,11) mỗi 1% — khoảng hẹp
+quanh giá trị 1. Khi giới hạn kết cục vào tái nhập viện liên quan ĐTĐ, OR hiệu chỉnh cao hơn rõ và có
+ý nghĩa ở cả nhóm 7–9% (2,97; 1,31–6,73) và nhóm >9% (5,50;
+2,42–12,49; p < 0,001). Hồi quy Cox cho HR hiệu chỉnh cùng chiều, cùng độ lớn:
+1,07 ở nhóm 7–9%, 1,35 ở nhóm >9%, cả hai KTC cũng chứa 1.
 
 Tử vong trong viện trong 1 năm (không xác định được tử vong ngoài viện) thấp ở cả 3 nhóm, từ
-1,3% ở nhóm <7% đến 2,8% ở nhóm >9% (chung: 2,2%); kết cục
-này chỉ được mô tả, không phân tích đa biến. Phân tích hậu kiểm (không đăng ký trước) theo nhóm tuổi
-cho thấy, ở người <65 tuổi, tỷ số chênh hiệu chỉnh của HbA1c >9% (so với <7%) đạt 1,61 (KTC 95%: 0,86–3,02);
-ở người ≥65 tuổi, giá trị này là 1,27 (KTC 95%: 0,72–2,24), với p kiểm định tương tác HbA1c × tuổi là
-0,835 —
-chưa có bằng chứng hiệu ứng khác nhau thật sự theo tuổi ở cỡ mẫu hiện có; kết quả này chỉ mang tính
-khám phá.
+1,3% đến 2,8% (chung: 2,2%); chỉ mô tả, không phân tích đa
+biến. Phân tích hậu kiểm (không đăng ký trước) theo tuổi: ở người <65 tuổi, OR hiệu chỉnh của HbA1c
+>9% (so <7%) là 1,61 (KTC 95%: 0,86–3,02); ở người ≥65 tuổi là 1,27 (KTC 95%: 0,72–2,24), p tương tác HbA1c × tuổi =
+0,835 — chưa có bằng chứng hiệu ứng khác theo tuổi; kết quả chỉ mang tính khám phá.
 
 orchestra-role: discussion
 
@@ -256,69 +250,69 @@ cả hai đều chứa giá trị 1 — mối liên quan giữa HbA1c lúc nhậ
 **chưa được chứng minh có ý nghĩa thống kê** ở cỡ mẫu hiện có; đây là một ước lượng chưa chính xác
 (imprecise), không phải bằng chứng cho việc không có liên quan.
 
-So với y văn, kết quả này cùng hướng nhưng không cùng độ chắc chắn với một nghiên cứu đoàn hệ tại
-Trung Quốc ở người ĐTĐ type 2 trẻ và trung niên (18–59 <!-- not-a-result: hu2026, tiêu chuẩn tuổi của nghiên cứu đó --> tuổi), ghi nhận HbA1c lúc nhập viện liên quan
-có ý nghĩa thống kê với tái nhập viện trong 30 ngày (mỗi 1% HbA1c, aOR = 1,15 <!-- not-a-result: hu2026, tái nhập viện 30 ngày -->) [1]. Sự khác biệt có thể do mốc theo dõi của [1] ngắn hơn
-nhiều (30 ngày so với 365 <!-- not-a-result: mốc theo dõi của đề tài --> ngày của nghiên cứu này) và
-quần thể hẹp hơn. Một nghiên cứu tin học y tế tại Anh lại ghi nhận chiều hướng ngược lại khi HbA1c đo
-sau xuất viện, không phải lúc nhập viện [4] — phơi nhiễm khác thời điểm nên không mâu
-thuẫn trực tiếp, nhưng cùng gợi ý mối liên quan có thể phụ thuộc vào thời điểm đo, như đã nêu ở Đặt
-vấn đề. Nghiên cứu duy nhất ở mốc 1 năm dùng mô hình học máy không tách riêng được hiệu ứng độc lập
-của HbA1c [3], nên không thể đối chiếu trực tiếp.
+So với y văn, kết quả này cùng hướng nhưng kém chắc chắn hơn một nghiên cứu đoàn hệ tại Trung Quốc ở
+người ĐTĐ type 2 trẻ và trung niên (18–59 <!-- not-a-result: hu2026, tiêu chuẩn tuổi của nghiên cứu đó --> tuổi), ghi nhận HbA1c lúc nhập viện liên quan có ý nghĩa thống kê với tái nhập viện trong 30
+ngày (mỗi 1% HbA1c, aOR = 1,15 <!-- not-a-result: hu2026, tái nhập viện 30 ngày -->) [1] — khác
+biệt có thể do mốc theo dõi của [1] ngắn hơn nhiều (30 so với 365 <!-- not-a-result: mốc theo dõi của đề tài --> ngày) và quần thể hẹp hơn. Một nghiên cứu tại Anh ghi nhận chiều hướng ngược lại khi
+HbA1c đo sau xuất viện, không phải lúc nhập viện [4], gợi ý mối liên quan có thể phụ thuộc
+thời điểm đo. Nghiên cứu duy nhất ở mốc 1 năm dùng mô hình học máy không tách riêng được hiệu ứng độc
+lập của HbA1c [3], nên không đối chiếu trực tiếp được.
 
 Về cơ chế, HbA1c phản ánh kiểm soát đường huyết trung bình khoảng 3 tháng trước; kiểm soát kém kéo dài
-**có thể** đi kèm nhiễm trùng, biến chứng mạch máu và suy giảm miễn dịch, những yếu tố **có thể liên
-quan với** nguy cơ tái nhập viện — một giả thuyết sinh lý bệnh hợp lý, chưa có tài liệu đã thẩm định
-nào khảo sát trực tiếp cơ chế này ở quần thể và mốc thời gian của nghiên cứu này.
+**có thể** đi kèm nhiễm trùng, biến chứng mạch máu và suy giảm miễn dịch — các yếu tố **có thể liên
+quan** nguy cơ tái nhập viện, một giả thuyết sinh lý bệnh hợp lý nhưng chưa được khảo sát trực tiếp ở
+quần thể và mốc thời gian của nghiên cứu này.
 
-Các phân tích phụ cho thấy một hình ảnh nhất quán nội bộ: HbA1c liên tục (mỗi 1%) cho OR hiệu chỉnh
-1,02 (KTC 95%: 0,93–1,11), khoảng tin cậy hẹp quanh giá trị 1; hồi quy Cox cho thời gian đến lần tái nhập viện
-đầu tiên cho HR hiệu chỉnh cùng chiều và cùng độ lớn với OR chính (1,07 (KTC 95%: 0,75–1,51) ở nhóm 7–9% và
-1,35 (KTC 95%: 0,94–1,93) ở nhóm >9%, cả hai KTC 95% cũng chứa 1) — không cung cấp thêm bằng chứng mới. Ngược
-lại, khi giới hạn kết cục vào tái nhập viện liên quan trực tiếp đến ĐTĐ, OR hiệu chỉnh cao hơn rõ và có
-ý nghĩa thống kê ở cả hai nhóm (2,97 (KTC 95%: 1,31–6,73) ở nhóm 7–9%; 5,50 (KTC 95%: 2,42–12,49) ở nhóm >9%). Đây là
-một phát hiện đáng chú ý nhưng là kết cục phụ khám phá, cần kiểm định lại ở nghiên cứu độc lập, không
-phải kết luận xác nhận. Phân tích hậu kiểm
-theo tuổi (không đăng ký trước) không cho thấy hiệu ứng HbA1c khác nhau có ý nghĩa thống kê giữa
-người <65 và ≥65 tuổi (p tương tác = 0,835), nhưng KTC mỗi tầng tuổi rất rộng do cỡ mẫu
-giảm một nửa — chỉ là chưa có bằng chứng khác biệt, không phải bằng chứng hiệu ứng giống nhau.
+Các phân tích phụ nhất quán với kết quả chính: HbA1c liên tục (mỗi 1%) cho OR hiệu chỉnh
+1,02 (KTC 95%: 0,93–1,11), KTC hẹp quanh giá trị 1; hồi quy Cox cho HR hiệu chỉnh cùng chiều và cùng độ lớn
+(1,07 (KTC 95%: 0,75–1,51) ở nhóm 7–9%, 1,35 (KTC 95%: 0,94–1,93) ở nhóm >9%, cả hai KTC cũng chứa 1) — không thêm
+bằng chứng mới. Ngược lại, khi giới hạn kết cục vào tái nhập viện liên quan ĐTĐ, OR hiệu chỉnh cao hơn
+rõ và có ý nghĩa ở cả hai nhóm (2,97 (KTC 95%: 1,31–6,73) và 5,50 (KTC 95%: 2,42–12,49)) — một phát hiện đáng chú ý
+nhưng là kết cục phụ khám phá, cần kiểm định lại ở nghiên cứu độc lập. Phân tích hậu kiểm theo tuổi
+(không đăng ký trước) không cho thấy hiệu ứng HbA1c khác nhau có ý nghĩa giữa người <65 và ≥65 tuổi (p
+tương tác = 0,835), nhưng KTC mỗi tầng rất rộng do cỡ mẫu giảm một nửa — chưa có bằng
+chứng khác biệt, không phải bằng chứng hiệu ứng giống nhau.
 
-**Điểm mạnh.** Nghiên cứu sử dụng thiết kế đoàn hệ hồi cứu với lấy mẫu toàn bộ (census), tránh sai
-lệch chọn mẫu thuận tiện; thời điểm đo phơi nhiễm (24–48 giờ đầu nhập viện) được cố định trước thời
-điểm bắt đầu theo dõi kết cục nên nguy cơ sai lệch thời gian bất tử thấp. Biến nhiễu được chọn trước
-khi thu thập dữ liệu, dựa trên y văn và kiến thức lâm sàng, không chọn theo kết quả kiểm định đơn biến;
-bảng đăng ký phân tích công khai trước khi xem dữ liệu giúp phân biệt rõ phân tích đã định trước với
-phân tích hậu kiểm.
+**Điểm mạnh.** Nghiên cứu lấy mẫu toàn bộ (census), tránh sai lệch chọn mẫu thuận tiện; thời điểm đo
+phơi nhiễm (24–48 giờ đầu nhập viện) được cố định trước khi theo dõi kết cục nên nguy cơ sai lệch thời
+gian bất tử thấp. Biến nhiễu được chọn trước khi thu thập dữ liệu, dựa trên y văn và kiến thức lâm
+sàng, không theo kết quả kiểm định đơn biến; bảng đăng ký phân tích công khai trước khi xem dữ liệu
+phân biệt rõ phân tích định trước với hậu kiểm.
 
-**Hạn chế.** Thứ nhất, lực mẫu: cả OR chính và HR phụ đều không đạt ý nghĩa thống kê với KTC 95% rộng
-và chứa 1, phù hợp với rủi ro về lực mẫu đã chấp nhận trước khi có dữ liệu — một hiệu ứng thật khiêm
-tốn có thể không được phát hiện ở mức ý nghĩa 0,05. Thứ hai, sai lệch thông tin (phân loại sai kết
-cục): HIS chỉ ghi nhận tái nhập viện tại chính cơ sở này, nên người bệnh tái nhập viện ở nơi khác bị
-tính nhầm là không tái nhập viện (hướng và độ lớn sai lệch chưa xác định được). Thứ ba, sai lệch chọn
+**Hạn chế.** Thứ nhất, lực mẫu: OR chính và HR phụ đều không đạt ý nghĩa thống kê với KTC rộng chứa 1,
+phù hợp với rủi ro lực mẫu đã chấp nhận trước khi có dữ liệu — một hiệu ứng thật khiêm tốn có thể
+không được phát hiện ở α = 0,05. Thứ hai, sai lệch thông tin: HIS chỉ ghi tái nhập viện tại chính cơ
+sở này, nên người tái nhập viện ở nơi khác bị tính nhầm là không tái nhập viện (hướng và độ lớn chưa
+xác định được). Thứ ba, sai lệch chọn
 mẫu: tiêu chuẩn loại người thiếu HbA1c hợp lệ có thể làm mẫu nghiêng về người bệnh ổn định hơn lúc
-nhập viện. Thứ tư, nhiễu tồn dư: mô hình chỉ hiệu chỉnh 4 yếu tố định trước; các yếu tố khác (tuân thủ
-điều trị, kinh tế–xã hội, chăm sóc sau xuất viện) không có trong dữ liệu, chiều ảnh hưởng chưa rõ.
-Thứ năm, dữ liệu thiếu: 27 <!-- derived: R-A0-001.n - R-A1-003.n --> người bệnh (2,5% <!-- derived: (R-A0-001.n - R-A1-003.n) / R-A0-001.n * 100 -->)
-thiếu thời gian mắc ĐTĐ, bị loại khỏi các mô hình hiệu chỉnh theo quy tắc phân tích ca đầy đủ; tỷ lệ
-thấp nên ít khả năng sai lệch lớn. Thứ sáu, tử vong chỉ ghi nhận được trong viện: phân tích Cox chính
-coi tử vong ngoài viện như kiểm duyệt — giả định có thể không đúng nếu tử vong ngoài viện liên quan
-đến HbA1c. Các kết quả phụ và hậu kiểm theo
-tuổi mang tính khám phá, không hiệu chỉnh đa so sánh, không dùng để kết luận xác nhận; kết quả chỉ áp
-dụng cho người bệnh ĐTĐ type 2 tại một khoa của một bệnh viện tuyến tỉnh giai đoạn 2021–2022, không
-ngoại suy sang cơ sở hay quần thể khác mà không có dữ liệu riêng kiểm chứng.
+nhập viện; số người bị loại theo từng tiêu chuẩn riêng không có trong dữ liệu nguồn nên không ước
+lượng được quy mô sai lệch này. Thứ tư, nhiễu tồn dư: mô hình chính chỉ hiệu chỉnh 4 yếu tố định trước.
+Một số yếu tố khác có thể ảnh hưởng đồng thời đến HbA1c lúc nhập viện và nguy cơ tái nhập viện nhưng
+không có trong dữ liệu hồi cứu này: mức độ tuân thủ điều trị và tái khám trước đó (hướng nhiễu khó
+đoán); tình trạng kinh tế–xã hội và khả năng tiếp cận chăm sóc sau xuất viện (người khó khăn hơn có
+thể vừa kiểm soát đường huyết kém hơn vừa ít được theo dõi sau ra viện, nên có thể đẩy OR quan sát
+được lên cao hơn giá trị thật); và mức độ nặng của bệnh đồng mắc (chỉ ghi có/không, không có thang
+điểm, nên phần nhiễu do bệnh đồng mắc có thể chưa được hiệu chỉnh hết). Không đo được các yếu tố này
+nên không thể định lượng hướng hay độ lớn phần nhiễu còn lại; KTC rộng quan sát được có thể phản ánh
+một phần nhiễu tồn dư, không chỉ cỡ mẫu nhỏ. Thứ năm, dữ liệu thiếu: 27 <!-- derived: R-A0-001.n - R-A1-003.n --> người bệnh (2,5% <!-- derived: (R-A0-001.n - R-A1-003.n) / R-A0-001.n * 100 -->)
+thiếu thời gian mắc ĐTĐ, bị loại theo quy tắc ca đầy đủ; tỷ lệ thấp nên ít khả năng sai lệch lớn. Thứ
+sáu, tử vong chỉ ghi nhận được trong viện: phân tích Cox chính coi tử vong ngoài viện như kiểm duyệt —
+giả định có thể không đúng nếu tử vong ngoài viện liên quan HbA1c. Các kết quả phụ và hậu kiểm theo
+tuổi mang tính khám phá, không hiệu chỉnh đa so sánh; kết quả chỉ áp dụng cho người bệnh ĐTĐ type 2
+tại một khoa của một bệnh viện tuyến tỉnh giai đoạn 2021–2022, không ngoại suy sang nơi khác khi chưa
+có dữ liệu riêng kiểm chứng.
 
 **Ý nghĩa thực hành và nghiên cứu.** Trong phạm vi quần thể và cỡ mẫu đã khảo sát, chưa đủ bằng chứng
-để khẳng định HbA1c lúc nhập viện liên quan với tái nhập viện trong 1 năm; chưa đủ cơ sở để dùng HbA1c
-lúc nhập viện làm yếu tố phân loại nguy cơ tái nhập viện trong thực hành. Phát hiện về tái nhập viện
-liên quan ĐTĐ và kết quả hậu kiểm theo tuổi gợi ý hướng cho nghiên cứu xác nhận tiếp theo, lý tưởng ở
-quy mô đa trung tâm, cỡ mẫu lớn hơn.
+để khẳng định hoặc dùng HbA1c lúc nhập viện làm yếu tố phân loại nguy cơ tái nhập viện trong thực
+hành. Phát hiện về tái nhập viện liên quan ĐTĐ và kết quả hậu kiểm theo tuổi gợi ý hướng cho nghiên
+cứu xác nhận tiếp theo, đa trung tâm, cỡ mẫu lớn hơn.
 
 orchestra-role: conclusion
 
 # KẾT LUẬN
 
-Ở người bệnh đái tháo đường type 2 xuất viện tại Khoa Nội tiết, Bệnh viện Mô phỏng giai đoạn
-2021–2022: (1) tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm là 22,1% (KTC 95%: 19,7–24,6), từ
+Ở người bệnh đái tháo đường type 2 xuất viện tại Khoa Nội tiết, Bệnh viện Mô phỏng giai đoạn 2021–2022:
+(1) tỷ lệ tái nhập viện mọi nguyên nhân trong 1 năm là 22,1% (KTC 95%: 19,7–24,6), từ
 19,6% ở nhóm HbA1c <7% đến 25,5% ở nhóm >9%; (2) sau hiệu chỉnh tuổi, giới,
 thời gian mắc đái tháo đường và bệnh đồng mắc, chưa tìm thấy mối liên quan có ý nghĩa thống kê giữa
 HbA1c lúc nhập viện và tái nhập viện trong 1 năm (OR hiệu chỉnh ở nhóm 7–9% là 1,10 (KTC 95%: 0,74–1,62) và ở

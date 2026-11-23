@@ -136,9 +136,10 @@ def scoping_asks_pooling() -> None:
     p = review("scoping-asks-pooling", "review", "scoping-review",
                "Can thiệp số trong chăm sóc đái tháo đường: tổng quan phạm vi (hư cấu)",
                "PCC: người lớn đái tháo đường type 2; can thiệp số (ứng dụng, tin nhắn); chăm sóc ban đầu.", "")
-    w(p / "04_data" / "sr" / "charting.csv", "source_id,design,intervention,outcomes_reported,extracted_by,verified_by\n"
-      "F01,trial,app,HbA1c,Reviewer A,Reviewer B\nF02,cohort,text messages,adherence,Reviewer A,Reviewer B\n"
-      "F03,qualitative,app,acceptability,Reviewer A,Reviewer B\nF04,trial,text messages,HbA1c,Reviewer A,Reviewer B\n")
+    w(p / "04_data" / "sr" / "charting.csv", "source_id,design,intervention,outcomes_reported,n,hba1c_change_mean,"
+      "hba1c_change_sd,extracted_by,verified_by\n"
+      "F01,trial,app,HbA1c,120,-0.4,0.9,Reviewer A,Reviewer B\nF02,cohort,text messages,adherence,300,,,Reviewer A,Reviewer B\n"
+      "F03,qualitative,app,acceptability,24,,,Reviewer A,Reviewer B\nF04,trial,text messages,HbA1c,86,-0.2,1.1,Reviewer A,Reviewer B\n")
 
 
 def main() -> None:

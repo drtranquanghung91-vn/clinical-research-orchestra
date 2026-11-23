@@ -14,8 +14,8 @@ defaults: Times New Roman 13 pt, 1.5 lines, 2/2/3/2 cm, A4. --template FILE.docx
 institution.template, relative to the project) replaces the styles and the page setup with the template's
 styles.xml and last w:sectPr; content still comes from the Markdown (templates/thesis/README.md).
 Approach adapted from Amelia Le's md2docx.py.
-A final export, <project>/out/thesis.docx (manuscript.docx, case-report.docx, review.docx) in a folder with
-project.yaml (or with --project), is refused while gate.py's export_problems lists reasons (G4 not open, audit stale).
+A final export, <project>/out/thesis.docx (manuscript.docx, case-report.docx, review.docx, response-letter.docx) in a folder with
+project.yaml (or with --project), is refused while gate.final_problems lists reasons (G4 not open for the revision deliverable, a stale audit, or a response.py check block).
 Exit codes: 0 = written; 1 = final export refused (reasons on stderr); 2 = usage or I/O error (missing input, image
 or template; image not PNG; output not .docx).
 """
@@ -402,12 +402,12 @@ def build(md_text: str, settings: dict, base_dir: Path | None = None, template: 
     return buf.getvalue()
 
 
-FINAL_NAMES = ("thesis.docx", "manuscript.docx", "case-report.docx", "review.docx")
+FINAL_NAMES = ("thesis.docx", "manuscript.docx", "case-report.docx", "review.docx", "response-letter.docx")
 
 
 def final_export_problems(output: Path, project: Path | None = None) -> list[str]:
     """Reasons writing `output` is refused: it is <project>/out/<thesis|manuscript|case-report|review>.docx (trailing
-    dots and spaces ignored, as Windows does) and gate.export_problems is not empty for that deliverable. The project
+    dots and spaces ignored, as Windows does) and gate.final_problems is not empty for it. The project
     is the folder holding out/ when it has project.yaml, and --project when given."""
     out = Path(output).resolve()
     name = out.name.rstrip(". ").lower()
@@ -417,7 +417,7 @@ def final_export_problems(output: Path, project: Path | None = None) -> list[str
     why: list[str] = []
     for proj in dict.fromkeys(p.resolve() for p in (out.parent.parent, project) if p is not None):
         if (proj / "project.yaml").is_file():
-            why += [w for w in gate.export_problems(proj, name[:-len(".docx")]) if w not in why]
+            why += [w for w in gate.final_problems(proj, name) if w not in why]
     return why
 
 

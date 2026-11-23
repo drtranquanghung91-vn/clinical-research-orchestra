@@ -1,0 +1,17 @@
+{
+  "deliverable": "manuscript",
+  "deliverables": [
+    "manuscript"
+  ],
+  "at": "fixture",
+  "blocks": 0,
+  "warns": 0,
+  "files": {
+    "06_writing/manuscript/00-title.md": "227eafac56a802406d0885969a993f84d86989713a09bdf4d793ebcb237ba416",
+    "06_writing/manuscript/02-introduction.md": "a07aa1fd36b8f297992d0f6264752b3d609eb08e00efd368cf36b17df736f102",
+    "06_writing/manuscript/03-methods.md": "9ac4cbd340ad67788c1d742e6985d3b78c7ba58f4f29bbbd1e4770a30311772e",
+    "06_writing/manuscript/04-results.md": "d31b8f68c741476397b5a7d3af19784f6ce5a35916fcf0d5c6a82cb80647f4b5",
+    "06_writing/manuscript/05-discussion.md": "c7e94f2c0e1553f93d7de6e797b46756c8634f90d8c6a9bdab300036758f5a51"
+  },
+  "note": "fixture audit file, not a real audit run"
+}

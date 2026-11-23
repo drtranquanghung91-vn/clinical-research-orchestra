@@ -217,3 +217,25 @@ class TestGateHook(unittest.TestCase):
         out = json.loads(r.stdout.decode("utf-8"))["hookSpecificOutput"]
         self.assertEqual(out["permissionDecision"], "ask")
         self.assertIn("Python not found", out["permissionDecisionReason"])
+
+    def test_response_letter_is_a_final_export(self):
+        for cmd in ("python /plug/scripts/response.py . build",
+                    "python -m response . build",
+                    "python /plug/scripts/build_docx.py 09_revision/letter.md out/response-letter.docx --project ."):
+            d = run(shell(cmd, self.p))
+            self.assertIsNotNone(d, cmd)
+            self.assertEqual(d["permissionDecision"], "deny", cmd)
+            self.assertIn("response-letter", d["permissionDecisionReason"])
+        for cmd in ("python /plug/scripts/response.py . check", "python /plug/scripts/response.py . init r.txt"):
+            self.assertIsNone(run(shell(cmd, self.p)), cmd)
+
+    def test_git_bash_tmp_maps_to_the_temp_folder_on_windows(self):
+        tmp = Path(tempfile.gettempdir()).as_posix()
+        self.assertEqual(gate_hook.map_path("/tmp/p/out/thesis.docx", nt=True), tmp + "/p/out/thesis.docx")
+        self.assertEqual(gate_hook.map_path("/tmp", nt=True), tmp)
+        self.assertEqual(gate_hook.map_path("/tmp/p", nt=False), "/tmp/p")
+        self.assertEqual(gate_hook.map_path("/tmpx/p", nt=True), "/tmpx/p")
+        if os.name == "nt":
+            rel = self.p.relative_to(tempfile.gettempdir()).as_posix()
+            d = run(shell(f"python /plug/scripts/build_docx.py a.md /tmp/{rel}/out/thesis.docx", Path.home()))
+            self.assertEqual(d["permissionDecision"], "deny")

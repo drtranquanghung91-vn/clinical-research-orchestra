@@ -20,7 +20,7 @@ Set `STATUS.md` row 4 (`4 Data`) to `doing` first.
    `python "<path>/deidentify.py" 00_inputs/<raw file> --out 04_data`. This writes
    `<name>.deid.csv` plus the key files; move the key files out of the project or leave them
    git-ignored as the template does. They never leave this machine.
-2. Codebook `04_data/codebook.md` from `variables.md` and the data: type, unit, coding, source column.
+2. Codebook `04_data/codebook.md` from `03_protocol/ethics/data-dictionary.csv` when it exists (keep its variable names, types and value lists), else from `variables.md`, and the data: type, unit, coding, source column.
 3. Vendor the library: if absent, copy `${CLAUDE_PLUGIN_ROOT}/scripts/crostats.py` to
    `05_analysis/crostats.py` with the first-line comment from the workflow file. Then audit with
    `crostats.audit` in `05_analysis/audit.py`: rows, duplicates, missing, and outliers by

@@ -75,7 +75,7 @@ Never describe methods or subgroup results that only the full text contains when
 Before searching: list current and former names of the condition and intervention, MeSH terms and
 their recent changes, Vietnamese and English terms, abbreviations. Search old and new names.
 Regression case: PCOS was renamed PMOS (2026) and a 2026 PLoS Medicine meta-analysis (Olalere et al.,
-doi:10.1371/journal.pmed.1004887) was indexed under "Metabolic Syndrome", so a standard PCOS query
+doi:10.1371/journal.pmed.1004887) was indexed under "Metabolic Syndrome" (confirmed by a PubMed probe on 2026-11-23), so a standard PCOS query
 missed it.
 
 ## Search plans

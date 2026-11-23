@@ -11,6 +11,9 @@ compressed: [1,2], [1-3] (en dash), [1-3,5]. A line that is exactly {REFERENCES}
 --start-marker TEXT: numbering starts at the first citation after the first line containing TEXT.
 Citations before it reuse those numbers; ids seen only before it are numbered after all others.
 
+`--help`/`-h` prints this text and exits 0. A record counts as retracted only when `retracted` is the
+JSON value true.
+
 A cited record with no authors is rendered without them and warned about on stderr
 ("cite_render: <id> has no authors; check the record"); the exit code is unchanged.
 
@@ -124,6 +127,9 @@ def main(argv: list[str] | None = None) -> int:
         except Exception:
             pass
     args = list(sys.argv[1:] if argv is None else argv)
+    if any(a in ("-h", "--help") for a in args):
+        print(__doc__)
+        return 0
     marker = None
     if "--start-marker" in args:
         k = args.index("--start-marker")
@@ -155,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
     for k in cited_ids(text):
         if k not in by_id:
             bad.append(f"E-REF {k}: not in references.json")
-        elif by_id[k].get("retracted"):
+        elif by_id[k].get("retracted") is True:
             bad.append(f"E-REF {k}: retracted")
     if bad:
         print("\n".join(bad))
