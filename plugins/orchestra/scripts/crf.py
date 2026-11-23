@@ -69,8 +69,8 @@ TYPES = [("time-to-event", ("thoi gian-den-su kien", "thoi gian den su kien", "t
          ("categorical", ("phan loai", "categorical", "nominal", "danh muc")),
          ("count", ("dem", "count", "roi rac", "discrete")),
          ("continuous", ("lien tuc", "continuous", "numeric")),
-         ("date", ("ngay thang", "date")),
-         ("text", ("van ban", "free text", "text"))]
+         ("date", ("ngay thang", "ngay", "date")),
+         ("text", ("van ban", "free text", "text", "dinh danh", "identifier"))]
 REGISTER_CELLS = {"outcome", "ket cuc", "covariates", "bien hieu chinh", "exposure", "phoi nhiem", "factor", "yeu to"}
 SKIP_TERM = re.compile(r"^(?:nhu|as in|same as|see|xem)\b|^(?:khong|none|no|n/?a|-)$")
 SPLIT = re.compile(r"\s*[,;]\s*|\s+(?:và|and|hoặc|or)\s+", re.IGNORECASE)
@@ -78,7 +78,7 @@ VSPLIT = re.compile(r"\s+/\s+|\s*;\s*|\s*,\s*")
 PAREN = re.compile(r"\([^()]*\)")
 STOP = {"trong", "cua", "va", "voi", "theo", "cac", "nhung", "mot", "hoac", "the", "of", "and", "or", "in", "at",
         "to", "for", "by", "with", "on", "per", "as", "an"}
-IDENT = re.compile(r"\b(?:ho ten|ho va ten|ten benh nhan|full name|name|dia chi|address|so dien thoai|dien thoai|"
+IDENT = re.compile(r"\b(?:ho ten|ho va ten|ten benh nhan|patient name|participant name|full name|dia chi|address|so dien thoai|dien thoai|"
                    r"phone|email|cccd|cmnd|can cuoc|national id|ngay sinh|date of birth|dob|so ho so|ma ho so|"
                    r"medical record number|mrn|so the bhyt|bhyt|insurance number)\b")
 TEXT = {"en": {"title": "Case report form (CRF)", "form": "Form",
