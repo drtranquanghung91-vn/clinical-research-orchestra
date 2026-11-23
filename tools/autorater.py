@@ -2,17 +2,23 @@
 """Autorater: judge a skill-text change old versus new on fixed cases (maintainer tool; never in CI).
 
   python tools/autorater.py list [--skill NAME]
-  python tools/autorater.py run <case> [<case> ...] --base <git-ref> [--model sonnet] [--judge-model opus] [--keep]
+  python tools/autorater.py run <case> [<case> ...] --base <git-ref> [--model sonnet] [--judge-model opus]
+                                         [--max-usd 20] [--keep]
   python tools/autorater.py report
 
 A case is evals/cases/<name>/ with case.json ({"fixture": "<repo-relative folder>", "allowed_tools": "...",
 "max_turns": N, "skills": [...]}), prompt.md and rubric.md. run extracts plugins/ at <git-ref> (git archive) as
 the old side and copies the working tree's plugins/ as the new side, runs `claude -p` on a fresh copy of the
 fixture for each side with the scenario isolation flags (tests/scenarios/README.md), then asks a judge
-(`claude -p --model opus`, Read only) twice with the two attempts in swapped order. The verdict is old, new or tie
+(`claude -p --model opus`, Read only) twice: both orders are judged (old as A, then new as A), not randomised.
+The judge runs in a fresh temp folder with a neutral name, and run paths in its materials are replaced by
+<RUN_A> / <RUN_B>, so nothing tells it which attempt is old. The verdict is old, new or tie
 only when both judgements agree; otherwise inconsistent (an unreadable judgement counts as disagreement).
+--max-usd (default 20) caps spend: the cost each claude run reports is summed and no further run starts once the
+total reaches the cap (the result is marked "stopped: budget"); a call that reports no cost counts as unknown and
+is flagged. An estimate (cases x 2 runs + 2 judgements) is printed first.
 Results: evals/results/<case>-<UTC stamp>.json (git-ignored). Needs git and a logged-in claude CLI; costs money.
-Exit codes: 0 = done; 1 = a claude run or judge call exited non-zero; 2 = usage, unknown case, git error.
+Exit codes: 0 = done; 1 = a claude run or judge call exited non-zero, or the budget stopped a run; 2 = usage, unknown case, git error.
 Standard library only.
 """
 from __future__ import annotations
@@ -28,6 +34,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import uuid
 from pathlib import Path
 
 for _s in (sys.stdout, sys.stderr):
@@ -112,7 +119,7 @@ def _files(folder: Path) -> dict[str, str]:
 
 
 def summarize(transcript: Path, before: dict, run_dir: Path) -> dict:
-    answer, cost, turns, calls = "", 0.0, 0, []
+    answer, cost, turns, calls = "", None, 0, []
     text = Path(transcript).read_text(encoding="utf-8", errors="replace") if Path(transcript).is_file() else ""
     for line in text.splitlines():
         try:
@@ -125,18 +132,33 @@ def summarize(transcript: Path, before: dict, run_dir: Path) -> dict:
                     calls.append(f"{part.get('name')}: {json.dumps(part.get('input'), ensure_ascii=False)[:200]}")
         elif ev.get("type") == "result":
             answer = str(ev.get("result") or "")
-            cost = float(ev.get("total_cost_usd") or 0)
+            cost = float(ev["total_cost_usd"]) if ev.get("total_cost_usd") is not None else None
             turns = int(ev.get("num_turns") or 0)
     after = _files(run_dir) if Path(run_dir).is_dir() else {}
     return {"answer": answer, "cost_usd": cost, "turns": turns, "tool_calls": calls,
             "changed": sorted(k for k in after if before.get(k) != after[k])}
 
 
-def materials(prompt: str, a: dict, a_dir: Path, b: dict, b_dir: Path) -> str:
+def _variants(p: Path) -> list[str]:
+    v = {str(p), Path(p).as_posix(), str(p).replace("\\", "\\\\")}
+    return sorted(v, key=len, reverse=True)
+
+
+def mask(text: str, root: Path | None, label: str) -> str:
+    """Replace every spelling of an absolute side root by a neutral placeholder."""
+    for v in _variants(root) if root else []:
+        text = text.replace(v, f"<{label}>")
+    return text
+
+
+def materials(prompt: str, a: dict, a_dir: Path, b: dict, b_dir: Path,
+              a_root: Path | None = None, b_root: Path | None = None) -> str:
     parts = ["# Task prompt", "", prompt, ""]
-    for label, s, folder in (("A", a, a_dir), ("B", b, b_dir)):
-        parts += [f"# Attempt {label}", "", "## Final answer", "", s["answer"] or "(none)", "", "## Tool calls", ""]
-        parts += [f"- {c}" for c in s["tool_calls"]] or ["(none)"]
+    for label, s, folder, root in (("A", a, a_dir, a_root), ("B", b, b_dir, b_root)):
+        ph = f"RUN_{label}"
+        parts += [f"# Attempt {label}", "", "## Final answer", "", mask(s["answer"], root, ph) or "(none)", "",
+                  "## Tool calls", ""]
+        parts += [f"- {mask(c, root, ph)}" for c in s["tool_calls"]] or ["(none)"]
         parts += ["", "## Files written or changed", ""]
         total = 0
         for rel in s["changed"]:
@@ -150,7 +172,7 @@ def materials(prompt: str, a: dict, a_dir: Path, b: dict, b_dir: Path) -> str:
                 parts += [f"### {rel}", "(binary or unreadable)", ""]
                 continue
             total += min(len(body), room)
-            parts += [f"### {rel}", FENCE, body[:room], FENCE, ""]
+            parts += [f"### {rel}", FENCE, mask(body[:room], root, ph), FENCE, ""]
     return "\n".join(parts)
 
 
@@ -173,25 +195,52 @@ def verdict(w_old_new: str | None, w_new_old: str | None) -> str:
     return first if first is not None and first == second else "inconsistent"
 
 
-def judge(workdir: Path, mats: str, rubric: str, model: str) -> tuple[str, float, int]:
-    workdir.mkdir(parents=True, exist_ok=True)
-    for name, text in (("materials.md", mats), ("rubric.md", rubric)):
-        with open(workdir / name, "w", encoding="utf-8", newline="\n") as fh:
-            fh.write(text)
-    out = workdir.parent / f"{workdir.name}.jsonl"
-    code = run_claude(["-p", JUDGE, "--model", model, "--allowedTools", "Read", *ISOLATION, *STREAM], workdir, out)
-    s = summarize(out, {}, workdir)
-    return s["answer"], s["cost_usd"], code
+def judge(mats: str, rubric: str, model: str) -> tuple[str, float | None, int]:
+    """Run the judge in a fresh temp folder with a neutral random name; nothing beside it says old or new."""
+    tmp = Path(tempfile.gettempdir())
+    workdir, outdir = tmp / f"ar{uuid.uuid4().hex[:12]}", tmp / f"ar{uuid.uuid4().hex[:12]}"
+    try:
+        workdir.mkdir(parents=True)
+        outdir.mkdir(parents=True)
+        for name, text in (("materials.md", mats), ("rubric.md", rubric)):
+            with open(workdir / name, "w", encoding="utf-8", newline="\n") as fh:
+                fh.write(text)
+        out = outdir / "j.jsonl"
+        code = run_claude(["-p", JUDGE, "--model", model, "--allowedTools", "Read", *ISOLATION, *STREAM], workdir, out)
+        s = summarize(out, {}, workdir)
+        return s["answer"], s["cost_usd"], code
+    finally:
+        shutil.rmtree(workdir, ignore_errors=True)
+        shutil.rmtree(outdir, ignore_errors=True)
+
+
+class Budget:
+    def __init__(self, cap: float | None = None):
+        self.cap, self.spent, self.unknown = cap, 0.0, 0
+
+    def add(self, cost: float | None) -> None:
+        if cost is None:
+            self.unknown += 1
+        else:
+            self.spent += cost
+
+    def over(self) -> bool:
+        return self.cap is not None and self.spent >= self.cap
 
 
 def run_case(name: str, base: str, model: str = "sonnet", judge_model: str = "opus", results: Path = RESULTS,
-             keep: bool = False) -> dict:
+             keep: bool = False, budget: Budget | None = None) -> dict:
     case = load_case(name)
+    budget = budget or Budget()
+    stopped = False
     scratch = Path(tempfile.mkdtemp(prefix=f"autorater-{name}-"))
     try:
         plugins = {"old": extract_base(base, scratch / "old"), "new": copy_head(scratch / "new")}
         summary, dirs = {}, {}
         for side, root in plugins.items():
+            if budget.over():
+                stopped = True
+                break
             run_dir = scratch / side / "run" / name
             shutil.copytree(ROOT / case["fixture"], run_dir)
             before = _files(run_dir)
@@ -202,16 +251,22 @@ def run_case(name: str, base: str, model: str = "sonnet", judge_model: str = "op
             out = scratch / side / "run.jsonl"
             code = run_claude(args, run_dir, out)
             summary[side] = dict(summarize(out, before, run_dir), exit=code)
+            budget.add(summary[side]["cost_usd"])
             dirs[side] = run_dir
         judgements = []
         for order, (a, b) in (("old-new", ("old", "new")), ("new-old", ("new", "old"))):
-            text, cost, code = judge(scratch / f"judge-{order}", materials(case["prompt"], summary[a], dirs[a],
-                                                                           summary[b], dirs[b]), case["rubric"], judge_model)
+            if stopped or budget.over():
+                stopped = True
+                break
+            mats = materials(case["prompt"], summary[a], dirs[a], summary[b], dirs[b], scratch / a, scratch / b)
+            text, cost, code = judge(mats, case["rubric"], judge_model)
+            budget.add(cost)
             parsed = parse_judgement(text)
             judgements.append({"order": order, "exit": code, "cost_usd": cost,
                                "winner": parsed["winner"] if parsed else None,
                                "reasons": str(parsed.get("reasons", "")) if parsed else text[:500],
                                "rubric": parsed.get("rubric", []) if parsed else []})
+        costs = [s["cost_usd"] for s in summary.values()] + [j["cost_usd"] for j in judgements]
         result = {"case": name, "base": base, "head": git("rev-parse", "HEAD").decode().strip(),
                   "dirty": bool(git("status", "--porcelain").strip()),
                   "at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
@@ -219,9 +274,11 @@ def run_case(name: str, base: str, model: str = "sonnet", judge_model: str = "op
                   "runs": {s: {k: summary[s][k] for k in ("exit", "cost_usd", "turns", "changed", "answer")}
                            for s in summary},
                   "judgements": judgements,
-                  "verdict": verdict(judgements[0]["winner"], judgements[1]["winner"]),
-                  "cost_usd": round(sum(s["cost_usd"] for s in summary.values())
-                                    + sum(j["cost_usd"] for j in judgements), 4)}
+                  "verdict": ("stopped: budget" if stopped
+                              else verdict(judgements[0]["winner"], judgements[1]["winner"])),
+                  "stopped": "budget" if stopped else None,
+                  "unknown_cost_calls": sum(1 for c in costs if c is None),
+                  "cost_usd": round(sum(c for c in costs if c is not None), 4)}
         results.mkdir(parents=True, exist_ok=True)
         path = results / f"{name}-{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json"
         with open(path, "w", encoding="utf-8", newline="\n") as fh:
@@ -260,6 +317,7 @@ def main(argv=None) -> int:
     rn.add_argument("--base", required=True)
     rn.add_argument("--model", default="sonnet")
     rn.add_argument("--judge-model", default="opus")
+    rn.add_argument("--max-usd", type=float, default=20.0, help="stop starting runs once this much is spent")
     rn.add_argument("--keep", action="store_true")
     rn.add_argument("--results", default=str(RESULTS))
     rp = sub.add_parser("report")
@@ -275,10 +333,18 @@ def main(argv=None) -> int:
         for name in a.cases:            # validate every case before spending anything
             load_case(name)
         failed = False
+        budget = Budget(a.max_usd)
+        print(f"autorater: estimate {len(a.cases)} case(s) x (2 runs + 2 judgements) = {len(a.cases) * 4} claude "
+              f"calls; stops starting runs at USD {a.max_usd:g} (a cost is known only after its call)", file=sys.stderr)
         for name in a.cases:
-            r = run_case(name, a.base, a.model, a.judge_model, Path(a.results), a.keep)
-            failed |= any(r["runs"][s]["exit"] for s in r["runs"]) or any(j["exit"] for j in r["judgements"])
-            print(f"{name}: {r['verdict']} (USD {r['cost_usd']}) → {r['file']}")
+            if budget.over():
+                print(f"{name}: stopped: budget (USD {budget.spent:.2f} >= {a.max_usd:g})")
+                failed = True
+                continue
+            r = run_case(name, a.base, a.model, a.judge_model, Path(a.results), a.keep, budget)
+            failed |= bool(r["stopped"]) | any(r["runs"][s]["exit"] for s in r["runs"]) or any(j["exit"] for j in r["judgements"])
+            note = f"; {r['unknown_cost_calls']} call(s) reported no cost" if r["unknown_cost_calls"] else ""
+            print(f"{name}: {r['verdict']} (USD {r['cost_usd']}{note}) → {r['file']}")
         return 1 if failed else 0
     except Usage as e:
         print(f"autorater: {e}", file=sys.stderr)

@@ -707,10 +707,15 @@ STORE_HINT = ("This Python comes from the Microsoft Store: R started from it may
               "installed from python.org.")
 
 
-def ms_store_python(executable: str | None = None, system: str | None = None) -> bool:
-    """True for the Microsoft Store Python on Windows (it runs from a WindowsApps folder in an app container)."""
-    exe = str(executable or sys.executable).replace("/", "\\").lower()
-    return (system or platform.system()) == "Windows" and "\\windowsapps\\" in exe
+def ms_store_python(executable: str | None = None, system: str | None = None, base: tuple | list | None = None) -> bool:
+    """True for the Microsoft Store Python on Windows (it runs from a WindowsApps folder in an app container).
+    A venv made from it runs from the venv, so the base interpreter and prefix are checked too."""
+    if (system or platform.system()) != "Windows":
+        return False
+    if base is None:
+        base = (getattr(sys, "_base_executable", None), getattr(sys, "base_prefix", None))
+    paths = (executable or sys.executable, *base)
+    return any("\\windowsapps\\" in str(p).replace("/", "\\").lower() + "\\" for p in paths if p)
 
 
 def _close(a, b) -> bool:
