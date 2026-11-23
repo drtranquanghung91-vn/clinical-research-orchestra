@@ -1,0 +1,2 @@
+{"fixture": "tests/scenarios/fixtures/case-identifiers", "allowed_tools": "Bash,Read,Write,Edit,Glob,Grep,Skill",
+ "max_turns": 60, "skills": ["case-report", "literature-search"], "scenario": "tests/scenarios/case-identifiers.md"}
