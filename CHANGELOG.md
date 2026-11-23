@@ -52,7 +52,19 @@
   (RED reproduced; GREEN after a `systematic-review` skill change). S1 sr-pool-heterogeneous is still not
   fully GREEN: heterogeneity, prediction interval and the GRADE downgrade are reported but tau-squared
   (R-A1-002) is not stated (known issue). S3 undeclared-deviation GREEN on both reruns.
-<!-- E2E and dogfood lines added at release -->
+- End to end (`examples/fictional-cohort`, sonnet, plugins orchestra + phi-guard): ethics and CRF (`crf.py
+  check` 0 blocks), a journal shortlist from live NLM Catalog, DOAJ and Crossref lookups (2026-11-23) with the
+  author's pick, and one fictional revision round to `out/response-letter.docx` (`response.py check` 0 blocks;
+  audit 0 blocks for thesis and manuscript). Four stages, about 45 minutes, USD 11.59 reported plus about
+  0.6 for one killed turn. `out/ch3-results.docx` removed. Pipeline slips are listed in the example README.
+- Autorater dogfood of the reviewer-loop change (`evals/README.md`): sr-pooling `new` (USD 1.28);
+  case-anonymisation `old` (USD 2.24): the case exercises case-report steps 1-3, which P6 did not change,
+  and the new side skipped `case_lint.py` in that run, so this is read as run variance; thesis case not run
+  (budget: the old side looped reviewers for about an hour, the A1 problem). The run found five autorater
+  bugs, fixed: `claude.cmd` on Windows, a per-call `--max-budget-usd` and `--timeout-min`, progress lines.
+- Hooks: PreToolUse timeout raised from 15 s to 30 s in both plugins. On Windows the `python3` Store alias
+  probe takes about 3 s, and under load the gate hook overran 15 s; a hook that times out does not enforce
+  G3/G4.
 - Known issues: as for 0.6.0 (R cross-check needs R 4 or later with `metafor`), plus the S1
   tau-squared omission above.
 - Roadmap: P6 done; 1.0.0 follows the owner's sign-off.
