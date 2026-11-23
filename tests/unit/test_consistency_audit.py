@@ -348,5 +348,26 @@ class TestCli(Base):
         self.assertEqual(code, 0)
 
 
+class TestSampleSizeSource(unittest.TestCase):
+    """C6: a typed sample size on a slide is compared with 03_protocol/sample-size.md (warn)."""
+
+    def test_slide_disagreeing_with_sample_size_md_warns(self):
+        import init_project
+        with tempfile.TemporaryDirectory() as t:
+            p = init_project.create(Path(t) / "p", "T", "thesis-masters", "cohort", "vi", "vi")
+            (p / "ledgers" / "results-ledger.json").write_text('{"results": []}', encoding="utf-8")
+            (p / "03_protocol" / "sample-size.md").write_text(
+                "# Cỡ mẫu\n\nCỡ mẫu tối thiểu cần thiết là 535 người.\n\nTính ra n = 534,6, làm tròn lên.\n", encoding="utf-8")
+            deck = p / "07_present" / "defense"
+            deck.mkdir(parents=True)
+            (deck / "deck.json").write_text(json.dumps({"slides": [{"body": ["Cỡ mẫu tối thiểu cần thiết là 530 người"]}]},
+                                                       ensure_ascii=False), encoding="utf-8")
+            found = ca.audit(p)
+        warns = [(loc, m) for sev, loc, m in found if sev == "warn"]
+        self.assertTrue(any("530" in m and "535" in m and loc.startswith("07_present/") for loc, m in warns), found)
+        self.assertFalse([f for f in found if f[0] == "block"], found)
+        self.assertFalse([f for f in found if str(f[1]).startswith(ca.SAMPLE_SIZE)], found)
+
+
 if __name__ == "__main__":
     unittest.main()

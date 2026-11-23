@@ -11,7 +11,9 @@ Checks: same quantity (same words before a number, same unit, different value) =
 written approximately or as a decimal = block; date ranges sharing one end but not the other = block;
 abstract numbers found nowhere else = warn; percentage columns not summing to the total row = warn;
 term variants (project.yaml terms: + built-ins) = warn. A line containing <!-- cons-ok: reason --> is
-skipped. Exit 0 = no block; 1 = at least one block; 2 = usage or I/O error. Standard library only.
+skipped. 03_protocol/sample-size.md, when present, is read as a reference source for the same-quantity
+check only: a typed number elsewhere that differs from it under the same key words is a warn (per-group and
+total sizes share key words, so never a block); no other check runs on it. Exit 0 = no block; 1 = at least one block; 2 = usage or I/O error. Standard library only.
 
 Deliberate blind spots (noise trade-offs; the consistency-auditor agent covers them):
 - integers <= 10 and years 1900-2100 are never compared as quantities ("5 deaths" vs "7 deaths");
@@ -38,6 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from crolib import numfmt, projectcfg  # noqa: E402
 import render_results  # noqa: E402
 
+SAMPLE_SIZE = "03_protocol/sample-size.md"
 STOP = frozenset("là của có và được trong với ở cho các những một này "
                  "is was of the a an in at to".split())
 SKIP_LAST = frozenset({"p", "pvalue", "p-value", "ci", "ktc", "or", "rr", "hr", "sd", "auc"})
@@ -629,7 +632,15 @@ def audit(project: Path, files: list[Path] | None = None, lang: str | None = Non
     docs = [_load_doc(p, project, by_id, lang, findings) for p in paths]
     infos_by_doc = [_analyse(d, lang) for d in docs]
     infos = [i for infos_ in infos_by_doc for i in infos_]
-    _check_quantities(infos, findings)
+    ref_infos: list = []
+    if files is None and (project / SAMPLE_SIZE).is_file():
+        ref_infos = _analyse(_load_doc(project / SAMPLE_SIZE, project, by_id, lang, findings), lang)
+    quantities: list = []
+    _check_quantities(ref_infos + infos, quantities)  # reference first: a finding sits on the later, typed copy
+    for sev, loc, msg in quantities:
+        if str(loc).startswith(SAMPLE_SIZE):  # both sides inside sample-size.md: not this check's business
+            continue
+        findings.append(("warn" if SAMPLE_SIZE in msg else sev, loc, msg))
     _check_sample_size(infos, findings)
     _check_dates(infos, findings)
     _check_abstract(docs, infos_by_doc, by_id, lang, findings)

@@ -22,7 +22,8 @@ Every PMID below is an illustration from the source; re-find a paper through a t
    headings a tool confirmed; never one from memory.
 4. Example: PCOS → PMOS (*polyendocrine metabolic ovarian syndrome*, 2026): add
    `"polyendocrine metabolic ovarian syndrome"[tiab] OR PMOS[tiab]`; the meta-analysis PMID 42776991
-   is indexed under MeSH "Metabolic Syndrome". Measure what is missed with
+   is indexed under MeSH "Metabolic Syndrome" (confirmed 2026-11-23 with
+   `42776991[pmid] AND "Metabolic Syndrome"[Mesh]`: 1 hit; the same probe with "Polycystic Ovary Syndrome": 0 hits). Measure what is missed with
    `(new name) AND (I block) NOT (old P block)`: the GLP-1 RA in PMOS test case (Nov 2026) returned 4
    papers that the standard PCOS query missed; record that number in the search log.
 5. Other frequent renamings (check the same way; never assume the list is complete): NAFLD → MASLD;
