@@ -397,6 +397,21 @@ def _key(dm: str, idx: int, end: int, unit: str):
     return prefix, nxt, ci
 
 
+SENT_CUT = re.compile(r"[.;!?](?=\s|$)|\|")
+QUAL = (("per", re.compile(r"m\u1ed7i\s+\d|per\s+(?:\d|unit|one|each|increase)", re.I)),
+        ("cont", re.compile(r"li\u00ean\s+t\u1ee5c|continuous", re.I)))
+
+
+def _qualifier(dm: str, idx: int, end: int) -> frozenset:
+    """Markers that make the quantity a different one (per-unit, continuous exposure), read from the
+    sentence (or table cell) holding the token, so "OR hiệu chỉnh 1,02 mỗi 1%" is not compared with the
+    unqualified "OR hiệu chỉnh" of a categorical exposure."""
+    a = max((m.end() for m in SENT_CUT.finditer(dm, 0, idx)), default=0)
+    m = SENT_CUT.search(dm, end)
+    seg = nfc(dm[a:m.start() if m else len(dm)])
+    return frozenset(name for name, rx in QUAL if rx.search(seg))
+
+
 def _suffix(a: tuple, b: tuple) -> bool:
     s, l = (a, b) if len(a) <= len(b) else (b, a)
     return l[len(l) - len(s):] == s
@@ -415,12 +430,13 @@ def _check_quantities(infos: list[Info], out: list) -> None:
             prefix, nxt, ci = _key(info.km, idx, idx + len(tok), unit)
             if ci or len(prefix) < 2 or prefix[-1] in SKIP_LAST | REF_WORDS | GROUP_WORDS:
                 continue
-            bucket = buckets.setdefault((unit, nxt, prefix[-2:]), [])
+            qual = _qualifier(info.km, idx, idx + len(tok))
+            bucket = buckets.setdefault((unit, nxt, prefix[-2:], qual), [])
             for o_tok, o_val, o_dec, o_prefix, o_loc in bucket:
                 if not _suffix(prefix, o_prefix) or _same(val, dec, o_val, o_dec):
                     continue
                 short = prefix if len(prefix) <= len(o_prefix) else o_prefix
-                tag = (unit, nxt, short, frozenset((tok, o_tok)))
+                tag = (unit, nxt, qual, short, frozenset((tok, o_tok)))
                 if tag not in seen:
                     seen.add(tag)
                     out.append(("block", info.loc,

@@ -78,6 +78,22 @@ class TestSameQuantity(Base):
                "Tỷ lệ đáp ứng 86,3%. <!-- cons-ok: nhóm khác -->\n")
         self.assertEqual(self.blocks(), [])
 
+    def test_per_unit_qualifier_is_a_different_quantity(self):
+        self.w("07_present/poster.md", "Nguy cơ cao hơn (OR hiệu chỉnh 1,42, KTC 95% 0,94-2,15).\n")
+        self.w("06_writing/thesis/ch3.md",
+               "HbA1c liên tục cho OR hiệu chỉnh 1,02 (KTC 95%: 0,93-1,11) mỗi 1%.\n")
+        self.assertEqual(self.blocks(), [])
+
+    def test_same_qualifier_different_numbers_still_blocks(self):
+        self.w("07_present/poster.md", "OR hiệu chỉnh 1,42 (KTC 95% 0,94-2,15) mỗi 1%.\n")
+        self.w("06_writing/thesis/ch3.md", "OR hiệu chỉnh 1,02 (KTC 95%: 0,93-1,11) mỗi 1%.\n")
+        self.assertEqual(len(self.blocks(needle="hiệu chỉnh")), 1)
+
+    def test_unqualified_different_numbers_still_blocks(self):
+        self.w("07_present/poster.md", "OR hiệu chỉnh 1,42 ở nhóm HbA1c >9%.\n")
+        self.w("06_writing/thesis/ch3.md", "OR hiệu chỉnh 1,02 ở nhóm HbA1c >9%.\n")
+        self.assertEqual(len(self.blocks(needle="hiệu chỉnh")), 1)
+
     def test_years_headings_and_citations_ignored(self):
         self.w("06_writing/thesis/a.md", "# Mục tiêu 2\nNăm 2021 và [12] và nhóm 1.\n")
         self.w("06_writing/thesis/b.md", "# Mục tiêu 3\nNăm 2023 và [13] và nhóm 2.\n")
