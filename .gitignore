@@ -4,6 +4,7 @@ __pycache__/
 _sources/
 .claude/
 out/
+evals/results/
 *.key.csv
 !plugins/orchestra/templates/project/out/
 !plugins/orchestra/templates/project/out/.gitkeep

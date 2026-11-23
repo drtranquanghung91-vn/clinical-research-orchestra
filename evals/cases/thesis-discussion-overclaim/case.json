@@ -1,0 +1,2 @@
+{"fixture": "tests/scenarios/fixtures/discussion-overclaim", "allowed_tools": "Bash,Read,Write,Edit,Glob,Grep,Skill,Agent",
+ "max_turns": 80, "skills": ["thesis-writing", "results-writing"], "scenario": "tests/scenarios/discussion-overclaim.md"}
