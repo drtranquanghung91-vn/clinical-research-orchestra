@@ -526,5 +526,66 @@ class TestP5Figures(unittest.TestCase):
         self.assertIn("no rows for outcome 'pain'", r.stderr)
 
 
+class TestStaleFigures(unittest.TestCase):
+    """C5: a document figure whose drawn numbers no longer match the ledger or its data file is stale."""
+
+    def setUp(self):
+        import init_project
+        import shutil
+        self.addCleanup(lambda: shutil.rmtree(self.t, ignore_errors=True))
+        self.t = Path(tempfile.mkdtemp())
+        self.p = init_project.create(self.t / "p", "T", "manuscript", "cohort", "en", "en")
+        self.rec = {"id": "R-A1-003", "analysis_id": "A1", "status": "prespecified", "label": "OR 7-9 vs <7",
+                    "value": 1.1, "ci": [0.74, 1.62], "kind": "or", "source_file": "x", "locator": "1", "raw": "r"}
+        self.ledger([self.rec])
+        self.figs = self.p / "07_present" / "figures"
+        self.figs.mkdir(parents=True, exist_ok=True)
+        (self.figs / "F1.png").write_bytes(b"\x89PNG fixture")
+        self.write_data({"id": "F1", "type": "forest", "chart": {},
+                         "values": [{"label": "7-9 vs <7", "ref": "R-A1-003", "est": 1.1, "lo": 0.74, "hi": 1.62,
+                                     "text": "1.10 (0.74-1.62)"}]})
+        d = self.p / "06_writing" / "manuscript"
+        d.mkdir(parents=True, exist_ok=True)
+        self.draft = d / "04-results.md"
+        self.draft.write_text("# Results\n\n![Figure 1. Odds ratios](../../07_present/figures/F1.png)\n", encoding="utf-8")
+
+    def ledger(self, recs):
+        (self.p / "ledgers" / "results-ledger.json").write_text(json.dumps({"results": recs}), encoding="utf-8")
+
+    def write_data(self, data):
+        (self.figs / "F1.data.json").write_text(json.dumps(data), encoding="utf-8")
+
+    def found(self):
+        import figures
+        return figures.stale_findings(self.p, [self.draft])
+
+    def test_fresh_figure_passes(self):
+        self.assertEqual(self.found(), [])
+
+    def test_changed_or_missing_ledger_record_blocks(self):
+        self.ledger([dict(self.rec, value=1.2)])
+        lv, loc, msg = self.found()[0]
+        self.assertEqual((lv, loc), ("block", "06_writing/manuscript/04-results.md:3"))
+        self.assertIn("R-A1-003.est drawn as 1.1 but the ledger has 1.2", msg)
+        self.ledger([])
+        self.assertIn("no longer in the results ledger", self.found()[0][2])
+
+    def test_data_file_hash(self):
+        data = self.p / "04_data" / "c.deid.csv"
+        data.parent.mkdir(parents=True, exist_ok=True)
+        data.write_text("time,event\n1,0\n", encoding="utf-8")
+        self.write_data({"id": "F1", "type": "km", "chart": {}, "values": [{"label": "all", "n": 1, "events": 0}],
+                         "data_file": "04_data/c.deid.csv", "data_sha256": hashlib.sha256(data.read_bytes()).hexdigest()})
+        self.assertEqual(self.found(), [])
+        data.write_text("time,event\n1,1\n", encoding="utf-8")
+        self.assertIn("04_data/c.deid.csv changed since the figure was drawn", self.found()[0][2])
+
+    def test_missing_data_json_warns_and_other_images_are_ignored(self):
+        (self.figs / "F1.data.json").unlink()
+        self.assertEqual(self.found()[0][0], "warn")
+        self.draft.write_text("# Results\n\n![Photo](img/ward.png)\n", encoding="utf-8")
+        self.assertEqual(self.found(), [])
+
+
 if __name__ == "__main__":
     unittest.main()

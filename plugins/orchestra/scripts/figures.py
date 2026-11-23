@@ -8,6 +8,8 @@ prisma (PRISMA 2020 flow from ledger ids), rob (risk-of-bias traffic light from 
 from the results ledger by id; nothing is typed. Writes F<n>.svg, .pdf, .png and F<n>.data.json (every number
 drawn plus the native-chart series slides use) into 07_present/figures/. --profile poster writes
 F<n>.poster.{svg,pdf,png} at poster_width_cm / font_pt instead (no data.json). Format: references/presenting/figures-spec.md.
+stale_findings(project, files): every image a draft shows that is a figure F<n> whose data.json no longer matches the
+ledger (values) or its data file (hash) is stale (audit E-NUM block); a missing data.json warns.
 Needs matplotlib (the install hint is printed when it is missing).
 Exit codes: 0 = done; 2 = usage error, bad spec, unknown ledger id, bad data file, or matplotlib missing.
 """
@@ -17,6 +19,7 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import re
 import sys
 import textwrap
@@ -49,6 +52,74 @@ ID_OK = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*\Z")
 PALETTE = ["#1f4e79", "#c0504d", "#4f9a4f", "#8064a2", "#e69f00", "#2c9fb0"]
 GREY = "#555555"
 FLOW_BOX_CM, FLOW_GAP_CM = 1.7, 1.1
+
+
+IMG_REF = re.compile(r"!\[[^\]]*\]\(([^)\s]+)")
+FIG_NAME = re.compile(r"^(F\d+)(?:\.poster)?\.(?:png|svg|pdf)$", re.IGNORECASE)
+LEDGER_ID = re.compile(r"R-A\d+-\d{3}")
+
+
+def _drift(project: Path, data: dict, by_id: dict) -> list[str]:
+    why = []
+    for v in data.get("values") or []:
+        ref = v.get("ref") if isinstance(v, dict) else None
+        if not (isinstance(ref, str) and LEDGER_ID.fullmatch(ref)):
+            continue
+        rec = by_id.get(ref)
+        if rec is None:
+            why.append(f"{ref} is no longer in the results ledger")
+            continue
+        ci = rec.get("ci") if isinstance(rec.get("ci"), (list, tuple)) else []
+        now = {"est": rec.get("value"), "lo": ci[0] if len(ci) > 0 else None, "hi": ci[1] if len(ci) > 1 else None}
+        for key, current in now.items():
+            drawn = v.get(key)
+            if (isinstance(drawn, (int, float)) and isinstance(current, (int, float))
+                    and not math.isclose(drawn, current, rel_tol=1e-9, abs_tol=1e-12)):
+                why.append(f"{ref}.{key} drawn as {drawn} but the ledger has {current}")
+    df, sha = data.get("data_file"), data.get("data_sha256")
+    if isinstance(df, str) and isinstance(sha, str):
+        p = Path(project) / df
+        if not p.is_file():
+            why.append(f"{df} is missing")
+        elif hashlib.sha256(p.read_bytes()).hexdigest() != sha:
+            why.append(f"{df} changed since the figure was drawn")
+    return why
+
+
+def stale_findings(project: Path, files: list[Path]) -> list[tuple[str, str, str]]:
+    """(level, 'rel:line', msg) for every figure image a draft shows whose numbers are stale (plan D22)."""
+    project = Path(project)
+    root = project.resolve()
+    try:
+        by_id = derived.ledger_by_id(project)
+    except (OSError, ValueError):
+        by_id = {}
+    out = []
+    for f in map(Path, files):
+        try:
+            rel = f.resolve().relative_to(root).as_posix()
+        except ValueError:
+            rel = f.as_posix()
+        for n, line in enumerate(f.read_text(encoding="utf-8-sig").splitlines(), 1):
+            for m in IMG_REF.finditer(line):
+                img = Path(m.group(1)) if Path(m.group(1)).is_absolute() else f.parent / m.group(1)
+                fm = FIG_NAME.match(img.name)
+                if not fm:
+                    continue
+                dj = img.with_name(f"{fm.group(1)}.data.json")
+                loc = f"{rel}:{n}"
+                if not dj.is_file():
+                    out.append(("warn", loc, f"{fm.group(1)}: no {dj.name} beside the image; its numbers cannot be "
+                                             "checked (rerun figures.py)"))
+                    continue
+                try:
+                    data = json.loads(dj.read_text(encoding="utf-8"))
+                except ValueError as e:
+                    out.append(("block", loc, f"{dj.name} is unreadable: {e}"))
+                    continue
+                out += [("block", loc, f"figure {fm.group(1)} is stale: {w}; rerun figures.py, then check the figure "
+                                       "and its caption") for w in _drift(project, data, by_id)]
+    return out
 
 
 class FigureError(Exception):

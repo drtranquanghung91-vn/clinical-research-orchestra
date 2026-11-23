@@ -37,7 +37,7 @@ calling a tool. Query building, the nomenclature check and the search log:
 Before building any query: was the condition or concept renamed, does it have new diagnostic
 criteria, or is MeSH out of date? If so, add old and new names with `[tiab]` to the P block and note
 it in the search log. Full procedure, the PCOS → PMOS case (the 2026 PLoS Med meta-analysis indexed
-under "Metabolic Syndrome" is missed by the standard PCOS query) and the missed-papers measurement:
+under "Metabolic Syndrome", confirmed by the `[pmid] AND [Mesh]` probe in search-strategy.md, is missed by the standard PCOS query) and the missed-papers measurement:
 `search-strategy.md` §Nomenclature check. Why it exists: in the test run the most relevant 2026 review
 was invisible to the skill's own search, which makes a search invalid and not reproducible over time.
 
