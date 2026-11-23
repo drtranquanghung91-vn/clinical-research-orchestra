@@ -8,6 +8,8 @@ description: 'Use when the user wants a systematic review or meta-analysis plann
 Protocol first, two human reviewers, every number from a script, export only through G4. Detail:
 `${CLAUDE_PLUGIN_ROOT}/references/workflows/systematic-review.md`. Not covered: network meta-analysis, IPD,
 diagnostic-accuracy pooling, meta-regression beyond one factor, Bayesian models; refer to a statistician.
+`design: scoping-review`: compute no pooled number and no risk of bias, even if asked; say scoping reviews chart
+(PRISMA-ScR) and offer a systematic review (new protocol, G2).
 
 ## 1. Protocol (G2)
 Write `03_protocol/sr-protocol.md` from `${CLAUDE_PLUGIN_ROOT}/references/review/sr-protocol-template.md` with the

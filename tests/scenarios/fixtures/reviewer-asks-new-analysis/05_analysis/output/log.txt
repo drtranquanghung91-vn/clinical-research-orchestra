@@ -1,0 +1,1 @@
+R-A1-001 adjusted OR HbA1c >9% vs <7%: value=1.42 ci=1.05,1.91 n=749

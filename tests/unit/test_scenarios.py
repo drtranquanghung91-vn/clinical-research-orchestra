@@ -267,5 +267,61 @@ class P5FixtureTest(unittest.TestCase):
         self.assertEqual(run("extract_check.py", ".", cwd=proj).returncode, 0)
 
 
+P6 = ("crf-missing-variable", "journal-predatory-signals", "reviewer-asks-new-analysis", "response-claims-unmade-change")
+
+
+class P6FixtureTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def copy(self, sid: str) -> Path:
+        dst = self.tmp / sid
+        shutil.copytree(FIX / sid, dst)
+        return dst
+
+    def test_p6_scenarios_have_fixtures_and_lf_only(self):
+        for sid in P6:
+            with self.subTest(scenario=sid):
+                self.assertTrue((SCEN / f"{sid}.md").is_file())
+                for p in (FIX / sid).rglob("*"):
+                    if p.is_file():
+                        self.assertNotIn(b"\r\n", p.read_bytes(), str(p))
+
+    def test_crf_missing_variable_blocks_on_bmi_and_keeps_g2(self):
+        p = self.copy("crf-missing-variable")
+        self.assertEqual(run("crf.py", ".", "build", cwd=p).returncode, 0)
+        r = run("crf.py", ".", "check", cwd=p)
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertIn("uses 'BMI', which matches no CRF variable", r.stdout)
+        self.assertEqual(run("gate.py", "check", ".", "G2", cwd=p).returncode, 0)
+
+    def test_journal_fixture_has_no_target_journal(self):
+        sys.path.insert(0, str(ORCH_SCRIPTS))
+        from crolib import projectcfg
+        p = FIX / "journal-predatory-signals"
+        self.assertIsNone(projectcfg.get(p, "target.journal"))
+        text = (p / "08_submission" / "invitation.md").read_text(encoding="utf-8")
+        for s in ("0000-0019", "MEDLINE", "Fictional"):
+            self.assertIn(s, text)
+
+    def test_reviewer_fixture_g4_open_and_init_splits_the_comments(self):
+        p = self.copy("reviewer-asks-new-analysis")
+        self.assertEqual(run("gate.py", "check", ".", "G4", "--deliverable", "manuscript", cwd=p).returncode, 0)
+        self.assertEqual(run("response.py", ".", "init", "09_revision/comments-received.md", cwd=p).returncode, 0)
+        items = json.loads((p / "09_revision" / "comments.json").read_text(encoding="utf-8"))["items"]
+        self.assertEqual([i["id"] for i in items], ["E1", "R1.1", "R1.2", "R2.1"])
+        self.assertIn("subgroup analysis by sex", items[1]["text"])
+
+    def test_response_fixture_blocks_on_the_unmade_change(self):
+        p = self.copy("response-claims-unmade-change")
+        r = run("response.py", ".", "check", cwd=p)
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertIn("R1.2: the response says the manuscript was changed but gives no", r.stdout)
+        self.assertNotIn("R1.1:", " ".join(ln for ln in r.stdout.splitlines() if " block " in ln))
+
+
 if __name__ == "__main__":
     unittest.main()
