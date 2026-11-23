@@ -1,8 +1,10 @@
 import contextlib
 import io
 import json
+import re
 import shutil
 import tempfile
+import types
 import unittest
 from pathlib import Path
 
@@ -20,8 +22,12 @@ def result_line(text, cost=0.5, turns=3):
 JUDGE_CALLS = []
 
 
-def fake_claude(args, cwd, out):
+SEEN = []
+
+
+def fake_claude(args, cwd, out, timeout=None):
     cwd = Path(cwd)
+    SEEN.append((list(args), timeout))
     if "--plugin-dir" in args:                       # a side run: old or new plugins
         side = Path(args[args.index("--plugin-dir") + 1]).parent.name
         (cwd / "06_writing").mkdir(parents=True, exist_ok=True)
@@ -108,9 +114,9 @@ class TestAutorater(unittest.TestCase):
         calls = []
         inner = autorater.run_claude
 
-        def counting(args, cwd, out):
+        def counting(args, cwd, out, timeout=None):
             calls.append(1)
-            return inner(args, cwd, out)
+            return inner(args, cwd, out, timeout)
 
         autorater.run_claude = counting
         res = autorater.run_case("sr-pooling", "main", results=self.t, budget=autorater.Budget(0.4))
@@ -132,8 +138,8 @@ class TestAutorater(unittest.TestCase):
         self.assertEqual((b.unknown, b.spent, b.over()), (1, 0.0, False))
         inner = autorater.run_claude
 
-        def no_cost(args, cwd, out):
-            code = inner(args, cwd, out)
+        def no_cost(args, cwd, out, timeout=None):
+            code = inner(args, cwd, out, timeout)
             data = [json.loads(ln) for ln in Path(out).read_text(encoding="utf-8").splitlines()]
             for d in data:
                 d.pop("total_cost_usd", None)
@@ -155,6 +161,116 @@ class TestAutorater(unittest.TestCase):
         self.assertEqual(autorater.main(["list", "--skill", "case-report"]), 0)
         self.assertEqual(autorater.main(["run", "nope", "--base", "main", "--results", str(self.t)]), 2)
         self.assertEqual(autorater.main(["report", "--results", str(self.t)]), 0)
+
+    def test_claude_is_resolved_with_which(self):
+        real = self.saved[0]
+        saved = (autorater.shutil.which, autorater.subprocess.run)
+        try:
+            autorater.shutil.which = lambda name: None
+            with self.assertRaises(autorater.Usage) as cm:
+                real([], self.t, self.t / "o.jsonl")
+            self.assertIn("claude", str(cm.exception))
+            seen = []
+
+            def fake_run(cmd, **kw):
+                seen.append((cmd, kw))
+                return types.SimpleNamespace(returncode=0)
+
+            autorater.shutil.which = lambda name: r"C:\bin\claude.cmd"
+            autorater.subprocess.run = fake_run
+            self.assertEqual(real(["-p", "x"], self.t, self.t / "o.jsonl", timeout=7), 0)
+            self.assertEqual(seen[0][0], [r"C:\bin\claude.cmd", "-p", "x"])
+            self.assertEqual(seen[0][1]["timeout"], 7)
+        finally:
+            autorater.shutil.which, autorater.subprocess.run = saved
+
+    def test_missing_claude_exits_2(self):
+        saved = autorater.shutil.which
+        autorater.run_claude = self.saved[0]
+        autorater.shutil.which = lambda name: None
+        try:
+            with contextlib.redirect_stderr(io.StringIO()) as err, contextlib.redirect_stdout(io.StringIO()):
+                code = autorater.main(["run", "sr-pooling", "--base", "main", "--results", str(self.t)])
+        finally:
+            autorater.shutil.which = saved
+        self.assertEqual(code, 2)
+        self.assertIn("claude", err.getvalue())
+
+    def test_timeout_is_recorded_as_failed_with_unknown_cost(self):
+        real = self.saved[0]
+        saved = (autorater.shutil.which, autorater.subprocess.run)
+
+        def boom(cmd, **kw):
+            raise autorater.subprocess.TimeoutExpired(cmd, kw["timeout"])
+
+        try:
+            autorater.shutil.which = lambda name: "claude"
+            autorater.subprocess.run = boom
+            self.assertEqual(real([], self.t, self.t / "o.jsonl", timeout=1), "timeout")
+        finally:
+            autorater.shutil.which, autorater.subprocess.run = saved
+
+        inner = autorater.run_claude
+
+        def slow(args, cwd, out, timeout=None):
+            if "--plugin-dir" in args and Path(args[args.index("--plugin-dir") + 1]).parent.name == "new":
+                Path(out).write_text("", encoding="utf-8")
+                return "timeout"
+            if "--plugin-dir" not in args:               # the judge sees no "answer new" text: fixed verdict
+                Path(out).write_text(result_line(f'{FENCE}json\n{{"winner": "tie"}}\n{FENCE}'), encoding="utf-8")
+                return 0
+            return inner(args, cwd, out, timeout)
+
+        autorater.run_claude = slow
+        res = autorater.run_case("sr-pooling", "main", results=self.t, timeout_min=3)
+        self.assertEqual(res["runs"]["new"]["exit"], "timeout")
+        self.assertIsNone(res["runs"]["new"]["cost_usd"])
+        self.assertGreaterEqual(res["unknown_cost_calls"], 1)
+
+    def test_per_call_cap_and_timeout_are_passed(self):
+        SEEN.clear()
+        autorater.run_case("sr-pooling", "main", results=self.t, budget=autorater.Budget(20), timeout_min=12)
+        self.assertEqual(len(SEEN), 4)
+        for args, timeout in SEEN:
+            self.assertEqual(timeout, 12 * 60)
+            cap = float(args[args.index("--max-budget-usd") + 1])
+            self.assertLessEqual(cap, 20 / 4 + 1e-9)
+            self.assertGreater(cap, 0)
+        self.assertIn("--max-turns", SEEN[0][0])
+        SEEN.clear()
+        autorater.run_case("sr-pooling", "main", results=self.t, budget=autorater.Budget(1.2))
+        caps = [float(a[a.index("--max-budget-usd") + 1]) for a, _ in SEEN]
+        self.assertLessEqual(caps[-1], 1.2 - 1.0 + 1e-9)        # never more than what is left
+
+    def test_cli_has_timeout_option(self):
+        SEEN.clear()
+        with contextlib.redirect_stderr(io.StringIO()), contextlib.redirect_stdout(io.StringIO()):
+            autorater.main(["run", "sr-pooling", "--base", "main", "--results", str(self.t), "--timeout-min", "2"])
+        self.assertEqual({t for _, t in SEEN}, {120})
+        SEEN.clear()
+        with contextlib.redirect_stderr(io.StringIO()), contextlib.redirect_stdout(io.StringIO()):
+            autorater.main(["run", "sr-pooling", "--base", "main", "--results", str(self.t)])
+        self.assertEqual({t for _, t in SEEN}, {1800})
+
+    def test_report_reads_utf8_and_source_is_explicit(self):
+        (self.t / "x-20260101T000000Z.json").write_text(
+            json.dumps({"case": "ca-ế", "verdict": "new", "cost_usd": 1}, ensure_ascii=False), encoding="utf-8")
+        self.assertIn("ca-ế", autorater.report(self.t))
+        src = (ROOT / "tools" / "autorater.py").read_text(encoding="utf-8")
+        for m in re.finditer(r"(read_text|write_text|open)\(([^\n]*)", src):
+            line = m.group(0)
+            if "\"wb\"" in line or "fileobj" in line:
+                continue
+            self.assertIn("encoding=", line, line)
+
+    def test_progress_lines_go_to_stderr(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            autorater.run_case("sr-pooling", "main", results=self.t)
+        lines = [ln for ln in err.getvalue().splitlines() if "sr-pooling" in ln]
+        self.assertGreaterEqual(len(lines), 8)                    # start + finish for 4 calls
+        for token in ("old", "new", "old-new", "new-old", "USD"):
+            self.assertTrue(any(token in ln for ln in lines), token)
 
     def test_results_ignored_and_agents_rule(self):
         self.assertIn("evals/results/", (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines())
