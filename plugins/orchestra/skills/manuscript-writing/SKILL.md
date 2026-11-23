@@ -31,15 +31,14 @@ Count words with `python "${CLAUDE_PLUGIN_ROOT}/scripts/lint_prose.py" --count-w
 `target.word_limit` and `target.text_words`.
 
 ## 4. Review and revise (at most 3 rounds)
-Each round, in parallel, dispatch `citation-verifier`, `statistical-reviewer`, `reporting-guideline-checker`,
-`scientific-editor` and `consistency-auditor` with the project, the deliverable `manuscript` and no role brief,
-then run `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score . manuscript --round N`; its last line decides.
-Exit 2: read stderr, rerun the named reviewer, score the same N again; never raise N after a failed score.
+Follow `${CLAUDE_PLUGIN_ROOT}/references/writing/review-round.md` with deliverable `manuscript`. One round: the five
+reviewer agents in parallel (no role brief); save each reply unchanged to `reviews/<agent>-manuscript.md`; then one
+`python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score . manuscript --round N` before any fix; its last line decides.
 - `KEEP`: fix the findings, next round.
 - `REVERT`: `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" revert . manuscript`; the loop stops.
 - `STOP`: the loop stops.
-A `NEW-ANALYSIS:` request goes to `out/author-decisions.md`, not the text. On reused sections fix only E-FMT/E-NUM
-issues; send the rest to the author.
+`NEW-ANALYSIS:` requests go to `out/author-decisions.md`, never into the text. Edit only sections you drafted;
+reused sections get mechanical E-FMT/E-NUM fixes only; an author's section not accepted is never edited.
 
 ## 5. Humanize
 After the last content round run `prose-humanizer` (Skill tool) on each section you drafted (not reused).

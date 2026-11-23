@@ -11,13 +11,13 @@ spec format: `${CLAUDE_PLUGIN_ROOT}/references/presenting/pptx-spec.md`; figures
 1. `python "${CLAUDE_PLUGIN_ROOT}/scripts/gate.py" check . G3` exits 0. Exit 1: stop and send the author to
    `statistical-analysis`. A `WAIVE G3:` line also exits 0; say so in the hand-off.
 2. `ledgers/results-ledger.json` has results; thesis chapters exist in `06_writing/thesis/`.
-3. Read `project.yaml` (language, type), the objectives in `01_question/`, `decisions.md`.
+3. Read `project.yaml` (language, type), the objectives in `01_question/`, `decisions.md`. Never edit `01_question/` or the protocol without the author's yes to that exact change.
 
 ## 2. Consistency audit (always first)
 
 1. `python "${CLAUDE_PLUGIN_ROOT}/scripts/consistency_audit.py" . 06_writing/thesis/*.md 07_present/abstract.md`
    (drop the abstract if it does not exist). Exit 0: no block. Exit 1: findings. Exit 2: usage error, stop.
-2. Agent `consistency-auditor` (Agent tool, by name). It writes `reviews/consistency.md` and covers what the
+2. Agent `consistency-auditor` (Agent tool, by name). It returns its report; save it to `reviews/consistency.md`. It covers what the
    script cannot compare: renamed quantities, other roundings, objectives worded differently.
 3. Fix each block in the thesis text itself, with the author, then re-run until exit 0. A slide that repeats
    a wrong thesis number only moves the problem to the committee. Warnings: decide one by one, note the
@@ -51,7 +51,7 @@ spec format: `${CLAUDE_PLUGIN_ROOT}/references/presenting/pptx-spec.md`; figures
 
 ## 5. Rehearsal
 
-Agent `committee-simulator` (Agent tool, by name), deliverable `defense`. It writes
+Agent `committee-simulator` (Agent tool, by name), deliverable `defense`. Save its reply to
 `reviews/committee-defense.md`. Go through the weak points with the author: post-hoc results, deviations,
 wide intervals, claims stronger than the design.
 

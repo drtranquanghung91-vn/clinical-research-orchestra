@@ -28,6 +28,6 @@
 11. GRADE: `05_analysis/meta/grade.json` with the author, then `python "${CLAUDE_PLUGIN_ROOT}/scripts/grade.py" . run`.
 12. Figures: PRISMA flow (`type: prisma`), forest plots, `type: rob`; `python "${CLAUDE_PLUGIN_ROOT}/scripts/figures.py" .`.
 13. `python "${CLAUDE_PLUGIN_ROOT}/scripts/screening.py" . check`; the author locks G3 (`gate.py lock . G3 --by "<name>" --files ledgers/results-ledger.json 02_evidence/sr/screening.csv 04_data/sr/extraction.csv 04_data/sr/rob.csv …`).
-14. Draft with `review-systematic` and the P4 roles; review rounds with
+14. Draft with `review-systematic` and the P4 roles; review rounds per `references/writing/review-round.md` (replies saved to `reviews/<agent>-review.md`, one score per pass) with
     `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score . review --round N`; assemble and audit
     (`assemble.py . review`, `audit.py . review`) until 0 blocks; the author opens G4; `assemble.py . review --final`.

@@ -18,11 +18,12 @@ plan nothing.
 ## 3. Step 1: consistency audit (before slides)
 From the project folder run `python "${CLAUDE_PLUGIN_ROOT}/scripts/consistency_audit.py" .` over
 `06_writing/thesis/` and the abstract. Then call the agent `consistency-auditor` with the Agent tool (not
-the Skill tool). Fix every block in the thesis with the author: unrounded sample size, end date that
+the Skill tool) and save its reply to `reviews/consistency.md`. Fix every block in the thesis with the author: unrounded sample size, end date that
 differs between sections, one rate printed two ways. A number goes back into the source `.md` as its
 `{{R-…}}` placeholder (it prints its own unit: no `%` after it); re-render with `render_results.py . <file>.md`,
 never edit a `.rendered.md` by hand. Re-run until the exit code is 0. Do not plan slides
-while a block stands. Never edit `01_question/` or the protocol: report the mismatch and ask the author.
+while a block stands. Never edit `01_question/` (question.md, objectives), the protocol or any file outside `07_present/defense/`
+without the author's yes to that exact change in this conversation: show the change and ask first.
 
 ## 4. Step 2: plan
 Write `07_present/defense/deck.json` in the format of
@@ -45,8 +46,8 @@ the CIs include 1.
 Fix every serious finding; report each script's last line. Missing python-pptx: install hint, stop.
 
 ## 6. Step 4: rehearsal
-Call the agent `committee-simulator` with the Agent tool: deliverable `defense`, this project. It writes
-`reviews/committee-defense.md` (15-25 questions, weak points). Show the weak points to the author.
+Call the agent `committee-simulator` with the Agent tool: deliverable `defense`, this project. Then
+save its reply to `reviews/committee-defense.md` (15-25 questions, weak points). Show the weak points to the author.
 
 ## 7. Hand-off
 List `07_present/defense/deck.json`, `deck.pptx`, `reviews/consistency.md`, `reviews/committee-defense.md`.

@@ -11,7 +11,7 @@
 5. `python "${CLAUDE_PLUGIN_ROOT}/scripts/case_lint.py" .` until no block.
 6. The author locks G3: `gate.py lock . G3 --by "<name>" --files ledgers/results-ledger.json 01_case/facts.csv 01_case/similar-cases.csv 05_analysis/output/case-facts-log.txt`.
 7. Draft with the roles `case-front`, `case-presentation`, `case-discussion` (role briefs first in any subagent prompt).
-8. Review rounds (≤ 3) with the five reviewer agents and `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score . case-report --round N`.
+8. Review rounds (≤ 3) per `references/writing/review-round.md`: the five reviewer agents, replies saved to `reviews/<agent>-case-report.md`, then one `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score . case-report --round N` per pass.
 9. `python "${CLAUDE_PLUGIN_ROOT}/scripts/assemble.py" . case-report`, then
    `python "${CLAUDE_PLUGIN_ROOT}/scripts/audit.py" . case-report` until 0 blocks.
 10. Consent: the author writes `CONSENT: obtained <form, who signed>` in `decisions.md`; without it the final export

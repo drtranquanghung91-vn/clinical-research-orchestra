@@ -37,9 +37,9 @@ uses BMJ headings and 3–5 learning points. Values only as `{{R-A0-…}}`; cita
 `[[AUTHOR: …]]`; ask the author to fill each `[[AUTHOR: …]]`/`[[TÁC GIẢ: …]]`, never fill them yourself.
 
 ## 5. Review, assemble, audit, export
-- Reviewer agents in parallel (deliverable `case-report`), then
-  `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score . case-report --round N` (at most 3 rounds; KEEP, REVERT
-  and STOP as in `thesis-writing`).
+- Review rounds per `${CLAUDE_PLUGIN_ROOT}/references/writing/review-round.md` (deliverable `case-report`):
+  reviewer replies saved to `reviews/<agent>-case-report.md`, then one
+  `python "${CLAUDE_PLUGIN_ROOT}/scripts/worklog.py" score . case-report --round N` per pass, at most 3 rounds.
 - `python "${CLAUDE_PLUGIN_ROOT}/scripts/assemble.py" . case-report`, then
   `python "${CLAUDE_PLUGIN_ROOT}/scripts/audit.py" . case-report`; report each block, fix mechanical ones.
   E-REF is the author's call: verify, replace or record manually; never delete or reword the citing sentence, nor edit a reference status or ledger to pass.
