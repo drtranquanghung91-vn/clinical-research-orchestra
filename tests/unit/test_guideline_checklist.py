@@ -265,3 +265,35 @@ class TestP5ItemLists(unittest.TestCase):
         notice = (_paths.ROOT / "NOTICE.md").read_text(encoding="utf-8")
         for code in P5_LISTS:
             self.assertIn(f"`references/reporting-guidelines/items/{code}.json`", notice)
+
+
+class TestStdin(unittest.TestCase):
+    """A2: the reviewer agent validates its checklist without writing a file."""
+
+    def setUp(self):
+        self.t = Path(tempfile.mkdtemp())
+        self.p = init_project.create(self.t / "p", "T", "thesis-masters", "cohort", "vi", "vi")
+
+    def tearDown(self):
+        shutil.rmtree(self.t, ignore_errors=True)
+
+    def run_stdin(self, data, *extra):
+        from unittest import mock
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch("sys.stdin", io.StringIO(json.dumps(data))), contextlib.redirect_stdout(out), \
+                contextlib.redirect_stderr(err):
+            code = gc.main([str(self.p), *extra])
+        return code, out.getvalue(), err.getvalue()
+
+    def test_checklist_from_stdin(self):
+        data = {"guideline": "STROBE", "deliverable": "thesis",
+                "items": {i: {"status": "na", "reason": "fixture"} for i in IDS}}
+        code, out, err = self.run_stdin(data, "--deliverable", "thesis", "--stdin")
+        self.assertEqual(code, 0, out + err)
+        self.assertFalse((self.p / "reviews" / "guideline-checklist-thesis.json").exists())
+        del data["items"]["1a"]
+        code, out, _ = self.run_stdin(data, "--deliverable", "thesis", "--stdin")
+        self.assertEqual(code, 1)
+        self.assertIn("E-RG block reviews/guideline-checklist-thesis.json:1: item 1a", out)
+        self.assertEqual(self.run_stdin(data, "--stdin")[0], 2)                       # --deliverable required
+        self.assertEqual(self.run_stdin(data, "--deliverable", "thesis", "--stdin", "--table")[0], 2)

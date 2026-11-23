@@ -34,6 +34,18 @@ def reports(p: Path, deliverable="thesis", digest=None, request=None, **s) -> No
         (p / rel).write_text(f"STATUS: FINDINGS\nFINDINGS\n| code | location | fix |\n{req}"
                              f"drafts-digest: {deliverable} {digest}\n```scores\n{json.dumps(block)}\n```\n", encoding="utf-8")
 
+def per_reports(p: Path, deliverable="thesis", **s) -> None:
+    """Like reports(), written to the per-deliverable paths (K5)."""
+    digest = drafts.digest(p, deliverable)
+    vals = dict.fromkeys(reviews.CRITERIA, 2)
+    vals.update(s)
+    for agent, (_, crits) in reviews.REVIEWERS.items():
+        block = {"deliverable": deliverable, **{c: vals[c] for c in crits}}
+        (p / reviews.report_rel(agent, deliverable)).write_text(
+            f"STATUS: PASS\nFINDINGS\n| code | location | fix |\ndrafts-digest: {deliverable} {digest}\n"
+            f"```scores\n{json.dumps(block)}\n```\n", encoding="utf-8")
+
+
 BOX = ("# Tính cỡ mẫu\n\n> **Assumptions / Giả định.** Theo yêu cầu của tác giả, tham số không có\n"
        "> nguồn thì ghi GIẢ ĐỊNH và làm luôn.\n> Đây là giả định rủi ro nhất.\n\n## 1. Tóm tắt\n")
 BOX_BULLETS = "> **Giả định / Assumptions**:\n> - Tỷ lệ nền 20%.\n>   theo ngoại suy.\n> - OR 1,5.\n\nHết.\n"
@@ -271,3 +283,26 @@ class TestWorklog(unittest.TestCase):
         code, _, err = self.cli("revert", str(self.p), "thesis", "--to", "2")
         self.assertEqual(code, 2)
         self.assertIn("reverted", err)
+
+    def test_per_deliverable_reports_scored_and_snapshotted(self):
+        per_reports(self.p, structure=1)                # 15/16: KEEP (16/16 would STOP)
+        self.assertEqual(worklog.score(self.p, "thesis", 1)["decision"], "KEEP")
+        snap = worklog.round_dir(self.p, "thesis", 1) / "reviews"
+        for name in ("scientific-editor-thesis.md", "consistency-thesis.md", "citation-verifier-thesis.md"):
+            self.assertTrue((snap / name).is_file(), name)
+
+    def test_missing_report_names_the_per_deliverable_path(self):
+        with self.assertRaises(worklog.UsageError) as cm:
+            worklog.score(self.p, "thesis", 1)
+        self.assertIn("reviews/citation-verifier-thesis.md", str(cm.exception))
+
+    def test_unscored_reports(self):
+        per_reports(self.p)
+        last, paths = worklog.unscored_reports(self.p, "thesis")
+        self.assertEqual((last, len(paths)), (0, 5))
+        worklog.score(self.p, "thesis", 1)
+        self.assertEqual(worklog.unscored_reports(self.p, "thesis"), (1, []))
+        rep = self.p / reviews.report_rel("statistical-reviewer", "thesis")
+        rep.write_text(rep.read_text(encoding="utf-8") + "\nA rerun nobody scored.\n", encoding="utf-8")
+        self.assertEqual(worklog.unscored_reports(self.p, "thesis"), (1, ["reviews/statistical-reviewer-thesis.md"]))
+        self.assertEqual(worklog.unscored_reports(self.p, "manuscript"), (0, []))

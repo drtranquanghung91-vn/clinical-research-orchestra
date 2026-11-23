@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """E-RG: verify the reporting-guideline checklist written by the reporting-guideline-checker agent.
 
-  python guideline_checklist.py <project> [--guideline CODE] [--deliverable thesis|manuscript|case-report|review] [--table] [--json]
+  python guideline_checklist.py <project> [--guideline CODE] [--deliverable thesis|manuscript|case-report|review] [--table] [--json] [--stdin]
 
 Item lists: references/reporting-guidelines/items/<CODE>.json ({"code", "version", "items": [{"id", "section",
 "text"}]}; text paraphrased, never copied). Checklist: <project>/reviews/guideline-checklist-<deliverable>.json
@@ -11,6 +11,8 @@ reviews/guideline-checklist.json is still read when its "deliverable" matches or
 "reason"}}}). Block: an item of the guideline missing from the checklist, "absent", "na" without a reason, an
 unknown status, a wrong guideline, or "present" whose quote is not within ±3 lines of file:line (in the draft or
 in that window rendered from the results ledger). Warn: "partial"; an id that is not in the guideline.
+`--stdin` reads the checklist JSON from standard input instead of the file (needs --deliverable; the reviewer agent
+validates without writing; findings point at reviews/guideline-checklist-<d>.json, where the skill saves it).
 The guideline defaults to project.yaml → reporting_guideline. --table prints the checklist as a Markdown table
 for the appendix. Without --deliverable the only checklist present is used (two: exit 2). Exit codes: 0 = no block; 1 = block findings; 2 = usage, missing project, checklist or item
 list, unreadable JSON. Standard library only.
@@ -128,11 +130,12 @@ def rel_path(project: Path, path: Path) -> str:
         return Path(path).as_posix()
 
 
-def load_checklist(project: Path, path: Path | None = None) -> tuple[dict, str]:
+def load_checklist(project: Path, path: Path | None = None, text: str | None = None) -> tuple[dict, str]:
     p = Path(path) if path else default_path(project)
-    if not p.is_file():
-        raise InputError(f"{rel_path(project, p)} not found: run the reporting-guideline-checker agent first")
-    text = p.read_text(encoding="utf-8-sig")
+    if text is None:
+        if not p.is_file():
+            raise InputError(f"{rel_path(project, p)} not found: run the reporting-guideline-checker agent first")
+        text = p.read_text(encoding="utf-8-sig")
     try:
         data = json.loads(text)
     except ValueError as e:
@@ -174,12 +177,12 @@ def _windows(project: Path, rel: str, line: int, by_id: dict, lang: str) -> list
 
 
 def check(project: Path, guideline: str | None = None, checklist_path: Path | None = None,
-          deliverable: str | None = None) -> list[tuple[str, str, str]]:
+          deliverable: str | None = None, checklist_text: str | None = None) -> list[tuple[str, str, str]]:
     project = Path(project)
     code = guideline_code(project, guideline)
     items = load_items(code)
     path = Path(checklist_path) if checklist_path else default_path(project, deliverable)
-    data, text = load_checklist(project, path)
+    data, text = load_checklist(project, path, checklist_text)
     where_cl = rel_path(project, path)
     entries, found = data["items"], []
     if str(data.get("guideline", "")).upper() != code.upper():
@@ -273,18 +276,26 @@ def main(argv=None) -> int:
     ap.add_argument("--deliverable", choices=DELIVERABLES)
     ap.add_argument("--table", action="store_true")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--stdin", action="store_true", help="read the checklist JSON from standard input")
     a = ap.parse_args(argv)
     project = Path(a.project)
     if not project.is_dir():
         print(f"guideline_checklist: project folder {a.project} not found", file=sys.stderr)
+        return 2
+    if a.stdin and (a.table or not a.deliverable):
+        print("guideline_checklist: --stdin needs --deliverable and cannot be combined with --table", file=sys.stderr)
         return 2
     try:
         if a.table:
             print(table(project, a.guideline, deliverable=a.deliverable), end="")
             return 0
         code = guideline_code(project, a.guideline)
-        found = check(project, a.guideline, deliverable=a.deliverable)
-    except (InputError, OSError) as e:
+        text = None
+        if a.stdin:
+            buf = getattr(sys.stdin, "buffer", None)
+            text = buf.read().decode("utf-8-sig") if buf is not None else sys.stdin.read()
+        found = check(project, a.guideline, deliverable=a.deliverable, checklist_text=text)
+    except (InputError, OSError, UnicodeDecodeError) as e:
         print(f"guideline_checklist: {e}", file=sys.stderr)
         return 2
     blocks = sum(1 for lvl, _, _ in found if lvl == "block")

@@ -5,7 +5,7 @@ Commands
   worklog.py score <project> <d> --round N [--json]
       Prints the round, the 8 scores, notes, requests, `total T/16` and, as the last line, KEEP, REVERT or STOP;
       exit 0 for any decision. Exit 2 (nothing recorded) on: round != last + 1, round > 3, loop already stopped,
-      no drafts, missing report, missing scores block, bad score value, stale digest, missing checklist,
+      no drafts, missing report (reviews/<agent>-<d>.md, or the legacy reviews/<agent>.md holding a scores block for <d>), missing scores block, bad score value, stale digest, missing checklist,
       consistency/lint failure.
   worklog.py revert <project> <d> [--to N]
       Restores reviews/rounds/<d>/r<K>/ (K = last kept round or N) exactly: snapshot files are copied back and
@@ -24,7 +24,7 @@ reviews/worklog.json: {"rounds": [{"deliverable", "round", "at", "scores": {8 ke
 "decision", "kept", "compared_with", "compared_total", "drafts_digest", "files_changed",
 "requests": [{"agent", "text"}], "notes"}], "events": [...], "decisions_sha256": "..."}
 
-Snapshot layout: reviews/rounds/<d>/r<N>/<draft files and order.txt>, r<N>/reviews/<report files>,
+Snapshot layout: reviews/rounds/<d>/r<N>/<draft files and order.txt>, r<N>/reviews/<report files under their own names>,
 r<N>/reviews/guideline-checklist.json (a copy of the deliverable's reviews/guideline-checklist-<d>.json, or of
 the legacy reviews/guideline-checklist.json when that one is for <d>).
 """
@@ -194,8 +194,8 @@ def snapshot(project: Path, deliverable: str, n: int) -> Path:
     (dest / "reviews").mkdir(parents=True)
     for p in drafts.tracked_files(project, deliverable):
         shutil.copyfile(p, dest / p.name)
-    for rel, _ in reviews.REVIEWERS.values():
-        src = Path(project) / rel
+    for agent in reviews.REVIEWERS:
+        src = reviews.report_path(project, agent, deliverable)
         if src.is_file():
             shutil.copyfile(src, dest / "reviews" / src.name)
     gl = guideline_checklist.checklist_path(project, deliverable)
@@ -228,10 +228,11 @@ def score(project: Path, deliverable: str, rnd: int) -> dict:
     said: dict = {}
     notes: list = []
     requests: list = []
-    for agent, (rel, crits) in reviews.REVIEWERS.items():
-        path = project / rel
+    for agent, (_, crits) in reviews.REVIEWERS.items():
+        path = reviews.report_path(project, agent, deliverable)
+        rel = path.relative_to(project).as_posix()
         if not path.is_file():
-            raise UsageError(f"{rel} not found: run the {agent} agent on the {deliverable} first")
+            raise UsageError(f"{rel} not found: run the {agent} agent on the {deliverable} and save its reply there")
         parsed = reviews.parse_report(path.read_text(encoding="utf-8-sig"))
         if parsed["bad_scores"]:
             raise UsageError(f"{rel} has a malformed ```scores block (not a JSON object); fix it and rerun {agent}")
@@ -271,6 +272,23 @@ def score(project: Path, deliverable: str, rnd: int) -> dict:
     log["rounds"].append(entry)
     save_log(project, log)
     return entry
+
+
+def unscored_reports(project: Path, deliverable: str) -> tuple[int, list[str]]:
+    """(last scored round, reports for <d> whose bytes differ from that round's snapshot copy; all of them when no
+    round is scored). Audit warns on each (A1: one scored round per reviewer pass)."""
+    project = Path(project)
+    mine = [e for e in load_log(project)["rounds"] if e.get("deliverable") == deliverable]
+    last = max((e["round"] for e in mine), default=0)
+    out = []
+    for agent in reviews.REVIEWERS:
+        p = reviews.report_path(project, agent, deliverable)
+        if not p.is_file() or reviews.scores_for(reviews.parse_report(p.read_text(encoding="utf-8-sig")), deliverable) is None:
+            continue
+        snap = round_dir(project, deliverable, last) / "reviews" / p.name if last else None
+        if snap is None or not snap.is_file() or _sha(snap) != _sha(p):
+            out.append(p.relative_to(project).as_posix())
+    return last, out
 
 
 def revert(project: Path, deliverable: str, to: int | None = None) -> dict:
