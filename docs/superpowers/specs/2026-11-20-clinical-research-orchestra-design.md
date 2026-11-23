@@ -469,7 +469,7 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
 - SemVer in `plugin.json` and `marketplace.json`; `CHANGELOG.md` from v0.1.0.
 - Public on GitHub from 0.1.0 (owner decision, 20 Nov 2026). README states the phase status so users know which skills exist.
 - Codex and Antigravity manifests (as in grand-rounds) shipped in P6 (0.7.0); hooks do not run on those hosts.
-- A landing page in `site/` with a Pages workflow (`.github/workflows/pages.yml`) that stays manual until the owner enables GitHub Pages at the 1.0 sign-off.
+- A landing page in `site/` with a Pages workflow (`.github/workflows/pages.yml`) that stays manual until the owner enables GitHub Pages (still off at 1.0.0).
 
 ## 16. Roadmap
 
@@ -481,7 +481,7 @@ Modes: (a) thesis Chapter 1, (b) manuscript background, (c) standalone narrative
 | **P3 Present** | `research-figures`, `research-poster`, `defense-prep`, `conference-abstract`, `prose-humanizer`, `consistency_audit.py`, `poster_preflight.py`, `lint_prose.py`, `invariants.py`, `committee-simulator` | poster with 3 layouts and defence deck built from fictional cohort; MZL and 87-dpi scenarios GREEN. Done (0.4.0, 22 Nov 2026) |
 | **P4 Write** | `thesis-writing`, `manuscript-writing`, `/orchestra:audit`, remaining reviewer agents, revise loop, G4 hook; design in `2026-11-22-p4-write-design.md` | fictional cohort yields manuscript .docx and thesis .docx passing `/orchestra:audit`; thesis-g3-closed, discussion-overclaim, g4-export-blocked, revise-revert scenarios GREEN. Done (0.5.0, 22 Nov 2026) |
 | **P5 Reviews and case reports** | `case-report` (CARE), `systematic-review` with `/orchestra:sr` (PRISMA 2020), `literature-review` mode (c) | fictional case and fictional systematic review pass `/orchestra:audit` and reach G4; case-identifiers, case-consent-missing, sr-single-screener, sr-pool-heterogeneous, scoping-asks-pooling scenarios GREEN; design in `2026-11-22-p5-reviews-case-reports-design.md`. Done (0.6.0, 23 Nov 2026) |
-| **P6 Extend** | `ethics-and-crf`, `journal-selection`, `reviewer-response`, Codex/Antigravity manifests, autorater, landing page; v1.0 release | done (0.7.0); 1.0.0 follows the owner's sign-off |
+| **P6 Extend** | `ethics-and-crf`, `journal-selection`, `reviewer-response`, Codex/Antigravity manifests, autorater, landing page; v1.0 release | done (0.7.0); 1.0.0 released after the owner's sign-off on 23 Nov 2026 |
 
 Each phase gets its own implementation plan in `docs/superpowers/plans/`. Phases were re-ordered on 21 Nov 2026 (statistical analysis moved from P3 to a new P2; old P2–P4 became P3–P5) and on 22 Nov 2026 (case report, systematic review and literature-review mode (c) moved out of P4 into a new P5; old P5 Extend became P6).
 

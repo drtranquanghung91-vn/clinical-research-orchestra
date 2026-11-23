@@ -3,7 +3,7 @@
   "owner": { "name": "Trần Quang Hưng" },
   "metadata": {
     "description": "Evidence-first Claude Code plugins for clinical research: question, evidence, protocol, analysis, manuscript, thesis, case report, systematic review, ethics dossier and CRF, journal choice, reviewer response, poster and defence.",
-    "version": "0.7.0"
+    "version": "1.0.0"
   },
   "plugins": [
     {
