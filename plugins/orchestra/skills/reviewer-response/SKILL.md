@@ -17,8 +17,9 @@ submitted, and add `--unapproved` only on the author's yes. Never init twice.
 
 ## 2. Plan with the author
 List the items of `09_revision/comments.json`, each with a proposed answer: a change, no change (with the reason),
-or a new analysis. A requested new analysis (subgroup, new model, new outcome) becomes a
-`NEW-ANALYSIS: <what and why>` line under its item; never run it. If the author accepts it, it takes the P2 route
+or a new analysis. Write this plan into `09_revision/response.md` now, before asking the author. A requested new
+analysis (subgroup, new model, new outcome) becomes a `NEW-ANALYSIS: <what and why>` line under its item; never
+run it. If the author accepts it, it takes the P2 route
 (`POST-HOC A<n>:` in `decisions.md`, then `statistical-analysis`); if not, write "No change because …".
 
 ## 3. Revise and respond
