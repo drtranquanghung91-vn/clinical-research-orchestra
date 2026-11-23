@@ -1,0 +1,24 @@
+{
+  "name": "phi-guard",
+  "displayName": "PHI Guard",
+  "version": "0.6.0",
+  "description": "Patient-identifier guard: scans text and de-identifies CSV/XLSX files. Hooks do not run on this host: scan files yourself before sending anything.",
+  "suggestedPrompts": [
+    "Ẩn danh tệp dữ liệu bệnh nhân này",
+    "Scan this note for patient identifiers"
+  ],
+  "category": "Productivity",
+  "keywords": [
+    "privacy",
+    "phi",
+    "de-identification",
+    "hook"
+  ],
+  "author": {
+    "name": "Trần Quang Hưng",
+    "url": "https://github.com/drtranquanghung91-vn"
+  },
+  "homepage": "https://github.com/drtranquanghung91-vn/clinical-research-orchestra",
+  "repository": "https://github.com/drtranquanghung91-vn/clinical-research-orchestra",
+  "license": "MIT"
+}
