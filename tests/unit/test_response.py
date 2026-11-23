@@ -133,6 +133,41 @@ class TestResponse(unittest.TestCase):
         self.assertIs(json.loads((self.p / response.COMMENTS).read_text(encoding="utf-8"))["approved"], False)
         self.assertEqual(response.main([str(self.p), "init"]), 2)
 
+    def test_init_refuses_when_g4_never_opened(self):
+        (self.p / "gates" / "state.json").write_text("{}", encoding="utf-8")
+        self.assertFalse(gate.check_gate(self.p, "G4", "manuscript")[0])
+        code, out, _ = self.cli("init", str(self.comments))
+        self.assertEqual(code, 1)
+        self.assertIn("--unapproved", out)
+        self.assertFalse((self.p / response.COMMENTS).exists())
+        self.assertEqual(self.cli("init", str(self.comments), "--unapproved")[0], 0)
+
+    def _fake_locator(self, target):
+        self.cli("init", str(self.comments))
+        self.respond(CLEAN.replace(
+            '[[CHANGE: 06_writing/manuscript/03-methods.md | "Patients transferred from another hospital were excluded."]]',
+            f'[[CHANGE: {target} | "Patients transferred from another hospital were excluded."]]'))
+        return " | ".join(self.blocks())
+
+    def test_locator_at_the_response_file_itself_blocks(self):
+        b = self._fake_locator("09_revision/response.md")
+        self.assertIn("R1.1: CHANGE file 09_revision/response.md is not one of", b)
+
+    def test_locator_at_the_submitted_snapshot_blocks(self):
+        b = self._fake_locator("09_revision/submitted/06_writing/manuscript/03-methods.md")
+        self.assertIn("is not one of", b)
+
+    def test_locator_outside_the_project_or_absolute_blocks(self):
+        self.assertIn("R1.1: CHANGE file ../x.md is not a file", self._fake_locator("../x.md"))
+
+    def test_missing_snapshot_blocks(self):
+        self.cli("init", str(self.comments))
+        self.made_changes()
+        self.respond(CLEAN)
+        (self.p / response.SUBMITTED / "06_writing/manuscript/03-methods.md").unlink()
+        b = " | ".join(self.blocks())
+        self.assertIn("no submitted snapshot of 06_writing/manuscript/03-methods.md", b)
+
     def test_clean_response_passes_only_after_the_edits(self):
         self.cli("init", str(self.comments))
         self.respond(CLEAN)

@@ -13,8 +13,10 @@ for the deliverable unless --unapproved (the snapshot must be the submitted vers
 09_revision/response.md has one "## <id>" section per item: lines starting ">" quote the comment; a change is
 [[CHANGE: <project-relative file> | "<exact new text>"]].
 check (E-RESP; numbers E-NUM) blocks: an item without a response; an id not in comments.json; a CHANGE file not in
-the project; a CHANGE quote not in the current draft, or already in the submitted snapshot; a response that says
-the manuscript was changed with no CHANGE locator; a NEW-ANALYSIS: line (the author decides; never sent); a number
+the project or not one of the deliverable's tracked draft files (so never 09_revision/**); a CHANGE quote not in the
+current draft, or already in the submitted snapshot (a missing snapshot is a block); a response that says the
+manuscript was changed with no CHANGE locator (one locator anywhere in an item ends the claim check for the rest of
+that item's prose: only a claim with no locator at all is caught); a NEW-ANALYSIS: line (the author decides; never sent); a number
 not in the results ledger ({{R-…}} placeholders are rendered; item ids and page/line references are ignored).
 Warns: no CHANGE and no "no change because …".
 build writes out/response-letter.docx (comments, responses, change locations with section names) only when
@@ -247,6 +249,8 @@ def check(project: Path) -> list[tuple[str, str, str, str]]:
     by_id = {r["id"]: r for r in ledger if isinstance(r.get("id"), str)}
     lang = drafts.lang_of(project, deliverable_of(data))
     root = project.resolve()
+    deliv = deliverable_of(data)
+    tracked = {f.resolve() for f in drafts.tracked_files(project, deliv)}
     for iid in ids:
         sec = sections.get(iid)
         body = [(n, ln) for n, ln in (sec["lines"] if sec else []) if ln.strip() and not ln.lstrip().startswith(">")]
@@ -259,12 +263,20 @@ def check(project: Path) -> list[tuple[str, str, str, str]]:
             if Path(rel).is_absolute() or not path.resolve().is_relative_to(root) or not path.is_file():
                 add("E-RESP", "block", n, f"{iid}: CHANGE file {rel} is not a file in the project")
                 continue
+            if path.resolve() not in tracked:
+                add("E-RESP", "block", n, f"{iid}: CHANGE file {rel} is not one of the {deliv} deliverable's draft files "
+                                          "(06_writing/... drafts and order.txt); name the draft that holds the new text")
+                continue
             if locate(path.read_text(encoding="utf-8-sig"), quote) is None:
                 add("E-RESP", "block", n, f'{iid}: "{_short(quote)}" is not in the current {rel}: the claimed change '
                                           "is not in the draft")
                 continue
             sub = project / SUBMITTED / rel
-            if sub.is_file() and locate(sub.read_text(encoding="utf-8-sig"), quote):
+            if not sub.is_file():
+                add("E-RESP", "block", n, f"{iid}: no submitted snapshot of {rel} in {SUBMITTED}/: cannot check that the "
+                                          "change is new (run init before editing the drafts)")
+                continue
+            if locate(sub.read_text(encoding="utf-8-sig"), quote):
                 add("E-RESP", "block", n, f'{iid}: "{_short(quote)}" was already in the submitted {rel}: the change '
                                           "was not made")
         prose = CHANGE.sub(" ", "\n".join(ln for _, ln in body))
