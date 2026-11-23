@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Removed the landing page (`site/`) and the GitHub Pages workflow; the project has no website.
+- README: workflow diagram (`assets/workflow.svg`, `assets/workflow.png`) under "How it works".
+
 ## 1.0.0 (2026-11-23)
 - Owner sign-off of 0.7.0 by Trần Quang Hưng; no functional change. Version bumped in the marketplace,
   all six plugin manifests and the README.

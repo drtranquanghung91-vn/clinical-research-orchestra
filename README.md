@@ -16,7 +16,7 @@
 </p>
 
 > **Status: 1.0.0.** Version 1.0.0 is the owner-approved release of 0.7.0, which adds the P6 "extend" skills (an ethics dossier and CRF, journal choice with checkable
-> signals, and a point-by-point response to reviewers), Codex and Antigravity manifests and a landing page, to the P5
+> signals, and a point-by-point response to reviewers) and Codex and Antigravity manifests to the P5
 > "reviews and case reports" skills (a CARE case report, a PRISMA 2020
 > systematic review with dual screening, double extraction, meta-analysis and a GRADE summary of
 > findings, and a standalone narrative or scoping review) to the P4 "write" skills (thesis and journal manuscript
@@ -49,13 +49,15 @@ supervisor, an ethics committee or a journal reviewer will catch:
   search or an external tool.
 - **The prose sounds machine-written**, and nothing says how AI was used.
 
-Clinical Research Orchestra turns these steps into a method with files, checks and gates,
-in the spirit of [Superpowers](https://github.com/obra/superpowers) and
-[PaperOrchestra](https://github.com/google-research/paper-orchestra). The agent reasons;
-scripts measure. Anything a script can verify (an identifier, a number, a sample-size
-calculation, a poster's print resolution) is not left to the model's word.
+Clinical Research Orchestra turns these steps into a method with files, checks and gates.
+The agent reasons; scripts measure. Anything a script can verify (an identifier, a number,
+a sample-size calculation, a poster's print resolution) is not left to the model's word.
 
 ## How it works
+
+<p align="center">
+  <img src="assets/workflow.png" width="100%" alt="Clinical Research Orchestra workflow: your materials (an idea, papers and guidelines, study data, drafts or reviewer comments) go into one project folder. You plan with the agent: 1 question (gate G1), 2 evidence and 3 protocol (gate G2). Skills then 4 analyse and lock the results (gate G3), 5 write from the locked ledger, pass scripted checks and read-only reviewer agents with a revise loop of up to three rounds, 6 present and 7 publish. You release the files at gate G4. phi-guard checks every outbound call for patient identifiers.">
+</p>
 
 Every project lives in one folder with stage directories (`01_question/` to `07_present/`),
 ledgers for references, results and claims, and four human gates:
@@ -168,10 +170,6 @@ the plugin folder before starting the host (`<repo>` is where you cloned this re
 - Windows (cmd): `set CLAUDE_PLUGIN_ROOT=<repo>\plugins\orchestra`
 - macOS and Linux (bash, zsh): `export CLAUDE_PLUGIN_ROOT="<repo>/plugins/orchestra"`
 
-A static landing page (`site/index.html`, Vietnamese and English) is deployed by `.github/workflows/pages.yml`
-once GitHub Pages is enabled for the repository.
-The page is not published yet; GitHub Pages stays off until the owner enables it.
-
 ### Tools the scripts use
 
 Python 3.10 or later. The harness scripts use the standard library only. Literature lookups call
@@ -211,6 +209,7 @@ tests/unit/                       tests for every script
 tests/scenarios/                  RED/GREEN behaviour scenarios and the baseline record
 tools/lint_skills.py              skill frontmatter and length checks
 docs/superpowers/                 design spec and phase plans
+assets/workflow.svg               workflow diagram source (workflow.png is its render)
 AGENTS.md                         conventions for agents working on this repository
 ```
 
@@ -228,7 +227,7 @@ python -m unittest discover -s tests/unit -v
 python tools/lint_skills.py
 ```
 
-`tests/unit/test_ci_config.py` checks the CI and Pages workflow files. CI runs both on Linux and Windows with Python 3.10 and 3.12 on every push.
+`tests/unit/test_ci_config.py` checks the CI workflow file. CI runs the tests and the skill lint on Linux and Windows with Python 3.10 and 3.12 on every push.
 
 The skills are written test-first, as Superpowers prescribes. Each behaviour is first run on
 an agent without the plugin, and the failures are recorded in
