@@ -15,8 +15,11 @@ The judge runs in a fresh temp folder with a neutral name, and run paths in its 
 <RUN_A> / <RUN_B>, so nothing tells it which attempt is old. The verdict is old, new or tie
 only when both judgements agree; otherwise inconsistent (an unreadable judgement counts as disagreement).
 --max-usd (default 20) caps spend: the cost each claude run reports is summed and no further run starts once the
-total reaches the cap (the result is marked "stopped: budget"); a call that reports no cost counts as unknown and
-is flagged. An estimate (cases x 2 runs + 2 judgements) is printed first.
+total reaches the cap (the result is marked "stopped: budget"); each call also gets --max-budget-usd (what is left,
+at most a quarter of the cap). --timeout-min (default 30) limits one call's wall-clock time; a call that times out
+is recorded as failed ("timeout") with unknown cost. A call that reports no cost counts as unknown and is flagged.
+--max-turns does not bound subagent turns, so the budget and timeout are the real limits. One progress line per
+started or finished call goes to stderr. An estimate (cases x 2 runs + 2 judgements) is printed first.
 Results: evals/results/<case>-<UTC stamp>.json (git-ignored). Needs git and a logged-in claude CLI; costs money.
 Exit codes: 0 = done; 1 = a claude run or judge call exited non-zero, or the budget stopped a run; 2 = usage, unknown case, git error.
 Standard library only.
@@ -87,9 +90,23 @@ def copy_head(dest: Path) -> Path:
     return dest / "plugins"
 
 
-def run_claude(args: list[str], cwd: Path, out: Path) -> int:
-    with open(out, "wb") as fh, open(Path(out).with_suffix(".err"), "wb") as err:
-        return subprocess.run(["claude", *args], cwd=cwd, stdin=subprocess.DEVNULL, stdout=fh, stderr=err).returncode
+def run_claude(args: list[str], cwd: Path, out: Path, timeout: float | None = None) -> int | str:
+    """Run the claude CLI; returns its exit code, or "timeout" when `timeout` seconds pass first.
+
+    The executable is resolved with shutil.which so Windows finds claude.cmd (PATHEXT)."""
+    exe = shutil.which("claude")
+    if not exe:
+        raise Usage("the claude CLI was not found on PATH (on Windows claude.cmd must be on PATH too)")
+    with open(out, "wb") as fh, open(Path(out).with_suffix(".err"), "wb") as err:     # binary: raw CLI output
+        try:
+            return subprocess.run([exe, *args], cwd=cwd, stdin=subprocess.DEVNULL, stdout=fh, stderr=err,
+                                  timeout=timeout).returncode
+        except subprocess.TimeoutExpired:
+            return "timeout"
+
+
+def progress(msg: str) -> None:
+    print(f"autorater: {msg}", file=sys.stderr, flush=True)
 
 
 def load_case(name: str) -> dict:
@@ -195,7 +212,8 @@ def verdict(w_old_new: str | None, w_new_old: str | None) -> str:
     return first if first is not None and first == second else "inconsistent"
 
 
-def judge(mats: str, rubric: str, model: str) -> tuple[str, float | None, int]:
+def judge(mats: str, rubric: str, model: str, budget: "Budget | None" = None,
+          timeout_min: float = 30) -> tuple[str, float | None, int | str]:
     """Run the judge in a fresh temp folder with a neutral random name; nothing beside it says old or new."""
     tmp = Path(tempfile.gettempdir())
     workdir, outdir = tmp / f"ar{uuid.uuid4().hex[:12]}", tmp / f"ar{uuid.uuid4().hex[:12]}"
@@ -206,9 +224,10 @@ def judge(mats: str, rubric: str, model: str) -> tuple[str, float | None, int]:
             with open(workdir / name, "w", encoding="utf-8", newline="\n") as fh:
                 fh.write(text)
         out = outdir / "j.jsonl"
-        code = run_claude(["-p", JUDGE, "--model", model, "--allowedTools", "Read", *ISOLATION, *STREAM], workdir, out)
+        args = ["-p", JUDGE, "--model", model, "--allowedTools", "Read", *ISOLATION, *STREAM]
+        code = call_claude(args, workdir, out, budget, timeout_min)
         s = summarize(out, {}, workdir)
-        return s["answer"], s["cost_usd"], code
+        return s["answer"], (None if code == "timeout" else s["cost_usd"]), code
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
         shutil.rmtree(outdir, ignore_errors=True)
@@ -227,9 +246,23 @@ class Budget:
     def over(self) -> bool:
         return self.cap is not None and self.spent >= self.cap
 
+    def call_cap(self, share: int = 4) -> float | None:
+        """USD cap for one call: what is left, and at most 1/share of the whole cap (a case makes 4 calls)."""
+        if self.cap is None:
+            return None
+        return round(max(0.01, min(self.cap - self.spent, self.cap / share)), 4)
+
+
+def call_claude(args: list[str], cwd: Path, out: Path, budget: "Budget | None", timeout_min: float) -> int | str:
+    """One claude call with a per-call budget cap and a wall-clock timeout."""
+    cap = budget.call_cap() if budget else None
+    if cap is not None:
+        args = [*args, "--max-budget-usd", f"{cap:g}"]
+    return run_claude(args, cwd, out, timeout_min * 60)
+
 
 def run_case(name: str, base: str, model: str = "sonnet", judge_model: str = "opus", results: Path = RESULTS,
-             keep: bool = False, budget: Budget | None = None) -> dict:
+             keep: bool = False, budget: Budget | None = None, timeout_min: float = 30) -> dict:
     case = load_case(name)
     budget = budget or Budget()
     stopped = False
@@ -249,9 +282,13 @@ def run_case(name: str, base: str, model: str = "sonnet", judge_model: str = "op
             for pl in PLUGINS:
                 args += ["--plugin-dir", str(root / pl)]
             out = scratch / side / "run.jsonl"
-            code = run_claude(args, run_dir, out)
+            progress(f"{name}: {side} run started (USD {budget.spent:.2f} so far)")
+            code = call_claude(args, run_dir, out, budget, timeout_min)
             summary[side] = dict(summarize(out, before, run_dir), exit=code)
+            if code == "timeout":
+                summary[side]["cost_usd"] = None          # the cost of a killed call is unknown
             budget.add(summary[side]["cost_usd"])
+            progress(f"{name}: {side} run finished, exit {code}, USD {budget.spent:.2f} so far")
             dirs[side] = run_dir
         judgements = []
         for order, (a, b) in (("old-new", ("old", "new")), ("new-old", ("new", "old"))):
@@ -259,8 +296,10 @@ def run_case(name: str, base: str, model: str = "sonnet", judge_model: str = "op
                 stopped = True
                 break
             mats = materials(case["prompt"], summary[a], dirs[a], summary[b], dirs[b], scratch / a, scratch / b)
-            text, cost, code = judge(mats, case["rubric"], judge_model)
+            progress(f"{name}: judge {order} started (USD {budget.spent:.2f} so far)")
+            text, cost, code = judge(mats, case["rubric"], judge_model, budget, timeout_min)
             budget.add(cost)
+            progress(f"{name}: judge {order} finished, exit {code}, USD {budget.spent:.2f} so far")
             parsed = parse_judgement(text)
             judgements.append({"order": order, "exit": code, "cost_usd": cost,
                                "winner": parsed["winner"] if parsed else None,
@@ -318,6 +357,7 @@ def main(argv=None) -> int:
     rn.add_argument("--model", default="sonnet")
     rn.add_argument("--judge-model", default="opus")
     rn.add_argument("--max-usd", type=float, default=20.0, help="stop starting runs once this much is spent")
+    rn.add_argument("--timeout-min", type=float, default=30.0, help="wall-clock limit per claude call, minutes")
     rn.add_argument("--keep", action="store_true")
     rn.add_argument("--results", default=str(RESULTS))
     rp = sub.add_parser("report")
@@ -341,7 +381,7 @@ def main(argv=None) -> int:
                 print(f"{name}: stopped: budget (USD {budget.spent:.2f} >= {a.max_usd:g})")
                 failed = True
                 continue
-            r = run_case(name, a.base, a.model, a.judge_model, Path(a.results), a.keep, budget)
+            r = run_case(name, a.base, a.model, a.judge_model, Path(a.results), a.keep, budget, a.timeout_min)
             failed |= bool(r["stopped"]) | any(r["runs"][s]["exit"] for s in r["runs"]) or any(j["exit"] for j in r["judgements"])
             note = f"; {r['unknown_cost_calls']} call(s) reported no cost" if r["unknown_cost_calls"] else ""
             print(f"{name}: {r['verdict']} (USD {r['cost_usd']}{note}) → {r['file']}")

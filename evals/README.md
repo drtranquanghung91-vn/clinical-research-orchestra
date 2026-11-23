@@ -5,7 +5,12 @@ base git ref (old) and with the working tree (new), then a judge model compares 
 case's rubric twice: both orders are judged (old as A, then new as A). Only a verdict both orders agree on counts (`old`, `new`, `tie`);
 anything else is `inconsistent`. It is a maintainer tool: it needs a logged-in `claude` CLI, costs money and never
 runs in CI. Results go to `evals/results/` (git-ignored).
-`--max-usd` (default 20) stops new runs once the reported cost reaches the cap.
+`--max-usd` (default 20) stops new runs once the reported cost reaches the cap, and each call also gets
+`--max-budget-usd` (what is left, at most a quarter of the cap). `--timeout-min` (default 30) limits one call's
+wall-clock time; a call that times out is recorded as failed (`timeout`) with unknown cost. `--max-turns` from
+`case.json` is passed too, but it does not bound subagent turns (one run used 131 main and 219 subagent turns), so
+the budget and the timeout are the real limits. One progress line per started or finished call goes to stderr.
+On Windows the tool finds `claude.cmd` through PATH; if `claude` is not found it exits with code 2.
 
     python tools/autorater.py list --skill thesis-writing
     python tools/autorater.py run thesis-discussion-overclaim --base main
