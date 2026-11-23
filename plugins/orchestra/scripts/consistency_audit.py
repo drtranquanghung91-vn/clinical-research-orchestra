@@ -635,12 +635,14 @@ def audit(project: Path, files: list[Path] | None = None, lang: str | None = Non
     ref_infos: list = []
     if files is None and (project / SAMPLE_SIZE).is_file():
         ref_infos = _analyse(_load_doc(project / SAMPLE_SIZE, project, by_id, lang, findings), lang)
-    quantities: list = []
-    _check_quantities(ref_infos + infos, quantities)  # reference first: a finding sits on the later, typed copy
-    for sev, loc, msg in quantities:
-        if str(loc).startswith(SAMPLE_SIZE):  # both sides inside sample-size.md: not this check's business
-            continue
-        findings.append(("warn" if SAMPLE_SIZE in msg else sev, loc, msg))
+    _check_quantities(infos, findings)  # the cross-document pass is unchanged: its blocks stay blocks
+    if ref_infos:  # separate pass: only what disagrees with sample-size.md, always a warn
+        quantities: list = []
+        _check_quantities(ref_infos + infos, quantities)  # reference first: a finding sits on the later, typed copy
+        for _sev, loc, msg in quantities:
+            if str(loc).startswith(SAMPLE_SIZE) or SAMPLE_SIZE not in msg:
+                continue
+            findings.append(("warn", loc, msg))
     _check_sample_size(infos, findings)
     _check_dates(infos, findings)
     _check_abstract(docs, infos_by_doc, by_id, lang, findings)

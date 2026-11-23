@@ -59,11 +59,11 @@ FIG_NAME = re.compile(r"^(F\d+)(?:\.poster)?\.(?:png|svg|pdf)$", re.IGNORECASE)
 LEDGER_ID = re.compile(r"R-A\d+-\d{3}")
 
 
-def _drift(project: Path, data: dict, by_id: dict) -> list[str]:
+def _drift(project: Path, data: dict, by_id: dict | None) -> list[str]:
     why = []
     for v in data.get("values") or []:
         ref = v.get("ref") if isinstance(v, dict) else None
-        if not (isinstance(ref, str) and LEDGER_ID.fullmatch(ref)):
+        if by_id is None or not (isinstance(ref, str) and LEDGER_ID.fullmatch(ref)):
             continue
         rec = by_id.get(ref)
         if rec is None:
@@ -93,8 +93,9 @@ def stale_findings(project: Path, files: list[Path]) -> list[tuple[str, str, str
     try:
         by_id = derived.ledger_by_id(project)
     except (OSError, ValueError):
-        by_id = {}
+        by_id = None
     out = []
+    ledger_named = False
     for f in map(Path, files):
         try:
             rel = f.resolve().relative_to(root).as_posix()
@@ -117,8 +118,14 @@ def stale_findings(project: Path, files: list[Path]) -> list[tuple[str, str, str
                 except ValueError as e:
                     out.append(("block", loc, f"{dj.name} is unreadable: {e}"))
                     continue
+                if by_id is None:
+                    if not ledger_named:
+                        ledger_named = True
+                        out.append(("block", loc, "ledgers/results-ledger.json is missing or unreadable, so the "
+                                                  "numbers in the figures cannot be checked"))
+                drift = _drift(project, data, by_id)
                 out += [("block", loc, f"figure {fm.group(1)} is stale: {w}; rerun figures.py, then check the figure "
-                                       "and its caption") for w in _drift(project, data, by_id)]
+                                       "and its caption") for w in drift]
     return out
 
 
