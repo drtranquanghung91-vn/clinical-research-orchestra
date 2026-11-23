@@ -1,7 +1,7 @@
 {
   "name": "orchestra",
   "displayName": "Clinical Research Orchestra",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Evidence-first clinical research lifecycle for medical students and healthcare professionals (Vietnamese and English). Hooks do not run on this host: check the gates yourself before a final export.",
   "suggestedPrompts": [
     "Giúp tôi viết đề cương nghiên cứu",
