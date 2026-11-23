@@ -444,3 +444,18 @@ class TestRDiscovery(unittest.TestCase):
         self.assertEqual(found[0][0], "warn")
         self.assertIn("A1 tau2", found[0][2])
         self.assertIn("missing", meta.compare(py, {})[0][2])
+
+    def test_microsoft_store_python_hint(self):
+        self.assertTrue(meta.ms_store_python(r"C:\Users\someone\AppData\Local\Microsoft\WindowsApps\python.exe", "Windows"))
+        self.assertTrue(meta.ms_store_python(
+            r"C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_x64\python.exe", "Windows"))
+        self.assertFalse(meta.ms_store_python(r"C:\Users\someone\AppData\Local\Programs\Python\Python312\python.exe",
+                                              "Windows"))
+        self.assertFalse(meta.ms_store_python("/usr/bin/python3", "Linux"))
+        for s in ("R_LIBS_USER", "tools.rscript", "python.org"):
+            self.assertIn(s, meta.STORE_HINT)
+        err = io.StringIO()
+        with mock.patch.object(meta, "find_rscript", return_value=None), \
+                mock.patch.object(meta, "ms_store_python", return_value=True), contextlib.redirect_stderr(err):
+            self.assertEqual(meta.main([str(self.p), "r-status"]), 2)
+        self.assertIn("R_LIBS_USER", err.getvalue())

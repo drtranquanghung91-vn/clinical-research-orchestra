@@ -701,6 +701,18 @@ def install_hint(system: str) -> str:
             "to the full path of Rscript. This tool never installs software.")
 
 
+STORE_HINT = ("This Python comes from the Microsoft Store: R started from it may not see your R user library. In R "
+              'run Sys.getenv("R_LIBS_USER") and set the environment variable R_LIBS_USER to that folder before '
+              "running meta.py, or set project.yaml → tools.rscript to the full path of Rscript, or use a Python "
+              "installed from python.org.")
+
+
+def ms_store_python(executable: str | None = None, system: str | None = None) -> bool:
+    """True for the Microsoft Store Python on Windows (it runs from a WindowsApps folder in an app container)."""
+    exe = str(executable or sys.executable).replace("/", "\\").lower()
+    return (system or platform.system()) == "Windows" and "\\windowsapps\\" in exe
+
+
 def _close(a, b) -> bool:
     if a is None or b is None:
         return a is None and b is None
@@ -772,12 +784,13 @@ def main(argv=None) -> int:
         if a.cmd == "r-status":
             rs = find_rscript(project)
             if rs is None:
-                print("r-status: R not found. " + install_hint(platform.system()), file=sys.stderr)
+                print("r-status: R not found. " + install_hint(platform.system())
+                      + (" " + STORE_HINT if ms_store_python() else ""), file=sys.stderr)
                 return 2
             rv, mf = r_versions(rs)
             if mf is None:
-                print(f"r-status: Rscript {rs} (R {rv}); metafor not installed. " + install_hint(platform.system()),
-                      file=sys.stderr)
+                print(f"r-status: Rscript {rs} (R {rv}); metafor not installed. " + install_hint(platform.system())
+                      + (" " + STORE_HINT if ms_store_python() else ""), file=sys.stderr)
                 return 2
             print(f"r-status: Rscript {rs} (R {rv}); metafor {mf}; r-check is available")
             return 0

@@ -51,6 +51,12 @@ STEP = {"en": {"down": "down", "up": "up", 1: "one level", 2: "two levels"},  # 
         "vi": {"down": "hạ", "up": "nâng", 1: "một bậc", 2: "hai bậc"}}
 PLACEHOLDER = re.compile(r"\{\{(R-A(\d+)-(\d{3}))(?:\.\w+)?\}\}")
 CAPTION = re.compile(r"^(?:\*\*)?(?:Table|Bảng)\s+(\d+)\.", re.M)
+NUM_IN_NAME = re.compile(r"\d+(?:[.,]\d+)?%?")
+
+
+def outcome_cell(name: str) -> str:
+    """An outcome name for the SoF table: every number in it is marked not-a-result (E-NUM reads sof.md)."""
+    return NUM_IN_NAME.sub(lambda m: f"{m.group(0)} <!-- not-a-result: outcome name -->", str(name))
 TEXT = {
     "en": {"caption": "Table {n}. Summary of findings",
            "head": "| Outcome | Studies (participants) | Relative effect (95% CI) | Risk with comparator (per 1000 "
@@ -176,7 +182,7 @@ def run(project: Path, table: int | None = None) -> tuple[int, list[str], list[s
         reasons += [f"{k.replace('_', ' ')}: {STEP[lang]['up']} {STEP[lang][v]} ({why})"
                     for k in UP for v, why in [_pair(o, "upgrades", k)] if v]
         summary.append(f"{o['outcome']}: {level} certainty ({SYMBOL[level]})")
-        cells = [o["outcome"], f"{{{{{rid}.count}}}} ({{{{{rid}.n}}}})", f"{{{{{rid}.full}}}}"]
+        cells = [outcome_cell(o["outcome"]), f"{{{{{rid}.count}}}} ({{{{{rid}.n}}}})", f"{{{{{rid}.full}}}}"]
         kind = rec.get("kind")
         if kind in ABSOLUTE_KINDS and rec.get("ci"):
             cr = float(o["comparator_risk"])
