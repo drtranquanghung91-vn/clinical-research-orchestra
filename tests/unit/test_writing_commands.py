@@ -16,7 +16,11 @@ FILES = [ORCH / "skills" / "thesis-writing" / "SKILL.md", ORCH / "skills" / "man
          ORCH / "skills" / "case" / "SKILL.md", ORCH / "skills" / "sr" / "SKILL.md",
          ORCH / "skills" / "literature-review" / "SKILL.md", ORCH / "skills" / "review" / "SKILL.md",
          ORCH / "references" / "workflows" / "case-report.md", ORCH / "references" / "workflows" / "systematic-review.md",
-         ORCH / "references" / "workflows" / "scoping-review.md"]
+         ORCH / "references" / "workflows" / "scoping-review.md",
+         ORCH / "skills" / "ethics-and-crf" / "SKILL.md", ORCH / "skills" / "journal-selection" / "SKILL.md",
+         ORCH / "skills" / "reviewer-response" / "SKILL.md", ORCH / "references" / "workflows" / "ethics-and-crf.md",
+         ORCH / "references" / "workflows" / "journal-selection.md",
+         ORCH / "references" / "workflows" / "reviewer-response.md"]
 MENTION = re.compile(r"(?:scripts/)?\b([a-z_]+)\.py\b\"?([^`\n]*)")
 _help_cache: dict[str, str] = {}
 
@@ -144,6 +148,45 @@ class TestP5Skills(unittest.TestCase):
         self.assertIn("`systematic-review`", self.text("sr"))
         self.assertIn("(c)", self.text("review"))
         self.assertNotIn("phase P3", self.text("literature-search"))
+
+
+
+class TestP6Skills(unittest.TestCase):
+    def text(self, name):
+        return (ORCH / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+
+    def test_frontmatter_and_size(self):
+        import lint_skills
+        for name in ("ethics-and-crf", "journal-selection", "reviewer-response"):
+            fm, body = lint_skills.parse_frontmatter(self.text(name))
+            with self.subTest(skill=name):
+                self.assertEqual(fm["name"], name)
+                self.assertNotIn("disable-model-invocation", fm)
+                self.assertTrue(fm["description"].startswith("Use when"))
+                self.assertRegex(fm["description"], r"[àáảãạăâđèéêìíòóôơùúưỳý]")
+                self.assertLessEqual(len(body.split()), 500)
+
+    def test_rules_in_the_text(self):
+        ethics = self.text("ethics-and-crf")
+        for s in ('crf.py" . build', 'crf.py" . check', "consent-elements.md", "--profile consent", "[[AUTHOR:",
+                  "never invent one", "out/ethics/", 'gate.py" check . G2', "crf-map.csv"):
+            self.assertIn(s, ethics)
+        journal = self.text("journal-selection")
+        for s in ('journal_check.py" . lookup', 'journal_check.py" . note', 'journal_check.py" . pick', "--by",
+                  "Think. Check. Submit.", "never call a", "target.journal", "Never pick for the author"):
+            self.assertIn(s, journal)
+        resp = self.text("reviewer-response")
+        for s in ('response.py" . init', 'response.py" . check', 'response.py" . build', "[[CHANGE:", "NEW-ANALYSIS:",
+                  "POST-HOC", "09_revision/response.md", "G4", "never reword a claim away"):
+            self.assertIn(s, resp)
+        self.assertIn("03_protocol/ethics/data-dictionary.csv", self.text("data-preparation"))
+
+    def test_p6_scripts_are_cited(self):
+        found = set()
+        for f in FILES:
+            found |= {m.group(1) for m in MENTION.finditer(f.read_text(encoding="utf-8"))}
+        for name in ("crf", "journal_check", "response", "lint_prose"):
+            self.assertIn(name, found)
 
 
 if __name__ == "__main__":

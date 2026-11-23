@@ -189,5 +189,20 @@ class TestInitP5(unittest.TestCase):
             self.assertTrue(ignored("04_data/raw.csv"))
 
 
+class TestInitP6(unittest.TestCase):
+    def test_ethics_for_every_type_submission_and_revision_for_publishing_types(self):
+        for ptype, design, publishing in (("thesis-masters", "cohort", False), ("de-tai-co-so", "cohort", False),
+                                          ("poster-only", "cohort", False), ("manuscript", "cohort", True),
+                                          ("case-report", "case-report", True),
+                                          ("systematic-review", "systematic-review", True),
+                                          ("review", "scoping-review", True)):
+            with tempfile.TemporaryDirectory() as t:
+                p = init_project.create(Path(t) / "p", "T", ptype, design, "vi", "vi")
+                with self.subTest(type=ptype):
+                    self.assertTrue((p / "03_protocol" / "ethics").is_dir())
+                    for rel in ("08_submission", "09_revision"):
+                        self.assertEqual((p / rel).is_dir(), publishing, rel)
+
+
 if __name__ == "__main__":
     unittest.main()
