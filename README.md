@@ -11,11 +11,11 @@
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-0F5E7A"></a>
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-C8372D">
   <img alt="Languages" src="https://img.shields.io/badge/languages-English%20%7C%20Vietnamese-56677F">
-  <img alt="Status" src="https://img.shields.io/badge/status-0.7.0%20extend-B7791F">
+  <img alt="Status" src="https://img.shields.io/badge/status-1.0.0-2F855A">
   <a href="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/drtranquanghung91-vn/clinical-research-orchestra/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
-> **Status: early.** Version 0.7.0 adds the P6 "extend" skills (an ethics dossier and CRF, journal choice with checkable
+> **Status: 1.0.0.** Version 1.0.0 is the owner-approved release of 0.7.0, which adds the P6 "extend" skills (an ethics dossier and CRF, journal choice with checkable
 > signals, and a point-by-point response to reviewers), Codex and Antigravity manifests and a landing page, to the P5
 > "reviews and case reports" skills (a CARE case report, a PRISMA 2020
 > systematic review with dual screening, double extraction, meta-analysis and a GRADE summary of
@@ -27,7 +27,7 @@
 > analysis per the SAP, results writing with a Chapter 3 .docx), the P1 "plan the study" skills
 > (research question, literature search, critical appraisal, guideline check, literature review,
 > protocol design, sample size and SAP) and the 0.1.0 foundation (project folder, ledgers, gates,
-> reference verification and patient-data protection). See [Roadmap](#roadmap) (1.0.0 comes after the owner's sign-off). A simulated project run through
+> reference verification and patient-data protection). See [Roadmap](#roadmap). A simulated project run through
 > every P1 to P4 skill is in [`examples/fictional-cohort/`](examples/fictional-cohort/). Do not
 > rely on it for real studies yet.
 
@@ -170,7 +170,7 @@ the plugin folder before starting the host (`<repo>` is where you cloned this re
 
 A static landing page (`site/index.html`, Vietnamese and English) is deployed by `.github/workflows/pages.yml`
 once GitHub Pages is enabled for the repository.
-A landing page in `site/` is published with GitHub Pages after the 1.0 sign-off.
+The page is not published yet; GitHub Pages stays off until the owner enables it.
 
 ### Tools the scripts use
 
@@ -195,7 +195,7 @@ install hint and exits 2; the skills report that check as not run.
 | P4 Write | thesis and manuscript writing, reviewer agents, revise loop, audit, gate G4 and its hook | done (0.5.0) |
 | P5 Reviews and case reports | case report (CARE) with `/orchestra:case`, systematic review with `/orchestra:sr` (PRISMA 2020), literature review mode (c) | done (0.6.0) |
 | P6 Extend | ethics and CRF, journal selection, reviewer response, autorater, Codex and Antigravity packaging | done (0.7.0) |
-| 1.0.0 | release after the owner's sign-off | next |
+| 1.0.0 | owner sign-off of 0.7.0 | done (1.0.0) |
 
 The design spec is in [`docs/superpowers/specs/`](docs/superpowers/specs/) and each phase
 has its implementation plan in [`docs/superpowers/plans/`](docs/superpowers/plans/).

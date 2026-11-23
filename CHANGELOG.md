@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0 (2026-11-23)
+- Owner sign-off of 0.7.0 by Trần Quang Hưng; no functional change. Version bumped in the marketplace,
+  all six plugin manifests and the README.
+- GitHub Pages stays off: the landing page in `site/` and `.github/workflows/pages.yml` are ready, but
+  the workflow does not deploy until the owner enables Pages and sets `PAGES_ENABLED`.
+
 ## 0.7.0 (2026-11-23)
 - P6 Extend: model-invoked skills `ethics-and-crf` (ethics dossier, consent form, E-CRF and data
   dictionary), `journal-selection` (shortlist from checkable signals) and `reviewer-response`

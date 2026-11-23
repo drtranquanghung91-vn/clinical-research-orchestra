@@ -1,7 +1,7 @@
 {
   "name": "phi-guard",
   "displayName": "PHI Guard",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "description": "Patient-identifier guard: scans text and de-identifies CSV/XLSX files. Hooks do not run on this host: scan files yourself before sending anything.",
   "suggestedPrompts": [
     "Ẩn danh tệp dữ liệu bệnh nhân này",
