@@ -7,7 +7,10 @@ Checks (E-REF ledgers and citations, E-NUM, E-STAT, E-CASE, E-SCR, E-GRADE, E-LI
 ROWS. reviews/audit.json records the sha256 of the tracked drafts, order.txt, referenced images, the ledgers that
 exist and the case or review input files (null for an input that is absent); gate.py G4 and assemble.py --final
 refuse when any of them changed, or a null input was created, afterwards. A review whose project.yaml names no review
-design is one E-FMT block (never a guessed review type). Case reports skip E-STAT (no
+design is one E-FMT block (never a guessed review type). E-NUM also warns on trend wording without two ledger
+values or a trend test and blocks a document figure whose drawn numbers no longer match the ledger or its data
+file (figures.stale_findings). Reviewer reports are read from reviews/<agent>-<d>.md, else the legacy
+reviews/<agent>.md for its deliverable; a report not yet scored in a worklog round is an E-REV warn. Case reports skip E-STAT (no
 register) and mask relative time for E-NUM; reviews add E-SCR (systematic and scoping) and E-GRADE.
 """
 from __future__ import annotations
@@ -34,6 +37,7 @@ import case_lint  # noqa: E402
 import check_numbers  # noqa: E402
 import cite_render  # noqa: E402
 import consistency_audit  # noqa: E402
+import figures  # noqa: E402
 import gate  # noqa: E402
 import grade  # noqa: E402
 import guideline_checklist  # noqa: E402
@@ -41,6 +45,7 @@ import lint_prose  # noqa: E402
 import render_results  # noqa: E402
 import review_lint  # noqa: E402
 import screening  # noqa: E402
+import worklog  # noqa: E402
 
 ORCH = Path(__file__).resolve().parents[1]
 ROWS = [("ledgers", "E-REF"), ("citations", "E-REF"), ("results numbers", "E-NUM"), ("analysis declarations", "E-STAT"),
@@ -121,7 +126,7 @@ def _masked(path: Path) -> str:
 def citation_problem(rec: dict | None) -> str | None:
     if rec is None:
         return "is not in ledgers/references.json"
-    if rec.get("retracted"):
+    if rec.get("retracted") is True:
         return "is retracted"
     if rec.get("source") == "manual":
         return None if str(rec.get("seen_in") or "").strip() else "is a manual record without 'seen_in'"
@@ -179,6 +184,13 @@ def check_numbers_(a: Audit, d: str, files: list[Path]) -> None:
                   f"{tok} is not in the results ledger (use a {{{{R-…}}}} placeholder or <!-- not-a-result: … -->)")
         for n, sev, msg in check_numbers.check_derived(rendered, results):
             a.add("results numbers", "E-NUM", sev, f"{p}:{n}", msg)
+        for n, sev, msg in check_numbers.trend_findings(p.read_text(encoding="utf-8-sig"), results):
+            a.add("results numbers", "E-NUM", sev, f"{p}:{n}", msg)
+
+
+def check_figures(a: Audit, files: list[Path]) -> None:
+    for level, loc, msg in figures.stale_findings(a.project, files):
+        a.add("results numbers", "E-NUM", level, loc, msg)
 
 
 def stat_applies(project: Path, d: str) -> bool:
@@ -307,14 +319,25 @@ def check_reviews(a: Audit, d: str) -> None:
 
     def parsed(c: Path) -> dict:
         return reviews.parse_report(c.read_text(encoding="utf-8-sig"))
-    for agent, (rel, _) in reviews.REVIEWERS.items():
-        path = pick(a.project, rel, d, lambda c: reviews.scores_for(parsed(c), d) is not None and d in parsed(c)["digests"])
+
+    def usable(c: Path) -> bool:
+        return reviews.scores_for(parsed(c), d) is not None and d in parsed(c)["digests"]
+    for agent in reviews.REVIEWERS:
+        cands = reviews.report_candidates(agent, d)
+        path = next((x for x in (pick(a.project, rel, d, usable) for rel in cands) if x is not None), None)
         if path is None:
-            a.add("reviewer reports", "E-REV", "block", f"{rel}:1",
-                  f"no {agent} report for the {d} with a scores block and a drafts-digest line; run the agent")
+            a.add("reviewer reports", "E-REV", "block", f"{cands[0]}:1",
+                  f"no {agent} report for the {d} with a scores block and a drafts-digest line; run the agent and "
+                  f"save its reply to {cands[0]}")
         elif parsed(path)["digests"][d] != current:
             a.add("reviewer reports", "E-REV", "warn", f"{a.rel(path)}:1",
                   f"{agent} reviewed an earlier version of the {d} drafts (digest differs); rerun it if the content changed")
+    last, newer = worklog.unscored_reports(a.project, d)
+    for rel in newer:
+        why = (f"no reviewer round of the {d} is scored yet" if last == 0
+               else f"newer than the last scored round (r{last})")
+        a.add("reviewer reports", "E-REV", "warn", f"{rel}:1",
+              f"{why}: score each reviewer pass once (worklog.py score . {d} --round N), at most 3 rounds")
 
 
 def run(project: Path, ds: list[str], named: str | None, online: bool) -> dict:
@@ -339,6 +362,7 @@ def run(project: Path, ds: list[str], named: str | None, online: bool) -> dict:
         files = drafts.draft_files(a.project, d)
         guarded("citations", check_citations, a, files, online)
         guarded("results numbers", check_numbers_, a, d, files)
+        guarded("results numbers", check_figures, a, files)
         if stat_applies(a.project, d):
             guarded("analysis declarations", check_stat, a, files)
         if d == "case-report":
