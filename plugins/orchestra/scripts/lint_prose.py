@@ -320,8 +320,8 @@ def lint_file(path: str, lang: str) -> dict:
 CONSENT_WORDS = {"en": 25, "vi": 40}     # Vietnamese words are syllables
 VI_LETTER = re.compile(r"[ăâđêôơưàảãáạằẳẵắặầẩẫấậèẻẽéẹềểễếệìỉĩíịòỏõóọồổỗốộờởỡớợùủũúụừửữứựỳỷỹýỵ]", re.I)
 JARGON = re.compile(r"(?i)\b(?:randomi[sz](?:ed|ation)|placebo|double[- ]blind|single[- ]blind|cohort|biomarkers?|"
-                    r"pharmacokinetics?|adverse events?|pseudonymi[sz](?:ed|ation)|de-?identified|ngẫu nhiên ho[áa]|"
-                    r"giả dược|mù đôi|mù đơn|đoàn hệ|dấu ấn sinh học|dược động học|biến cố bất lợi|mã ho[áa])\b")
+                    r"pharmacokinetics?|adverse events?|pseudonymi[sz](?:ed|ation)|de-?identified|ngẫu nhiên h(?:oá|óa)|"
+                    r"giả dược|mù đôi|mù đơn|đoàn hệ|dấu ấn sinh học|dược động học|biến cố bất lợi|mã h(?:oá|óa))\b")
 EXPLAIN = re.compile(r"\(|\bnghĩa là\b|\btức là\b|\bthat is\b|\bwhich means\b|\bmeaning\b|\bi\.e\.")
 OBLIGATION = re.compile(r"(?i)\b(?:must|shall|will) be [a-z]+(?:ed|en)\b|\b(?:is|are) (?:required|obliged|expected) to\b|"
                         r"\bphải được\b|\bbắt buộc phải\b|\bđược yêu cầu\b")
@@ -331,7 +331,7 @@ CONSENT_SPLIT = re.compile(r"(?<=[.!?;])\s+")
 def lint_consent(path: str) -> dict:
     """Plain-language warns for a consent form or information sheet: CF01 long sentence, CF02 unexplained jargon,
     CF03 passive obligation. Headings, tables, fences and HTML comments are skipped."""
-    text = Path(path).read_text(encoding="utf-8-sig", errors="replace")
+    text = unicodedata.normalize("NFC", Path(path).read_text(encoding="utf-8-sig", errors="replace"))
     text = re.sub(r"<!--.*?-->", lambda m: re.sub(r"[^\n]", " ", m.group(0)), text, flags=re.S)
     findings, sentences, fence = [], 0, False
 

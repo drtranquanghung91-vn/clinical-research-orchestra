@@ -258,6 +258,17 @@ class TestConsentProfile(unittest.TestCase):
         self.assertNotIn("giả dược", msgs)      # explained in the parenthesis right after it
         self.assertNotIn("mù đôi", msgs)
 
+    def _cf02(self, text):
+        self.f.write_text(text + "\n", encoding="utf-8")
+        return [x["message"] for x in lint_prose.lint_consent(str(self.f))["findings"] if x["code"] == "CF02"]
+
+    def test_jargon_accepts_both_hoa_spellings_and_nfd(self):
+        import unicodedata
+        for word in ("mã hóa", "mã hoá", "ngẫu nhiên hóa", "ngẫu nhiên hoá"):
+            self.assertEqual(len(self._cf02(f"Dữ liệu được {word} khi lưu.")), 1, word)
+        nfd = unicodedata.normalize("NFD", "Dữ liệu được mã hóa khi lưu.")
+        self.assertEqual(len(self._cf02(nfd)), 1)
+
     def test_cli_exit_0_and_profiles(self):
         r = run_cli("--profile", "consent", self.f)
         self.assertEqual(r.returncode, 0, r.stderr)

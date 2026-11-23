@@ -167,6 +167,44 @@ class TestJournalCheck(unittest.TestCase):
         self.assertEqual(projectcfg.get(self.p, "target.journal"), "Journal: 'Fictional' Medicine")
         self.assertEqual(projectcfg.get(self.p, "target.word_limit"), "200")
 
+    def _yaml_without_target(self):
+        out, skip = [], False
+        for ln in (self.p / "project.yaml").read_text(encoding="utf-8").splitlines():
+            if ln.startswith("target:"):
+                skip = True
+                continue
+            if skip and ln.startswith(" "):
+                continue
+            skip = False
+            out.append(ln)
+        return "\n".join(out) + "\n"
+
+    def test_set_target_matches_target_line_variants(self):
+        base = self._yaml_without_target()
+        for variant in ("target: ", "target:  # comment", "target: {}", "target: null", "target:"):
+            (self.p / "project.yaml").write_text(base + variant + "\n", encoding="utf-8", newline="\n")
+            journal_check.set_target(self.p, {"journal": "Fictional Medicine", "word_limit": 200})
+            text = (self.p / "project.yaml").read_text(encoding="utf-8")
+            self.assertEqual(len(re.findall(r"(?m)^target:", text)), 1, variant)
+            self.assertEqual(projectcfg.get(self.p, "target.journal"), "Fictional Medicine", variant)
+            self.assertEqual(projectcfg.get(self.p, "target.word_limit"), "200", variant)
+
+    def test_set_target_refuses_other_inline_value(self):
+        base = self._yaml_without_target()
+        (self.p / "project.yaml").write_text(base + "target: something\n", encoding="utf-8", newline="\n")
+        with self.assertRaises(ValueError) as cm:
+            journal_check.set_target(self.p, {"journal": "X"})
+        self.assertIn("target", str(cm.exception))
+
+    def test_get_maps_http_exception_to_network_error(self):
+        import http.client
+
+        def boom(url):
+            raise http.client.IncompleteRead(b"x")
+        journal_check.http_get = boom
+        with self.assertRaises(journal_check.NetworkError):
+            journal_check._get("https://example.org/x?y=1")
+
 
 if __name__ == "__main__":
     unittest.main()

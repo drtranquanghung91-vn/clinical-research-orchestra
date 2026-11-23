@@ -112,6 +112,29 @@ class TestCrf(unittest.TestCase):
         self.assertNotIn("tuoi:", warns)
         self.assertEqual(self.cli("check")[0], 0)
 
+    def test_types_ngay_and_identifier(self):
+        self.assertEqual(crf._type("Ngày"), "date")
+        self.assertEqual(crf._type("Định danh"), "text")
+        self.assertEqual(crf._type("Identifier"), "text")
+
+    def test_ident_name_is_person_name_only(self):
+        self.assertIsNone(crf.IDENT.search(crf.fold("Name of drug")))
+        self.assertIsNone(crf.IDENT.search(crf.fold("Drug name")))
+        for s in ("Patient name", "Participant name", "Full name", "Họ tên", "Họ và tên"):
+            self.assertTrue(crf.IDENT.search(crf.fold(s)), s)
+
+    def test_fictional_cohort_example_builds_and_checks_clean(self):
+        ex = Path(__file__).resolve().parents[2] / "examples" / "fictional-cohort"
+        if not ex.is_dir():
+            self.skipTest("examples/fictional-cohort not present")
+        dst = self.t / "ex"
+        shutil.copytree(ex, dst)
+        gate.open_gate(dst, "G2", by="Example author", files=["03_protocol/variables.md", "03_protocol/sap.md"])
+        count, _ = crf.build(dst)
+        self.assertGreater(count, 0)
+        blocks = [f for f in crf.check(dst) if f[0] == "block"]
+        self.assertEqual(blocks, [])
+
     def test_register_variable_missing_blocks(self):
         self.write("03_protocol/sap.md", SAP.format(cov="Tuổi, giới, BMI"))
         self.lock_g2()

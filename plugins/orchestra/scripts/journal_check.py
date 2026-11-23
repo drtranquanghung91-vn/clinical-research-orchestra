@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import itertools
+from http.client import HTTPException
 import json
 import re
 import sys
@@ -79,6 +80,8 @@ def _get(url: str) -> bytes | None:
         if e.code == 404:
             return None
         raise NetworkError(f"{url.split('?')[0]}: HTTP {e.code}") from e
+    except HTTPException as e:     # IncompleteRead, RemoteDisconnected...
+        raise NetworkError(f"{url.split('?')[0]}: {e!r}") from e
     except OSError as e:            # URLError, timeouts, refused connections
         raise NetworkError(f"{url.split('?')[0]}: {getattr(e, 'reason', e)}") from e
 
@@ -322,10 +325,19 @@ def set_target(project: Path, values: dict) -> None:
     """Replace or add `  key: value` lines under the top-level `target:` block of project.yaml (LF written)."""
     path = Path(project) / "project.yaml"
     lines = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").split("\n")
-    if "target:" not in lines:
+    head = re.compile(r"^target:\s*(#.*)?$")
+    inline = re.compile(r"^target:\s*(?:\{\s*\}|null|~)?\s*(?:#.*)?$")
+    found = next((i for i, ln in enumerate(lines) if ln.startswith("target:")), None)
+    if found is None:
         at = len(lines) - 1 if lines and lines[-1] == "" else len(lines)
         lines.insert(at, "target:")
-    start = lines.index("target:")
+        found = at
+    else:       # trailing space, comment, {} or null become a plain block header (projectcfg reads no comments)
+        if not (head.match(lines[found]) or inline.match(lines[found])):
+            raise ValueError(f"project.yaml: 'target' already has an inline value ({lines[found].strip()!r}); "
+                             "make it a block (target:, then indented keys) and rerun")
+        lines[found] = "target:"
+    start = found
     end = start + 1
     while end < len(lines) and lines[end].startswith(" "):
         end += 1
